@@ -1,23 +1,23 @@
 // /src/components/Ficha/Identidade.jsx
 
-// 1. Não precisamos mais do 'useState' aqui!
 import React from 'react';
 
-// 2. Recebemos 'dados' (personagem.info) e 'onFichaChange' (a função) como "props"
-function Identidade({ dados, onFichaChange }) {
+function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
 
-  // 3. Criamos uma função 'handler' local para simplificar
-  // Ela vai chamar a função principal (onFichaChange)
-  // passando a seção ('info') e o campo corretos.
   const handleChange = (e) => {
-    const campo = e.target.id;     // ex: "nome-personagem"
+    const campo = e.target.id;     
     const valor = e.target.value;  
     
-    // Converte o ID do HTML para a chave do objeto (ex: "nome-personagem" -> "nome")
-    const nomeCampo = campo.replace('-personagem', '').replace('-jogador', ''); // Simplificação
+    // Simplificado, já que os IDs correspondem às chaves do objeto info
+    const nomeCampo = campo; 
     
     onFichaChange('info', nomeCampo, valor);
   };
+
+  // Lógica para obter as trilhas filtradas
+  const classeAtual = dados.classe.toLowerCase();
+  const trilhasFiltradas = trilhasPorClasse[classeAtual] || [];
+
 
   return (
     <header className="box box-identidade" id="grid-identidade">
@@ -26,9 +26,9 @@ function Identidade({ dados, onFichaChange }) {
         <label>PERSONAGEM</label>
         <input 
           type="text" 
-          id="nome" // Usamos a chave do objeto como ID
-          value={dados.nome} // 4. O valor vem dos 'dados'
-          onChange={handleChange} // 5. O 'onChange' chama nossa função 'handler'
+          id="nome" 
+          value={dados.nome} 
+          onChange={handleChange} 
         />
       </div>
 
@@ -49,11 +49,53 @@ function Identidade({ dados, onFichaChange }) {
           value={dados.origem}
           onChange={handleChange}
         >
-          {/* Copie e cole todas as suas <option> de Origem aqui */}
+          {/* ---------------------------------------------------------------------- */}
+          {/* LISTA COMPLETA DE ORIGENS (Base + Sobrevivendo ao Horror) */}
           <option value="academico">Acadêmico</option>
-          <option value="desgarrado" selected>Desgarrado</option>
+          <option value="agente_saude">Agente de Saúde</option>
+          <option value="amnesico">Amnésico</option>
+          <option value="artista">Artista</option>
+          <option value="atleta">Atleta</option>
+          <option value="chef">Chef</option>
+          <option value="criminoso">Criminoso</option>
+          <option value="cultista_arrependido">Cultista Arrependido</option>
+          <option value="desgarrado">Desgarrado</option>
+          <option value="engenheiro">Engenheiro</option>
+          <option value="executivo">Executivo</option>
+          <option value="investigador">Investigador</option>
+          <option value="lutador">Lutador</option>
+          <option value="magnata">Magnata</option>
+          <option value="militar">Militar</option>
           <option value="policial">Policial</option>
-          {/* ...etc... */}
+          <option value="religioso">Religioso</option>
+          <option value="servidor_publico">Servidor Público</option>
+          <option value="teorico_conspiracao">Teórico da Conspiração</option>
+          <option value="ti">T.I.</option>
+          <option value="trabalhador_rural">Trabalhador Rural</option>
+          <option value="universitario">Universitário</option>
+          <option value="vitima">Vítima</option>
+          
+          <option value="amigo_animais">Amigo dos Animais</option>
+          <option value="astronauta">Astronauta</option>
+          <option value="chef_outro_lado">Chef do Outro Lado</option>
+          <option value="colegial">Colegial</option>
+          <option value="cosplayer">Cosplayer</option>
+          <option value="diplomata">Diplomata</option>
+          <option value="explorador">Explorador</option>
+          <option value="experimento">Experimento</option>
+          <option value="fanatico_criaturas">Fanático por Criaturas</option>
+          <option value="fotografo">Fotógrafo</option>
+          <option value="inventor_paranormal">Inventor Paranormal</option>
+          <option value="jovem_mistico">Jovem Místico</option>
+          <option value="legista_noturno">Legista do Turno da Noite</option>
+          <option value="mateiro">Mateiro</option>
+          <option value="mergulhador">Mergulhador</option>
+          <option value="motorista">Motorista</option>
+          <option value="nerd_entusiasta">Nerd Entusiasta</option>
+          <option value="profetizado">Profetizado</option>
+          <option value="psicologo">Psicólogo</option>
+          <option value="reporter_investigativo">Repórter Investigativo</option>
+          {/* ---------------------------------------------------------------------- */}
         </select>
       </div>
 
@@ -65,7 +107,7 @@ function Identidade({ dados, onFichaChange }) {
           onChange={handleChange}
         >
           <option value="combatente">Combatente</option>
-          <option value="especialista" selected>Especialista</option>
+          <option value="especialista">Especialista</option>
           <option value="ocultista">Ocultista</option>
           <option value="sobrevivente">Sobrevivente</option>
         </select>
@@ -78,12 +120,15 @@ function Identidade({ dados, onFichaChange }) {
           value={dados.trilha}
           onChange={handleChange}
         >
-          {/* Copie e cole todas as suas <option> e <optgroup> de Trilha aqui */}
+          {/* Opção padrão, sempre disponível */}
           <option value="nenhuma">Nenhuma (NEX 5%)</option>
-          <optgroup label="Especialista" id="trilhas-especialista">
-            <option value="tecnico">Técnico</option>
-          </optgroup>
-          {/* ...etc... */}
+          
+          {/* Mapeia e renderiza APENAS as trilhas da classe selecionada */}
+          {trilhasFiltradas.map(trilha => (
+              <option key={trilha.value} value={trilha.value}>
+                  {trilha.text}
+              </option>
+          ))}
         </select>
       </div>
     </header>

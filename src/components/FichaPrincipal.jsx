@@ -1,5 +1,4 @@
 // /src/components/FichaPrincipal.jsx
-// ATUALIZAÇÃO (Removendo extensões .jsx dos imports)
 
 import React from 'react';
 
@@ -17,17 +16,28 @@ function FichaPrincipal({
   calculados,
   fichaInstance,
   handleFichaChange,
-  controlesProps 
+  controlesProps,
+  trilhasPorClasse // Recebe a prop
 }) {
+    // 1. Extrai canChangeTheme do objeto calculados
+    const { canChangeTheme } = calculados; 
+
+    // 2. Cria um novo objeto de props para Controles, incluindo o status do NEX
+    const controlesComNEX = {
+        ...controlesProps,
+        canChangeTheme: canChangeTheme // Repassa o novo status
+    };
+
   return (
     <main className="ficha-container">
       
       <Identidade 
         dados={personagem.info} 
         onFichaChange={handleFichaChange} 
+        trilhasPorClasse={trilhasPorClasse} // Repassa a prop para Identidade
       />
       
-      <Controles {...controlesProps} />
+      <Controles {...controlesComNEX} /> {/* Usa as novas props aqui */}
 
       <Atributos 
         dados={personagem.atributos} 

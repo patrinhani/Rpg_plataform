@@ -1,15 +1,17 @@
 // /src/components/ficha/controles.jsx
+// (ATUALIZADO: Oculta o seletor de Afinidade se NEX < 50%)
 
 import React from 'react';
 
-// Recebemos o tema atual e todas as funções de 'clique' como props
+// Agora recebemos a nova prop: canChangeTheme
 function Controles({ 
   temaAtual, 
   onSave, 
   onClear, 
   onExport, 
   onImport, 
-  onThemeChange 
+  onThemeChange,
+  canChangeTheme // <--- NOVA PROP: true se NEX >= 50
 }) {
 
   // Handler local para o <input type="file">
@@ -17,7 +19,6 @@ function Controles({
     const file = e.target.files[0];
     if (file) {
       onImport(file);
-      // Limpa o input para permitir importar o mesmo arquivo de novo
       e.target.value = null; 
     }
   };
@@ -35,7 +36,6 @@ function Controles({
         Exportar (JSON)
       </button>
       
-      {/* O <label> agora usa a classe CSS que adicionamos no style.css */}
       <label htmlFor="input-importar" className="btn-importar-label">
         Importar
       </label>
@@ -43,24 +43,28 @@ function Controles({
         type="file" 
         id="input-importar" 
         accept=".json" 
-        style={{ display: 'none' }} // O input real fica escondido
+        style={{ display: 'none' }} 
         onChange={handleFileChange} 
       />
 
-      <div className="seletor-tema">
-        <label htmlFor="tema-elemento">Afinidade:</label>
-        <select 
-          id="tema-elemento"
-          value={temaAtual}
-          onChange={(e) => onThemeChange(e.target.value)}
-        >
-          <option value="tema-ordem">Sem Afinidade</option>
-          <option value="tema-sangue">Sangue</option>
-          <option value="tema-morte">Morte</option>
-          <option value="tema-conhecimento">Conhecimento</option>
-          <option value="tema-energia">Energia</option>
-        </select>
-      </div>
+      {/* LÓGICA DE OCULTAÇÃO: Só renderiza se canChangeTheme for true */}
+      {canChangeTheme && (
+        <div className="seletor-tema">
+          <label htmlFor="tema-elemento">Afinidade:</label>
+          <select 
+            id="tema-elemento"
+            value={temaAtual}
+            onChange={(e) => onThemeChange(e.target.value)}
+          >
+            <option value="tema-ordem">Sem Afinidade</option>
+            <option value="tema-sangue">Sangue</option>
+            <option value="tema-morte">Morte</option>
+            <option value="tema-conhecimento">Conhecimento</option>
+            <option value="tema-energia">Energia</option>
+          </select>
+        </div>
+      )}
+      
     </section>
   );
 }

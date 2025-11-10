@@ -411,7 +411,7 @@ input[type="number"].input-hex {
 /* --- 10. Posicionamento dos Inputs --- */
 #forca {
   top: 30%;
-  left: 23%;
+  left: 18%;
 }
 #agilidade {
   top: 10%;
@@ -419,17 +419,16 @@ input[type="number"].input-hex {
 }
 #intelecto {
   top: 30%;
-  left: 67%;
+  left: 72%;
 }
 #presenca {
   top: 66%;
-  left: 29%;
+  left: 26%;
 }
 #vigor {
   top: 66%;
-  left: 61%;
+  left: 64%;
 }
-
 /* --- 11. Resumo de Cálculo --- */
 .box-calculo {
   flex-direction: row;

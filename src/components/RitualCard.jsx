@@ -2,20 +2,50 @@
 
 import React from 'react';
 
-// Recebemos o objeto 'ritual' completo como prop
-function RitualCard({ ritual }) {
+/**
+ * ATUALIZADO: Agora recebe props para interatividade
+ * * Props:
+ * - ritual: O objeto do ritual
+ * - tipo: 'loja' (mostra botão 'Adicionar') ou 'inventario' (mostra botão 'Remover')
+ * - onAdd: (função) Chamada ao clicar em 'Adicionar'
+ * - onRemove: (função) Chamada ao clicar em 'Remover'
+ */
+function RitualCard({ ritual, tipo, onAdd, onRemove }) {
 
-  // Recria a lógica de 'Alvo/Área' do main.js
+  // --- 1. Lógica do Footer (Botões) ---
+  let footerComponent;
+  
+  if (tipo === 'loja') {
+    // Se for 'loja' (a biblioteca), renderiza o botão "Aprender"
+    footerComponent = (
+      <button 
+        className="loja-item-add" 
+        onClick={() => onAdd(ritual)} // Chama a função onAdd (que virá do App.jsx)
+      >
+        Aprender Ritual
+      </button>
+    );
+  } else if (tipo === 'inventario') {
+    // Se for 'inventario' (o grimório), renderiza o botão "Esquecer"
+    footerComponent = (
+      <button 
+        className="item-inventario-remover" 
+        onClick={() => onRemove(ritual.inventarioId)} // Chama onRemove com o ID único
+      >
+        Esquecer
+      </button>
+    );
+  }
+
+  // --- 2. Renderização ---
   const alvoArea = ritual.alvo || ritual.area || ritual.efeito || "N/A";
 
   return (
-    // A classe do elemento (ex: 'sangue') é aplicada no <li>
     <li className={`item-card ritual-card ${ritual.elemento.toLowerCase()}`}>
       
       <div className="item-header">
         <h3>{ritual.nome}</h3>
         <div className="item-header-info">
-          {/* O CSS (style.css) vai colorir este texto baseado na classe do <li> */}
           <div><strong>{ritual.elemento} {ritual.circulo}</strong></div>
         </div>
       </div>
@@ -26,14 +56,12 @@ function RitualCard({ ritual }) {
         <div className="item-detalhe"><strong>Alvo/Área:</strong> {alvoArea}</div>
         <div className="item-detalhe"><strong>Duração:</strong> {ritual.duracao}</div>
         
-        {/* Renderização condicional: Só mostra se 'ritual.resistencia' existir */}
         {ritual.resistencia && (
           <div className="item-detalhe"><strong>Resistência:</strong> {ritual.resistencia}</div>
         )}
 
         <div className="item-descricao">{ritual.descricao}</div>
 
-        {/* Renderização condicional para Aprimoramentos */}
         {ritual.discente && (
           <div className="item-detalhe bonus discente">
             <strong>Discente:</strong> {ritual.discente}
@@ -46,6 +74,14 @@ function RitualCard({ ritual }) {
         )}
       </div>
 
+      {/* --- 3. Footer Interativo --- */}
+      {/* Só renderiza o footer se houver um tipo (loja ou inventario) */}
+      {tipo && (
+        <div className="item-footer">
+          {footerComponent}
+        </div>
+      )}
+      
     </li>
   );
 }
