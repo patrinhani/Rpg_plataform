@@ -1,27 +1,38 @@
 // /src/app.jsx
-// VERSÃO CORRIGIDA (Remove o comentário de sintaxe inválida)
+// (COMPLETO: Inclui a lógica de animação E o efeito Parallax)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
 import { database } from './lib/database.js'; 
 
-import Identidade from './components/ficha/identidade.jsx';
-import Atributos from './components/ficha/atributos.jsx';
-import Recursos from './components/ficha/recursos.jsx';
-import DefesaStatus from './components/ficha/defesa-status.jsx';
-import Pericias from './components/ficha/pericias.jsx';
-import Controles from './components/ficha/controles.jsx';
-import CalculoDetalhado from './components/ficha/calculo-detalhado.jsx'; 
+// Importa as Abas
+import FichaPrincipal from './components/FichaPrincipal';
+import Inventario from './components/Inventario';
+import Rituais from './components/Rituais';
+import ModalLoja from './components/ModalLoja';
+import ModalSelecao from './components/ModalSelecao';
 
-// (função aplicarTema)
-function aplicarTema(tema) {
-  document.documentElement.dataset.tema = tema;
-  localStorage.setItem("temaFichaOrdem", tema);
-}
+// Importa as funções de animação (o .js corrigido)
+import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
+
+// (Helper para perícias)
+const listaTodasPericias = Object.keys(fichaInstance.pericias); 
+const opcoesPericia = listaTodasPericias
+  .filter(p => p !== 'luta' && p !== 'pontaria') 
+  .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
+
+// (Helper para elementos)
+const opcoesElemento = [
+  { nome: 'Sangue', valor: 'Sangue' },
+  { nome: 'Morte', valor: 'Morte' },
+  { nome: 'Conhecimento', valor: 'Conhecimento' },
+  { nome: 'Energia', valor: 'Energia' },
+];
 
 
 function App() {
   
+  // --- ESTADOS ---
   const [personagem, setPersonagem] = useState(fichaInstance.getDados());
   
   const [calculados, setCalculados] = useState({
@@ -33,34 +44,104 @@ function App() {
     bonusPericia: {}
   });
 
-  const [tema, setTema] = useState(() => {
-    return localStorage.getItem("temaFichaOrdem") || "tema-ordem";
-  });
+  const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
+  const [abaAtiva, setAbaAtiva] = useState('principal');
 
-  useEffect(() => {
-    aplicarTema(tema);
-  }, [tema]);
+  // (Estados dos Modais)
+  const [isLojaOpen, setIsLojaOpen] = useState(false);
+  const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
+  const [itemPendente, setItemPendente] = useState(null); 
 
   
-  const carregarFicha = () => {
-    const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
-    if (dadosSalvos) {
-      const dadosFicha = JSON.parse(dadosSalvos);
-      fichaInstance.carregarDados(dadosFicha);
-      handleFichaChange(null, null, null); 
-    }
-  };
-
+  // --- Lógica de Tema com Animação ---
+  
+  // Roda QUANDO o estado 'tema' muda (quando o usuário clica no select)
   useEffect(() => {
+    // Pega o tema que está *visível* no momento
+    const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
+    
+    // Roda a animação. O 3º argumento é a função "callback"
+    // que vai rodar no meio da transição.
+    aplicarTemaComAnimacao(tema, temaAtual, () => {
+      // Esta é a função de callback:
+      // Ela atualiza o tema real e salva no localStorage
+      document.documentElement.dataset.tema = tema;
+      localStorage.setItem("temaFichaOrdem", tema);
+    });
+
+  }, [tema]); // Dispara toda vez que 'setTema' é chamado
+
+
+  // Roda SÓ UMA VEZ, no carregamento inicial da página
+  useEffect(() => {
+    // Carrega o tema salvo SEM animação
+    const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
+    aplicarTemaSemAnimacao(temaSalvo);
+    
+    // Carrega a ficha
     carregarFicha();
   }, []); 
 
+  // (O useEffect de 'document.title' continua igual)
+  useEffect(() => {
+    document.title = `${personagem.info.nome || "Ficha"} - NEX ${personagem.info.nex || "0%"}`;
+  }, [personagem.info.nome, personagem.info.nex]); // (Corrigido: dependências mais específicas)
+
+  
+  // --- (ADIÇÃO) Efeito Parallax do Mouse ---
+  useEffect(() => {
+    const parallaxContainer = document.getElementById("parallax-background");
+    // (Corrigido: checa se container existe antes de query)
+    const parallaxSimbolos = parallaxContainer 
+      ? parallaxContainer.querySelectorAll(".simbolo-parallax")
+      : null;
+
+    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
+
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const moveX = (clientX - centerX) * -0.01;
+      const moveY = (clientY - centerY) * -0.01;
+
+      parallaxSimbolos.forEach((simbolo) => {
+        // (Garante que o translate -50% não seja perdido)
+        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Função de limpeza do React
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []); // O array vazio [] garante que isso rode só uma vez
+  // --- FIM DO BLOCO PARALLAX ---
+
+  
+  // --- FUNÇÕES DE CONTROLE (Salvar, Carregar, etc.) ---
+  const carregarFicha = () => {
+    const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
+    if (dadosSalvos) {
+      try {
+        const dadosFicha = JSON.parse(dadosSalvos);
+        fichaInstance.carregarDados(dadosFicha);
+        // (CORRIGIDO) Chama o handleFichaChange sem argumentos para 
+        // forçar um recálculo total e atualização de estado no React
+        handleFichaChange(null, null, null); 
+      } catch (e) {
+        console.error("Erro ao carregar dados salvos:", e);
+        localStorage.removeItem("fichaOrdemParanormal");
+      }
+    }
+  };
   const salvarFicha = () => {
     const dadosFicha = fichaInstance.getDados();
     localStorage.setItem("fichaOrdemParanormal", JSON.stringify(dadosFicha));
     alert("Ficha salva com sucesso no navegador!");
   };
-
   const limparFicha = () => {
     if (window.confirm("Isso apagará a ficha salva. Deseja continuar?")) {
       localStorage.removeItem("fichaOrdemParanormal");
@@ -68,12 +149,12 @@ function App() {
       window.location.reload(); 
     }
   };
-
   const exportarFicha = () => {
+    // (CORRIGIDO) Garante que a fichaInstance está atualizada antes de exportar
+    handleFichaChange(null, null, null); 
     const dadosFicha = fichaInstance.getDados();
     const nomeArquivo = "ficha-ordem.json";
     const dadosString = JSON.stringify(dadosFicha, null, 2);
-    
     const link = document.createElement("a");
     link.href = "data:text/json;charset=utf-8," + encodeURIComponent(dadosString);
     link.download = nomeArquivo;
@@ -81,8 +162,8 @@ function App() {
     link.click();
     document.body.removeChild(link);
   };
-
   const importarFicha = (arquivo) => {
+    if (!arquivo) return;
     const leitor = new FileReader();
     leitor.onload = (e) => {
       try {
@@ -90,14 +171,82 @@ function App() {
         fichaInstance.carregarDados(dadosFicha);
         handleFichaChange(null, null, null);
         alert("Ficha importada com sucesso!");
-      } catch (erro) {
-        alert("Erro ao ler o arquivo JSON.");
-      }
+      } catch (erro) { alert("Erro ao ler o arquivo JSON."); }
     };
     leitor.readAsText(arquivo);
   };
   
+  // Funções de Controle dos Modais
+  const handleAbrirLoja = () => setIsLojaOpen(true);
+  const handleFecharLoja = () => setIsLojaOpen(false);
+  const handleFecharSelecao = () => {
+    setIsSelecaoOpen(false);
+    setItemPendente(null); 
+  };
+
+  // Funções de Controle do Inventário
+  const handleAddItem = (itemOriginal) => {
+    if (itemOriginal.tipoBonus === 'generico') {
+      setItemPendente({
+        ...itemOriginal,
+        tituloModal: `Vincular: ${itemOriginal.nome}`,
+        descricaoModal: 'Escolha uma perícia para vincular ao item. (Não pode Luta ou Pontaria)',
+        opcoes: opcoesPericia, 
+        tipoVinculo: 'pericia' 
+      });
+      setIsSelecaoOpen(true); 
+      handleFecharLoja(); 
+      
+    } else if (itemOriginal.tipoBonus === 'escolhaElemento') {
+      setItemPendente({
+        ...itemOriginal,
+        tituloModal: `Escolher Elemento: ${itemOriginal.nome}`,
+        descricaoModal: 'Este item pode ser de diferentes elementos. Escolha um:',
+        opcoes: opcoesElemento, 
+        tipoVinculo: 'elemento' 
+      });
+      setIsSelecaoOpen(true);
+      handleFecharLoja();
+
+    } else {
+      fichaInstance.addItemInventario(itemOriginal);
+      handleFichaChange(null, null, null); 
+    }
+  };
+
+  const handleVincularItem = (valorSelecionado) => {
+    if (!itemPendente) return;
+    let itemVinculado = { ...itemPendente };
+    if (itemPendente.tipoVinculo === 'pericia') {
+      itemVinculado.periciaVinculada = valorSelecionado;
+    } else if (itemPendente.tipoVinculo === 'elemento') {
+      itemVinculado.elemento = valorSelecionado;
+      itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`);
+    }
+    // Limpa os campos do modal
+    itemVinculado.tipoBonus = null; 
+    itemVinculado.tituloModal = undefined;
+    itemVinculado.descricaoModal = undefined;
+    itemVinculado.opcoes = undefined;
+    itemVinculado.tipoVinculo = undefined;
+
+    fichaInstance.addItemInventario(itemVinculado);
+    handleFecharSelecao(); 
+    handleFichaChange(null, null, null); 
+  };
+
+  const handleRemoveItem = (inventarioId) => {
+    fichaInstance.removeItemInventario(inventarioId);
+    handleFichaChange(null, null, null);
+  };
+
+  const handleToggleItem = (inventarioId) => {
+    fichaInstance.toggleIgnorarCalculos(inventarioId);
+    handleFichaChange(null, null, null);
+  };
   
+
+  // --- FUNÇÃO CÉREBRO (handleFichaChange) ---
   function handleFichaChange(secao, campo, valor) {
     
     if (secao) {
@@ -130,8 +279,13 @@ function App() {
 
     const agi = parseInt(fichaInstance.atributos.agi) || 0;
     const equip = fichaInstance.defesa.equip || 0;
-    const outros = fichaInstance.defesa.outros || 0;
-    const defesaTotal = 10 + agi + equip + outros; 
+    const outros = parseInt(fichaInstance.defesa.outros) || 0;
+    // (Corrigido: Defesa da origem Policial)
+    let bonusOrigemDefesa = 0;
+    if (fichaInstance.info.origem === "policial") {
+      bonusOrigemDefesa = 2;
+    }
+    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
 
     const cargaAtual = fichaInstance.getPesoTotal();
     const cargaMax = fichaInstance.getMaxPeso();
@@ -148,9 +302,15 @@ function App() {
     
     const origem = fichaInstance.info.origem;
     let bonusOrigemPericias = 0;
-    // Verificação de segurança (caso o database ainda não tenha sido carregado)
+    
+    // (Corrigido: Checa se database e a origem existem)
     if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
-      bonusOrigemPericias = database.periciasPorOrigem[origem].fixas.length;
+      const { fixas, escolhas } = database.periciasPorOrigem[origem];
+      bonusOrigemPericias += fixas.length;
+      // (Corrigido: Soma as perícias de escolha também)
+      escolhas.forEach((e) => {
+        bonusOrigemPericias += e.quantidade;
+      });
     }
     const periciasTotal = bonusClassePericias + bonusOrigemPericias;
 
@@ -161,25 +321,33 @@ function App() {
       }
     });
 
+    // Atualiza o estado dos valores calculados
     setCalculados({
       defesaTotal: defesaTotal,
       cargaAtual: cargaAtual,
       cargaMax: cargaMax,
       periciasTreinadas: periciasTreinadas,
       periciasTotal: periciasTotal,
-      bonusPericia: bonusPericiaCalculado
+      bonusPericia: bonusPericiaCalculado 
     });
 
+    // Atualiza o estado do personagem
     const novosDados = fichaInstance.getDados();
     setPersonagem({ ...novosDados });
   }
 
-  useEffect(() => {
-    const nome = personagem.info.nome || "Ficha sem nome";
-    const nex = personagem.info.nex || "0%";
-    document.title = `${nome} - NEX ${nex}`;
-  }, [personagem]);
+  // Agrupa as props do <Controles />
+  const controlesProps = {
+    temaAtual: tema, 
+    onSave: salvarFicha,
+    onClear: limparFicha,
+    onExport: exportarFicha,
+    onImport: importarFicha,
+    onThemeChange: setTema 
+  };
 
+
+  // --- RENDERIZAÇÃO ---
   return (
     <>
       <div id="parallax-background">
@@ -189,75 +357,71 @@ function App() {
         <img src="/assets/images/SimboloConhecimento.png" id="simbolo-conhecimento" className="simbolo-parallax" />
         <img src="/assets/images/SimboloEnergia.png" id="simbolo-energia" className="simbolo-parallax" />
       </div>
+      
+      {/* O <div> abaixo é o alvo do animacoes.js */}
       <div id="transition-overlay"></div>
 
       <nav className="ficha-abas">
-        <button className="ficha-aba-link active" data-aba="aba-principal">
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'principal' ? 'active' : ''}`} 
+          onClick={() => setAbaAtiva('principal')}
+        >
           Principal
         </button>
-        <button className="ficha-aba-link" data-aba="aba-inventario">
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'inventario' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('inventario')}
+        >
           Inventário
         </button>
-        <button className="ficha-aba-link" data-aba="aba-rituais">Rituais</button>
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'rituais' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('rituais')}
+        >
+          Rituais
+        </button>
       </nav>
-
-      <div id="aba-principal" className="ficha-aba-conteudo active">
-        <main className="ficha-container">
-          
-          <Identidade 
-            dados={personagem.info} 
-            onFichaChange={handleFichaChange} 
-          />
-          
-          <Controles
-            temaAtual={tema}
-            onSave={salvarFicha}
-            onClear={limparFicha}
-            onExport={exportarFicha}
-            onImport={importarFicha}
-            onThemeChange={setTema} 
-          />
-
-          <Atributos 
-            dados={personagem.atributos} 
-            onFichaChange={handleFichaChange} 
-          />
-
-          <Recursos 
-            dados={personagem.recursos}
-            onFichaChange={handleFichaChange}
-          />
-          
-          <DefesaStatus
-            dadosInfo={personagem.info}
-            dadosDefesa={personagem.defesa}
-            dadosCalculados={calculados}
-            onFichaChange={handleFichaChange}
-          />
-          
-          <Pericias
-            dadosPericias={personagem.pericias}
-            dadosAtributos={personagem.atributos}
-            dadosCalculados={calculados}
-            onFichaChange={handleFichaChange}
-          />
-
-          {/* --- A CORREÇÃO ESTÁ AQUI --- */}
-          {/* O comentário inválido foi removido */}
-          <CalculoDetalhado
-            dados={personagem.bonusManuais}
-            calculos={fichaInstance.calculosDetalhados}
-            onFichaChange={handleFichaChange}
-          />
-
-        </main>
-      </div>
       
-      <div id="aba-inventario" className="ficha-aba-conteudo"></div>
-      <div id="aba-rituais" className="ficha-aba-conteudo"></div>
+      {abaAtiva === 'principal' && (
+        <FichaPrincipal
+          personagem={personagem}
+          calculados={calculados}
+          fichaInstance={fichaInstance} 
+          handleFichaChange={handleFichaChange}
+          controlesProps={controlesProps}
+        />
+      )}
+      
+      {abaAtiva === 'inventario' && (
+        <Inventario 
+          inventario={personagem.inventario} 
+          onAbrirLoja={handleAbrirLoja}
+          onRemoveItem={handleRemoveItem}
+          onToggleItem={handleToggleItem}
+        />
+      )}
+
+      {abaAtiva === 'rituais' && (
+        <Rituais />
+      )}
+
       <footer>
         <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
       </footer>
+
+      <ModalLoja 
+        isOpen={isLojaOpen}
+        onClose={handleFecharLoja}
+        onAddItem={handleAddItem}
+        pericias={listaTodasPericias} 
+      />
+      
+      <ModalSelecao 
+        isOpen={isSelecaoOpen}
+        onClose={handleFecharSelecao}
+        item={itemPendente} 
+        onSelect={handleVincularItem} 
+      />
     </>
   )
 }
