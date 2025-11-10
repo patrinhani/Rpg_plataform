@@ -1,0 +1,193 @@
+/* css/responsive.css */
+
+/* --- 1. Telas Médias (Tablets, Laptops Pequenos) --- */
+/* Desfaz a grade principal de 2 colunas e empilha tudo */
+@media (max-width: 1100px) {
+  .ficha-container {
+    grid-template-columns: 1fr;
+    /* Define uma nova ordem de empilhamento mais lógica */
+    grid-template-areas:
+      "identidade"
+      "controles"
+      "defesa"
+      "recursos"
+      "atributos"
+      "pericias"
+      "calculo";
+  }
+
+  .box-atributos {
+    min-height: 350px; /* Reduz um pouco o hexágono */
+    background-size: contain; /* Garante que ele caiba */
+  }
+}
+
+/* --- 2. Telas Pequenas (Tablets em Retrato, Celulares) --- */
+@media (max-width: 768px) {
+  body {
+    font-size: 95%; /* Reduz a fonte base levemente */
+  }
+
+  .ficha-container,
+  .ficha-container-inventario {
+    padding: 10px;
+    gap: 15px;
+  }
+
+  .box {
+    padding: 15px;
+  }
+
+  /* Abas principais */
+  .ficha-abas {
+    padding: 0 10px;
+    gap: 5px;
+    overflow-x: auto; /* Permite rolar as abas se não couberem */
+    flex-wrap: nowrap;
+  }
+  .ficha-aba-link {
+    font-size: 1em;
+    padding: 8px 12px;
+    flex-shrink: 0; /* Impede que as abas encolham */
+  }
+
+  /* Empilhar Recursos */
+  .box-recursos {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .recurso-individual {
+    width: 100%;
+  }
+
+  /* Empilhar Defesa/Status */
+  .box-defesa-status {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .box-defesa-status .campo-horizontal {
+    width: 100%;
+  }
+
+  /* --- Correção Drástica dos Atributos (Hexágono para Lista) --- */
+  /* O layout do hexágono com 'position: absolute' não é responsivo.
+     A melhor solução é escondê-lo e transformar os inputs numa lista. */
+
+  .box-atributos {
+    background-image: none !important; /* Remove o hexágono */
+    min-height: auto;
+    gap: 10px;
+    border: 2px solid var(--cor-borda); /* Adiciona borda que foi removida */
+    background-color: var(--cor-caixa); /* Adiciona fundo que foi removido */
+  }
+
+  input[type="number"].input-hex {
+    position: static; /* Remove o posicionamento absoluto */
+    width: 100%;
+    text-align: left;
+    font-size: 1.8em;
+    text-shadow: none;
+    border: 1px solid var(--cor-borda);
+    padding: 10px 15px;
+    display: flex; /* Para alinhar o label do ::before */
+    align-items: center;
+    background-color: var(--cor-fundo); /* Devolve o fundo */
+  }
+
+  /* Adiciona labels via CSS pois não existem no HTML */
+  input[type="number"].input-hex::before {
+    content: attr(id); /* Usa o ID (forca, agilidade...) */
+    font-family: "Special Elite", monospace;
+    color: var(--cor-texto-label);
+    margin-right: 15px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    width: 80px; /* Alinha os inputs */
+    flex-shrink: 0;
+  }
+
+#for::before {
+    content: "FORÇA:";
+  }
+  #agi::before {
+    content: "AGILIDADE:";
+  }
+  #int::before {
+    content: "INTELECTO:";
+  }
+  #pre::before {
+    content: "PRESENÇA:";
+  }
+  #vig::before {
+    content: "VIGOR:";
+  }
+  /* Simplificar lista de Perícias */
+  .pericia-item {
+    grid-template-columns: 1fr; /* Empilha tudo */
+    gap: 8px;
+    padding: 10px;
+  }
+  .pericia-total-bonus {
+    text-align: left;
+    padding-left: 5px;
+  }
+
+  /* Controles */
+  .box-controles {
+    gap: 5px;
+  }
+  .box-controles button,
+  .box-controles label {
+    flex-grow: 1;
+    text-align: center;
+    margin: 2px;
+  }
+  .seletor-tema {
+    width: 100%;
+    margin-left: 0;
+  }
+  .seletor-tema select {
+    width: 100%;
+  }
+
+  /* Modais */
+  .modal-conteudo {
+    width: 95vw;
+    max-height: 90vh;
+  }
+  .modal-abas {
+    justify-content: flex-start;
+    overflow-x: auto; /* Permite rolar as abas do modal */
+    flex-wrap: nowrap;
+    padding-bottom: 5px; /* Espaço para a barra de rolagem */
+  }
+  .form-custom-grid {
+    grid-template-columns: 1fr; /* Empilha o form de item custom */
+  }
+
+  /* Posições do Parallax (menos exageradas) */
+  #parallax-background {
+    display: none; /* Desativa o parallax em celulares para performance */
+  }
+}
+
+/* --- 3. Telas Muito Pequenas (Celulares em Retrato) --- */
+@media (max-width: 480px) {
+  body {
+    font-size: 90%;
+  }
+
+  /* Força 1 coluna nos cards de item/ritual */
+  .loja-lista-itens {
+    grid-template-columns: 1fr;
+  }
+
+  /* Empilha botões de perícia no modal */
+  #lista-selecao-pericia {
+    flex-direction: column;
+    gap: 8px;
+  }
+  #lista-selecao-pericia li {
+    flex-basis: auto;
+  }
+}

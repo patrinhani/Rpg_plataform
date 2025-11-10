@@ -1,0 +1,1243 @@
+/* css/style.css - Versão Completa com Destaque de Perícia (Tema) */
+
+/* --- 1. Importação de Fontes --- */
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
+
+@font-face {
+  font-family: "SigilosDeConhecimento";
+  /* CAMINHO CORRIGIDO: de ../assets/ para /assets/ */
+  src: url("/assets/fonte/SigilosDeConhecimento.ttf") format("truetype");
+}
+
+/* --- 2. Reset Básico e Variáveis de Cor --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+:root {
+  --cor-texto-principal: #f0f0f0;
+  --cor-texto-label: #9e9e9e;
+  --cor-caixa-recurso: #0a0a0a;
+  /* Cores de transição usam o fundo real */
+  --cor-trans-ordem: #001a2e;
+  --cor-trans-sangue: #2a0000;
+  --cor-trans-morte: #1e1e1e;
+  --cor-trans-conhecimento: #2b2800; /* Fundo (Amarelo-Escuro) */
+  --cor-trans-energia: #2a002e;
+
+  /* Cor de destaque para os símbolos */
+  --cor-destaque-conhecimento: #ffeb3b;
+}
+/* --- Paletas de Cores por Tema --- */
+:root,
+:root[data-tema="tema-ordem"] {
+  --cor-fundo: #001a2e;
+  --cor-caixa: #1a2f40;
+  --cor-destaque: #0091ff;
+  --cor-borda: #0091ff;
+}
+:root[data-tema="tema-sangue"] {
+  --cor-fundo: #2a0000;
+  --cor-caixa: #3a1a1a;
+  --cor-destaque: #d40000;
+  --cor-borda: #d40000;
+}
+:root[data-tema="tema-morte"] {
+  --cor-fundo: #1e1e1e;
+  --cor-caixa: #2f2f2f;
+  --cor-destaque: #e0e0e0;
+  --cor-borda: #888888;
+}
+:root[data-tema="tema-conhecimento"] {
+  --cor-fundo: #2b2800;
+  --cor-caixa: #3b371a;
+  --cor-destaque: #ffeb3b;
+  --cor-borda: #ffeb3b;
+}
+:root[data-tema="tema-energia"] {
+  --cor-fundo: #2a002e;
+  --cor-caixa: #3a1a3e;
+  --cor-destaque: #be29ec;
+  --cor-borda: #be29ec;
+}
+
+/* --- 3. Tipografia Principal (Fontes) --- */
+h1,
+h2,
+label,
+button,
+.pericia-item span:first-child {
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  color: var(--cor-texto-principal);
+}
+h2 {
+  color: var(--cor-destaque);
+  border-bottom: 2px solid var(--cor-borda);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+}
+
+/* --- 4. Layout Principal com CSS Grid --- */
+body {
+  font-family: "Roboto Condensed", sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto-principal);
+  line-height: 1.6;
+}
+.ficha-container {
+  display: grid;
+  max-width: 1400px;
+  margin: 20px auto;
+  padding: 20px;
+  gap: 20px;
+  grid-template-columns: 1fr 1.5fr;
+  /* (CORRIGIDO) "footer" foi removido do grid para funcionar com as abas */
+  grid-template-areas:
+    "identidade pericias"
+    "controles  pericias"
+    "atributos  pericias"
+    "defesa     pericias"
+    "recursos   pericias"
+    "calculo    calculo";
+}
+#grid-identidade {
+  grid-area: identidade;
+}
+#grid-controles {
+  grid-area: controles;
+}
+#grid-atributos {
+  grid-area: atributos;
+}
+#grid-defesa-status {
+  grid-area: defesa;
+}
+#grid-recursos {
+  grid-area: recursos;
+}
+#grid-pericias {
+  grid-area: pericias;
+}
+#grid-calculo {
+  grid-area: calculo;
+}
+/* (CORRIGIDO) Footer agora é estilizado fora do grid */
+footer {
+  grid-area: unset; /* <-- CORREÇÃO AQUI */
+  text-align: center;
+  padding: 20px;
+  margin-top: 20px;
+  background-color: var(--cor-caixa);
+  border-top: 1px solid var(--cor-borda);
+  font-size: 0.9em;
+  color: var(--cor-texto-label);
+}
+
+/* --- 5. Estilo Padrão das Caixas --- */
+.box {
+  background-color: var(--cor-caixa);
+  border: 2px solid var(--cor-borda);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* --- 6. Estilos Específicos dos Blocos --- */
+.campo-horizontal {
+  display: flex;
+  flex-direction: column;
+}
+.campo-horizontal label {
+  font-size: 0.9em;
+  color: var(--cor-texto-label);
+  margin-bottom: 3px;
+}
+.campo-horizontal input[type="text"] {
+  width: 100%;
+}
+.box-controles {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  background-color: #333;
+  border-color: #555;
+}
+.seletor-tema {
+  margin-left: auto;
+  padding-left: 10px;
+}
+.seletor-tema select {
+  font-family: "Special Elite", monospace;
+}
+
+.pericia-item {
+  display: grid;
+  grid-template-columns: 1fr 180px 100px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #333;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+.pericia-item span:first-child {
+  font-size: 1.1em;
+}
+.pericia-item select {
+  width: 100%;
+}
+.pericia-total-bonus {
+  text-align: center;
+  color: var(--cor-destaque);
+  font-size: 1em;
+  font-family: "Special Elite", monospace;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.box-recursos {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.recurso-individual {
+  background-color: var(--cor-caixa-recurso);
+  border: 2px solid var(--cor-borda);
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  width: 33%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.recurso-individual .recurso-atual {
+  font-family: "Special Elite", monospace;
+  font-size: 2.5em;
+  color: var(--cor-texto-principal);
+  background: none;
+  border: none;
+  text-align: center;
+  width: 80%;
+  padding: 0;
+}
+.recurso-individual label {
+  font-size: 1.5em;
+  color: var(--cor-destaque);
+  margin: 0;
+}
+.recurso-individual .recurso-max {
+  color: var(--cor-texto-label);
+}
+.recurso-individual .recurso-max input {
+  width: 40px;
+  background-color: var(--cor-caixa);
+  padding: 2px;
+}
+.recurso-individual span {
+  font-family: "Special Elite", monospace;
+  font-size: 0.8em;
+  color: var(--cor-texto-label);
+  text-transform: uppercase;
+}
+.barra-recurso {
+  width: 90%;
+  height: 12px;
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-texto-label);
+  border-radius: 2px;
+  margin: 5px auto 10px auto;
+  overflow: hidden;
+}
+.barra-preenchimento {
+  height: 100%;
+  background-color: var(--cor-destaque);
+  width: 100%;
+  transition: width 0.3s ease;
+}
+:root[data-tema="tema-morte"] .box-controles button,
+:root[data-tema="tema-morte"]
+  .box-controles
+  input[type="file"]::file-selector-button {
+  color: #121212;
+}
+:root[data-tema="tema-conhecimento"] .box-controles button,
+:root[data-tema="tema-conhecimento"]
+  .box-controles
+  input[type="file"]::file-selector-button {
+  color: #121212;
+}
+
+/* Estilo para Bloco de Defesa e Carga */
+.box-defesa-status {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.box-defesa-status .campo-horizontal {
+  flex: 1;
+  text-align: center;
+  background-color: var(--cor-caixa-recurso);
+  border: 1px solid var(--cor-borda);
+  padding: 10px;
+  border-radius: 4px;
+}
+.box-defesa-status .campo-horizontal:first-child, /* NEX */
+.box-defesa-status .campo-horizontal:nth-child(2) {
+  /* DESL */
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.box-defesa-status .campo-horizontal label {
+  text-align: center;
+  font-size: 1em;
+  margin-bottom: 5px;
+}
+.box-defesa-status .valor-calculado {
+  font-family: "Special Elite", monospace;
+  font-size: 2.5em;
+  text-align: center;
+  color: var(--cor-destaque);
+  display: block;
+  margin: 5px 0;
+}
+.box-defesa-status .campo-horizontal input[type="number"] {
+  width: 100%;
+  text-align: center;
+  background-color: var(--cor-fundo);
+  margin-top: 5px;
+}
+/* Input readonly da defesa */
+.box-defesa-status input[readonly] {
+  background-color: #111;
+  color: var(--cor-texto-label);
+  border-color: #333;
+  cursor: not-allowed;
+}
+.box-defesa-status .carga-max {
+  font-family: "Special Elite", monospace;
+  font-size: 1.1em;
+  color: var(--cor-texto-label);
+}
+
+/* --- 7. Estilos Gerais de Formulário --- */
+button,
+input[type="file"]::file-selector-button {
+  padding: 8px 12px;
+  background-color: var(--cor-destaque);
+  color: var(--cor-texto-principal);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  margin: 5px;
+}
+button:hover {
+  filter: brightness(1.2);
+}
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  padding: 8px;
+  border: 1px solid var(--cor-borda);
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto-principal);
+  border-radius: 2px;
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 1.1em;
+}
+/* (Removido o estilo do footer daqui, pois foi corrigido acima) */
+
+/* --- 9. Estilo do Hexágono de Atributos --- */
+.box-atributos {
+  position: relative;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  min-height: 400px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+/* CAMINHOS CORRIGIDOS (../assets/ -> /assets/) */
+:root[data-tema="tema-ordem"] .box-atributos {
+  background-image: url("/assets/images/hexagono.png");
+}
+:root[data-tema="tema-sangue"] .box-atributos {
+  background-image: url("/assets/images/hexagonoSangue.png");
+}
+:root[data-tema="tema-morte"] .box-atributos {
+  background-image: url("/assets/images/hexagonoMorte.png");
+}
+:root[data-tema="tema-conhecimento"] .box-atributos {
+  background-image: url("/assets/images/hexagonoConhecimento.png");
+}
+:root[data-tema="tema-energia"] .box-atributos {
+  background-image: url("/assets/images/hexagonoEnergia.png");
+}
+input[type="number"].input-hex {
+  position: absolute;
+  background: transparent;
+  border: none;
+  color: var(--cor-texto-principal);
+  font-family: "Special Elite", monospace;
+  font-size: 2.5em;
+  width: 60px;
+  text-align: center;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+    1px 1px 0 #000;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.input-hex::-webkit-outer-spin-button,
+.input-hex::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* --- 10. Posicionamento dos Inputs --- */
+#forca {
+  top: 30%;
+  left: 23%;
+}
+#agilidade {
+  top: 10%;
+  left: 45%;
+}
+#intelecto {
+  top: 30%;
+  left: 67%;
+}
+#presenca {
+  top: 66%;
+  left: 29%;
+}
+#vigor {
+  top: 66%;
+  left: 61%;
+}
+
+/* --- 11. Resumo de Cálculo --- */
+.box-calculo {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20px;
+  border-color: var(--cor-texto-label);
+  background-color: var(--cor-fundo);
+}
+.calc-bloco {
+  flex: 1;
+  min-width: 280px;
+  padding: 15px;
+  border: 1px solid var(--cor-caixa);
+  border-radius: 4px;
+  background-color: var(--cor-caixa);
+}
+.calc-bloco h3 {
+  font-family: "Special Elite", monospace;
+  color: var(--cor-destaque);
+  border-bottom: 1px solid var(--cor-destaque);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+.calc-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #333;
+}
+.calc-linha:last-child {
+  border-bottom: none;
+}
+.calc-linha label {
+  font-family: "Roboto Condensed", sans-serif;
+  color: var(--cor-texto-label);
+  font-size: 0.9em;
+  text-transform: none;
+  margin-right: 10px;
+}
+.calc-linha span,
+.calc-linha input[type="number"] {
+  font-family: "Special Elite", monospace;
+  font-size: 1.3em;
+  text-align: right;
+  color: var(--cor-texto-principal);
+}
+.calc-linha input[type="number"] {
+  width: 60px;
+  padding: 5px;
+  background-color: var(--cor-fundo);
+  border: 1px solid #333;
+}
+.calc-linha.total {
+  border-bottom: none;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cor-destaque);
+}
+.calc-linha.total label {
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  color: var(--cor-destaque);
+  font-size: 1.1em;
+}
+.calc-linha.total span {
+  font-size: 1.5em;
+  color: var(--cor-destaque);
+}
+
+/* --- 12. Sobreposição de Transição --- */
+
+#transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transform: revert;
+  clip-path: revert;
+  overflow: hidden;
+}
+
+/* --- Classes de Animação (JS) --- */
+
+/* 1. Ordem (Fade Limpo) */
+#transition-overlay.anim-ordem {
+  /* O JS (main.js) aplica o 'backgroundColor' */
+  animation: anim-fade 1.2s ease-in-out;
+}
+
+/* 2. Estilo base para as partículas de GOTA DE SANGUE */
+.particula-sangue {
+  position: absolute;
+  background-color: var(--cor-trans-sangue);
+  border-radius: 50%; /* Círculo (JS vai esticar com scaleY) */
+  transform-origin: top center;
+  filter: blur(1px);
+}
+
+/* 3. Estilo base para as partículas de poeira da Morte */
+.particula-morte {
+  position: absolute;
+  background-color: #000;
+  filter: blur(3px);
+  border-radius: 50%;
+}
+
+/* 4. Energia (Glitch de Imagem) */
+#transition-overlay.anim-energia {
+  /* O JS (main.js) aplica 'backgroundColor', 'backgroundImage', 'backgroundSize', etc. */
+  animation: anim-glitch-image 1s ease;
+}
+
+/* Estilo dos Sigilos (para Conhecimento) */
+.glitch-text {
+  position: absolute;
+  color: var(--cor-destaque-conhecimento);
+  font-family: "SigilosDeConhecimento", monospace;
+  font-size: 2em;
+  opacity: 0;
+  text-shadow: 0 0 8px var(--cor-destaque-conhecimento),
+    0 0 15px rgba(255, 235, 59, 0.4);
+}
+
+/* --- Definição das Animações (Keyframes) --- */
+
+/* 1. Animação de FADE (Ordem) */
+@keyframes anim-fade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 5. Animação de ENERGIA (Glitch de Imagem) */
+@keyframes anim-glitch-image {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+    transform: translateX(-5px);
+  }
+  20% {
+    opacity: 0.9;
+    transform: translateX(5px);
+  }
+  30% {
+    opacity: 0.7;
+    transform: translateX(-3px);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(3px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateX(4px);
+  }
+  70% {
+    opacity: 0.9;
+    transform: translateX(-4px);
+  }
+  80% {
+    opacity: 0.7;
+    transform: translateX(2px);
+  }
+  90% {
+    opacity: 0.5;
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- 13. Estilos de Carga e Inventário --- */
+
+/* (NOVO) Layout da Aba de Inventário (e Rituais) */
+.ficha-container-inventario {
+  max-width: 1400px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* (NOVO) Bloco de Inventário (e Rituais) */
+.box-inventario {
+  background-color: var(--cor-caixa);
+  border: 2px solid var(--cor-borda);
+  border-radius: 4px;
+  padding: 20px;
+}
+.inventario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--cor-borda);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+.inventario-header h2 {
+  border-bottom: none; /* Remove a borda duplicada do h2 */
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.btn-add-item {
+  font-family: "Special Elite", monospace;
+  font-size: 2em;
+  line-height: 1;
+  padding: 0 12px;
+}
+
+/* --- 14. Estilos do Modal "Loja de Itens" --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+.modal-conteudo {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background-color: var(--cor-caixa);
+  border: 2px solid var(--cor-borda);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 2px solid var(--cor-borda);
+}
+.modal-header h3 {
+  font-family: "Special Elite", monospace;
+  font-size: 1.5em;
+  color: var(--cor-destaque);
+}
+.btn-fechar-modal {
+  font-family: "Roboto Condensed", sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
+  background: none;
+  border: none;
+  color: var(--cor-texto-label);
+  cursor: pointer;
+}
+.btn-fechar-modal:hover {
+  color: var(--cor-destaque);
+}
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+.modal-abas {
+  display: flex;
+  flex-wrap: wrap; /* Permite quebra de linha em telas pequenas */
+  border-bottom: 1px solid var(--cor-caixa-recurso);
+  margin-bottom: 20px;
+}
+.modal-abas .aba-link {
+  padding: 10px 15px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--cor-texto-label);
+  font-family: "Special Elite", monospace;
+  font-size: 1.1em;
+  text-transform: uppercase;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px; /* Alinha com a borda principal */
+}
+.modal-abas .aba-link:hover {
+  color: var(--cor-texto-principal);
+}
+.modal-abas .aba-link.active {
+  color: var(--cor-destaque);
+  border-bottom: 3px solid var(--cor-destaque);
+}
+.modal-body .aba-conteudo {
+  display: none; /* JS controla a exibição */
+}
+.modal-body .aba-conteudo.active {
+  display: block;
+}
+
+/* (ATUALIZADO) Lista de Itens (Loja, Inventário e Rituais) */
+.loja-lista-itens {
+  list-style: none;
+  display: grid;
+  /* Grid responsivo para os cards */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+#lista-inventario-pessoal .item-placeholder,
+#lista-rituais .item-placeholder {
+  color: var(--cor-texto-label);
+  text-align: center;
+  padding: 20px;
+  grid-column: 1 / -1; /* Ocupa a linha inteira */
+}
+
+/* --- 17. Formulário de Item Personalizado --- */
+.form-custom-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.form-custom-item h3 {
+  font-family: "Special Elite", monospace;
+  color: var(--cor-destaque);
+  border-bottom: 1px solid var(--cor-borda);
+  padding-bottom: 10px;
+  font-size: 1.3em;
+}
+.form-custom-item h4 {
+  font-family: "Special Elite", monospace;
+  color: var(--cor-texto-label);
+  margin-top: 10px;
+  font-size: 1.1em;
+}
+.form-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+.form-custom-item textarea {
+  min-height: 60px;
+  background-color: var(--cor-fundo);
+  border: 1px solid #333;
+  color: var(--cor-texto-principal);
+  font-family: "Roboto Condensed", sans-serif;
+  padding: 8px;
+  border-radius: 4px;
+}
+.form-custom-item button {
+  margin-top: 15px;
+}
+
+/* --- 18. (MANTIDO) Estilos de Destaque de Perícia --- */
+.pericia-item {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Destreinado - Fica "apagado" */
+.pericia-item.treino-0 {
+  opacity: 0.6;
+  border-left-color: transparent;
+  background-color: transparent;
+  filter: none;
+  text-shadow: none;
+}
+.pericia-item.treino-0:hover {
+  opacity: 1; /* Volta ao normal no hover */
+}
+.pericia-item.treino-0 .pericia-total-bonus {
+  color: var(--cor-texto-label); /* Bônus fica cinza */
+}
+
+/* Treinado - Destaque normal */
+.pericia-item.treino-5 {
+  opacity: 1;
+  border-left-color: var(--cor-destaque);
+  border-left-width: 4px;
+}
+.pericia-item.treino-5 .pericia-total-bonus {
+  color: var(--cor-destaque);
+}
+
+/* Veterano - Destaque mais forte */
+.pericia-item.treino-10 {
+  opacity: 1;
+  border-left-color: var(--cor-destaque);
+  border-left-width: 5px;
+  background-color: rgba(0, 0, 0, 0.1);
+  filter: brightness(1.1);
+}
+.pericia-item.treino-10 .pericia-total-bonus {
+  color: var(--cor-destaque);
+  filter: brightness(1.1);
+}
+
+/* Expert - Destaque máximo */
+.pericia-item.treino-15 {
+  opacity: 1;
+  border-left-color: var(--cor-destaque);
+  border-left-width: 5px;
+  background-color: rgba(0, 0, 0, 0.15);
+  filter: brightness(1.25);
+  text-shadow: 0 0 3px var(--cor-destaque);
+}
+.pericia-item.treino-15 .pericia-total-bonus {
+  color: var(--cor-destaque);
+  filter: brightness(1.25);
+  text-shadow: 0 0 5px var(--cor-destaque);
+}
+
+/* --- 19. (NOVO) Estilo para Bônus de Origem Automático --- */
+.calc-linha.origem-bonus {
+  color: var(--cor-destaque);
+}
+.calc-linha.origem-bonus label {
+  color: var(--cor-destaque);
+  font-style: italic;
+  font-size: 0.85em;
+}
+.calc-linha.origem-bonus span {
+  color: var(--cor-destaque);
+  font-size: 1.2em;
+}
+
+/* --- 20. (NOVO) Estilos do Contador de Perícias --- */
+.pericias-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--cor-borda);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+.pericias-header h2 {
+  /* Remove a estilização antiga para não duplicar a borda */
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+.pericias-contador {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 1em;
+  color: var(--cor-texto-label);
+  text-align: right;
+  white-space: nowrap;
+}
+.pericias-contador span {
+  font-family: "Special Elite", monospace;
+  font-size: 1.2em;
+  color: var(--cor-destaque);
+  padding: 0 3px;
+}
+/* O <span> de perícias escolhidas (X) */
+#pericias-escolhidas {
+  color: var(--cor-texto-principal);
+}
+
+/* --- 21. (NOVO) Estilos do Parallax Background --- */
+
+#parallax-background {
+  position: fixed; /* Fica fixo na tela */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* Fica atrás de todo o conteúdo */
+  overflow: hidden; /* Esconde partes da imagem que saem da tela */
+  pointer-events: none; /* Permite clicar através dele */
+}
+
+.simbolo-parallax {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  /* Um tamanho grande, mas que não ultrapassa 800px */
+  width: 80%;
+  max-width: 800px;
+
+  /* Centraliza a imagem perfeitamente */
+  transform: translate(-50%, -50%);
+
+  /* Começa invisível */
+  opacity: 0;
+
+  /* Transições suaves para a opacidade (quando troca o tema) 
+       e para o transform (quando mexe o mouse) */
+  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out;
+}
+
+/* Regras para MOSTRAR o símbolo do tema ativo */
+/* (A opacidade é baixa para não atrapalhar a leitura da ficha) */
+
+:root[data-tema="tema-ordem"] #simbolo-ordem {
+  opacity: 0.05; /* Ordem (Sem Afinidade) é o mais sutil */
+}
+
+:root[data-tema="tema-sangue"] #simbolo-sangue {
+  opacity: 0.1;
+}
+
+:root[data-tema="tema-morte"] #simbolo-morte {
+  opacity: 0.1;
+}
+
+:root[data-tema="tema-conhecimento"] #simbolo-conhecimento {
+  opacity: 0.08; /* Conhecimento é brilhante, então um pouco menos */
+}
+
+:root[data-tema="tema-energia"] #simbolo-energia {
+  opacity: 0.07; /* Energia também é brilhante */
+}
+
+/* --- 22. (NOVO) Estilo do Símbolo na Transição --- */
+
+.transition-symbol {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  /* Tamanho do símbolo na transição */
+  width: 60%;
+  max-width: 500px;
+
+  /* Começa invisível e um pouco menor */
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+
+  pointer-events: none;
+
+  /* Adiciona um filtro de "brilho" para destacar */
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+/* O símbolo de Morte (preto) precisa de um brilho branco para aparecer no fundo escuro */
+#transition-overlay.anim-morte .transition-symbol {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.7)) brightness(2);
+}
+
+/* --- 23. (NOVO) Abas Principais --- */
+.ficha-abas {
+  max-width: 1400px;
+  margin: 20px auto 0 auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 10px;
+}
+.ficha-aba-link {
+  padding: 10px 20px;
+  font-size: 1.2em;
+  background-color: var(--cor-caixa-recurso);
+  border: 2px solid var(--cor-caixa);
+  color: var(--cor-texto-label);
+}
+.ficha-aba-link.active {
+  background-color: var(--cor-caixa);
+  border-color: var(--cor-borda);
+  color: var(--cor-destaque);
+}
+.ficha-aba-conteudo {
+  display: none;
+}
+.ficha-aba-conteudo.active {
+  display: block;
+}
+/* Faz a aba principal (grid) não ter margem no topo */
+.ficha-aba-conteudo.active .ficha-container {
+  margin-top: 0;
+}
+
+/* --- 24. (NOVO) Card de Item (Inventário & Loja) --- */
+/* A lista de inventário agora usa o mesmo grid da loja */
+#lista-inventario-pessoal {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+#lista-inventario-pessoal .item-placeholder {
+  color: var(--cor-texto-label);
+  text-align: center;
+  padding: 20px;
+  grid-column: 1 / -1; /* Ocupa a linha inteira */
+}
+.item-card {
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.item-header {
+  padding: 10px 15px;
+  background-color: var(--cor-caixa-recurso);
+  border-bottom: 1px solid var(--cor-borda);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.item-header h3 {
+  font-family: "Special Elite", monospace;
+  font-size: 1.3em;
+  color: var(--cor-destaque);
+  word-break: break-all;
+}
+.item-header-info {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 0.9em;
+  color: var(--cor-texto-label);
+  text-align: right;
+  flex-shrink: 0;
+}
+.item-body {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+.item-detalhe {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 1.1em;
+}
+.item-detalhe strong {
+  color: var(--cor-texto-label);
+  font-weight: normal;
+  margin-right: 5px;
+}
+.item-detalhe.bonus {
+  color: var(--cor-destaque);
+  font-weight: bold;
+}
+.item-descricao {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 0.9em;
+  color: var(--cor-texto-label);
+  font-style: italic;
+  border-top: 1px dashed var(--cor-caixa);
+  padding-top: 10px;
+  margin-top: 5px;
+}
+.item-footer {
+  display: flex;
+  padding: 5px;
+  background-color: var(--cor-caixa-recurso);
+  border-top: 1px solid var(--cor-borda);
+}
+.item-footer .item-inventario-toggle {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  gap: 5px;
+  color: var(--cor-texto-label);
+  font-size: 0.9em;
+}
+.item-footer .item-inventario-remover {
+  margin-left: auto;
+  background-color: #401a1a;
+  border: 1px solid var(--cor-trans-sangue);
+  color: #f0f0f0;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.item-footer .item-inventario-remover:hover {
+  background-color: var(--cor-trans-sangue);
+}
+/* Botão de adicionar na loja */
+.loja-item-add {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--cor-borda);
+  background-color: var(--cor-fundo);
+  color: var(--cor-destaque);
+}
+.loja-item-add:hover {
+  background-color: var(--cor-destaque);
+  color: var(--cor-caixa);
+}
+
+/* --- 25. (CORRIGIDO) Card de Ritual --- */
+
+/* A borda do card e o texto do cabeçalho terão a cor do elemento */
+/* O fundo do cabeçalho será o padrão (escuro) */
+
+.ritual-card .item-header {
+  /* Garante que o fundo do cabeçalho do ritual seja o padrão, não o do elemento */
+  background-color: var(--cor-caixa-recurso);
+  border-bottom: 1px solid var(--cor-caixa); /* Borda interna escura */
+}
+
+/* Conhecimento (Amarelo) */
+.ritual-card.conhecimento {
+  border-color: #ffeb3b;
+}
+.ritual-card.conhecimento .item-header h3,
+.ritual-card.conhecimento .item-header-info {
+  color: #ffeb3b;
+}
+
+/* Energia (Roxo) */
+.ritual-card.energia {
+  border-color: #be29ec;
+}
+.ritual-card.energia .item-header h3,
+.ritual-card.energia .item-header-info {
+  color: #be29ec;
+}
+
+/* Sangue (Vermelho) */
+.ritual-card.sangue {
+  border-color: #d40000;
+}
+.ritual-card.sangue .item-header h3,
+.ritual-card.sangue .item-header-info {
+  color: #d40000;
+}
+
+/* Morte (Preto -> Texto Cinza/Branco) */
+.ritual-card.morte {
+  border-color: #aaaaaa;
+} /* Borda Cinza Clara */
+.ritual-card.morte .item-header h3,
+.ritual-card.morte .item-header-info {
+  color: #f0f0f0; /* Texto Branco (Padrão) */
+}
+
+/* Medo (Cinza Claro) */
+.ritual-card.medo {
+  border-color: #aaaaaa;
+}
+.ritual-card.medo .item-header h3,
+.ritual-card.medo .item-header-info {
+  color: #aaaaaa;
+}
+
+/* Cor dos aprimoramentos (usa a cor do tema ATUAL, para destaque) */
+.ritual-card .item-detalhe.bonus.discente {
+  color: var(--cor-destaque);
+  font-weight: normal;
+  font-style: italic;
+}
+.ritual-card .item-detalhe.bonus.verdadeiro {
+  color: var(--cor-destaque);
+  font-weight: bold;
+  font-style: italic;
+}
+
+/* --- 26. (NOVO) Modal de Seleção de Perícia --- */
+
+.modal-conteudo.modal-pequeno {
+  max-width: 500px; /* Modal menor */
+  max-height: 80vh;
+}
+
+#modal-pericia-descricao {
+  color: var(--cor-texto-label);
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#lista-selecao-pericia {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+#lista-selecao-pericia li {
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto-principal);
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  flex-basis: 130px; /* Largura base de cada botão */
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+#lista-selecao-pericia li:hover {
+  background-color: var(--cor-destaque);
+  color: var(--cor-fundo);
+  transform: scale(1.05);
+}
+
+:root[data-tema="tema-morte"] #lista-selecao-pericia li:hover,
+:root[data-tema="tema-conhecimento"] #lista-selecao-pericia li:hover {
+  color: #111; /* Garante contraste no hover de Morte/Conhecimento */
+}
