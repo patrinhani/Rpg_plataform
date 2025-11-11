@@ -1,15 +1,16 @@
 // /src/app.jsx
-// (COMPLETO: Integração dos Poderes de Classe com o ModalPoderes.jsx)
+// (COMPLETO: Adiciona a prop 'poderesGerais' ao ModalPoderes)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
-// IMPORTAÇÃO CORRIGIDA: Importa as listas de poderes do database.js, além das classes e funcoes
+// IMPORTAÇÃO CORRIGIDA: Importa as listas de poderes (Classe e Gerais)
 import { 
     database, 
     OpcoesClasse, 
     poderesCombatente, 
     poderesEspecialista, 
-    poderesOcultista 
+    poderesOcultista,
+    poderesGerais // <--- ADICIONADO
 } from './lib/database.js'; 
 import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
@@ -22,14 +23,12 @@ import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
 import ProgressaoHabilidades from './components/ficha/ProgressaoHabilidades'; 
 import ModalTrilhaCustom from './components/ModalTrilhaCustom'; 
-import ModalPoderes from './components/ModalPoderes'; // <--- NOVO MODAL DE PODERES
+import ModalPoderes from './components/ModalPoderes';
+import PoderesAprendidos from './components/PoderesAprendidos'; 
 import Identidade from './components/ficha/identidade'; 
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
-
-// (Caminhos de imagem corrigidos no JSX, sem import desnecessário)
-
 
 // (Helper para perícias)
 const listaTodasPericias = Object.keys(fichaInstance.pericias); 
@@ -92,7 +91,7 @@ function App() {
   const [itemPendente, setItemPendente] = useState(null); 
   const [isRitualModalOpen, setIsRitualModalOpen] = useState(false); 
   const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); 
-  const [isPoderesModalOpen, setIsPoderesModalOpen] = useState(false); // <--- NOVO ESTADO
+  const [isPoderesModalOpen, setIsPoderesModalOpen] = useState(false); 
 
   
   // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
@@ -162,7 +161,7 @@ function App() {
     handleFecharTrilhaModal();
   };
 
-  // --- Funções de Gerenciamento de PODERES (NOVAS) ---
+  // --- Funções de Gerenciamento de PODERES (Existentes) ---
   const handleAbrirPoderesModal = () => setIsPoderesModalOpen(true);
   const handleFecharPoderesModal = () => setIsPoderesModalOpen(false);
   
@@ -488,6 +487,15 @@ function App() {
         >
           Rituais
         </button>
+        
+        {/* NOVA ABA: PODERES */}
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'poderes' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('poderes')}
+        >
+          Poderes
+        </button>
+        
         {/* NOVA ABA: PROGRESSÃO */}
         <button 
           className={`ficha-aba-link ${abaAtiva === 'progressao' ? 'active' : ''}`}
@@ -526,7 +534,15 @@ function App() {
         />
       )}
       
-      {/* RENDERIZAÇÃO NA NOVA ABA */}
+      {/* NOVO: ABA PODERES */}
+      {abaAtiva === 'poderes' && (
+        <PoderesAprendidos 
+            poderesAprendidos={personagem.poderes_aprendidos}
+            onAbrirModal={handleAbrirPoderesModal} // <--- Abre o ModalPoderes
+        />
+      )}
+      
+      {/* RENDERIZAÇÃO NA NOVA ABA (AGORA LIMPA) */}
       {abaAtiva === 'progressao' && (
         <div className="ficha-aba-conteudo active">
           <button 
@@ -544,6 +560,7 @@ function App() {
             progressaoClasses={progressaoClasses}
             progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} // Passa Trilhas UNIFICADAS
             info={personagem.info}
+            poderesAprendidos={personagem.poderes_aprendidos} // <--- PASSA PODERES PARA EXIBIÇÃO
           />
         </div>
       )}
@@ -579,6 +596,17 @@ function App() {
         onClose={handleFecharTrilhaModal}
         onAddTrilha={handleAddTrilha}
         classesList={OpcoesClasse} // Passa a lista de classes do database (OpçõesClasse)
+      />
+      
+      {/* NOVO: MODAL DE SELEÇÃO DE PODERES */}
+      <ModalPoderes
+        isOpen={isPoderesModalOpen}
+        onClose={handleFecharPoderesModal}
+        classe={personagem.info.classe}
+        poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)}
+        poderesAprendidos={personagem.poderes_aprendidos}
+        onTogglePoder={handleTogglePoder}
+        poderesGerais={poderesGerais} // <--- ADICIONADO
       />
     </>
   )

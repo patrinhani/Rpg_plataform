@@ -152,7 +152,7 @@ class Personagem {
   
   // --- MÉTODOS PARA PODERES (NOVOS) ---
   addPoder(poder) {
-      // Garante que o poder tenha uma key única para o React (usamos a key do poder)
+      // Garante que o poder tenha uma key única e não seja duplicado
       if (!this.poderes_aprendidos.some(p => p.key === poder.key)) {
           this.poderes_aprendidos.push(poder);
       }
@@ -334,8 +334,8 @@ class Personagem {
       inventario: this.inventario,
       rituais: this.rituais, 
       bonusManuais: this.bonusManuais,
-      trilhas_personalizadas: this.trilhas_personalizadas, // EXPORTAR TRILHAS
-      poderes_aprendidos: this.poderes_aprendidos, // <--- EXPORTAR PODERES
+      trilhas_personalizadas: this.trilhas_personalizadas, 
+      poderes_aprendidos: this.poderes_aprendidos, 
     };
   }
   
@@ -351,8 +351,8 @@ class Personagem {
       this.inventario = dados.inventario || [];
       this.rituais = dados.rituais || []; 
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;
-      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; // IMPORTAR TRILHAS
-      this.poderes_aprendidos = dados.poderes_aprendidos || []; // <--- IMPORTAR PODERES
+      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; 
+      this.poderes_aprendidos = dados.poderes_aprendidos || []; 
     }
   }
 

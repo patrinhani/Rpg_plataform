@@ -1,16 +1,7 @@
 // /src/lib/poderes.js
 /**
- * Lista de Poderes de Classe (Combatente, Especialista, Ocultista).
- * Estes poderes são escolhidos em NEX 15%, 30%, e a cada 15% subsequentes.
- *
- * Estrutura:
- * {
- * key: string,
- * nome: string,
- * tipo: string, // 'Geral', 'Combate', 'Pericia', 'Paranormal', 'Investigacao'
- * prerequisito: string
- * descricao: string
- * }
+ * Lista de Poderes de Classe (Combatente, Especialista, Ocultista) 
+ * E Poderes Gerais (Disponíveis para todas as classes).
  */
 
 const poderesCombatente = [
@@ -589,4 +580,253 @@ const poderesOcultista = [
     }
 ];
 
-export { poderesCombatente, poderesEspecialista, poderesOcultista };
+// --- NOVO: PODERES GERAIS (BASEADO NO PDF) ---
+const poderesGerais = [
+    {
+        key: "acrobatico",
+        nome: "Acrobático",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Acrobacia ou +2 se já for treinado. Terreno difícil não reduz seu deslocamento nem impede investidas."
+    },
+    {
+        key: "as_do_volante",
+        nome: "Ás do Volante",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Pilotagem ou +2 se já for treinado. Uma vez por rodada, pode fazer um teste de Pilotagem para evitar dano ao veículo que está pilotando."
+    },
+    {
+        key: "atletico",
+        nome: "Atlético",
+        tipo: "Geral",
+        prerequisito: "For 2",
+        descricao: "Você recebe treinamento em Atletismo ou +2 se já for treinado. Além disso, recebe +3m em seu deslocamento."
+    },
+    {
+        key: "atraente",
+        nome: "Atraente",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe +5 em testes de Artes, Diplomacia, Enganação, e Intimidação contra pessoas que possam se sentir fisicamente atraídas por você."
+    },
+    {
+        key: "dedos_ageis",
+        nome: "Dedos Ágeis",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Crime ou +2 se já for treinado. Pode arrombar (ação padrão), furtar (ação livre, 1x/rodada) e sabotar (ação completa)."
+    },
+    {
+        key: "detector_de_mentiras",
+        nome: "Detector de Mentiras",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Intuição ou +2 se já for treinado. Outros seres sofrem –10 em testes de Enganação para mentir para você."
+    },
+    {
+        key: "especialista_em_emergencias",
+        nome: "Especialista em Emergências",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Medicina ou +2 se já for treinado. Pode aplicar cicatrizantes e medicamentos como ação de movimento e sacar um desses itens como ação livre (1x/rodada)."
+    },
+    {
+        key: "estimado", // Nota: O PDF tem 'Estigmado', mas parece ser 'Estimado' ou 'Estigma'
+        nome: "Estigmado",
+        tipo: "Geral",
+        prerequisito: null,
+        descricao: "Sempre que sofre dano mental de efeitos de medo, você pode converter esse dano em perda de pontos de vida."
+    },
+    {
+        key: "foco_em_pericia",
+        nome: "Foco em Perícia",
+        tipo: "Geral",
+        prerequisito: "Treinado na perícia escolhida",
+        descricao: "Escolha uma perícia (exceto Luta e Pontaria). Quando faz um teste dessa perícia, você rola +O. Pode ser escolhido várias vezes para perícias diferentes."
+    },
+    {
+        key: "inventario_organizado",
+        nome: "Inventário Organizado",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você soma seu Intelecto no limite de espaços que pode carregar. Itens de 0,5 espaço ocupam 0,25 espaço para você."
+    },
+    {
+        key: "informado",
+        nome: "Informado",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Atualidades ou +2 se já for treinado. Pode usar Atualidades no lugar de qualquer outra perícia para testes envolvendo informações (a critério do mestre)."
+    },
+    {
+        key: "interrogador",
+        nome: "Interrogador",
+        tipo: "Geral",
+        prerequisito: "For 2",
+        descricao: "Você recebe treinamento em Intimidação ou +2 se já for treinado. Pode fazer testes de Intimidação para coagir como uma ação padrão (1x/cena contra a mesma pessoa)."
+    },
+    {
+        key: "mentiroso_nato",
+        nome: "Mentiroso Nato",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Enganação ou +2 se já for treinado. A penalidade por mentiras muito implausíveis diminui para –O."
+    },
+    {
+        key: "observador",
+        nome: "Observador",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Investigação ou +2 se já for treinado. Além disso, soma seu Intelecto em Intuição."
+    },
+    {
+        key: "pai_de_pet",
+        nome: "Pai de Pet",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Adestramento ou +2 se já for treinado. Possui um animal de estimação (aliado) que fornece +2 em duas perícias à sua escolha (exceto Luta ou Pontaria)."
+    },
+    {
+        key: "palavras_de_devocao",
+        nome: "Palavras de Devoção",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Religião ou +2 se já for treinado. Uma vez por cena, pode gastar 3 PE e uma ação completa para executar uma oração. Os participantes recebem resistência a dano mental 5 até o fim da cena."
+    },
+    {
+        key: "parceiro",
+        nome: "Parceiro",
+        tipo: "Geral",
+        prerequisito: "Treinado em Diplomacia, NEX 30%",
+        descricao: "Você possui um parceiro (aliado de um tipo à sua escolha) que o acompanha e auxilia."
+    },
+    {
+        key: "pensamento_tatico",
+        nome: "Pensamento Tático",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Tática ou +2 se já for treinado. Se passar em um teste de Tática para analisar terreno, você e seus aliados em alcance médio recebem uma ação de movimento adicional na primeira rodada do próximo combate."
+    },
+    {
+        key: "personalidade_esoterica",
+        nome: "Personalidade Esotérica",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe +3 PE e recebe treinamento em Ocultismo. Se já for treinado nesta perícia, recebe +2 nela."
+    },
+    {
+        key: "persuasivo",
+        nome: "Persuasivo",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Diplomacia ou +2 se já for treinado. A penalidade por pedir coisas custosas ou perigosas diminui em –5."
+    },
+    {
+        key: "pesquisador_cientifico",
+        nome: "Pesquisador Científico",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Ciências ou +2 se já for treinado. Pode usar Ciências no lugar de Ocultismo (identificar criaturas) e Sobrevivência (animais)."
+    },
+    {
+        key: "proativo",
+        nome: "Proativo",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Iniciativa ou +2 se já for treinado. Ao rolar 19 ou 20 em um teste de Iniciativa, você recebe uma ação padrão adicional no seu primeiro turno."
+    },
+    {
+        key: "provisoes_de_emergencia",
+        nome: "Provisões de Emergência",
+        tipo: "Geral",
+        prerequisito: null,
+        descricao: "Uma vez por missão, você pode usar uma ação de interlúdio para recuperar o conteúdo de seu esconderijo (recebe novos equipamentos equivalentes à sua patente)."
+    },
+    {
+        key: "racionalidade_inflexivel",
+        nome: "Racionalidade Inflexível",
+        tipo: "Geral",
+        prerequisito: "Int 3",
+        descricao: "Você pode usar Intelecto no lugar de Presença como atributo-chave de Vontade e para calcular seus pontos de esforço."
+    },
+    {
+        key: "rato_de_computador",
+        nome: "Rato de Computador",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Tecnologia ou +2 se já for treinado. Pode hackear, localizar arquivo ou operar dispositivo como uma ação completa. 1x/cena de investigação, pode fazer um teste de Tecnologia para procurar pistas sem gastar uma rodada."
+    },
+    {
+        key: "resposta_rapida",
+        nome: "Resposta Rápida",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Reflexos ou +2 se já for treinado. Ao falhar em um teste de Percepção para evitar ficar desprevenido, pode gastar 2 PE para rolar novamente o teste usando Reflexos."
+    },
+    {
+        key: "talentoso",
+        nome: "Talentoso",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Artes ou +2 se já for treinado. Quando faz um teste de Artes para impressionar, o bônus em perícias que você recebe aumenta em +1 para cada 5 pontos adicionais no teste."
+    },
+    {
+        key: "teimosia_obstinada",
+        nome: "Teimosia Obstinada",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Vontade ou +2 se já for treinado. Quando faz um teste de Vontade contra um efeito mental ou de atitude, pode gastar 2 PE para receber +5 neste teste."
+    },
+    {
+        key: "tenacidade",
+        nome: "Tenacidade",
+        tipo: "Geral",
+        prerequisito: "Vig 2",
+        descricao: "Você recebe treinamento em Fortitude ou +2 se já for treinado. Ao estar morrendo (mas consciente), pode fazer um teste de Fortitude (DT 20 + 10 por teste anterior) como ação livre para encerrar a condição morrendo."
+    },
+    {
+        key: "sentidos_agucados",
+        nome: "Sentidos Aguçados",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe treinamento em Percepção ou +2 se já for treinado. Não fica desprevenido contra inimigos que não possa ver e, sempre que erra um ataque devido a camuflagem, pode rolar mais uma vez o dado da chance de falha."
+    },
+    {
+        key: "sobrevivencialista",
+        nome: "Sobrevivencialista",
+        tipo: "Geral",
+        prerequisito: "Int 2",
+        descricao: "Você recebe treinamento em Sobrevivência ou +2 se já for treinado. Recebe +2 em testes para resistir a efeitos de clima e terreno difícil natural não reduz seu deslocamento nem impede investidas."
+    },
+    {
+        key: "sorrateiro",
+        nome: "Sorrateiro",
+        tipo: "Geral",
+        prerequisito: "Agi 2",
+        descricao: "Você recebe treinamento em Furtividade ou +2 se já for treinado. Você não sofre penalidades por se mover normalmente enquanto está furtivo, nem por seguir alguém em ambientes sem esconderijos ou sem movimento."
+    },
+    {
+        key: "vitalidade_reforcada",
+        nome: "Vitalidade Reforçada",
+        tipo: "Geral",
+        prerequisito: "Vig 2",
+        descricao: "Você recebe +1 PV para cada 5% de NEX e +2 em Fortitude."
+    },
+    {
+        key: "vontade_inabalavel",
+        nome: "Vontade Inabalável",
+        tipo: "Geral",
+        prerequisito: "Pre 2",
+        descricao: "Você recebe +1 PE para cada 10% de NEX e +2 em Vontade."
+    }
+];
+
+
+// Exporta todas as listas
+export { 
+    poderesCombatente, 
+    poderesEspecialista, 
+    poderesOcultista,
+    poderesGerais 
+};
