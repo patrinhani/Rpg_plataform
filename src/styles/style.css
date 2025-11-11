@@ -1320,3 +1320,14 @@ input[type="number"].input-hex {
 :root[data-tema="tema-conhecimento"] #lista-selecao-pericia li:hover {
   color: #111; /* Garante contraste no hover de Morte/Conhecimento */
 }
+/* CORREÇÃO: Força a cor do texto do botão '+' nos temas claros */
+
+:root[data-tema="tema-morte"] .btn-add-item {
+  /* Define o texto do '+' para preto */
+  color: var(--cor-caixa-recurso); 
+}
+
+:root[data-tema="tema-conhecimento"] .btn-add-item {
+   /* Define o texto do '+' para preto (corrige o tema Conhecimento também) */
+  color: var(--cor-caixa-recurso);
+}

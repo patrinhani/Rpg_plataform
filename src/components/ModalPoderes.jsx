@@ -66,13 +66,19 @@ function ModalPoderes({
                   <div className="item-descricao">{poder.descricao}</div>
                 </div>
                 <div className="item-footer">
+                    {/* --- BOTÃO CORRIGIDO AQUI --- */}
                     <button 
                         className="loja-item-add"
-                        style={{backgroundColor: isAprendido ? 'var(--cor-trans-sangue)' : 'var(--cor-destaque)'}}
+                        style={{
+                           backgroundColor: isAprendido ? 'var(--cor-trans-sangue)' : 'var(--cor-destaque)',
+                           /* CORREÇÃO: Usar a cor de fundo mais escura (--cor-caixa-recurso) para o texto */
+                           color: isAprendido ? null : 'var(--cor-caixa-recurso)' 
+                        }}
                         onClick={() => onTogglePoder(poder)}
                     >
                       {isAprendido ? 'Remover Poder' : 'Adicionar Poder'}
                     </button>
+                    {/* --- FIM DA CORREÇÃO --- */}
                 </div>
               </li>
             );
