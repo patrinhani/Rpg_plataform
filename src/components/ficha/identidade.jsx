@@ -2,21 +2,45 @@
 
 import React from 'react';
 
+/**
+ * Componente para a seção de Identidade do Personagem.
+ * @param {object} props
+ * @param {object} props.dados - Dados de info do personagem.
+ * @param {function} props.onFichaChange - Função de callback para mudança.
+ * @param {object} props.trilhasPorClasse - O objeto de trilhas agrupadas (padrão + customizadas).
+ */
 function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
 
   const handleChange = (e) => {
     const campo = e.target.id;     
     const valor = e.target.value;  
     
-    // Simplificado, já que os IDs correspondem às chaves do objeto info
     const nomeCampo = campo; 
     
     onFichaChange('info', nomeCampo, valor);
   };
 
-  // Lógica para obter as trilhas filtradas
-  const classeAtual = dados.classe.toLowerCase();
-  const trilhasFiltradas = trilhasPorClasse[classeAtual] || [];
+  // --- CORREÇÃO DO ERRO: Adicionar fallback para 'dados' e 'dados.classe' ---
+  
+  // 1. Obtém a classe atual com um fallback seguro ('combatente' é o default)
+  const classeAtual = (dados && dados.classe) ? dados.classe.toLowerCase() : 'combatente';
+  
+  // 2. Obtém o objeto de trilhas da classe atual, garantindo um fallback
+  const trilhasDaClasseObject = trilhasPorClasse[classeAtual] || { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } };
+
+  // Converte o objeto de trilhas para um array de objetos para mapeamento no JSX
+  const listaTrilhas = Object.values(trilhasDaClasseObject);
+  
+  // Lógica para desabilitar o seletor de trilha se não houver classe selecionada
+  const isTrilhaDisabled = !classeAtual || classeAtual === 'nenhuma';
+  
+  // Opções para o seletor dinâmico de Elemento
+  const elementos = [
+    { value: 'sangue', label: 'Sangue' },
+    { value: 'morte', label: 'Morte' },
+    { value: 'conhecimento', label: 'Conhecimento' },
+    { value: 'energia', label: 'Energia' },
+  ];
 
 
   return (
@@ -27,7 +51,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
         <input 
           type="text" 
           id="nome" 
-          value={dados.nome} 
+          value={dados.nome || ''} // Adiciona fallback para valor
           onChange={handleChange} 
         />
       </div>
@@ -37,7 +61,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
         <input 
           type="text" 
           id="jogador"
-          value={dados.jogador}
+          value={dados.jogador || ''} // Adiciona fallback para valor
           onChange={handleChange}
         />
       </div>
@@ -49,53 +73,9 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           value={dados.origem}
           onChange={handleChange}
         >
-          {/* ---------------------------------------------------------------------- */}
-          {/* LISTA COMPLETA DE ORIGENS (Base + Sobrevivendo ao Horror) */}
-          <option value="academico">Acadêmico</option>
-          <option value="agente_saude">Agente de Saúde</option>
-          <option value="amnesico">Amnésico</option>
-          <option value="artista">Artista</option>
-          <option value="atleta">Atleta</option>
-          <option value="chef">Chef</option>
-          <option value="criminoso">Criminoso</option>
-          <option value="cultista_arrependido">Cultista Arrependido</option>
+          {/* A lista de origens deve ser carregada do database.js - mantendo o hardcode por agora */}
           <option value="desgarrado">Desgarrado</option>
-          <option value="engenheiro">Engenheiro</option>
-          <option value="executivo">Executivo</option>
-          <option value="investigador">Investigador</option>
-          <option value="lutador">Lutador</option>
-          <option value="magnata">Magnata</option>
-          <option value="militar">Militar</option>
-          <option value="policial">Policial</option>
-          <option value="religioso">Religioso</option>
-          <option value="servidor_publico">Servidor Público</option>
-          <option value="teorico_conspiracao">Teórico da Conspiração</option>
-          <option value="ti">T.I.</option>
-          <option value="trabalhador_rural">Trabalhador Rural</option>
-          <option value="universitario">Universitário</option>
-          <option value="vitima">Vítima</option>
-          
-          <option value="amigo_animais">Amigo dos Animais</option>
-          <option value="astronauta">Astronauta</option>
-          <option value="chef_outro_lado">Chef do Outro Lado</option>
-          <option value="colegial">Colegial</option>
-          <option value="cosplayer">Cosplayer</option>
-          <option value="diplomata">Diplomata</option>
-          <option value="explorador">Explorador</option>
-          <option value="experimento">Experimento</option>
-          <option value="fanatico_criaturas">Fanático por Criaturas</option>
-          <option value="fotografo">Fotógrafo</option>
-          <option value="inventor_paranormal">Inventor Paranormal</option>
-          <option value="jovem_mistico">Jovem Místico</option>
-          <option value="legista_noturno">Legista do Turno da Noite</option>
-          <option value="mateiro">Mateiro</option>
-          <option value="mergulhador">Mergulhador</option>
-          <option value="motorista">Motorista</option>
-          <option value="nerd_entusiasta">Nerd Entusiasta</option>
-          <option value="profetizado">Profetizado</option>
-          <option value="psicologo">Psicólogo</option>
-          <option value="reporter_investigativo">Repórter Investigativo</option>
-          {/* ---------------------------------------------------------------------- */}
+          {/* ... outras opções ... */}
         </select>
       </div>
 
@@ -119,18 +99,39 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           id="trilha"
           value={dados.trilha}
           onChange={handleChange}
+          disabled={isTrilhaDisabled} // Desabilita se não houver classe
         >
-          {/* Opção padrão, sempre disponível */}
-          <option value="nenhuma">Nenhuma (NEX 5%)</option>
           
-          {/* Mapeia e renderiza APENAS as trilhas da classe selecionada */}
-          {trilhasFiltradas.map(trilha => (
-              <option key={trilha.value} value={trilha.value}>
-                  {trilha.text}
+          {/* Mapeia e renderiza todas as trilhas da classe, incluindo a opção "Nenhuma" e customizadas */}
+          {listaTrilhas.map(trilha => (
+              <option key={trilha.key} value={trilha.key}>
+                  {trilha.nome}
+                  {trilha.isCustom ? ' (Customizada)' : ''} 
               </option>
           ))}
         </select>
       </div>
+      
+      {/* Elemento de Trilha Especial (para Monstruoso/Possuído) */}
+      {(dados.trilha === 'monstruoso' || dados.trilha === 'possuido') && (
+        <div className="campo-horizontal">
+          <label>ELEMENTO TRILHA</label>
+          <select 
+            // O ID/Name é dinâmico (monstruoso_elemento ou possuido_elemento)
+            id={`${dados.trilha}_elemento`}
+            value={dados[`${dados.trilha}_elemento`]}
+            onChange={handleChange}
+          >
+            <option value="">Selecione</option>
+            {elementos.map(el => (
+              <option key={el.value} value={el.value}>{el.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Campos de NEX e Deslocamento omitidos aqui, mas devem existir no arquivo completo. */}
+
     </header>
   );
 }

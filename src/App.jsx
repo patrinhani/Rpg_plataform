@@ -1,29 +1,28 @@
 // /src/app.jsx
-// (COMPLETO: Correção do Parallax, Lógica de Afinidade (NEX 50+) e Inicialização)
+// (COMPLETO: Lógica de Escolha de Elemento na Trilha Monstruoso/Possuído e Passagem de Progressão de Trilhas)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
-import { database } from './lib/database.js'; 
+import { database, OpcoesClasse } from './lib/database.js'; 
+// MODIFICADO: Importa progressaoClasses, progressaoTrilhas, getMergedTrilhas E groupTrilhasByClass
+import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
-// Importa as Abas
+// Importa as Abas e Componentes
 import FichaPrincipal from './components/FichaPrincipal';
 import Inventario from './components/Inventario';
 import Rituais from './components/Rituais';
 import ModalLoja from './components/ModalLoja';
 import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
-import Identidade from './components/ficha/identidade'; // Necessário para a lista de origens
+import ProgressaoHabilidades from './components/ficha/ProgressaoHabilidades'; 
+import ModalTrilhaCustom from './components/ModalTrilhaCustom'; 
+import Identidade from './components/ficha/identidade'; 
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
 
-// (CORREÇÃO PARALLAX) Importa os caminhos dos assets para garantir o carregamento correto
-import SimboloOrdem from '/assets/images/SimboloSemafinidade.png';
-import SimboloSangue from '/assets/images/SimboloSangue.png';
-import SimboloMorte from '/assets/images/SimboloMorte.png';
-import SimboloConhecimento from '/assets/images/SimboloConhecimento.png';
-import SimboloEnergia from '/assets/images/SimboloEnergia.png';
-
+// --- LINHAS DE IMPORTAÇÃO DE IMAGEM REMOVIDAS PARA EVITAR O AVISO DO LINTER ---
+// Os caminhos estáticos são usados diretamente no JSX.
 
 // (Helper para perícias)
 const listaTodasPericias = Object.keys(fichaInstance.pericias); 
@@ -33,59 +32,25 @@ const opcoesPericia = listaTodasPericias
 
 // (Helper para elementos)
 const opcoesElemento = [
-  { nome: 'Sangue', valor: 'Sangue' },
-  { nome: 'Morte', valor: 'Morte' },
-  { nome: 'Conhecimento', valor: 'Conhecimento' },
-  { nome: 'Energia', valor: 'Energia' },
+  { nome: 'Sangue', valor: 'sangue' },
+  { nome: 'Morte', valor: 'morte' },
+  { nome: 'Conhecimento', valor: 'conhecimento' },
+  { nome: 'Energia', valor: 'energia' },
 ];
 
-// ----------------------------------------------------------------------
-// Mapeamento de Trilhas por Classe - ATUALIZADO COM AS TRILHAS CORRETAS DE SOBREVIVENTE
-const trilhasPorClasse = {
-  combatente: [
-    { value: "aniquilador", text: "Aniquilador" },
-    { value: "comandante_campo", text: "Comandante de Campo" },
-    { value: "guerreiro", text: "Guerreiro" },
-    { value: "operacoes_especiais", text: "Operações Especiais" },
-    { value: "tropa_choque", text: "Tropa de Choque" },
-    
-    // Novas trilhas de COMBATENTE
-    { value: "agente_secreto", text: "Agente Secreto" },
-    { value: "cacador", text: "Caçador" },
-    { value: "monstruoso", text: "Monstruoso (Especial)" }, 
-  ],
-  especialista: [
-    { value: "atirador_elite", text: "Atirador de Elite" },
-    { value: "infiltrador", text: "Infiltrador" },
-    { value: "medico_campo", text: "Médico de Campo" },
-    { value: "negociador", text: "Negociador" },
-    { value: "tecnico", text: "Técnico" },
-
-    // Novas trilhas de ESPECIALISTA
-    { value: "bibliotecario", text: "Bibliotecário" },
-    { value: "perseverante", text: "Perseverante" },
-    { value: "muambeiro", text: "Muambeiro" },
-  ],
-  ocultista: [
-    { value: "conduite", text: "Conduíte" },
-    { value: "flagelador", text: "Flagelador" },
-    { value: "graduado", text: "Graduado" },
-    { value: "intuitivo", text: "Intuitivo" },
-    { value: "lamina_paranormal", text: "Lâmina Paranormal" },
-
-    // Novas trilhas de OCULTISTA
-    { value: "exorcista", text: "Exorcista" },
-    { value: "possuido", text: "Possuído" },
-    { value: "parapsicologo", text: "Parapsicólogo" },
-  ],
-  sobrevivente: [
-    // TRILHAS CORRETAS DA CLASSE SOBREVIVENTE (por Estágios)
-    { value: "durao", text: "Durão" },
-    { value: "esperto", text: "Esperto" },
-    { value: "esoterico", text: "Esotérico" },
-  ],
+// Mapeamento simplificado das chaves de trilha padrão para a classe
+const MapeamentoTrilhaClasse = {
+    aniquilador: 'combatente', comandante_campo: 'combatente', guerreiro: 'combatente',
+    operacoes_especiais: 'combatente', tropa_choque: 'combatente', agente_secreto: 'combatente',
+    cacador: 'combatente', monstruoso: 'combatente',
+    atirador_elite: 'especialista', infiltrador: 'especialista', medico_campo: 'especialista',
+    negociador: 'especialista', tecnico: 'especialista', bibliotecario: 'especialista',
+    perseverante: 'especialista', muambeiro: 'especialista',
+    conduite: 'ocultista', flagelador: 'ocultista', graduado: 'ocultista',
+    intuitivo: 'ocultista', lamina_paranormal: 'ocultista', exorcista: 'ocultista',
+    possuido: 'ocultista', parapsicologo: 'ocultista',
+    durao: 'sobrevivente', esperto: 'sobrevivente', esoterico: 'sobrevivente',
 };
-// ----------------------------------------------------------------------
 
 
 function App() {
@@ -100,21 +65,40 @@ function App() {
     periciasTreinadas: 0,
     periciasTotal: 0,
     bonusPericia: {},
-    canChangeTheme: false, // Controla se o NEX >= 50%
+    canChangeTheme: false, 
   });
 
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
-  const [abaAtiva, setAbaAtiva] = useState('principal');
+  const [abaAtiva, setAbaAtiva] = useState('principal'); 
+
+  // NOVO: Estado para as trilhas agrupadas (padrão + customizadas)
+  const [trilhasPorClasse, setTrilhasPorClasse] = useState({
+      combatente: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
+      especialista: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
+      ocultista: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
+      sobrevivente: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
+  });
 
   // (Estados dos Modais)
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
   const [isRitualModalOpen, setIsRitualModalOpen] = useState(false); 
+  const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); // MODAL TRILHA CUSTOM
 
   
-  // --- Lógica de Tema e Efeitos ---
+  // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
   
+  // Efeito para recalcular as trilhas disponíveis quando os dados mudam
+  useEffect(() => {
+    const customTrilhas = fichaInstance.getTrilhasPersonalizadas(); 
+    const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
+    const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
+    setTrilhasPorClasse(trilhasAgrupadas);
+    
+  }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
+  
+  // Efeitos de inicialização e tema (Existentes)
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
     aplicarTemaComAnimacao(tema, temaAtual, () => {
@@ -123,13 +107,9 @@ function App() {
     });
   }, [tema]); 
 
-
-  // Efeito de inicialização (roda uma vez)
   useEffect(() => {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
-    
-    // Tenta carregar dados e executa o cálculo inicial
     carregarFicha();
     handleFichaChange(null, null, null); 
   }, []); 
@@ -163,7 +143,17 @@ function App() {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []); 
-  
+
+  // --- Funções de Criação/Gerenciamento de Trilhas Customizadas (NOVAS) ---
+  const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
+  const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
+
+  const handleAddTrilha = (trilhaData) => {
+    fichaInstance.addTrilhaPersonalizada(trilhaData); 
+    handleFichaChange(null, null, null); 
+    handleFecharTrilhaModal();
+  };
+
   // --- FUNÇÕES DE CONTROLE (Salvar, Carregar, etc.) ---
   const carregarFicha = () => {
     const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
@@ -215,25 +205,24 @@ function App() {
     leitor.readAsText(arquivo);
   };
   
-  // --- Funções de Controle dos Rituais e Inventário ---
+  // --- Funções de Controle de Modais e Itens (Existentes) ---
   const handleAbrirRitualModal = () => setIsRitualModalOpen(true);
   const handleFecharRitualModal = () => setIsRitualModalOpen(false);
   
-  // NOVO: Funções de Adição/Remoção de Rituais
   const handleAddRitual = (ritual) => { 
-    // Assumindo que addRitualInventario existe no personagem.js
     fichaInstance.addRitualInventario(ritual); 
     handleFichaChange(null, null, null); 
   };
   const handleRemoveRitual = (inventarioId) => { 
-    // Assumindo que removeRitualInventario existe no personagem.js
     fichaInstance.removeRitualInventario(inventarioId); 
     handleFichaChange(null, null, null); 
   };
 
   const handleAbrirLoja = () => setIsLojaOpen(true);
   const handleFecharLoja = () => setIsLojaOpen(false);
+  
   const handleFecharSelecao = () => { setIsSelecaoOpen(false); setItemPendente(null); };
+
   const handleAddItem = (itemOriginal) => {
     if (itemOriginal.tipoBonus === 'generico') {
       setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia para vincular ao item. (Não pode Luta ou Pontaria)', opcoes: opcoesPericia, tipoVinculo: 'pericia' });
@@ -245,14 +234,30 @@ function App() {
       fichaInstance.addItemInventario(itemOriginal); handleFichaChange(null, null, null); 
     }
   };
+  
   const handleVincularItem = (valorSelecionado) => {
     if (!itemPendente) return;
+    
+    const trilhasUnificadas = getMergedTrilhas(fichaInstance.getTrilhasPersonalizadas());
+
+    if (itemPendente.tipoVinculo === 'trilhaElemento') {
+      const trilhaSelecionada = itemPendente.trilhaValue;
+      
+      fichaInstance.setInfo('trilha', trilhaSelecionada);
+      fichaInstance.setInfo(`${trilhaSelecionada}_elemento`, valorSelecionado); 
+      
+      handleFecharSelecao(); 
+      handleFichaChange(null, null, null); 
+      return; 
+    }
+
     let itemVinculado = { ...itemPendente };
     if (itemPendente.tipoVinculo === 'pericia') { itemVinculado.periciaVinculada = valorSelecionado; } 
     else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); }
     itemVinculado.tipoBonus = null; itemVinculado.tituloModal = undefined; itemVinculado.descricaoModal = undefined; itemVinculado.opcoes = undefined; itemVinculado.tipoVinculo = undefined;
     fichaInstance.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
   };
+  
   const handleRemoveItem = (inventarioId) => { fichaInstance.removeItemInventario(inventarioId); handleFichaChange(null, null, null); };
   const handleToggleItem = (inventarioId) => { fichaInstance.toggleIgnorarCalculos(inventarioId); handleFichaChange(null, null, null); };
   
@@ -260,43 +265,61 @@ function App() {
   // --- FUNÇÃO CÉREBRO (handleFichaChange) ---
   function handleFichaChange(secao, campo, valor) {
     
+    let skipUpdate = false;
+    const trilhasUnificadas = getMergedTrilhas(fichaInstance.getTrilhasPersonalizadas());
+
     if (secao) {
       if (secao === 'info') {
         
-        // (LÓGICA NEX) Lógica de formatação de NEX
         if (campo === 'nex') {
-            // Remove tudo que não for dígito
             let nexValue = String(valor).replace(/[^0-9]/g, '');
             let nexNumber = parseInt(nexValue) || 0;
-            
-            // Limita a 100%
             if (nexNumber > 100) nexNumber = 100;
-            
-            // Formata sempre com '%' para salvar no objeto
             valor = `${nexNumber}%`;
         }
         
-        fichaInstance.setInfo(campo, valor);
-
-        // ----------------------------------------------------------------------
-        // Lógica de validação de trilha ao trocar a classe
-        if (campo === 'classe') {
-            const novaClasse = valor;
-            const trilhasValidas = trilhasPorClasse[novaClasse.toLowerCase()] || [];
+        // --- LÓGICA DE ESCOLHA DE TRILHA (COM TRATATIVA DE MODAL) ---
+        if (campo === 'trilha') {
+            const trilhaSelecionada = valor;
+            const dadosTrilha = trilhasUnificadas[trilhaSelecionada]; 
             
-            // Pega a trilha que foi mantida no estado
+            if (dadosTrilha && dadosTrilha.requiresChoice === 'elemento' && trilhaSelecionada !== 'nenhuma') {
+                
+                setItemPendente({ 
+                    trilhaValue: trilhaSelecionada,
+                    tituloModal: `Escolher Elemento da Trilha`, 
+                    descricaoModal: `Escolha o Elemento Paranormal para a trilha ${dadosTrilha.nome}:`, 
+                    opcoes: opcoesElemento, 
+                    tipoVinculo: 'trilhaElemento' 
+                });
+                setIsSelecaoOpen(true);
+                skipUpdate = true;
+                
+            } else {
+                fichaInstance.setInfo(campo, valor);
+            }
+
+        } 
+        // Lógica de validação de trilha ao trocar a classe
+        else if (campo === 'classe') {
+            const novaClasse = valor;
+            const trilhasValidas = Object.values(trilhasPorClasse[novaClasse.toLowerCase()] || {}).map(t => t.key); 
             const trilhaAtual = fichaInstance.info.trilha; 
             
-            // Verifica se a trilha atual não é 'nenhuma' E não está na lista de trilhas válidas
-            const trilhaInvalida = trilhasValidas.length > 0 && 
-                                   !trilhasValidas.some(t => t.value === trilhaAtual);
+            const trilhaInvalida = trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual);
             
-            if (trilhaAtual !== 'nenhuma' && trilhaInvalida) {
-                // Se a trilha for inválida para a nova classe, reseta para "nenhuma"
+            if (trilhaInvalida) {
                 fichaInstance.setInfo('trilha', 'nenhuma');
+                fichaInstance.setInfo(`${trilhaAtual}_elemento`, '');
             }
+
+            fichaInstance.setInfo(campo, valor);
         }
-        // ----------------------------------------------------------------------
+        // Outros campos de info
+        else if (!skipUpdate) {
+            fichaInstance.setInfo(campo, valor);
+        }
+        // FIM DA LÓGICA DE INFO
 
       } else if (secao === 'atributos') {
         fichaInstance.setAtributo(campo, valor); 
@@ -309,6 +332,10 @@ function App() {
       } else if (secao === 'bonusManuais') {
         fichaInstance.setBonusManual(campo, valor);
       }
+    }
+
+    if (skipUpdate) {
+        return;
     }
 
     // --- Recalcula TUDO ---
@@ -364,8 +391,9 @@ function App() {
       }
     });
 
-    // (LÓGICA NEX) Cálculo de Afinidade
-    const nexString = fichaInstance.info.nex || '0%';
+    const novosDados = fichaInstance.getDados();
+
+    const nexString = novosDados.info.nex || '0%';
     const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
     const canChangeTheme = nexNumeric >= 50;
 
@@ -379,8 +407,6 @@ function App() {
       canChangeTheme: canChangeTheme, 
     });
 
-    // Atualiza o estado do personagem
-    const novosDados = fichaInstance.getDados();
     setPersonagem({ ...novosDados });
   }
 
@@ -399,12 +425,12 @@ function App() {
   return (
     <>
       <div id="parallax-background">
-        {/* CORREÇÃO PARALLAX: Uso de variáveis importadas */}
-        <img src={SimboloOrdem} id="simbolo-ordem" className="simbolo-parallax" />
-        <img src={SimboloSangue} id="simbolo-sangue" className="simbolo-parallax" />
-        <img src={SimboloMorte} id="simbolo-morte" className="simbolo-parallax" />
-        <img src={SimboloConhecimento} id="simbolo-conhecimento" className="simbolo-parallax" />
-        <img src={SimboloEnergia} id="simbolo-energia" className="simbolo-parallax" />
+        {/* CORREÇÃO FINAL: Usar caminhos estáticos para o Vite */}
+        <img src="/assets/images/SimboloSemafinidade.png" id="simbolo-ordem" className="simbolo-parallax" />
+        <img src="/assets/images/SimboloSangue.png" id="simbolo-sangue" className="simbolo-parallax" />
+        <img src="/assets/images/SimboloMorte.png" id="simbolo-morte" className="simbolo-parallax" />
+        <img src="/assets/images/SimboloConhecimento.png" id="simbolo-conhecimento" className="simbolo-parallax" />
+        <img src="/assets/images/SimboloEnergia.png" id="simbolo-energia" className="simbolo-parallax" />
       </div>
       
       <div id="transition-overlay"></div>
@@ -428,6 +454,13 @@ function App() {
         >
           Rituais
         </button>
+        {/* NOVA ABA: PROGRESSÃO */}
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'progressao' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('progressao')}
+        >
+          Progressão
+        </button>
       </nav>
       
       {abaAtiva === 'principal' && (
@@ -437,7 +470,7 @@ function App() {
           fichaInstance={fichaInstance} 
           handleFichaChange={handleFichaChange}
           controlesProps={controlesProps}
-          // Passando o mapeamento de trilhas como prop
+          // Passando o mapeamento de trilhas por classe para Identidade
           trilhasPorClasse={trilhasPorClasse} 
         />
       )}
@@ -458,12 +491,34 @@ function App() {
           onRemoveRitual={handleRemoveRitual} 
         />
       )}
+      
+      {/* RENDERIZAÇÃO NA NOVA ABA */}
+      {abaAtiva === 'progressao' && (
+        <div className="ficha-aba-conteudo active">
+          <button 
+            className="btn-add-item" 
+            onClick={handleAbrirTrilhaModal}
+            style={{ float: 'right', margin: '10px 0', padding: '5px 15px', fontSize: '1.2em' }}
+          >
+            + Criar Trilha
+          </button>
+          
+          <ProgressaoHabilidades
+            classe={personagem.info.classe}
+            trilha={personagem.info.trilha}
+            nexString={personagem.info.nex}
+            progressaoClasses={progressaoClasses}
+            progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} // Passa Trilhas UNIFICADAS
+            info={personagem.info}
+          />
+        </div>
+      )}
 
       <footer>
         <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
       </footer>
 
-      {/* --- Modais --- */}
+      {/* --- Modais (Existentes) --- */}
       <ModalLoja 
         isOpen={isLojaOpen}
         onClose={handleFecharLoja}
@@ -478,11 +533,18 @@ function App() {
         onSelect={handleVincularItem} 
       />
 
-      {/* RENDERIZAÇÃO DO MODAL DE RITUAIS */}
       <ModalRituais 
         isOpen={isRitualModalOpen}
         onClose={handleFecharRitualModal}
-        onAddRitual={handleAddRitual} // Passa a função de adição
+        onAddRitual={handleAddRitual} 
+      />
+
+      {/* NOVO: MODAL DE CRIAÇÃO DE TRILHA */}
+      <ModalTrilhaCustom
+        isOpen={isTrilhaModalOpen}
+        onClose={handleFecharTrilhaModal}
+        onAddTrilha={handleAddTrilha}
+        classesList={OpcoesClasse} // Passa a lista de classes do database (OpçõesClasse)
       />
     </>
   )

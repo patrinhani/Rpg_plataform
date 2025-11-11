@@ -1,0 +1,162 @@
+ HABILIDADES 
+DE COMBATENTE
+ Ataque Especial. Quando faz um 
+ataque, você pode gastar 2 PE para re
+ceber +5 no teste de ataque ou na rolagem de dano. 
+Conforme avança de NEX, você pode gastar +1 PE 
+para receber mais bônus de +5 (veja a Tabela 1.3). 
+Você pode aplicar cada bônus de +5 em ataque ou 
+dano. Por exemplo, em NEX 55%, você pode gastar 
+4 PE para receber +5 no teste de ataque e +10 na 
+rolagem de dano.
+ Habilidade de Trilha. Em NEX 10% você escolhe uma das trilhas de combatente e recebe o primeiro 
+poder da trilha escolhida. Você recebe um novo poder da trilha escolhida em NEX 40%, 65% e 99%. Veja a 
+descrição das trilhas nas páginas 26 e 27.
+ Poder de Combatente. Em NEX 15%, você recebe um poder de combatente à sua escolha. Você recebe um 
+novo poder de combatente em NEX 30% e a cada 15% de NEX subsequentes, conforme indicado na tabela. 
+Veja a lista de poderes a seguir
+
+
+
+ Armamento Pesado. Você recebe proficiência 
+com armas pesadas. Pré-requisito: For 2.
+
+
+ b Artista Marcial. Seus ataques desarmados causam 
+1d6 pontos de dano, podem causar dano letal e 
+contam como armas ágeis. Em NEX 35%, o dano 
+aumenta para 1d8 e, em NEX 70%, para 1d10.
+
+
+ b Ataque de Oportunidade. Sempre que um ser 
+sair voluntariamente de um espaço adjacente ao 
+seu, você pode gastar uma reação e 1 PE para fazer 
+um ataque corpo a corpo contra ele.
+ 
+ 
+ b Combater com Duas Armas. Se estiver usando 
+duas armas (e pelo menos uma for leve) e fizer a 
+ação agredir, você pode fazer dois ataques, um 
+com cada arma. Se fizer isso, sofre –O em todos 
+os testes de ataque até o seu próximo turno. Pré--requisitos: Agi 3, treinado em Luta ou Pontaria.
+ 
+ 
+ b Combate Defensivo. Quando usa a ação agredir, 
+você pode combater defensivamente. Se fizer isso, 
+até seu próximo turno, sofre –O em todos os testes 
+de ataque, mas recebe +5 na Defesa. Pré-requisito: 
+Int 2.
+
+
+ b Golpe Demolidor. Quando usa a manobra que
+brar ou ataca um objeto, você pode gastar 1 PE 
+para causar dois dados de dano extra do mesmo 
+tipo de sua arma. Pré-requisitos: For 2, treinado 
+em Luta.
+ 
+ 
+ b Golpe Pesado. O dano de suas armas corpo a 
+corpo aumenta em mais um dado do mesmo tipo.
+ 
+ 
+ b Incansável. Uma vez por cena, você pode gastar 
+2 PE para fazer uma ação de investigação adi
+cional, mas deve usar Força ou Agilidade como 
+atributo-base do teste.
+
+
+ b Presteza Atlética. Quando faz um teste de facilitar 
+a investigação, você pode gastar 1 PE para usar 
+Força ou Agilidade no lugar do atributo-base da 
+perícia. Se passar no teste, o próximo aliado que 
+usar seu bônus também recebe +O no teste.
+ 
+ 
+ b Proteção Pesada. Você recebe proficiência com 
+Proteções Pesadas. Pré-requisito: NEX 30%.
+ 
+ 
+ b Reflexos Defensivos. Você recebe +2 em Defesa 
+e em testes de resistência. Pré-requisitos: Agi 2.
+ 
+ 
+ b Saque Rápido. Você pode sacar ou guardar 
+itens como uma ação livre (em vez de ação de 
+movimento). Além disso, caso esteja usando a 
+regra opcional de contagem de munição, uma 
+vez por rodada pode recarregar uma arma de 
+disparo como uma ação livre. Pré-requisito: 
+treinado em Iniciativa.
+ 
+ 
+ b Segurar o Gatilho. Sempre que acerta um ataque 
+com uma arma de fogo, pode fazer outro ataque
+com a mesma arma contra o mesmo alvo, pagan
+do 2 PE por cada ataque já realizado no turno. Ou 
+seja, pode fazer o primeiro ataque extra gastando 
+2 PE e, se acertar, pode fazer um segundo ataque 
+extra gastando mais 4 PE e assim por diante, até 
+errar um ataque ou atingir o limite de seus PE 
+por rodada. Pré-requisito: NEX 60%.
+
+
+ b Sentido Tático. Você pode gastar uma ação de 
+movimento e 2 PE para analisar o ambiente. 
+Se fizer isso, recebe um bônus em Defesa e em 
+testes de resistência igual ao seu Intelecto até 
+o final da cena. Pré-requisitos: Int 2, treinado 
+em Percepção e Tática.
+ 
+ 
+ b Tanque de Guerra. Se estiver usando uma pro
+teção pesada, a Defesa e a resistência a dano 
+que ela fornece aumentam em +2. Pré-requisito: 
+Proteção Pesada.
+
+
+ b Tiro Certeiro. Se estiver usando uma arma de 
+disparo, você soma sua Agilidade nas rolagens de 
+dano e ignora a penalidade contra alvos envolvidos 
+em combate corpo a corpo (mesmo se não usar a 
+ação mirar). Pré-requisito: treinado em Pontaria.
+ 
+ 
+ b Tiro de Cobertura. Você pode gastar uma ação 
+padrão e 1 PE para disparar uma arma de fogo 
+na direção de um personagem no alcance da 
+arma para forçá-lo a se proteger. Faça um teste 
+de Pontaria contra a Vontade do alvo. Se vencer, 
+até o início do seu próximo turno o alvo não pode 
+sair do lugar onde está e sofre –5 em testes de 
+ataque. A critério do mestre, o alvo recebe +5 no 
+teste de Vontade se estiver em um lugar extrema
+mente perigoso, como uma casa em chamas ou 
+um barco afundando. Este é um efeito de medo.
+
+
+ b Transcender. Escolha um poder paranormal (veja 
+a página 114). Você recebe o poder escolhido, 
+mas não ganha Sanidade neste aumento de NEX. 
+Você pode escolher este poder várias vezes.
+ 
+ 
+ b Treinamento em Perícia. Escolha duas perícias. 
+Você se torna treinado nessas perícias. A partir 
+de NEX 35%, você pode escolher perícias nas 
+quais já é treinado para se tornar veterano. A 
+partir de NEX 70%, pode escolher perícias nas 
+quais já é veterano para se tornar expert. Você 
+pode escolher este poder várias vezes.
+ Aumento de Atributo. Em NEX 20%, e novamente 
+em NEX 50%, 80% e 95%, aumente um atributo a sua 
+escolha em +1. Você não pode aumentar um atributo 
+além de 5 desta forma.
+ 26
+ Grau de Treinamento. Em NEX 35%, e novamente 
+em NEX 70%, escolha um número de perícias treina
+das igual a 2 + Int. Seu grau de treinamento nessas 
+perícias aumenta em um (de treinado para veterano 
+ou de veterano para expert).
+ Versatilidade. Em NEX 50%, escolha entre receber 
+um poder de combatente ou o primeiro poder de uma 
+trilha de combatente que não a sua

@@ -1,0 +1,1589 @@
+TRILHAS DE 
+COMBATENTE
+
+
+
+ Aniquilador
+ Você é treinado para abater alvos com eficiência e 
+velocidade. Suas armas são suas melhores amigas e 
+você cuida tão bem delas quanto de seus companhei
+ros de equipe. Talvez até melhor.
+
+ NEX 10% - A Favorita. Escolha uma arma para 
+ser sua favorita, como katana ou fuzil de assalto. A 
+categoria da arma escolhida é reduzida em I.
+
+ NEX 40% - Técnica Secreta. A categoria da arma 
+favorita passa a ser reduzida em II. Quando faz um 
+ataque com ela, você pode gastar 2 PE para executar 
+um dos efeitos abaixo como parte do ataque. Você 
+pode adicionar mais efeitos gastando +2 PE por 
+efeito adicional.
+
+ b Amplo. O ataque pode atingir um alvo adicional 
+em seu alcance e adjacente ao original (use o 
+mesmo teste de ataque para ambos).
+ b Destruidor. Aumenta o multiplicador de crítico 
+da arma em +1.
+
+ NEX 65% - Técnica Sublime. Você adiciona os 
+seguintes efeitos à lista de sua Técnica Secreta:
+
+ b Letal. Aumenta a margem de ameaça em +2. 
+Você pode escolher este efeito duas vezes para 
+aumentar a margem de ameaça em +5.
+ b Perfurante. Ignora até 5 pontos de resistência a 
+dano de qualquer tipo do alvo.
+
+ NEX 99% - Máquina de Matar. A categoria da 
+arma favorita passa a ser reduzida em III, ela recebe 
++2 na margem de ameaça e seu dano aumenta em 
+um dado do mesmo tipo.
+
+ Comandante de Campo
+ Sem um oficial uma batalha não passa de uma briga 
+de bar. Você é treinado para coordenar e auxiliar 
+seus companheiros em combate, tomando decisões 
+rápidas e tirando melhor proveito da situação e do 
+talento de seus aliados.
+
+ NEX 10% - Inspirar Confiança. Sua liderança 
+inspira seus aliados. Você pode gastar uma reação 
+e 2 PE para fazer um aliado em alcance curto rolar 
+novamente um teste recém realizado.
+
+ NEX 40% - Estrategista. Você pode direcionar 
+aliados em alcance curto. Gaste uma ação padrão e 
+1 PE por aliado que quiser direcionar (limitado pelo 
+seu Intelecto). No próximo turno dos aliados afeta
+dos, eles ganham uma ação de movimento adicional.
+
+ NEX 65% - Brecha na Guarda. Uma vez por rodada, 
+ quando um aliado causar dano em um inimigo 
+que esteja em seu alcance curto, você pode gastar 
+uma reação e 2 PE para que você ou outro aliado 
+em alcance curto faça um ataque adicional contra 
+o mesmo inimigo. Além disso, o alcance de inspirar 
+confiança e estrategista aumenta para médio.
+
+ NEX 99% - Oficial Comandante. Você pode 
+gastar uma ação padrão e 5 PE para que cada aliado 
+que você possa ver em alcance médio receba uma 
+ação padrão adicional no próximo turno dele.
+
+
+ Guerreiro
+ Você treinou sua musculatura e movimentos a ponto 
+de transformar seu corpo em uma verdadeira arma. 
+Com golpes corpo a corpo tão poderosos quanto 
+uma bala, você encara os perigos de frente.
+
+ NEX 10% - Técnica Letal. Você recebe um au
+mento de +2 na margem de ameaça com todos os 
+seus ataques corpo a corpo.
+
+ NEX 40% - Revidar. Sempre que bloquear um ata
+que, você pode gastar uma reação e 2 PE para fazer 
+um ataque corpo a corpo no inimigo que o atacou.
+
+ NEX 65% - Força Opressora. Quando acerta 
+um ataque corpo a corpo, você pode gastar 1 PE 
+para realizar uma manobra derrubar ou empur
+rar contra o alvo do ataque como ação livre. Se 
+escolher empurrar, recebe um bônus de +5 para 
+cada 10 pontos de dano que causou no alvo. Se 
+escolher derrubar e vencer no teste oposto, você 
+pode gastar 1 PE para fazer um ataque adicional 
+contra o alvo caído.
+
+ NEX 99% - Potência Máxima. Quando usa seu 
+Ataque Especial com armas corpo a corpo, todos os 
+bônus numéricos são dobrados. Por exemplo, se usar 
+5 PE para receber +5 no ataque e +15 no dano, você 
+recebe +10 no ataque e +30 no dano
+
+ Operações Especiais
+ Você é um combatente eficaz. Suas ações são calcula
+das e otimizadas, sempre antevendo os movimentos 
+inimigos e se posicionando da maneira mais inteli
+gente no campo de batalha.
+
+ NEX 10% - Iniciativa Aprimorada. Você recebe 
++5 em Iniciativa e uma ação de movimento adicional 
+na primeira rodada.
+
+ NEX 40% - Ataque Extra. Uma vez por rodada, 
+quando faz um ataque, você pode gastar 2 PE para 
+fazer um ataque adicional.
+
+ NEX 65% - Surto de Adrenalina. Uma vez por 
+rodada, você pode gastar 5 PE para realizar uma ação 
+padrão ou de movimento adicional.
+
+ NEX 99% - Sempre Alerta. Você recebe uma ação 
+padrão adicional no início de cada cena de combate.
+
+
+Tropa de Choque
+ Você é duro na queda. Treinou seu corpo para re
+sistir a traumas físicos, tornando-o praticamente 
+inquebrável, e por isso não teme se colocar entre seus 
+aliados e o perigo.
+
+ NEX 10% - Casca Grossa. Você recebe +1 PV para 
+cada 5% de NEX e, quando faz um bloqueio, soma 
+seu Vigor na resistência a dano recebida.
+
+ NEX 40% - Cai Dentro. Sempre que um oponen
+te em alcance curto ataca um de seus aliados, você 
+pode gastar uma reação e 1 PE para fazer com que 
+esse oponente faça um teste de Vontade (DT Vig). 
+Se falhar, o oponente deve atacar você em vez de 
+seu aliado. Este poder só funciona se você puder ser 
+efetivamente atacado e estiver no alcance do ataque 
+(por exemplo, adjacente a um oponente atacando em 
+corpo a corpo ou dentro do alcance de uma arma de 
+ataque à distância). Um oponente que passe no teste 
+de Vontade não pode ser afetado por seu poder Cai 
+Dentro até o final da cena.
+
+ NEX 65% - Duro de Matar. Ao sofrer dano não 
+paranormal, você pode gastar uma reação e 2 PE para 
+reduzir esse dano à metade. Em NEX 85%, você pode 
+usar esta habilidade para reduzir dano paranormal.
+
+ NEX 99% - Inquebrável. Enquanto estiver machu
+cado, você recebe +5 na Defesa e resistência a dano 
+5. Enquanto estiver morrendo, em vez do normal, 
+você não fica indefeso e ainda pode realizar ações. 
+Você ainda segue as regras de morte normalmente
+
+
+ AGENTE SECRETO
+ Às vezes, um governo precisa lidar com um pro
+blema de forma discreta — por precisar operar fora 
+de sua jurisdição, para não assustar a população ou 
+por vários outros motivos. Quando esse é o caso, 
+usam-se agentes secretos, indivíduos treinados para 
+trabalhar sozinhos ou em pequenos grupos, que 
+contam apenas com suas próprias habilidades, 
+determinação e sorrisos carismáticos. Você 
+se tornou um desses agentes e, por suas ca
+pacidades, foi escolhido para a missão mais 
+confidencial de todas — trabalhar com a Ordo 
+Realitas para proteger a humanidade contra 
+o Outro Lado.
+
+ NEX 10% - Carteirada. Escolha 
+uma perícia entre Diplomacia ou 
+Enganação. Você recebe treina
+mento na perícia escolhida ou, 
+se já for treinado, recebe +2 
+nela. Como parte do esforço 
+conjunto da sua agência e da 
+Ordem, no início de cada mis
+são você recebe documentos 
+que lhe fornecem privilégios jurí
+dicos especiais. Esses documentos po
+dem incluir a sua identidade verdadeira ou 
+não, e podem ser individuais ou incluir os 
+demais membros da sua equipe (confor
+me apropriado à missão). Os benefícios 
+específicos desses documentos ficam a 
+critério do mestre, mas em geral incluem 
+acesso a locais restritos ou proibidos, 
+permissão para portar armas de fogo e 
+b Valentão. Em algum momento, 
+a vida lhe ensinou que a brutali
+dade pode ser amedrontadora, e 
+agora esse é seu principal idioma. 
+Você pode usar Força no lugar de 
+Presença para Intimidação. Além 
+disso, uma vez por cena, pode gas
+tar 1 PE para fazer um teste de In
+timidação para assustar como 
+uma ação livre.
+ autoridade para assumir a jurisdição 
+de investigações da polícia. Pessoas 
+comuns não conseguem perceber 
+que seus documentos são falsos, 
+mas membros de agências de se
+gurança ou indivíduos veteranos 
+FELIX 
+FONTANA
+ Diretor 
+do Setor 
+em Crime podem desconfiar de 
+sua veracidade. Os documentos 
+de Crimes 
+Inabituais
+ contam como itens operacionais 
+que não ocupam espaço — mas 
+cuidado para não perdê-los em 
+locais onde novos não podem 
+ser fornecidos!
+ 15
+
+
+NEX 40% - O Sorriso. Em seu trabalho como agente, 
+você aprendeu que se manter contido com um sorriso 
+“sincero” e palavras gentis são ferramentas muito 
+eficientes em uma investigação. Você recebe +2 em 
+Diplomacia e Enganação e, quando falha em um teste 
+de uma dessas perícias, pode gastar 2 PE para repetir a 
+rolagem (apenas uma vez por teste), mas deve aceitar 
+o novo resultado, mesmo que seja pior que o primeiro. 
+Por fim, uma vez por cena, você pode fazer um teste 
+de Diplomacia para acalmar a si mesmo.
+
+ NEX 65% - Método Investigativo. Acostumado 
+a vasculhar locais em segredo, você aprendeu a ser 
+rápido ou “controlar a situação” antes que coisas 
+ruins aconteçam. A urgência de qualquer 
+cena de investigação em que você esteja pre
+sente aumenta em 1 rodada. Além disso, 
+quando o mestre faz uma rolagem na tabela 
+de eventos de investigação, você pode 
+gastar 2 PE para transformar o 
+resultado em “sem evento”. 
+Você pode usar este efei
+to mais de uma vez na 
+mesma cena, mas a cada 
+uso adicional seu custo 
+aumenta em +2 PE.
+
+
+ NEX 99% - Multifa
+cetado. Viver sob vários 
+disfarces tem sido útil, mas 
+você faz isso há tanto tempo que 
+talvez nem se lembre mais quem é 
+de verdade. Essas habilidades que 
+surgem quando você precisa 
+foram aprendidas em disfar
+ces anteriores, ou são apenas 
+sua mente buscando uma saí
+da? Uma vez por cena, você 
+pode gastar 5 pontos de Sanidade 
+para receber todas as habilidades 
+de até NEX 65% de uma trilha 
+de combatente ou especialista à 
+sua escolha (você deve cumprir 
+quaisquer pré-requisitos específi
+cos da trilha). Você pode usar essas 
+ habilidades até o fim da cena, mas 
+não pode escolher a mesma trilha 
+mais de uma vez na mesma missão. 
+Os pontos de Sanidade gastos 
+para ativar essa habilidade 
+só podem ser recuperados 
+ao fim da missão.
+
+
+
+CAÇADOR
+ Em um mundo cheio de predadores sobrenaturais, 
+você decidiu não ser mais uma presa. Valendo-se de 
+relatos de segunda mão, notícias de jornais e relatórios 
+de incidentes inexplicáveis, você reúne informações 
+sobre como caçar as coisas que espreitam na escuridão.
+
+
+ NEX 10% - Rastrear o Paranormal. Você es
+tudou criaturas paranormais o suficiente para saber 
+como identificar seus sinais e seguir seus rastros. 
+Você recebe treinamento em Sobrevivência ou, se 
+já for treinado nesta perícia, recebe +2 nela. Além 
+disso,  pode usar essa perícia no lugar de Ocul
+tismo para identificar criaturas e no lugar 
+de Investigação e Percepção para perceber 
+e encontrar rastros, pistas e criaturas que 
+tenham traços paranormais.
+
+
+ NEX 40% - Estudar Fraquezas. Você 
+acredita que todo ser, mesmo aqueles 
+do Outro Lado, tem uma fraque
+za. E você vai encontrá-la… você 
+precisa! Você pode gastar uma 
+ação de interlúdio estudando as 
+fraquezas de um ser específico, 
+como uma criatura paranormal 
+ou um membro de um culto. 
+Para isso, você precisa de uma 
+pista diretamente ligada ao ser, 
+como uma parte do seu corpo 
+ou de suas vestes. Ao fim dos 
+estudos, você recebe 
+uma informa
+ção útil sobre o 
+ser. Isso pode ser 
+uma caracterís
+tica relevante (“a 
+criatura é do ele
+mento Sangue”) ou 
+uma informação sobre 
+seus hábitos (“apesar de 
+matar qualquer coisa, ela 
+parece preferir idosos”). 
+SENHOR 
+VERÍSSIMO
+ habilidades até o fim da cena, mas 
+não pode escolher a mesma trilha 
+mais de uma vez na mesma missão. 
+Os pontos de Sanidade gastos 
+para ativar essa habilidade 
+só podem ser recuperados 
+ao fim da missão.
+ Líder da 
+Ordo 
+Realitas 
+(1980)
+ Além das informações, para 
+cada pista você recebe +1 em 
+testes de perícia contra a 
+criatura até o fim da missão. 
+Cada pista fornece apenas 
+uma informação e, a critério 
+do mestre, informações di
+ferentes podem exigir 
+pistas específicas.
+ 16
+
+NEX 65% - Atacar das Sombras. Você aprende a 
+usar as sombras contra o Paranormal. Você não sofre 
+a penalidade de –O em testes de Furtividade por 
+se mover ao seu deslocamento normal e, se estiver 
+usando uma arma que não faça barulho (como uma 
+faca ou um arco), a penalidade que você sofre em 
+Furtividade por atacar na mesma rodada é reduzida 
+para –O. Além disso, sua visibilidade inicial em cenas 
+de furtividade (veja p. 92) é sempre 1 ponto abaixo 
+da inicial (podendo ser negativa).
+
+
+ NEX 99% - Estudar a Presa. Você sabe que eles 
+são mais fortes e que para derrotá-los preci
+sará revelar todos os seus segredos. Quando 
+usa Estudar Fraquezas contra uma criatura 
+paranormal ou um cultista, você pode 
+transformar o tipo desse ser em sua 
+“presa”. Contra seres desse tipo, você 
+recebe +O em testes de perícia, 
++1 na margem de ameaça e no 
+multiplicador de crítico e re
+sistência a dano 5. Você só 
+pode ter um tipo de ser como 
+presa ao mesmo tempo.
+
+
+ MONSTRUOSO
+ Muito se fala sobre os ocul
+tistas escolherem o caminho de 
+tornarem sua mente uma porta 
+para o paranormal, na tentativa de usá--lo contra ele mesmo, mas de vez em 
+quando, um combatente é corajoso 
+ou insano o bastante para fazer o 
+mesmo com seu corpo. Você pro
+positalmente desfigura e altera 
+seu corpo para que as Entida
+des o invadam com maior in
+tensidade; contudo, para sua 
+infelicidade, os métodos 
+para isso costumam ser 
+brutais. Combatentes 
+dessa trilha que che
+gam aos níveis mais 
+altos de exposição 
+inevitavelmente 
+perdem o controle 
+e se tornam inimigos 
+da Ordem.
+ Especial: esta trilha usa a “Progressão de NEX” 
+apresentada na regra opcional Nível de Experiência 
+e Nível de Exposição (p. 98), mesmo que esta regra 
+em si não esteja sendo usada. O personagem recebe 
+todas as alterações apropriadas ao seu NEX descritas 
+na progressão e, se a regra de Nível de Experiência 
+estiver em uso, recebe o dobro de NEX sempre que 
+se expõe ao paranormal.
+
+
+ NEX 10% - Ser Amaldiçoado. Em suas veias corre 
+uma maldição paranormal que aos poucos o está 
+transformando em um monstro. Você se torna 
+treinado em Ocultismo (se já for treinado, em 
+vez disso recebe +2 nessa perícia). Escolha um 
+elemento paranormal entre Sangue, Morte, 
+Conhecimento ou Energia. Uma vez por 
+dia, você precisa executar uma eta
+pa ritualística desse elemento (por 
+exemplo, beber sangue humano para 
+Sangue, inalar cinzas de mortos 
+para Morte, tatuar palavras que 
+causam medo para Conheci
+mento ou receber choques de 
+cabos elétricos para Energia). 
+Se fizer isso, até o fim do dia 
+você recebe os efeitos des
+critos a seguir, conforme o 
+elemento escolhido. Caso 
+contrário, você sofre de 
+fome e sede nesse dia 
+(OPRPG, p. 292). 
+Por fim, se adquirir 
+afinidade com um 
+elemento, deverá 
+escolher aquele 
+selecionado para 
+esta habilidade.
+ I SANGUE  Suas 
+presas ficam protuberan
+tes e seus olhos se tornam 
+vermelhos. Você recebe 
+resistência a balístico 
+e Sangue 5 e faro e, 
+quando faz um con
+tra-ataque bem-su
+cedido, soma seu 
+Vigor na rolagem de 
+dano, mas sofre –O 
+RAZIEL
+ Vampiro de Sangue
+ em Ciências e Intuição
+ I MORTE  Você fica pálido e seu metabolismo se torna 
+bem mais lento. Você recebe resistência a perfuração 
+e Morte 5 e imunidade a fadiga e soma sua Força em 
+seu total de pontos de vida, mas sofre –O em Diplo
+macia e Enganação.
+ I CONHECIMENTO  Seus olhos são banhados em 
+um dourado sobrenatural. Você recebe resistência 
+a balístico e Conhecimento 5 e visão no escuro e 
+soma seu Intelecto na Defesa, mas sofre –O 
+em Atletismo e Acrobacia.
+ I ENERGIA  Sua pele ganha cicatrizes de quei
+maduras elétricas com múltiplas cores. Você 
+recebe resistência a corte, eletricidade, fogo 
+e Energia 5 e soma sua Agilidade na RD re
+cebida por um bloqueio 
+bem-sucedido, mas 
+sofre –O em Investi
+gação e Percepção.
+
+
+ NEX 40% - Ser Ma
+cabro. Conforme sua 
+humanidade é substi
+tuída pela Entidade, as 
+mudanças em seu corpo 
+e mente se intensificam. 
+A resistência a dano que 
+você recebe por execu
+tar a etapa ritualística 
+de seu elemento aumen
+ta para 10, enquanto a 
+penalidade em perícias 
+aumenta para –2O. Por 
+fim, quando executa 
+sua etapa ritualística, 
+você recebe os efeitos 
+adicionais incluídos na 
+descrição de seu elemen
+to, a seguir.
+ I SANGUE  Você veste poucas 
+roupas, expondo o máximo de 
+sua pele sensível ao ambiente 
+que puder. Seu corpo já está 
+repleto de cicatrizes e feri
+das, muitas causadas por 
+você mesmo para sabo
+rear a dor. Devorar 
+qualquer coisa que 
+não seja carne ou 
+sangue não é capaz 
+de conter sua fome. Você 
+pode usar Força para calcular seus pontos de esfor
+ço (em vez de Presença). Além disso, pode gastar 
+uma ação de movimento e 1 ou mais PE (limitado 
+por sua Força) para recuperar 1d8 PV por PE gasto.
+ I MORTE  Roupas modernas e complexas não pa
+recem fazer sentido pra você. Seus trajes são ana
+crônicos e simples, às vezes adornado de cristais, 
+esqueletos de pequenas criaturas pendurados, 
+pedras, raízes e plantas mortas. Você recebe 
++O em Intimidação e pode usar Vigor para 
+calcular seus pontos de esforço (em vez de 
+Presença). Além disso, morre se iniciar 
+quatro turnos morrendo na mesma cena 
+(e não apenas três) e não precisa mais 
+comer ou beber para viver, mas 
+ainda sofre da fome para
+normal causada por essa 
+trilha.
+ I CONHECIMENTO  Você 
+está sempre vestindo 
+joias de ouro puro 
+ou roupas com ouro 
+em suas linhas. Seu 
+corpo está quase in
+teiramente coberto de 
+palavras que evocam 
+medo, como famosas 
+últimas frases ou pedi
+dos de socorro. Você 
+já sabe que é superior 
+a todos eles. Seu In
+telecto aumenta em 
++1. Além disso, você 
+pode usar Intelecto 
+como atributo-chave 
+para Enganação e para 
+calcular seus pontos de 
+esforço (em vez de Pre
+sença).
+ I ENERGIA  Você está 
+sempre vestindo roupas 
+complexas e modernas, 
+com luzes brilhantes e 
+dispositivos conectados 
+a baterias e à sua pele para 
+receber pequenos 
+choques estimu
+lantes. Você pode 
+usar Agilidade como
+atributo-chave para calcular seus pontos de esforço 
+(em vez de Presença). Além disso, quando acerta 
+um ataque corpo a corpo, pode gastar 1 ou mais 
+PE (limitado por sua Agilidade). Se fizer isso, seu 
+ataque causa +1d6 pontos de dano de Energia para 
+cada 1 PE gasto.
+
+ NEX 65% - Ser Assustador. Como um parasi
+ta, você sente a Entidade andar por todo o seu 
+corpo, fazendo de você uma morada. A 
+resistência a dano que você recebe por exe
+cutar a etapa ritualística de seu elemento 
+aumenta para 15, mas sua Presença é 
+reduzida permanentemente em 1. Por 
+fim, quando executa 
+sua etapa ritualística, 
+você recebe os seguintes 
+efeitos adicionais associa
+dos ao seu elemento.
+ I SANGUE  Você dilace
+rou seus próprios ór
+gãos sensitivos, como 
+olhos, nariz e orelhas, 
+para que possa sentir 
+com total intensidade 
+o sabor e a dor da sua 
+existência. Arames 
+farpados e lâminas 
+enroladas em seu 
+corpo permitem que 
+você não pare de 
+sentir. A esse pon
+to, a palavra “não” 
+já parece ser um 
+conceito inútil para 
+suas decisões: você 
+está disposto a aceitar 
+tudo, provar de tudo, sofrer tudo. 
+Você tem 50% de chance de igno
+rar o dano adicional de um acerto 
+crítico ou ataque furtivo. Além 
+disso, recebe uma arma natural 
+de mordida (dano 1d8, crítico 
+x2, perfuração). Uma vez por 
+rodada, quando usa a ação 
+agredir para atacar com 
+outra arma, você pode 
+gastar 1 PE para fa
+zer um ataque cor
+po a corpo extra 
+com a mordida.
+ I MORTE  O Lodo preto da Morte faz parte do seu 
+consumo diário, ele se espalha pelo seu organismo 
+apodrecendo seu sistema, mantendo-o vivo através 
+da morte. Não é incomum você ser considerado 
+um “acumulador de lixo”: é difícil diferenciar um 
+animal vivo de um galho morto, pois perante a 
+Morte todas as coisas são iguais. No início de cada 
+turno em que estiver morrendo, você pode fazer 
+um teste de Vigor (DT 15). Se passar, encerra a 
+condição morrendo e acorda com 1 PV. Além disso, 
+sempre que faz um acerto crítico em combate ou 
+reduz um inimigo a 0 PV, você recupera 2 PE.
+ I CONHECIMENTO  Você injeta e ingere ouro 
+líquido esporadicamente e não há mais espaço 
+para tatuagens. Ler, reler e escrever novos 
+registros faz parte da sua rotina extre
+mamente organizada e metódica. Você 
+pode deixar de ser treinado em uma de 
+suas perícias para receber um número 
+de dados de bônus igual ao seu In
+telecto. Até o fim da cena, sempre 
+que fizer um teste, você pode gastar 
+um desses dados de bônus para 
+receber +O nesse teste. Você 
+recupera todas as perícias 
+treinadas perdidas dessa 
+forma ao final de seu pró
+ximo interlúdio.
+ I ENERGIA  A inten
+sidade dos choques 
+aumenta, além de 
+ter conectado 
+em suas veias 
+pequenos 
+tubos para 
+gotejamen
+to de ácido. Respirar através 
+de uma máscara de gás para 
+inalar alucinógenos a todo 
+momento deixa tudo mais 
+divertido, colorido e caóti
+co. Sua resistência a dano 
+passa a se aplicar também a 
+dano químico. Além disso, 
+você pode extrair energia 
+de fontes elétricas; para 
+isso, deve gastar uma ação de 
+movimento e tocar uma fonte 
+de eletricidade. Você recupera 
+19
+uma quantidade de PE conforme o tipo de fonte: 
+1d4 PE para um dispositivo portátil, como um ta
+blet ou celular, 2d4 PE para um dispositivo grande, 
+como uma moto ou um carro elétrico, e 4d4 para 
+uma fonte do tamanho de uma casa. Usar este 
+efeito descarrega completamente a fonte e sobre
+carrega seus circuitos, que se tornam incapazes 
+de transmitir energia.
+
+
+ NEX 99% - Ser Aterrorizante. Você foi transfor
+mado no habitat perfeito para a entidade que reside 
+no interior de seu corpo e mente. Os efeitos por exe
+cutar sua etapa ritualística se tornam permanentes 
+(mas você ainda precisa executá-la para evitar sentir 
+fome e sede) e você passa a ser considerado uma cria
+tura paranormal para efeitos de habilidades e itens. 
+Além disso, a resistência a dano que você recebe 
+por essa trilha aumenta para 20 e você recebe 
+os seguintes efeitos adicionais associados ao 
+seu elemento.
+ I SANGUE  Você se move como 
+uma criatura bestial; não existe 
+sensibilidade ou empatia. 
+Apenas o instinto e a 
+necessidade de consumir 
+mais. Se o resultado é devo
+rar, essa é a decisão correta. 
+Pensamentos são esporádicos 
+e raros, como pequenos sustos 
+de humanidade que são engoli
+dos pelo fluxo que banha o Outro 
+Lado. Seu Intelecto diminui em –1 
+e sua Força aumenta em +1. Sempre 
+que causa dano com sua mordida em 
+um ser, você recupera 5 PV (esse ganho 
+também é multiplicado em um acerto 
+crítico). Além disso, você aprende o 
+ritual Forma Monstruosa. Entretanto, 
+seu desejo de assumir essa forma pode so
+brepujar sua própria vontade; sempre que 
+sofre dano, você deve fazer um teste de Vontade 
+(DT 10 + o dano sofrido). Se falhar e não estiver 
+sob efeito de Forma Monstruosa, sua próxima 
+ação padrão deve ser conjurar esse ritual (se 
+não puder, você perde a ação).
+ Preso na eternidade de cada segundo, você ainda é 
+arrastado pela Realidade pela percepção alheia, pois 
+mesmo que sua mente tenha se tornado o próprio 
+tempo, todas as coisas precisam de um fim. Sua 
+Presença diminui em –1 e seu Vigor aumenta em 
++1. Você recebe imunidade a dano de Morte e se 
+torna imortal (se morrer, você volta à vida no dia 
+seguinte, sendo “restaurado” pelo Lodo). Entretanto, 
+se for reduzido a 0 PV por dano de fogo ou Energia, 
+seu Lodo é destruído e você não retorna à vida. Por 
+fim, você aprende o ritual Fim Inevitável.
+
+ I MORTE  Você está morto, mas ainda é 
+forçado a existir. Sua aparência é a de um 
+cadáver apodrecido, todos os seus órgãos 
+foram consumidos pela Morte e, por dedicar sua 
+existência inteira à entidade, você se tornou imortal. 
+Preso na eternidade de cada segundo, você ainda é 
+arrastado pela Realidade pela percepção alheia, pois 
+mesmo que sua mente tenha se tornado o próprio 
+tempo, todas as coisas precisam de um fim. Sua 
+Presença diminui em –1 e seu Vigor aumenta em 
++1. Você recebe imunidade a dano de Morte e se 
+torna imortal (se morrer, você volta à vida no dia 
+seguinte, sendo “restaurado” pelo Lodo). Entretanto, 
+se for reduzido a 0 PV por dano de fogo ou Energia, 
+seu Lodo é destruído e você não retorna à vida. Por 
+fim, você aprende o ritual Fim Inevitável
+
+I CONHECIMENTO  Sua boca desa
+pareceu após você costurá-la com 
+fios dourados, pois ninguém é digno 
+do seu ensinamento. Seus olhos au
+mentaram e ficaram mais profundos, 
+com escleras negras. Todos os seus 
+membros se alongaram e ficaram mais 
+finos. Suas tatuagens e textos se con
+verteram em sigilos do Outro Lado. A 
+verdade que você deve esquecer está 
+atrás de uma porta dourada, e você 
+consegue enxergá-la, mas sabe que ao 
+abri-la, irá perder tudo. Sua Força dimi
+nui em –1 e seu Intelecto aumenta em 
++1. Além disso, você recebe Percepção 
+às Cegas e aprende um ritual de Conheci
+mento de 4º círculo a sua escolha. Entre
+tanto, sempre que conjura esse ritual, você 
+perde a memória de tudo que vivenciou 
+desde o início da cena.
+ MONSTRUOSA 
+TRANSFORMAÇÃO
+ Apesar dos alertas e resultados anteriores 
+desastrosos, a tentação de usar o 
+paranormal contra si mesmo é muito grande. 
+Alguns agentes, movidos por orgulho, 
+ingenuidade ou desespero, acabam seguindo 
+esse caminho, acreditando que com eles 
+“será diferente”, e que eles serão aqueles 
+que conseguirão fitar as Entidades e usar 
+seu poder para o bem.
+ Eles sempre estão errados.
+ I ENERGIA  Tudo faz parte de você e você é 
+tudo. Você se tornou uma metamorfose am
+bulante, assumindo uma forma plasmática 
+que não pode ser descrita nem como líquida, 
+sólida ou gasosa. Seu corpo flutua alguns 
+centímetros acima do chão e não é mais 
+possível segurar objetos, afinal tudo que 
+você toca também se torna parte de você 
+enquanto está em contato. Seus traços 
+físicos mudam constantemente e você 
+não pode ser mais descrito com apenas 
+uma aparência definitiva. Decisões ló
+gicas não fazem mais parte da sua vida, 
+o Caos é inevitável. Sua Força diminui 
+em –1 e sua Agilidade aumenta em +1. 
+Você pode pairar a 1,5m do chão com 
+deslocamento 12m (o que permite que 
+ignore terreno difícil e o torna imu
+ne a dano por queda), pode passar 
+por qualquer espaço por onde uma 
+criatura Minúscula poderia passar e 
+se torna imune a condições de paralisia de 
+origem física (como ser agarrado ou enredado). 
+Por fim, você aprende o ritual Deflagração de 
+Energia. Entretanto, você não pode mais se 
+beneficiar de itens vestidos e, por não ter corpo 
+físico, só consegue manipular objetos com sua 
+mente; você pode manipular um objeto dessa 
+forma por vez, e apenas objetos que poderia 
+manipular com suas duas mãos.
+
+
+
+TRILHAS DE 
+ESPECIALISTA
+
+
+ Atirador de Elite
+ Um tiro, uma morte. Ao contrário dos combatentes, 
+você é perito em neutralizar ameaças de longe, termi
+30
+ nando uma briga antes mesmo que ela comece. Você 
+trata sua arma como uma ferramenta de precisão, 
+sendo capaz de executar façanhas incríveis.
+
+ NEX 10% - Mira de Elite. Você recebe proficiência 
+com armas de fogo que usam balas longas e soma 
+seu Intelecto em rolagens de dano com essas armas.
+
+ NEX 40% - Disparo Letal. Quando faz a ação 
+mirar você pode gastar 1 PE para aumentar em +2 a 
+margem de ameaça do próximo ataque que fizer até 
+o final de seu próximo turno. 
+
+NEX 65% - Disparo Impactante. Se estiver 
+usando uma arma de fogo com calibre grosso você 
+pode gastar 2 PE para fazer as manobras derrubar, 
+desarmar, empurrar e quebrar usando um ataque 
+a distância.
+
+ NEX 99% - Atirar para Matar. Quando faz um 
+acerto crítico com uma arma de fogo, você causa dano 
+máximo, sem precisar rolar dados
+
+
+Infiltrad or
+ Você é um perito em infiltração e sabe neutralizar 
+alvos desprevenidos sem causar alarde. Combinando 
+talento acrobático, destreza manual e conhecimento 
+técnico você é capaz de superar qualquer barreira de 
+defesa, mesmo quando a missão parece impossível.
+
+ NEX 10% - Ataque Furtivo. Você sabe atingir os 
+pontos vitais de um inimigo distraído. Uma vez por 
+rodada, quando atinge um alvo desprevenido com 
+um ataque corpo a corpo ou em alcance curto, ou um 
+alvo que você esteja flanqueando, você pode gastar 1 
+PE para causar +1d6 pontos de dano do mesmo tipo 
+da arma. Em NEX 40% o dano adicional aumenta 
+para +2d6, em NEX 65% aumenta para +3d6 e em 
+NEX 99% aumenta para +4d6.
+
+ NEX 40% - Gatuno. Você recebe +5 em Atletismo 
+e Crime e pode percorrer seu deslocamento normal 
+quando se esconder sem penalidade (veja a perícia 
+Furtividade).
+
+ NEX 65% - Assassinar. Você pode gastar uma 
+ação de movimento e 3 PE para analisar um alvo 
+em alcance curto. Até o fim de seu próximo turno, 
+seu primeiro Ataque Furtivo que causar dano a ele 
+tem seus dados de dano extras dessa habilidade 
+dobrados. Além disso, se sofrer dano de seu ataque, 
+o alvo fica inconsciente ou morrendo, à sua escolha 
+(Fortitude DT Agi evita).
+
+ NEX 99% - Sombra Fugaz. Quando faz um teste de 
+Furtividade após atacar ou fazer outra ação chamativa, 
+você pode gastar 3 PE para não sofrer a penalidade 
+de –15 no teste
+
+
+Médico de Campo
+ Você é treinado em técnicas de primeiros socorros 
+e tratamento de emergência, o que torna você um 
+membro valioso para qualquer grupo de agentes. Ao 
+contrário dos profissionais de saúde convencionais, 
+você está acostumado com o campo de batalha e sabe 
+tomar decisões rápidas no meio do caos.
+ Especial: para escolher esta trilha, você precisa ser 
+treinado em Medicina. Para usar as habilidades desta 
+trilha, você precisa possuir um kit de medicina.
+
+ NEX 10% - Paramédico. Você pode usar uma ação 
+padrão e 2 PE para curar 2d10 pontos de vida de um 
+aliado adjacente. Você pode curar +1d10 PV respec
+tivamente em NEX 40%, 65% e 99%, gastando +1 PE 
+por dado adicional de cura.
+
+ NEX 40% - Equipe de Trauma. Você pode usar 
+uma ação padrão e 2 PE para remover uma condição 
+negativa (exceto morrendo) de um aliado adjacente.
+
+ NEX 65% - Resgate. Uma vez por rodada, se estiver 
+em alcance curto de um aliado machucado ou mor
+rendo, você pode se aproximar do aliado com uma 
+ação livre (desde que seja capaz de fazê-lo usando 
+seu deslocamento normal). Além disso, sempre que 
+curar PV ou remover condições do aliado, você e 
+o aliado recebem +5 na Defesa até o início de seu 
+próximo turno. Por fim, para você, o total de espaços 
+ocupados por carregar um personagem é reduzido 
+pela metade.
+
+ NEX 99% - Reanimação. Uma vez por cena, você 
+pode gastar uma ação completa e 10 PE para trazer 
+de volta a vida um personagem que tenha morrido 
+na mesma cena (exceto morte por dano massivo).
+
+
+ Negociador
+ Você é um diplomata habilidoso e consegue influen
+ciar outras pessoas, seja por lábia ou intimidação. 
+Sua capacidade de avaliar situações com rapidez e 
+eficiência pode tirar o grupo de apuros que nem a 
+mais poderosa das armas poderia resolver.
+
+ NEX 10% - Eloquência. Você pode usar uma ação 
+completa e 1 PE por alvo em alcance curto para afetar 
+outros personagens com sua fala. Faça um teste de Di
+plomacia, Enganação ou Intimidação contra a Vontade 
+dos alvos. Se você vencer, os alvos ficam fascinados 
+enquanto você se concentrar (uma ação padrão por 
+rodada). Um alvo hostil ou que esteja envolvido em 
+combate recebe +5 em seu teste de resistência e tem 
+direito a um novo teste por rodada, sempre que você 
+se concentrar Um personagem que passar no teste 
+fica imune a este efeito por um dia.
+
+ NEX 40% - Discurso Motivador. Você pode gas
+tar uma ação padrão e 4 PE para inspirar seus aliados 
+com suas palavras. Você e todos os seus aliados em 
+alcance curto ganham +O em testes de perícia até o 
+fim da cena. A partir de NEX 65%, você pode gastar 
+8 PE para fornecer um bônus total de +OO.
+
+ NEX 65% - Eu Conheço um Cara. Uma vez por 
+missão, você pode ativar sua rede de contatos para 
+pedir um favor, como por exemplo trocar todo o equi
+pamento do seu grupo (como se tivesse uma segunda 
+fase de preparação de missão), conseguir um local de 
+descanso ou mesmo ser resgatado de uma cena. O 
+mestre tem a palavra final de quando é possível usar 
+essa habilidade e quais favores podem ser obtidos.
+
+ NEX 99% - Truque de Mestre. Acostumado a 
+uma vida de fingimento e manipulação, você pode 
+gastar 5 PE para simular o efeito de qualquer habi
+lidade que você tenha visto um de seus aliados usar 
+durante a cena. Você ignora os pré-requisitos da 
+habilidade, mas ainda precisa pagar todos os seus 
+custos, incluindo ações, PE e materiais, e ela usa 
+os seus parâmetros de jogo, como se você estivesse 
+usando a habilidade em questão
+
+
+Técnico
+ Sua principal habilidade é a manutenção e reparo do 
+valioso equipamento que seu time carrega em mis
+são. Seu conhecimento técnico também permite que 
+improvise ferramentas com o que tiver à disposição 
+e sabote os itens usados por seus inimigos.
+
+ NEX 10% - Inventário Otimizado. Você soma 
+seu Intelecto à sua Força para calcular sua capacidade 
+de carga. Por exemplo, se você tem Força 1 e Intelecto 
+3, seu inventário tem 20 espaços.
+
+ NEX 40% - Remendão. Você pode gastar uma ação 
+completa e 1 PE para remover a condição quebrado de 
+um equipamento adjacente até o final da cena. Além 
+disso, qualquer equipamento geral tem sua categoria 
+reduzida em I para você.
+
+ NEX 65% - Improvisar. Você pode improvisar 
+equipamentos com materiais ao seu redor. Escolha 
+um equipamento geral e gaste uma ação completa 
+e 2 PE, mais 2 PE por categoria do item escolhido. 
+Você cria uma versão funcional do equipamento, 
+que segue suas regras de espaço e categoria como 
+normal. Ao final da cena, seu equipamento impro
+visado se torna inútil.
+
+ NEX 99% - Preparado para Tudo. Você sempre 
+tem o que precisa para qualquer situação. Sempre que 
+precisar de um item qualquer (exceto armas), pode 
+gastar uma ação de movimento e 3 PE por categoria do 
+item para lembrar que colocou ele no fundo da bolsa! 
+Depois de encontrado, o item segue normalmente as 
+regras de inventário
+
+BIBLIOTECÁRIO
+ Poucas pessoas lêem tanto quanto você, mas diferente do 
+que imaginam, passar a vida cercado de conhecimento 
+não o torna menos apto. Na verdade, seu vasto conhe
+cimento é muitas vezes a única solução para situações 
+desesperadoras. Alguém precisa ser a chave dos segredos. 
+Alguém precisa saber, mesmo que isso signifique perder.
+
+ NEX 10% - Conhecimento Prático. Você pode se 
+lembrar de muitas informações úteis de suas leituras. 
+Quando faz um teste de perícia (exceto Luta e Ponta
+ria), você pode gastar 2 PE para mudar o atributo-base 
+da perícia para Int. Se possuir o poder Conhecimento 
+Aplicado, em vez disso seu custo é reduzido em –1 PE.
+
+ NEX 40% - Leitor Contumaz. Você consome livros 
+de forma obstinada. Cada dado de bônus que você rece
+be pela ação de interlúdio ler aumenta para 1d8 e você 
+pode aplicar esse bônus em testes de qualquer perícia. 
+Além disso, quando usa este bônus em um teste, você 
+pode gastar 2 PE para aumentá-lo em +1 dado 
+(de 1d8 para 2d8).
+
+ NEX 65% - Rato de Biblioteca. Acostuma
+do com bibliotecas, você sabe como extrair 
+informações de qualquer lugar repleto de li
+vros. Se estiver em um ambiente com muitos 
+livros (como uma livraria, uma biblioteca ou um 
+antiquário), você pode gastar alguns minutos 
+(ou, se estiver em uma cena de investigação, 
+uma rodada) para receber os benefícios de 
+uma ação de interlúdio à sua escolha entre 
+ler e revisar caso. Você só pode usar essa 
+habilidade uma vez por cena.
+
+ NEX 99% - A Força do Saber. Tanto tempo 
+passado entre livros e textos fortaleceu sua 
+mente. Seu Intelecto aumenta em +1 e você 
+soma o valor desse atributo em seu total de PE. 
+Além disso, escolha uma perícia qualquer. Você 
+troca o atributo-base dessa perícia para Intelecto.
+
+PERSEVERANTE
+ Você sabe que é um sobrevivente. Talvez tenha sido 
+o único a escapar com vida de uma grande tragédia, 
+ou simplesmente possua o espírito necessário para 
+perseverar onde todos os outros caíram. Em filmes 
+de terror, os monstros e assassinos costumam pegar 
+suas vítimas isoladas uma a uma com facilidade, até 
+se depararem com uma protagonista resiliente e que 
+parece nunca desistir. Seja por experiência ou instin
+to, você tem certeza que se estivesse em um desses 
+filmes, seria o último sobrevivente a sair vivo no final.
+
+ NEX 10% - Soluções Improvisadas. Você não é 
+um sobrevivente à toa. Quando as coisas dão errado, 
+você consegue pensar em alguma solução inusitada. 
+Você pode gastar 2 PE para rolar novamente 1 
+mIa
+ dos dados de um teste recém-realizado (apenas uma 
+vez por teste) e ficar com o melhor resultado entre 
+as duas rolagens.
+
+ NEX 40% - Fuga Obstinada. Seu instinto de so
+brevivência lhe impulsiona para desprender as mais 
+desesperadas fugas. Você recebe +O em testes de 
+perícia para fugir de um inimigo (seja em uma perse
+guição ou não). Além disso, em cenas de perseguição, 
+se você for a presa, pode acumular até 4 falhas antes 
+de ser pego.
+
+ NEX 65% - Determinação Inquestionável. Nos 
+momentos mais sombrios, você consegue encontrar 
+em seu interior a força para perseverar. Uma vez 
+por cena, você pode gastar 5 PE e uma ação padrão 
+para remover uma condição de medo, mental ou de 
+paralisia que esteja lhe afligindo. A critério do mestre, 
+certas condições, como paralisia causada por uma 
+doença, não podem ser removidas por essa habilidade.
+
+ NEX 99% - Só Mais um Passo... Você 
+não chegou até aqui para morrer, e 
+fará qualquer coisa para escapar 
+com vida. Uma vez por rodada, 
+quando sofre dano que reduziria 
+seus PV a 0, você pode gastar 5 PE 
+para, em vez disso, ficar com 1 PV. 
+Esta habilidade não funciona 
+contra dano massivo
+
+MUAMBEIRO
+ Você sempre foi bom em lidar com equipamentos, e 
+aprendeu como produzir ou encontrar, os itens 
+certos em qualquer ocasião. Esse talento 
+pode ser fundamental para manter todos 
+em sua equipe vivos.
+
+ NEX 10% - Mascate. 
+Você aprendeu um ofí
+cio útil e desenvolveu 
+métodos para ter sempre 
+à mão o que precisa para 
+praticá-lo. Você recebe trei
+namento em uma Profissão 
+à sua escolha entre armeiro, 
+engenheiro ou químico, e re
+cebe +5 em sua capacidade 
+de carga. Além disso, quando 
+fabrica um item improvisado 
+a DT é reduzida em –10 (em 
+vez de –5).
+
+ NEX 40% - Fabricação 
+Própria. Você desenvol
+veu suas próprias técnicas 
+para fabricar equipamentos 
+rapidamente. Você leva apenas 
+metade do tempo para fabricar 
+itens mundanos. Ou seja, com uma 
+ação de manutenção pode 
+fabricar duas munições, 
+explosivos e demais 
+consumíveis, e precisa 
+de apenas uma ação 
+de manutenção para 
+armas, proteções 
+e demais equi
+pamentos 
+gerais (itens 
+modificados ou paranormais não são 
+afetados por esta habilidade).
+
+ NEX 65% - Laboratório de Campo. Sua habilidade em reparar e fabricar itens 
+permite que você lide com a complexidade de dispositivos paranormais. Você 
+recebe treinamento em uma Profissão à sua escolha entre armeiro, engenheiro ou 
+químico ou, se já for treinado em uma dessas perícias, recebe +5 nela. Além disso, 
+você pode usar fabricação em campo para fabricar e consertar itens paranormais 
+(fabricar um item paranormal exige três ações de interlúdio que não precisam ser 
+consecutivas, veja p. 94).
+
+ NEX 99% - Achado Conveniente. Entre protótipos e itens encontrados durante a missão, 
+sua mochila sempre pode ter a ferramenta certa para a ocasião. Você pode gastar uma ação completa e 5 PE 
+para “produzir” um item de até categoria III (exceto itens paranormais). O item pode ser um protótipo em que 
+você estava trabalhando, um item encontrado anteriormente na missão ou qualquer outra justificativa apro
+vada pelo mestre. O item permanece em funcionamento até o fim da cena, quando então deixa de funcionar 
+permanentemente (fica sem energia ou munição, uma peça fundamental se gasta ou quebra etc)
+
+ Conduíte
+ Você domina os aspectos fundamentais da conjuração 
+de rituais e é capaz de aumentar o alcance e velocidade 
+de suas conjurações. Conforme sua conexão com as 
+entidades paranormais aumenta você se torna capaz 
+de interferir com os rituais de outros ocultistas.
+
+ NEX 10% - Ampliar Ritual. Quando lança um 
+ritual, você pode gastar +2 PE para aumentar seu 
+alcance em um passo (de curto para médio, de médio 
+para longo ou de longo para extremo) ou dobrar sua 
+área de efeito.
+
+ NEX 40% - Acelerar Ritual. Uma vez por rodada, 
+você pode aumentar o custo de um ritual em 4 PE 
+para conjurá-lo como uma ação livre.
+
+ NEX 65% - Anular Ritual. Quando for alvo de 
+um ritual, você pode gastar uma quantidade de PE 
+igual ao custo pago por esse ritual e fazer um teste 
+oposto de Ocultismo contra o conjurador. Se vencer, 
+você anula o ritual, cancelando todos os seus efeitos.
+
+ NEX 99% - Canalizar o Medo. Você aprende o 
+ritual Canalizar o Medo
+
+
+Flagelador
+ Dor é um poderoso catalisador paranormal e você 
+aprendeu a transformá-la em poder para seus rituais. 
+Quando se torna especialmente poderoso, consegue 
+usar a dor e o sofrimento de seus inimigos como 
+instrumento de seus rituais ocultistas.
+
+ NEX 10% - Poder do Flagelo. Ao conjurar um 
+ritual, você pode gastar seus próprios pontos de vida 
+para pagar o custo em pontos de esforço, à taxa de 2 
+PV por PE pago. Pontos de vida gastos dessa forma 
+só podem ser recuperados com descanso.
+
+ NEX 40% - Abraçar a Dor. Sempre que sofrer 
+dano não paranormal, você pode gastar uma reação 
+e 2 PE para reduzir esse dano à metade.
+
+ NEX 65% - Absorver Agonia. Sempre que reduz 
+um ou mais inimigos a 0 PV com um ritual, você 
+recebe uma quantidade de PE temporários 
+igual ao círculo do ritual utilizado. Por exem
+plo, se ativar esse poder com um ritual de 2º 
+círculo, receberá 2 PE.
+
+ NEX 99% - Medo Tangível. Você aprende 
+o ritual Medo Tangível
+
+
+ Graduado
+ Você foca seus estudos em se tornar um con
+jurador versátil e poderoso, conhecendo mais 
+rituais que os outros ocultistas e sendo capaz 
+de torná-los mais difíceis de serem resisti
+dos. Seu objetivo é desvendar e dominar os 
+segredos do Outro Lado, custe o que custar.
+
+ NEX 10% - Saber Ampliado. Você aprende 
+um ritual de 1º círculo. Toda vez que ganha 
+acesso a um novo círculo, aprende um ritual 
+adicional daquele círculo. Esses rituais não 
+contam no seu limite de rituais.
+
+ NEX 40% - Grimório Ritualístico. 
+Você cria um grimório especial, que arma
+zena rituais que sua mente não seria capaz 
+de guardar. Você aprende uma quantidade 
+de rituais de 1º ou 2º círculos igual ao seu 
+Intelecto. Quando ganha acesso a um novo 
+círculo, pode incluir um novo ritual desse 
+círculo em seu grimório. Esses rituais não 
+contam em seu limite de rituais conhecidos. 
+Para conjurar um ritual armazenado em 
+seu grimório, você precisa antes empunhar 
+o grimório e gastar uma ação completa o 
+folheando para relembrando o ritual. O 
+grimório ocupa 1 espaço em seu inventário. 
+Se perdê-lo, você pode replicá-lo com duas 
+ações de interlúdio.
+
+ NEX 65% - Rituais Eficientes. A DT para 
+resistir a todos os seus rituais aumenta em +5.
+
+ NEX 99% - Conhecendo o Medo. Você 
+aprende o ritual Conhecendo o Medo
+
+
+ Intuitivo
+ Assim como combatentes treinam seus 
+corpos para resistir a traumas físicos, você 
+preparou sua mente para resistir aos efeitos 
+do Outro Lado. Seu foco e força de vontade 
+fazem com que você expanda os limites de 
+suas capacidades paranormais.
+
+ NEX 10% - Mente Sã. Você compreende 
+melhor as entidades do Outro Lado, e passa 
+a ser menos abalado por seus efeitos. Você re
+cebe resistência paranormal +5 (+5 em testes 
+de resistência contra efeitos paranormais).
+
+ NEX 40% - Presença Poderosa. Sua re
+siliência mental faz com que você possa ex
+trair mais do Outro Lado. Você adiciona sua 
+Presença ao seu limite de PE por turno, mas 
+apenas para conjurar rituais (não para DT).
+
+ NEX 65% - Inabalável. Você recebe resis
+tência a dano mental e paranormal 10. Além 
+disso, quando é alvo de um efeito paranormal 
+que permite um teste de Vontade para reduzir 
+o dano à metade, você não sofre dano algum 
+se passar.
+
+ NEX 99% - Presença do Medo. Você 
+aprende o ritual Presença do Medo
+
+
+ Lâmina Paranormal
+ Alguns ocultistas preferem ficar fechados em 
+suas bibliotecas estudando livros e rituais. 
+Outros preferem investigar fenômenos para
+normais em sua fonte. Já você, prefere usar o 
+paranormal como uma arma. Você aprendeu 
+e dominou técnicas de luta mesclando suas 
+habilidades de conjuração com suas capaci
+dades de combate.
+
+ NEX 10% - Lâmina Maldita. Você aprende 
+o ritual Amaldiçoar Arma. Se já o conhece, 
+seu custo é reduzido em –1 PE. Além disso, 
+quando conjura esse ritual, você pode usar 
+Ocultismo, em vez de Luta ou Pontaria, para 
+testes de ataque com a arma amaldiçoada.
+
+ NEX 40% - Gladiador Paranormal. 
+Sempre que acerta um ataque corpo a corpo 
+em um inimigo, você recebe 2 PE temporários. 
+Você pode ganhar um máximo de PE tempo
+rários por cena igual ao seu limite de PE. PE 
+temporários desaparecem no final da cena.
+
+ NEX 65% - Conjuração Marcial. Uma 
+vez por rodada, quando você lança um ritual 
+com execução de uma ação padrão, pode gas
+tar 2 PE para fazer um ataque corpo a corpo 
+como uma ação livre.
+
+ NEX 99% - Lâmina do Medo. Você aprende 
+o ritual Lâmina do Medo
+
+
+EXORCISTA
+ Da escuridão da noite, quando as sombras se tornam 
+mais densas, emerge um chamado desesperado. Um 
+grito sufocado pela presença maligna que assola 
+uma alma atormentada. É então que o exorcista 
+se ergue para enfrentar o paranormal. Com sua 
+fé como escudo e suas palavras como espada, 
+independente de sua religião ou crença, você 
+mergulha na escuridão, onde a Realidade 
+e o Outro Lado travam uma batalha pelo 
+medo humano.
+
+ NEX 10% - Revelação do Mal. 
+Qualquer que seja sua fé, seus estu
+dos teológicos o prepararam para 
+perceber os sinais do paranor
+mal. Você recebe treinamento 
+em Religião ou, se já for trei
+nado nesta perícia, recebe +2 
+nela. Além disso, pode usar essa 
+perícia no lugar de Investigação 
+e Percepção para notar e en
+contrar seres, rastros ou pistas que 
+tenham traços paranormaise no lugar 
+de Ocultismo.
+
+ NEX 40% - Poder da Fé. Sua fé e o 
+estudo de suas doutrinas religiosas ali
+mentam suas defesas mentais e espiri
+tuais. Você se torna veterano em Reli
+gião ou, se já for veterano, recebe +O 
+nessa perícia. Quando falha em um 
+teste de resistência, você pode gastar 
+2 PE para repetir o teste usando Re
+ligião, mas deve aceitar o resultado 
+da segunda rolagem, mesmo que 
+seja menor que a primeira.
+
+ NEX 65% - Parareligiosi
+dade. Você conjura rituais com 
+uma intensidade tão fervorosa 
+que potencializa seus efeitos. Quando 
+ conjura um ritual, você pode gastar +2 PE 
+para adicionar a ele um efeito 
+equivalente ao de um 
+catalisador ritualístico 
+a sua escolha.
+
+NEX 99% - Chagas da Resistência. Por meio 
+de sua fé, sua mente consegue extrair forças de seu 
+corpo para suportar qualquer agressão. Quando sua 
+Sanidade é reduzida a 0, você pode gastar 10 PV para, 
+em vez disso, ficar com SAN 1.
+
+POSSUÍDO
+ Você nunca quis contato com o Outro Lado, mas 
+ele parece ter especialmente escolhido você para 
+perseguir. Desde que consegue lembrar, você es
+tava predestinado a essa maldição, como se 
+o paranormal estivesse crescendo em seu 
+interior antes mesmo de seu nascimento… 
+E assim, você foi empurrado para uma 
+batalha sem fim… Sem opção, só lhe resta 
+lutar, enquanto o paranormal dentro de 
+você aflora cada vez mais.
+
+ NEX 10% - Poder Não Desejado. Você 
+sente o paranormal tomando forma em 
+seu interior. Ele oferece um poder assus
+tador, mas ao mesmo tempo exige que 
+você siga o caminho que ele escolheu. 
+Sempre que receber um novo poder de 
+ocultista, em vez disso você recebe o 
+poder Transcender. Entretanto, você 
+possui uma reserva paranormal 
+alimentada pela presença em seu 
+interior. Essa reserva é represen
+tada por pontos de possessão 
+(PP); seu total de PP é igual a 
+3, mais 2 pontos para cada po
+der Transcender que possui. O 
+limite de PP que você pode gastar 
+por turno é igual à sua Presença; 
+para cada PP gasto, você recupera 
+10 PV ou 2 PE. Você recupera 1 PP 
+a cada ação de interlúdio dormir. 
+
+NEX 40% - As Sombras Dentro 
+de Mim. Cada vez mais a Entidade 
+cresce dentro de você, tomando seus 
+músculos e guiando seus movimen
+tos. Sua recuperação de PP aumenta 
+para 2 por ação dormir. Além disso, 
+ você pode gastar 2 PE para permitir que sua En
+tidade controle temporariamente seus músculos. 
+Você assume uma postura desnatural que permite 
+movimentos bizarros e silenciosos; você recebe +O 
+em Acrobacia, Atletismo e Furtividade por uma 
+rodada e, se estiver em uma cena de furtividade (veja 
+p. 92), nesta rodada o aumento em sua visibilidade 
+por qualquer ação é reduzido em –1.
+
+ NEX 65% - Ele Me Ensina. Mais do que apenas uma 
+força, o paranormal lentamente se torna uma voz, 
+sussurrando segredos em sua mente. Escolha entre 
+transcender ou receber o primeiro poder de 
+uma trilha de ocultista que não a sua. Você 
+precisa atender os pré-requisitos do poder.
+
+ NEX 99% - Tornamo-nos Um. Desa
+brochando em seu interior, o paranormal 
+se manifesta como uma dádiva poderosa. 
+Baseado no elemento com que tem afi
+nidade, você recebe um dos poderes 
+a seguir. 
+
+b Presente da Obsessão (Sangue). 
+Uma vez por rodada, você pode 
+gastar 6 PE para recuperar 50 
+PV. Quando faz isso, até o iní
+cio do seu próximo turno, os 
+bônus por treinamento em 
+suas perícias baseadas em 
+Força e Vigor, e em Inti
+midação, mudam para 
++35. As demais perícias 
+baseadas em Presença 
+mudam para –10. Você 
+pode ativar esse poder 
+mesmo inconsciente.
+
+ b Presente do Tempo (Morte).
+ Uma vez por rodada, você pode 
+gastar 6 PE para receber um turno 
+adicional na última contagem de 
+iniciativa da rodada. Você pode ativar essa 
+habilidade mesmo inconsciente.
+
+ b Presente do Saber (Conhecimento). Uma 
+vez por cena, você pode gastar 6 PE para 
+reescrever uma fração de seu próprio ser. 
+Você recebe um poder qualquer até o fim da 
+cena. Você deve cumprir os pré-requisitos 
+do poder escolhido, e não pode escolher 
+poderes de trilha de NEX 99%. A cada vez 
+que usa este poder, você deve fazer um teste de 
+Vontade (DT 15 + 5 para cada vez que usou este 
+poder na mesma missão). Se falhar, perde 1d6 
+pontos de Sanidade para cada vez que usou esse 
+poder nesta missão.
+
+ b Presente do Espaço (Energia). Uma vez por roda
+da, você pode gastar 6 PE para se teletransportar 
+para outro ponto em alcance médio. Você não 
+precisa conhecer o local para onde vai nem precisa 
+vê-lo, mas se teletransportar-se para um espaço 
+ocupado vai ser arremessado para o espaço 
+disponível mais próximo.
+
+
+ PARAPSICÓLOGO
+ Você esteve em um meio de pessoas dedi
+cadas a cuidar da mente humana… Mas, 
+quando descobriu a maior ameaça 
+para a nossa psique, descobriu 
+também que seus colegas não pas
+savam de tolos céticos. Quando 
+você falou sobre o paranormal, 
+eles apenas riram. Desprezado 
+pela academia, você decidiu per
+seguir a verdade sozinho. Afinal, 
+a diferença entre o remédio e o 
+veneno é a dosagem. Se o pa
+ranormal pode ser usado para 
+perturbar, também pode ser usado 
+para sanar. Ele só precisa ser es
+tudado, analisado e aplicado por 
+alguém competente como você, 
+mesmo que isso custe sua vida.
+ Especial: para escolher esta 
+trilha, você precisa ser treinado 
+em Profissão (psicólogo).
+
+ NEX 10% - Terapia. Por 
+meio de seus estudos pa
+rapsicológicos, você come
+ça a compreender os efeitos 
+do paranormal sobre a mente 
+humana. Você pode usar Pro
+fissão (psicólogo) como Diploma
+cia. Além disso, uma vez por rodada, 
+quando você ou um aliado em alcance 
+curto falha em um teste de resistên
+cia contra um efeito que causa dano 
+mental, você pode gastar 2 PE para fazer um teste de 
+Profissão (psicólogo) e usar o resultado desse teste 
+no lugar do teste de resistência falho. Se já possuir 
+esta habilidade, em vez disso seu custo é reduzido 
+em –1 PE e você recebe +2 em Profissão (psicólogo).
+
+ NEX 40% - Palavras-chave. Combinando psi
+cologia e estudos do Outro Lado, você desenvolveu 
+técnicas e sabe o que dizer para restaurar a sanidade de 
+seus pacientes. Quando passa em um teste de perícia 
+para acalmar (veja OPRPG, p. 44), você pode gastar 
+uma quantidade de pontos de esforço até seu 
+limite de PE. Para cada 1 PE gasto desta forma, 
+a pessoa que está sendo tratada recupera 1 
+ponto de Sanidade (ou 1 PD, se estiver usando 
+a regra “Jogando sem Sanidade”  da p. 104).
+
+ NEX 65% - Reprogramação Mental. 
+Ignorando os avisos de cautela de seus pa
+res, você descobriu 
+como hipnotizar e 
+manipular a mente 
+humana para repro
+gramar suas capacida
+des. Você pode gastar 5 
+PE e uma ação de inter
+lúdio para manipular o 
+cérebro de outra pessoa vo
+luntária em alcance curto (essa 
+pessoa também gasta sua ação de 
+interlúdio). Até o próximo interlúdio, 
+a pessoa recebe, à escolha dela, um 
+poder geral, um poder da própria 
+classe ou o primeiro poder de uma 
+trilha que não a dela, acreditando 
+que isso sempre fez parte de sua 
+vida. A pessoa precisa cumprir 
+os pré-requisitos do poder es
+colhido.
+
+ NEX 99% - A Sanidade Está 
+Lá Fora. Graças aos seus es
+tudos, a capacidade de curar 
+a mente humana de (quase) todas as 
+mazelas está ao seu alcance. Você pode 
+gastar uma ação de movimento e 5 PE 
+para remover todas as condições de medo 
+ou mentais de uma pessoa adjacente (incluindo 
+você mesmo)
+
+TRILHAS DE 
+SOBREVIVENTE
+
+ DURÃO
+
+
+ Você é um indivíduo resistente, que consegue de
+fender a si mesmo ou aos outros em situações de 
+perigo. Pode ser um atleta, segurança, trabalhador 
+da construção civil etc.
+ Estágio 2 – Durão. Você recebe +4 PV. Quando 
+subir para o 3º estágio, recebe +2 PV.
+ Estágio 4 – Pancada Forte. Quando faz um 
+ataque, você pode gastar 1 PE para receber +O no 
+teste de ataque. Se você se tornar um combatente 
+(veja “Treinamento Especial”, a seguir), perde esta 
+habilidade, mas reduz o custo de ativação de Ataque 
+Especial em –1 PE
+
+ESPERTO
+ Você é um estudante, técnico, engenheiro ou outra 
+pessoa equipada com conhecimento, inteligência e 
+persuasão.
+
+ Estágio 2 – Esperto. Você se torna treinado em 
+uma perícia adicional a sua escolha.
+
+ Estágio 4 – Entendido. Escolha duas perícias nas 
+quais você é treinado (exceto Luta e Pontaria). Quando 
+faz um teste de uma dessas perícias, você pode gastar 
+1 PE para somar +1d4 no resultado do teste. Se você 
+se tornar um especialista (veja “Treinamento Especial”, 
+a seguir), perde esta habilidade, mas reduz o custo de 
+ativação de Perito em –1 PE
+
+
+ ESOTÉRICO
+ Você é uma pessoa ligada a aspectos espirituais do 
+mundo, como religiões, astrologia e cartomancia, 
+ou apenas possui um sexto sentido em relação ao 
+paranormal e ao Outro Lado.
+
+ Estágio 2 – Esotérico. Você pode gastar uma ação 
+padrão e 1 PE para sentir energias paranormais em 
+alcance curto. Isso pode dar alguma pista em uma 
+investigação ou alertá-lo de algum perigo iminente. 
+O mestre dirá quais informações você consegue obter, 
+se houver.
+
+ Estágio 4 – Iniciado. Você aprende e pode conjurar 
+um ritual de 1º círculo a sua 
+escolha. Se você se tornar 
+um ocultista (veja “Treina
+mento Especial”, a seguir), 
+soma este ritual aos três 
+rituais que aprende 
+com Escolhido pelo 
+Outro Lado

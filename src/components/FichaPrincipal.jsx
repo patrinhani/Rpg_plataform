@@ -10,6 +10,7 @@ import DefesaStatus from './ficha/defesa-status';
 import Pericias from './ficha/pericias';
 import Controles from './ficha/controles';
 import CalculoDetalhado from './ficha/calculo-detalhado';
+// ProgressaoHabilidades foi removido desta importação
 
 function FichaPrincipal({
   personagem,
@@ -17,7 +18,8 @@ function FichaPrincipal({
   fichaInstance,
   handleFichaChange,
   controlesProps,
-  trilhasPorClasse // Recebe a prop
+  trilhasPorClasse,
+  progressaoData // A prop ainda é recebida do App.jsx
 }) {
     // 1. Extrai canChangeTheme do objeto calculados
     const { canChangeTheme } = calculados; 
@@ -62,6 +64,8 @@ function FichaPrincipal({
         dadosCalculados={calculados}
         onFichaChange={handleFichaChange}
       />
+
+      {/* O componente ProgressaoHabilidades foi removido desta seção, pois foi movido para a aba "Progressão". */}
 
       <CalculoDetalhado
         dados={personagem.bonusManuais}

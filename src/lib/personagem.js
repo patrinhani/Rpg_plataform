@@ -6,6 +6,8 @@
  * parseInt(valor) || 0 para tratar "" como 0.
  * - Adicionado 'export { ficha }'
  * * (NOVO) Implementação completa do Grimório de Rituais (this.rituais, add/remove, get/setDados)
+ * * (NOVO) Adicionados campos para Elemento de Trilhas Especiais (monstruoso_elemento e possuido_elemento).
+ * * (NOVO) Adicionado array para Trilhas Personalizadas (this.trilhas_personalizadas) e métodos de gerenciamento.
  */
 
 class Personagem {
@@ -49,6 +51,9 @@ class Personagem {
       trilha: "nenhuma",
       nex: "5%",
       deslocamento: 9,
+      // CAMPOS PARA ESCOLHA DE ELEMENTO DE TRILHA
+      monstruoso_elemento: "", 
+      possuido_elemento: "",
     };
     this.recursos = {
       pv_atual: 10,
@@ -65,7 +70,8 @@ class Personagem {
     };
 
     this.inventario = []; // Array de objetos de item
-    this.rituais = []; // <--- NOVO: Array de objetos de ritual (Grimório Pessoal)
+    this.rituais = []; // Grimório Pessoal
+    this.trilhas_personalizadas = []; // <--- NOVO: Array para Trilhas Personalizadas
 
     this.bonusManuais = {
       pv_nex: 0,
@@ -94,23 +100,21 @@ class Personagem {
 
   // --- Métodos "Set" ---
   setAtributo(campo, valor) {
-    // CORREÇÃO DO "BUG DO 0":
-    // Se o valor for uma string vazia, guardamos ela
     if (valor === "") {
       this.atributos[campo] = "";
       return;
     }
-    // Se não for vazia, tentamos converter para número.
-    // Se falhar (NaN), guardamos 0.
     const num = parseInt(valor);
     this.atributos[campo] = isNaN(num) ? 0 : num;
   }
   setTreinoPericia(campo, valor) {
     this.pericias[campo] = parseInt(valor) || 0;
   }
+  
   setInfo(campo, valor) {
     this.info[campo] = valor;
   }
+  
   setRecurso(campo, valor) {
     this.recursos[campo] = parseInt(valor) || 0;
   }
@@ -121,7 +125,33 @@ class Personagem {
     this.defesa[campo] = parseInt(valor) || 0;
   }
 
-  // --- Métodos de Inventário ---
+  // --- MÉTODOS PARA TRILHAS PERSONALIZADAS (NOVOS) ---
+  addTrilhaPersonalizada(trilhaData) {
+      // Gera uma key única e minúscula
+      // Usar uma key simples baseada em ID único para evitar conflitos na progressaoTrilhas
+      const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
+      
+      const newTrilha = {
+        ...trilhaData,
+        id: `custom_trilha_${Date.now() + Math.random()}`,
+        key: key, // Chave para seleção e remoção
+        isCustom: true, // Flag para identificação
+      };
+      this.trilhas_personalizadas.push(newTrilha);
+  }
+  
+  removeTrilhaPersonalizada(trilhaKey) {
+      this.trilhas_personalizadas = this.trilhas_personalizadas.filter(
+          (trilha) => trilha.key !== trilhaKey
+      );
+  }
+
+  getTrilhasPersonalizadas() {
+      return this.trilhas_personalizadas;
+  }
+
+  // --- Métodos de Inventário, Rituais (Existentes) ---
+  
   getBonusTotalPericia(pericia, atributoBase) {
     return this.pericias[pericia] || 0;
   }
@@ -140,7 +170,7 @@ class Personagem {
   }
   toggleIgnorarCalculos(inventarioId) {
     const item = this.inventario.find(
-      (item) => item.inventarioId === inventarioId
+      (item) => item.inventarioId === inventariaId
     );
     if (item) {
       item.ignorarCalculos = !item.ignorarCalculos;
@@ -150,9 +180,7 @@ class Personagem {
     return this.inventario;
   }
   
-  // --- MÉTODOS DO GRIMÓRIO DE RITUAIS (NOVO) ---
   addRitualInventario(ritual) {
-    // Adiciona um ID único para remoção/rastreio
     const ritualComId = {
       ...ritual,
       inventarioId: Date.now() + Math.random(),
@@ -169,7 +197,6 @@ class Personagem {
   getGrimorio() {
     return this.rituais;
   }
-  // ---------------------------------------------
   
   getBonusDefesaInventario() {
     const inventarioAtivo = this.inventario.filter(
@@ -244,8 +271,6 @@ class Personagem {
   }
   
   getMaxPeso() {
-    // CORREÇÃO DO "BUG DO 0":
-    // Garante que 'for' (que pode ser "") seja tratado como 0
     const forca = parseInt(this.atributos.for) || 0;
     let maxPesoBase = forca * 5 || 2;
 
@@ -268,7 +293,6 @@ class Personagem {
     }
 
     if (this.info.trilha === "tecnico") {
-      // CORREÇÃO DO "BUG DO 0":
       const intelecto = parseInt(this.atributos.int) || 0;
       maxPesoBase = (forca + intelecto) * 5 || 2; 
 
@@ -288,35 +312,39 @@ class Personagem {
     return {
       atributos: this.atributos,
       pericias: this.pericias,
-      info: this.info,
+      info: this.info, 
       recursos: this.recursos,
       defesa: this.defesa,
       inventario: this.inventario,
-      rituais: this.rituais, // <--- EXPORTAR RITUAIS
+      rituais: this.rituais, 
       bonusManuais: this.bonusManuais,
+      trilhas_personalizadas: this.trilhas_personalizadas, // <--- EXPORTAR TRILHAS
     };
   }
+  
+  // Lógica de carregamento atualizada para novos campos
   carregarDados(dados) {
     if (dados) {
       this.atributos = dados.atributos || this.atributos;
       this.pericias = dados.pericias || this.pericias;
-      this.info = dados.info || this.info;
+      
+      this.info = { ...this.info, ...dados.info };
+      
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
       this.inventario = dados.inventario || [];
-      this.rituais = dados.rituais || []; // <--- IMPORTAR RITUAIS
+      this.rituais = dados.rituais || []; 
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;
+      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; // <--- IMPORTAR TRILHAS
     }
   }
 
-  // --- CÁLCULO DE RECURSOS MÁXIMOS ---
+  // --- CÁLCULO DE RECURSOS MÁXIMOS (Existente) ---
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
     const nex = parseInt(this.info.nex) || 0;
 
-    // CORREÇÃO DO "BUG DO 0":
-    // Garante que 'vig' e 'pre' (que podem ser "") sejam tratados como 0
     const vigor = parseInt(this.atributos.vig) || 0;
     const presenca = parseInt(this.atributos.pre) || 0;
 

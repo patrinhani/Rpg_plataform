@@ -5,9 +5,46 @@
  * - Limpas as marcações de citação '[cite]' de todas as descrições.
  * - (NOVO) Adicionada a propriedade 'elemento' a todos os itens paranormais.
  * - (NOVO) Adicionada a propriedade 'tipoBonus: "escolhaElemento"' aos itens "Varia".
- */
+ */// --- CONSTANTES DE FICHA ---
+const NiveisNex = {
+    "5%": "5%", "10%": "10%", "15%": "15%",
+    "20%": "20%", "25%": "25%", "30%": "30%",
+    "35%": "35%", "40%": "40%", "45%": "45%",
+    "50%": "50%", "55%": "55%", "60%": "60%",
+    "65%": "65%", "70%": "70%", "75%": "75%",
+    "80%": "80%", "85%": "85%", "90%": "90%",
+    "95%": "95%", "99%": "99%"
+};
+
+const OpcoesClasse = {
+    combatente: "Combatente", especialista: "Especialista",
+    ocultista: "Ocultista", sobrevivente: "Sobrevivente"
+};
+
+const OpcoesOrigem = {
+    academico: "Acadêmico", agente_saude: "Agente de Saúde", amnesico: "Amnésico",
+    artista: "Artista", atleta: "Atleta", chef: "Chef", criminoso: "Criminoso",
+    cultista_arrependido: "Cultista Arrependido", desgarrado: "Desgarrado",
+    engenheiro: "Engenheiro", executivo: "Executivo", investigador: "Investigador",
+    lutador: "Lutador", magnata: "Magnata", militar: "Militar", policial: "Policial",
+    religioso: "Religioso", servidor_publico: "Servidor Público",
+    teorico_conspiracao: "Teórico da Conspiração", ti: "T.I.", trabalhador_rural: "Trabalhador Rural",
+    universitario: "Universitário", vitima: "Vítima", amigo_animais: "Amigo dos Animais",
+    astronauta: "Astronauta", chef_outro_lado: "Chef do Outro Lado", colegial: "Colegial",
+    cosplayer: "Cosplayer", diplomata: "Diplomata", explorador: "Explorador",
+    experimento: "Experimento", fanatico_criaturas: "Fanático por Criaturas",
+    fotografo: "Fotógrafo", inventor_paranormal: "Inventor Paranormal", jovem_mistico: "Jovem Místico",
+    legista_noturno: "Legista do Turno da Noite", mateiro: "Mateiro", mergulhador: "Mergulhador",
+    motorista: "Motorista", nerd_entusiasta: "Nerd Entusiasta", profetizado: "Profetizado",
+    psicologo: "Psicólogo", reporter_investigativo: "Repórter Investigativo"
+};
+// --- FIM DAS CONSTANTES DE FICHA ---
+
+// ... (O restante do seu objeto database, com listas de itens e rituais)
 
 const database = {
+
+  
   // Tabela 3.3: Armas (Simples)
   armasSimples: [
     {
@@ -3467,4 +3504,8 @@ const database = {
 };
 
 
-export { database };
+// ... (Final do seu objeto 'database')
+// ... (Final da definição de 'rituais')
+
+export { database, NiveisNex, OpcoesClasse, OpcoesOrigem }; 
+// ^^^ ESTA É A ÚNICA LINHA DE EXPORTAÇÃO QUE DEVE EXISTIR PARA ESTES ELEMENTOS
