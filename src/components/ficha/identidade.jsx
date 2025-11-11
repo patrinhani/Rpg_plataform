@@ -1,6 +1,8 @@
 // /src/components/Ficha/Identidade.jsx
 
 import React from 'react';
+// <-- NOVO: Importar a lista de origens do database
+import { OpcoesOrigem } from '../../lib/database.js';
 
 /**
  * Componente para a seção de Identidade do Personagem.
@@ -31,6 +33,12 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
   // Converte o objeto de trilhas para um array de objetos para mapeamento no JSX
   const listaTrilhas = Object.values(trilhasDaClasseObject);
   
+  // <-- NOVO: Converte o objeto OpcoesOrigem para um array [key, nome]
+  const listaOrigens = Object.entries(OpcoesOrigem).map(([key, nome]) => ({
+    key: key,
+    nome: nome
+  }));
+
   // Lógica para desabilitar o seletor de trilha se não houver classe selecionada
   const isTrilhaDisabled = !classeAtual || classeAtual === 'nenhuma';
   
@@ -66,6 +74,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
         />
       </div>
 
+      {/* --- BLOCO CORRIGIDO --- */}
       <div className="campo-horizontal">
         <label>ORIGEM</label>
         <select 
@@ -73,9 +82,13 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           value={dados.origem}
           onChange={handleChange}
         >
-          {/* A lista de origens deve ser carregada do database.js - mantendo o hardcode por agora */}
-          <option value="desgarrado">Desgarrado</option>
-          {/* ... outras opções ... */}
+          {/* <-- ALTERADO: Mapeia a lista de origens dinamicamente */}
+          {listaOrigens.map(origem => (
+            <option key={origem.key} value={origem.key}>
+              {origem.nome}
+            </option>
+          ))}
+          {/* Fim da alteração */}
         </select>
       </div>
 
