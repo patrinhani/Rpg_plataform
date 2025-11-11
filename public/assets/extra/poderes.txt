@@ -1,5 +1,6 @@
  HABILIDADES 
 DE COMBATENTE
+
  Ataque Especial. Quando faz um 
 ataque, você pode gastar 2 PE para re
 ceber +5 no teste de ataque ou na rolagem de dano. 
@@ -9,9 +10,11 @@ Você pode aplicar cada bônus de +5 em ataque ou
 dano. Por exemplo, em NEX 55%, você pode gastar 
 4 PE para receber +5 no teste de ataque e +10 na 
 rolagem de dano.
+
  Habilidade de Trilha. Em NEX 10% você escolhe uma das trilhas de combatente e recebe o primeiro 
 poder da trilha escolhida. Você recebe um novo poder da trilha escolhida em NEX 40%, 65% e 99%. Veja a 
 descrição das trilhas nas páginas 26 e 27.
+
  Poder de Combatente. Em NEX 15%, você recebe um poder de combatente à sua escolha. Você recebe um 
 novo poder de combatente em NEX 30% e a cada 15% de NEX subsequentes, conforme indicado na tabela. 
 Veja a lista de poderes a seguir
@@ -151,12 +154,640 @@ pode escolher este poder várias vezes.
 em NEX 50%, 80% e 95%, aumente um atributo a sua 
 escolha em +1. Você não pode aumentar um atributo 
 além de 5 desta forma.
- 26
+ 
+
  Grau de Treinamento. Em NEX 35%, e novamente 
 em NEX 70%, escolha um número de perícias treina
 das igual a 2 + Int. Seu grau de treinamento nessas 
 perícias aumenta em um (de treinado para veterano 
 ou de veterano para expert).
+
  Versatilidade. Em NEX 50%, escolha entre receber 
 um poder de combatente ou o primeiro poder de uma 
 trilha de combatente que não a sua
+
+ b Caminho para Forca. Se for para alguém do seu 
+grupo ser pego, que seja você. Quando usa a ação 
+sacrifício em uma cena de perseguição (p. 90), você 
+pode gastar 1 PE para fornecer +O extra (para um 
+total de +2O) nos testes dos outros personagens e, 
+quando usa a ação chamar atenção em uma cena 
+de furtividade (p. 92), você pode gastar 1 PE para 
+diminuir a visibilidade de todos os seus aliados 
+próximos em –2 (em vez de –1).
+ 
+ b Ciente das Cicatrizes. Acostumado a manusear 
+armas, você aprendeu também a identificar as 
+marcas que elas deixam. Quando faz um teste para 
+encontrar uma pista relacionada a armas ou feri
+mentos (como um teste para necropsia ou para 
+identificar uma arma amaldiçoada), você pode 
+usar Luta ou Pontaria no lugar da perícia original. 
+Pré-requisito: treinado em Luta ou Pontaria.
+
+ b Correria Desesperada. Você já esteve diante de 
+coisas que não podem ser derrotadas e aprendeu 
+da forma mais trágica que às vezes fugir é a única 
+chance de vitória. Você recebe +3m em seu deslo
+camento e +O em testes de perícia para fugir em 
+uma perseguição (veja p. 90).
+ 
+ b Engolir o Choro. Mesmo ferido, você não vai emitir 
+um pio até que a ameaça se afaste. Você não sofre 
+penalidades por condições em testes de perícia 
+para fugir e em testes de Furtividade.
+ 
+ b Instinto de Fuga. Sabendo que nem toda batalha 
+
+
+ b Apego Angustiado. Não importa o quão profun
+dos sejam seus ferimentos, você escolhe a agonia 
+enlouquecedora da dor a perder a consciência 
+diante da própria morte. Você não fica inconsciente 
+por estar morrendo, mas sempre que terminar 
+uma rodada nesta condição e consciente, perde 2 
+pontos de Sanidade.
+ pode ser vencida, você desenvolveu um sexto sen
+tido para prever quando é hora de fugir. Quando 
+uma cena de perseguição (ou semelhante) tem 
+início, você recebe +2 em todos os testes de perícia 
+que fizer durante a cena. Pré-requisito: treinado 
+em Intuição.
+ 
+ b Mochileiro. Você já precisou pegar a estrada para 
+escapar de perseguidores o suficiente para saber 
+como carregar tudo que precisa. Seu limite de carga 
+aumenta em 5 espaços e você pode se beneficiar 
+de uma vestimenta adicional. Pré-requisito: Vig 2
+
+b Paranoia Defensiva. Você sabe que eles estão 
+lá fora, e fará tudo ao seu alcance para man
+tê-los assim. Uma vez por cena, você pode 
+gastar uma rodada e 3 PE. Se fizer isso, você 
+e cada aliado presente escolhe entre receber 
++5 na Defesa contra o próximo ataque que 
+sofrer na cena ou receber um bônus de +5 
+em um único teste de perícia feito até o fim 
+da cena.
+ 
+ b Sacrificar os Joelhos. Diante de algo que não 
+pode ser vencido, você abre mão da autopre
+servação para superar seus limites de fuga. 
+Uma vez por cena de perseguição (p. 
+90), quando faz a ação esforço extra, 
+você pode gastar 2 PE para passar 
+automaticamente no teste de pe
+rícia. Pré-requisito: treinado 
+em Atletismo.
+
+ b Sem Tempo, Irmão. Você 
+sabe que pistas são im
+portantes, mas com o 
+paranormal poden
+do surgir a qualquer 
+momento, cada se
+gundo conta. Uma 
+vez por cena de 
+investigação, 
+quando usa a 
+ação facilitar 
+investigação 
+(OPRPG, p. 80), 
+você pode prestar 
+ajuda de forma apressada e 
+descuidada. Você passa auto
+maticamente no teste para au
+xiliar seus aliados, mas faz uma 
+rolagem adicional na tabela de 
+eventos de investigação (p. 82).
+
+b Valentão. Em algum momento, 
+a vida lhe ensinou que a brutali
+dade pode ser amedrontadora, e 
+agora esse é seu principal idioma. 
+Você pode usar Força no lugar de 
+Presença para Intimidação. Além 
+disso, uma vez por cena, pode gas
+tar 1 PE para fazer um teste de In
+timidação para assustar como 
+uma ação livre.
+
+
+HABILIDADES  
+DE ESPECIALISTA
+
+ Eclético. Quando faz um teste de uma 
+perícia, você pode gastar 2 PE para receber 
+os benefícios de ser treinado nesta perícia.
+
+ Perito. Escolha duas perícias nas quais você é trei
+nado (exceto Luta e Pontaria). Quando faz um teste 
+de uma dessas perícias, você pode gastar 2 PE para 
+somar +1d6 no resultado do teste. Conforme avança 
+de NEX, você pode gastar +1 PE para aumentar o dado 
+de bônus (veja a Tabela 1.4). Por exemplo, em NEX 
+55%, pode gastar 4 PE para receber +1d10 no teste.
+ 28
+
+ Habilidade de Trilha. Em NEX 10% você escolhe 
+uma das trilhas de especialista disponíveis e recebe o 
+primeiro poder da trilha escolhida. Você recebe um 
+novo poder da trilha escolhida respectivamente em 
+NEX 40%, 65% e 99%. Veja a descrição das trilhas nas 
+páginas 30 e 31 
+
+Poder de Especialista. Em NEX 15%, você recebe 
+um poder de especialista à sua escolha. Você recebe 
+um novo poder de especialista em NEX 30% e a cada 
+15% de NEX subsequentes, conforme indicado na 
+tabela. Veja a lista de poderes a seguir.
+
+ b Artista Marcial. Seus ataques desarmados causam 
+1d6 pontos de dano, podem causar dano letal e 
+contam como armas ágeis. Em NEX 35%, o dano 
+aumenta para 1d8 e, em NEX 70%, para 1d10.
+
+ b Balística Avançada. Você recebe proficiência 
+com armas táticas de fogo e +2 em rolagens de 
+dano com essas armas.
+
+ b Conhecimento Aplicado. Quando faz um teste de 
+perícia (exceto Luta e Pontaria), você pode gastar 
+2 PE para mudar o atributo-base da perícia para 
+Int. Pré-requisito: Int 2
+
+ b Hacker. Você recebe +5 em testes de Tecnologia 
+para invadir sistemas e diminui o tempo necessá
+rio para hackear qualquer sistema para uma ação 
+completa. Pré-requisito: treinado em Tecnologia.
+
+ b Mãos Rápidas. Ao fazer um teste de Crime, você 
+pode pagar 1 PE para fazê-lo como uma ação livre. 
+Pré-requisitos: Agi 3, treinado em Crime.
+
+ b Mochila de Utilidades. Um item a sua escolha  
+(exceto armas) conta como uma categoria abaixo 
+e ocupa 1 espaço a menos.
+
+ b Movimento Tático. Você pode gastar 1 PE para 
+ignorar a penalidade em deslocamento por terreno 
+difícil e por escalar até o final do turno. Pré-re
+quisito: treinado em Atletismo.
+
+ b Na Trilha Certa. Sempre que tiver sucesso em 
+um teste para procurar pistas, você pode gastar 1 
+PE para receber +O no próximo teste. Os custos e 
+os bônus são cumulativos (se passar num segundo 
+teste, pode pagar 2 PE para receber um total de 
++OO no próximo teste, e assim por diante).
+
+ b Nerd. Você é um repositório de conhecimento útil 
+(e inútil). Uma vez por cena, pode gastar 2 PE para 
+fazer um teste de Atualidades (DT 20). Se passar, 
+recebe uma informação útil para essa cena (se for 
+uma investigação, uma dica para uma pista; se 
+for um combate, uma fraqueza de um inimigo, e 
+assim por diante). A fonte da informação pode ser 
+desde um livro antigo que você leu na biblioteca 
+até um episódio de sua série de ficção favorita.
+
+ b Ninja Urbano. Você recebe proficiência com 
+armas táticas de ataque corpo a corpo e de disparo (exceto de fogo) +2 em rolagens de dano 
+com essas armas.
+
+ b Pensamento Ágil. Uma vez por rodada, durante 
+uma cena de investigação, você pode gastar 2 PE 
+para fazer uma ação de procurar pistas adicional.
+
+ b Perito em Explosivos. Você soma seu Intelecto na 
+DT para resistir aos seus explosivos e pode excluir 
+dos efeitos da explosão um número de alvos igual 
+ao seu valor de Intelecto.
+
+ b Primeira Impressão. Você recebe +OO no primei
+ro teste de Diplomacia, Enganação, Intimidação 
+ou Intuição que fizer em uma cena.
+
+ b Transcender. Escolha um poder paranormal (veja 
+a página 114). Você recebe o poder escolhido, 
+mas não ganha Sanidade neste aumento de NEX. 
+Você pode escolher este poder várias vezes.
+
+ b Treinamento em Perícia. Escolha duas perícias. 
+Você se torna treinado nessas perícias. A partir de 
+NEX 35%, você pode escolher perícias nas quais 
+já é treinado para se tornar veterano. A partir de 
+NEX 70%, pode escolher perícias nas quais já é 
+veterano para se tornar expert. Você pode escolher 
+este poder várias vezes.
+ Aumento de Atributo. Em NEX 20%, e novamente 
+em NEX 50%, 80% e 95%, aumente um atributo a sua 
+escolha em +1. Você não pode aumentar um atributo 
+além de 5 desta forma.
+
+ Grau de Treinamento. Em NEX 35%, e novamente 
+em NEX 70%, escolha um número de perícias treina
+das igual a 5 + Int. Seu grau de treinamento nessas 
+perícias aumenta em um (de treinado para veterano 
+ou de veterano para expert).
+ Engenhosidade. Em NEX 40%, quando usa sua 
+habilidade Eclético, você pode gastar 2 PE adicionais 
+para receber os benefícios de ser veterano na perícia. 
+Em NEX 75%, pode gastar 4 PE adicionais para receber 
+os benefícios de ser expert na perícia.
+
+ Versatilidade. Em NEX 50%, escolha entre receber 
+um poder de especialista ou o primeiro poder de uma 
+trilha de especialista que não a sua
+
+b Esconderijo Desesperado. Você já esteve diante de 
+coisas que não podem ser derrotadas e aprendeu 
+da forma mais trágica que às vezes se esconder é 
+a única chance de vitória. Você não sofre –O em 
+testes de Furtividade por se mover ao seu desloca
+mento normal. Além disso, em cenas de furtividade 
+(veja p. 92), sempre que passa em um teste para 
+esconder-se, sua visibilidade diminui em –2 (em 
+vez de apenas –1).
+
+ b Especialista Diletante. A vida lhe ensinou que 
+todo tipo de conhecimento pode ser útil. Você 
+aprende um poder que não pertença à sua classe 
+(exceto poderes de trilha ou paranormais), à sua 
+escolha, cujos pré-requisitos possa cumprir. Pré--requisito: NEX 30%.
+ 
+ b Flashback. Um novo trauma recente desbloqueia 
+um conhecimento adormecido. Talvez fosse uma 
+memória enterrada fundo em sua mente, ou uma 
+habilidade desenvolvida por seu cérebro como um 
+mecanismo de defesa. Escolha uma origem que 
+não seja a sua. Você recebe o poder dessa origem.
+ 
+ b Leitura Fria. Você estudou técnicas de “leitura 
+fria”, a capacidade de analisar e compreender uma 
+pessoa através de suas mais sutis reações. Uma 
+vez em cada interlúdio, se passar alguns minutos 
+interagindo com uma pessoa, ou mesmo obser
+vando-a no mesmo ambiente, você pode fazer três 
+perguntas pessoais sobre ela, tais como “Qual seu 
+filme favorito?”, “Qual sua profissão?” “Tem algum 
+animal de estimação?”. O mestre pode responder 
+com a verdade ou se negar a responder, mas, para 
+cada pergunta não respondida, você recebe 2 
+PE temporários que duram até o fim da missão. 
+Esse poder só pode ser usado uma vez em cada 
+pessoa, e apenas em NPCs. Pré-requisito: treinado 
+em Intuição.
+
+ b Mãos Firmes. Quando há um caçador à espreita, 
+derrubar sequer uma agulha pode ser o suficiente 
+para revelar sua localização. E você não quer que 
+isso aconteça. Quando faz um teste de Furtivida
+de para esconder-se ou para executar uma ação 
+discreta que envolva manipular um objeto (como 
+em uma cena de furtividade), você pode gastar 
+2 PE para receber +O nesse teste. Pré-requisito: 
+treinado em Furtividade
+
+ b Acolher o Terror. Você já sofreu tanto medo que 
+às vezes aceitar o terror é como voltar para casa. 
+Você pode se entregar para o medo (veja p. 88) 
+uma vez por sessão de jogo adicional.
+
+ b Contatos Oportunos. Ao longo de sua vida, você 
+fez amizades úteis com pessoas de vários tipos 
+em muitos lugares. Você pode usar uma ação 
+de interlúdio para acionar seus contatos locais. 
+Você recebe um aliado de um tipo à sua escolha 
+(veja OPRPG, p. 170), que lhe acompanha até o 
+fim da missão ou até ser dispensado. Você só 
+pode ter um desses aliados por vez, e o mestre 
+tem a palavra final sobre a disponibilidade de 
+cada aliado. Pré-requisito: treinado em Crime.
+
+ b Disfarce Sutil. Você sabe como se disfarçar rapida
+mente, usando pequenos detalhes para alterar sua 
+aparência. Quando faz um disfarce em si mesmo 
+usando Enganação, você pode gastar 1 PE para 
+se disfarçar como uma ação completa e sem ne
+cessidade de um kit de disfarces (se usar um kit, 
+recebe +5 no teste). Pré-requisitos: Pre 2, treinado 
+em Enganação.
+
+b Plano de Fuga. A todo momento você 
+está criando cenários imaginários e pos
+sibilidades na sua mente, pensando em 
+estratégias que usaria para escapar de 
+perseguidores. Você pode usar Intelec
+to no lugar de Força para a ação criar 
+obstáculos (p. 90) em uma perseguição. 
+Além disso, uma vez por cena, pode 
+gastar 2 PE para dispensar o teste e ser 
+bem-sucedido nesta ação.
+
+ b Remoer Memórias. Sua mente está cons
+tantemente revivendo memórias do pas
+sado, sejam elas boas ou ruins. Uma vez 
+por cena, quando faz um teste de perícia 
+baseada em Intelecto ou Presença, você 
+pode gastar 2 PE para substituir esse 
+teste por um teste de Intelecto com DT 
+15. Pré-requisito: Int 1.
+
+ b Resistir à Pressão. A ansiedade de correr contra o 
+relógio o deixa mais eficiente. Uma vez por cena de 
+investigação, você pode gastar 5 PE para coordenar 
+os esforços de seus companheiros. A urgência da 
+investigação aumenta em 1 rodada, e durante esta 
+rodada adicional todos os personagens (incluindo 
+você) recebem +2 em testes de perícia. Pré-requisito: 
+treinado em Investigação
+
+ HABILIDADES  
+DE OCULTISTA
+ Escolhido pelo Outro Lado. Você teve uma 
+experiência paranormal e foi marcado pelo Outro 
+Lado, absorvendo o conhecimento e poder necessários 
+para realizar rituais. Você pode lançar rituais de 1º 
+círculo. À medida que aumenta seu NEX, pode lançar 
+rituais de círculos maiores (2º círculo em NEX 25%, 
+ 3º círculo em NEX 55% e 4º círculo em NEX 85%). 
+Você começa com três rituais de 1º círculo. Sempre 
+que avança de NEX, aprende um ritual de qualquer 
+círculo que possa lançar. Esses rituais não contam no 
+seu limite de rituais conhecidos. Veja o Capítulo 5 
+para as regras de rituais.
+
+Habilidade de Trilha. Em NEX 10% você escolhe 
+uma das trilhas de ocultista disponíveis e recebe o 
+primeiro poder da trilha escolhida. Você recebe um 
+novo poder da trilha escolhida respectivamente em 
+NEX 40%, 65% e 99%. Veja a descrição das trilhas nas 
+páginas 34 e 35.
+
+ Poder de Ocultista. Em NEX 15%, você recebe 
+um poder de ocultista à sua escolha. Você recebe 
+um novo poder de ocultista em NEX 30% e a cada 
+15% de NEX subsequentes, conforme indicado na 
+tabela. Veja a lista de poderes a seguir.
+
+ b Camuflar Ocultismo. Você pode gastar uma 
+ação livre para esconder símbolos e sigilos que 
+estejam desenhados ou gravados em objetos ou 
+em sua pele, tornando-os invisíveis para ou
+tras pessoas além de você mesmo. Além disso, 
+quando lança um ritual, pode gastar +2 PE para 
+lançá-lo sem usar componentes ritualísticos e 
+sem gesticular (o que permite conjurar um ritual 
+com as mãos presas), usando apenas concentra
+ção. Outros seres só perceberão que você lançou 
+uma ritual se passarem num teste de Ocultismo 
+(DT 25)
+
+ b Criar Selo. Você sabe fabricar selos paranormais 
+de rituais que conheça (veja a página 151). Fabricar 
+um selo gasta uma ação de interlúdio e um número 
+de PE iguais ao custo de conjurar o ritual. Você 
+pode ter um número máximo de selos criados a 
+qualquer momento igual à sua Presença.
+
+ b Envolto em Mistério. Sua aparência e postura 
+assombrosas o permitem manipular e assustar 
+pessoas ignorantes ou supersticiosas. O mestre 
+define o que exatamente você pode fazer e quem 
+se encaixa nessa descrição. Como regra geral, você 
+recebe +5 em Enganação e Intimidação contra 
+pessoas não treinadas em Ocultismo.
+
+ b Especialista em Elemento. Escolha um elemento. 
+A DT para resistir aos seus rituais desse elemento 
+aumenta em +2.
+
+ b Ferramentas Paranormais. Você reduz a cate
+goria de um item paranormal em I e pode ativar 
+itens paranormais sem pagar seu custo em PE.
+
+ b Fluxo de Poder. Você pode manter dois efeitos 
+sustentados de rituais ativos simultaneamente 
+com apenas uma ação livre, pagando o custo 
+de cada efeito separadamente. Pré-requisito: 
+NEX 60%
+
+b Guiado pelo Paranormal. Uma vez por cena, 
+você pode gastar 2 PE para fazer uma ação de 
+investigação adicional.
+
+ b Identificação Paranormal. Você recebe +10 em 
+testes de Ocultismo para identificar criaturas, 
+objetos ou rituais.
+
+ b Improvisar Componentes. Uma vez por cena, você 
+pode gastar uma ação completa para fazer um 
+teste de Investigação (DT 15). Se passar, encontra 
+objetos que podem servir como componentes ri
+tualísticos de um elemento à sua escolha. O mestre 
+define se é possível usar esse poder na cena atual.
+
+ b Intuição Paranormal. Sempre que usa a ação 
+facilitar investigação, você soma seu Intelecto ou 
+Presença no teste (à sua escolha).
+
+ b Mestre em Elemento. Escolha um elemento. O 
+custo para lançar rituais desse elemento dimi
+nui em –1 PE. Pré-requisitos: Especialista em 
+Elemento no elemento escolhido, NEX 45%.
+
+ b Ritual Potente. Você soma seu Intelecto nas 
+rolagens de dano ou nos efeitos de cura de seus 
+rituais. Pré-requisito: Int 2.
+ 
+ b Ritual Predileto. Escolha um ritual que você 
+conhece. Você reduz em –1 PE o custo do ritual. 
+Essa redução se acumula com reduções forneci
+das por outras fontes.
+ 
+ b Tatuagem Ritualística. Símbolos marcados em 
+sua pele reduzem em –1 PE o custo de rituais de 
+alcance pessoal que têm você como alvo.
+ 
+ b Transcender. Escolha um poder paranormal (veja 
+a página 114). Você recebe o poder escolhido, 
+mas não ganha Sanidade neste aumento de NEX. 
+Você pode escolher este poder várias vezes.
+
+ b Treinamento em Perícia. Escolha duas perícias. 
+Você se torna treinado nessas perícias. A partir de 
+NEX 35%, você pode escolher perícias nas quais 
+já é treinado para se tornar veterano. A partir de 
+NEX 70%, pode escolher perícias nas quais já é 
+veterano para se tornar expert. Você pode escolher 
+este poder várias vezes.
+ 
+ Aumento de Atributo. Em NEX 20%, e novamente 
+em NEX 50%, 80% e 95%, aumente um atributo a sua 
+escolha em +1. Você não pode aumentar um atributo 
+além de 5 desta forma.
+ 
+ Grau de Treinamento. Em NEX 35%, e novamente 
+em NEX 70%, escolha um número de perícias treina
+das igual a 3 + Int. Seu grau de treinamento nessas 
+ perícias aumenta em um (de treinado para veterano 
+ou de veterano para expert).
+
+ Versatilidade. Em NEX 50%, escolha entre receber 
+um poder de ocultista ou o primeiro poder de uma 
+trilha de ocultista que não a sua.
+
+ b Deixe os Sussurros Guiarem. Você sabe abrir sua 
+mente para os sussurros do Paranormal, vozes que 
+lhe guiam às custas de sua Sanidade. Uma vez por 
+cena, você pode gastar 2 PE e uma rodada para 
+receber +2 em testes de perícia para investigação 
+até o fim da cena. Entretanto, enquanto este poder 
+estiver ativo, sempre que falha em um teste de 
+perícia, você perde 1 ponto de Sanidade.
+ 
+ b Domínio Esotérico. Você estudou a fundo a com
+plexidade de catalisadores esotéricos e aprendeu 
+a combinar suas propriedades paranormais. Ao 
+lançar um ritual, você pode combinar os efeitos 
+de até dois catalisadores ritualísticos diferentes 
+ao mesmo tempo. Pré-requisito: Int 3.
+
+ b Estalos Macabros. Você sabe colidir pequenos 
+objetos amaldiçoados para gerar distrações for
+tuitas em momentos de necessidade. Quando faz 
+uma ação para atrapalhar a atenção de outro ser 
+(como distrair em uma cena de furtividade ou fin
+tar em combate), você pode gastar 1 PE para usar 
+Ocultismo em vez da perícia original. Se o alvo 
+da sua distração for uma pessoa ou animal, você 
+recebe +5 no teste
+
+b Minha Dor me Impulsiona. Você está acostumado 
+com sacrifícios dolorosos e aprendeu a transformar 
+sua dor em impulso físico. Quando faz um teste 
+de Acrobacia, Atletismo ou Furtividade, você pode 
+gastar 1 PE para receber +1d6 no teste. Você só 
+pode usar este poder se estiver com pelo menos 5 
+pontos de dano em seus PV. Pré-requisito: Vig 2.
+ 
+ b Nos Olhos do Monstro. Por mais assustador que 
+seja encarar o paranormal, fazer isso pode fornecer 
+a chave para escapar dele com vida. Se estiver em 
+uma cena envolvendo uma criatura paranormal, 
+você pode gastar uma rodada e 3 PE para encarar 
+essa criatura (você precisa ser capaz de ver os olhos 
+ou o mais próximo de um “rosto” da criatura, defi
+nido pelo mestre). Se fizer isso, você recebe +5 em 
+testes contra a criatura (exceto testes de ataque) 
+até o fim da cena.
+ 
+ b Olhar Sinistro. Aquilo que para outros é quase 
+uma ciência, para você é a imposição da própria 
+vontade. Você pode usar Presença no lugar de 
+Intelecto para Ocultismo e pode usar esta perícia 
+para coagir (veja Intimidação). Pré-requisito: Pre 1.
+ 
+ b Sentido Premonitório. Sua exposição paranormal 
+dá outros significados para arrepios e calafrios. 
+Você pode gastar 3 PE para ativar um sentido pre
+monitório. Enquanto seu sentido estiver ativo, você 
+tem um déjà vu do futuro próximo (equivalente a 
+uma rodada). Entre outras coisas, você sabe com 
+uma rodada de antecedência quando a urgência 
+de uma investigação vai acabar, se irá ocorrer um 
+evento na investigação e qual será ele (o mestre 
+rola antecipadamente o evento) e sabe quais ações 
+seus inimigos irão tomar em cenas de furtividade 
+e perseguição (essencialmente, você pode decidir 
+suas próprias ações após ver o resultado das ro
+lagens dos demais envolvidos na cena). O mestre 
+pode aprovar outros usos criativos deste poder. 
+Devido à natureza acelerada e caótica de um com
+bate, este poder não tem efeito nestas cenas. Para 
+manter seu sentido ativado, você deve gastar 1 PE 
+no início de cada rodada.
+ 
+ b Sincronia Paranormal. A exposição Paranormal 
+de momentos terríveis que você compartilhou com 
+seus aliados criou uma conexão invisível de Medo 
+entre vocês, como uma linha entrelaçada 
+dos seus destinos. Você pode gastar uma 
+ação padrão e 2 PE para estabelecer uma 
+sincronia mental com qualquer número de 
+personagens, em alcance médio, com os quais 
+você já tenha sobrevivido a pelo menos um 
+encontro com o Paranormal. Essa sincronia 
+é uma conexão inconsciente, e não permite 
+uma troca clara de informações; em ter
+mos de regras, no início de cada rodada 
+em que a sincronia estiver em efeito 
+você pode distribuir uma quantidade 
+de O de bônus igual à sua Presença 
+entre os demais participantes. Estes 
+dados podem ser usados em tes
+tes de perícias baseadas em 
+Intelecto ou Presença e 
+desaparecem no final de 
+cada rodada. Manter a 
+sincronia custa 1 PE 
+no início de cada ro
+dada. Pré-requisito: 
+Pre 2.
+
+ b Traçado Conjura
+tório. Você conhece 
+versões de proteção 
+e fortalecimento de 
+vários símbolos para
+normais, e pode usá-los 
+para reforçar seus rituais. 
+Você pode gastar 1 PE e 
+uma ação completa tra
+çando um símbolo pa
+ranormal no chão que 
+ocupa um quadrado de 
+1,5m. Enquanto estiver 
+dentro desse símbolo, 
+você recebe +2 em 
+testes de Ocultismo e 
+de resistência e a DT 
+para resistir aos seus 
+rituais aumenta em 
++2. O símbolo dura 
+até o fim da cena.
+
+
+ HABILIDADES sobrevivente
+
+ Empenho. Você pode não ter treinamento especial, 
+mas compensa com dedicação e esforço. Quando 
+faz um teste de perícia, você pode gastar 1 PE para 
+receber +2 nesse teste.
+ 
+ Trilha. No 2º estágio, você escolhe uma das trilhas 
+de sobrevivente (durão, esperto ou esotérico) e recebe 
+o primeiro poder da trilha escolhida. No 4º estágio, 
+você recebe o segundo (e último) poder dela.
+
+ Aumento de Atributo. No 3º estágio, aumente 
+um atributo a sua escolha em +1. Você não pode 
+aumentar um atributo desta forma além de 3. Note 
+que, se você aumentar Vigor, aumentará seus PV; se 
+aumentar Presença, aumentará seus PE, e, se aumentar 
+Intelecto, ganhará uma nova perícia treinada.
+
+ Cicatrizado. No 5º estágio, você já viu — e sobrevi
+veu — a sua cota de horrores. Isso deixou marcas em 
+seu corpo e sua mente, mas também o deixou mais 
+forte. Escolha um tipo de perigo paranormal que seu 
+personagem já enfrentou, de um elemento específico 
+(Sangue, Morte…).  Você possui algum trauma em re
+lação a esse perigo e sofre –O em testes de resistência 
+contra ele. Contudo, uma vez por sessão de jogo você 
+pode se esforçar ao máximo para não se deixar cair 
+ou se abater. Como uma reação, você pode sacrificar 
+1 PV permanentemente para ignorar um dano mental 
+ou gasto de PE, ou pode sacrificar permanentemente 
+1 PE para reduzir um dano físico à metade

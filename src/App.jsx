@@ -1,10 +1,16 @@
 // /src/app.jsx
-// (COMPLETO: Lógica de Escolha de Elemento na Trilha Monstruoso/Possuído e Passagem de Progressão de Trilhas)
+// (COMPLETO: Integração dos Poderes de Classe com o ModalPoderes.jsx)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
-import { database, OpcoesClasse } from './lib/database.js'; 
-// MODIFICADO: Importa progressaoClasses, progressaoTrilhas, getMergedTrilhas E groupTrilhasByClass
+// IMPORTAÇÃO CORRIGIDA: Importa as listas de poderes do database.js, além das classes e funcoes
+import { 
+    database, 
+    OpcoesClasse, 
+    poderesCombatente, 
+    poderesEspecialista, 
+    poderesOcultista 
+} from './lib/database.js'; 
 import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
 // Importa as Abas e Componentes
@@ -16,13 +22,14 @@ import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
 import ProgressaoHabilidades from './components/ficha/ProgressaoHabilidades'; 
 import ModalTrilhaCustom from './components/ModalTrilhaCustom'; 
+import ModalPoderes from './components/ModalPoderes'; // <--- NOVO MODAL DE PODERES
 import Identidade from './components/ficha/identidade'; 
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
 
-// --- LINHAS DE IMPORTAÇÃO DE IMAGEM REMOVIDAS PARA EVITAR O AVISO DO LINTER ---
-// Os caminhos estáticos são usados diretamente no JSX.
+// (Caminhos de imagem corrigidos no JSX, sem import desnecessário)
+
 
 // (Helper para perícias)
 const listaTodasPericias = Object.keys(fichaInstance.pericias); 
@@ -84,7 +91,8 @@ function App() {
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
   const [isRitualModalOpen, setIsRitualModalOpen] = useState(false); 
-  const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); // MODAL TRILHA CUSTOM
+  const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); 
+  const [isPoderesModalOpen, setIsPoderesModalOpen] = useState(false); // <--- NOVO ESTADO
 
   
   // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
@@ -144,7 +152,7 @@ function App() {
     };
   }, []); 
 
-  // --- Funções de Criação/Gerenciamento de Trilhas Customizadas (NOVAS) ---
+  // --- Funções de Criação/Gerenciamento de Trilhas Customizadas (Existentes) ---
   const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
   const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
 
@@ -154,7 +162,33 @@ function App() {
     handleFecharTrilhaModal();
   };
 
-  // --- FUNÇÕES DE CONTROLE (Salvar, Carregar, etc.) ---
+  // --- Funções de Gerenciamento de PODERES (NOVAS) ---
+  const handleAbrirPoderesModal = () => setIsPoderesModalOpen(true);
+  const handleFecharPoderesModal = () => setIsPoderesModalOpen(false);
+  
+  const handleTogglePoder = (poder) => {
+      const aprendidos = fichaInstance.getPoderesAprendidos();
+      const isAprendido = aprendidos.some(p => p.key === poder.key);
+
+      if (isAprendido) {
+          fichaInstance.removePoder(poder.key);
+      } else {
+          fichaInstance.addPoder(poder);
+      }
+      handleFichaChange(null, null, null);
+  };
+  
+  const getPoderesDisponiveis = (classe) => {
+      switch (classe.toLowerCase()) {
+          case 'combatente': return poderesCombatente;
+          case 'especialista': return poderesEspecialista;
+          case 'ocultista': return poderesOcultista;
+          default: return [];
+      }
+  };
+
+
+  // --- FUNÇÕES DE CONTROLE (Salvar, Carregar, etc. - Existentes) ---
   const carregarFicha = () => {
     const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
     if (dadosSalvos) {

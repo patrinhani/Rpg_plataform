@@ -7,7 +7,8 @@
  * - Adicionado 'export { ficha }'
  * * (NOVO) Implementação completa do Grimório de Rituais (this.rituais, add/remove, get/setDados)
  * * (NOVO) Adicionados campos para Elemento de Trilhas Especiais (monstruoso_elemento e possuido_elemento).
- * * (NOVO) Adicionado array para Trilhas Personalizadas (this.trilhas_personalizadas) e métodos de gerenciamento.
+ * * (NOVO) Adicionado array para Trilhas Personalizadas (this.trilhas_personalizadas).
+ * * (NOVO) Adicionado array e métodos para Poderes de Classe (this.poderes_aprendidos).
  */
 
 class Personagem {
@@ -71,7 +72,8 @@ class Personagem {
 
     this.inventario = []; // Array de objetos de item
     this.rituais = []; // Grimório Pessoal
-    this.trilhas_personalizadas = []; // <--- NOVO: Array para Trilhas Personalizadas
+    this.trilhas_personalizadas = []; // Array para Trilhas Personalizadas
+    this.poderes_aprendidos = []; // <--- NOVO: Array para Poderes de Classe
 
     this.bonusManuais = {
       pv_nex: 0,
@@ -125,17 +127,15 @@ class Personagem {
     this.defesa[campo] = parseInt(valor) || 0;
   }
 
-  // --- MÉTODOS PARA TRILHAS PERSONALIZADAS (NOVOS) ---
+  // --- MÉTODOS PARA TRILHAS PERSONALIZADAS (Existentes) ---
   addTrilhaPersonalizada(trilhaData) {
-      // Gera uma key única e minúscula
-      // Usar uma key simples baseada em ID único para evitar conflitos na progressaoTrilhas
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
       
       const newTrilha = {
         ...trilhaData,
         id: `custom_trilha_${Date.now() + Math.random()}`,
-        key: key, // Chave para seleção e remoção
-        isCustom: true, // Flag para identificação
+        key: key, 
+        isCustom: true, 
       };
       this.trilhas_personalizadas.push(newTrilha);
   }
@@ -149,8 +149,24 @@ class Personagem {
   getTrilhasPersonalizadas() {
       return this.trilhas_personalizadas;
   }
+  
+  // --- MÉTODOS PARA PODERES (NOVOS) ---
+  addPoder(poder) {
+      // Garante que o poder tenha uma key única para o React (usamos a key do poder)
+      if (!this.poderes_aprendidos.some(p => p.key === poder.key)) {
+          this.poderes_aprendidos.push(poder);
+      }
+  }
 
-  // --- Métodos de Inventário, Rituais (Existentes) ---
+  removePoder(poderKey) {
+      this.poderes_aprendidos = this.poderes_aprendidos.filter(p => p.key !== poderKey);
+  }
+
+  getPoderesAprendidos() {
+      return this.poderes_aprendidos;
+  }
+
+  // --- MÉTODOS DE INVENTÁRIO/RITUAIS (Existentes) ---
   
   getBonusTotalPericia(pericia, atributoBase) {
     return this.pericias[pericia] || 0;
@@ -170,7 +186,7 @@ class Personagem {
   }
   toggleIgnorarCalculos(inventarioId) {
     const item = this.inventario.find(
-      (item) => item.inventarioId === inventariaId
+      (item) => item.inventarioId === inventarioId
     );
     if (item) {
       item.ignorarCalculos = !item.ignorarCalculos;
@@ -318,11 +334,11 @@ class Personagem {
       inventario: this.inventario,
       rituais: this.rituais, 
       bonusManuais: this.bonusManuais,
-      trilhas_personalizadas: this.trilhas_personalizadas, // <--- EXPORTAR TRILHAS
+      trilhas_personalizadas: this.trilhas_personalizadas, // EXPORTAR TRILHAS
+      poderes_aprendidos: this.poderes_aprendidos, // <--- EXPORTAR PODERES
     };
   }
   
-  // Lógica de carregamento atualizada para novos campos
   carregarDados(dados) {
     if (dados) {
       this.atributos = dados.atributos || this.atributos;
@@ -335,7 +351,8 @@ class Personagem {
       this.inventario = dados.inventario || [];
       this.rituais = dados.rituais || []; 
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;
-      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; // <--- IMPORTAR TRILHAS
+      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; // IMPORTAR TRILHAS
+      this.poderes_aprendidos = dados.poderes_aprendidos || []; // <--- IMPORTAR PODERES
     }
   }
 
