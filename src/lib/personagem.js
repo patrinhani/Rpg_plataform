@@ -5,6 +5,7 @@
  * - Funções de cálculo (getMaxPeso, calcularValoresMaximos) usam 
  * parseInt(valor) || 0 para tratar "" como 0.
  * - Adicionado 'export { ficha }'
+ * * (NOVO) Implementação completa do Grimório de Rituais (this.rituais, add/remove, get/setDados)
  */
 
 class Personagem {
@@ -64,6 +65,7 @@ class Personagem {
     };
 
     this.inventario = []; // Array de objetos de item
+    this.rituais = []; // <--- NOVO: Array de objetos de ritual (Grimório Pessoal)
 
     this.bonusManuais = {
       pv_nex: 0,
@@ -119,7 +121,7 @@ class Personagem {
     this.defesa[campo] = parseInt(valor) || 0;
   }
 
-  // ... (getBonusTotalPericia, addItemInventario, etc. continuam iguais) ...
+  // --- Métodos de Inventário ---
   getBonusTotalPericia(pericia, atributoBase) {
     return this.pericias[pericia] || 0;
   }
@@ -147,6 +149,28 @@ class Personagem {
   getInventario() {
     return this.inventario;
   }
+  
+  // --- MÉTODOS DO GRIMÓRIO DE RITUAIS (NOVO) ---
+  addRitualInventario(ritual) {
+    // Adiciona um ID único para remoção/rastreio
+    const ritualComId = {
+      ...ritual,
+      inventarioId: Date.now() + Math.random(),
+    };
+    this.rituais.push(ritualComId);
+  }
+  
+  removeRitualInventario(inventarioId) {
+    this.rituais = this.rituais.filter(
+      (ritual) => ritual.inventarioId !== inventarioId
+    );
+  }
+
+  getGrimorio() {
+    return this.rituais;
+  }
+  // ---------------------------------------------
+  
   getBonusDefesaInventario() {
     const inventarioAtivo = this.inventario.filter(
       (item) => !item.ignorarCalculos
@@ -259,7 +283,7 @@ class Personagem {
     return maxPesoBase;
   }
 
-  // --- Métodos de Salvamento ---
+  // --- Métodos de Salvamento/Carregamento (ATUALIZADO) ---
   getDados() {
     return {
       atributos: this.atributos,
@@ -268,6 +292,7 @@ class Personagem {
       recursos: this.recursos,
       defesa: this.defesa,
       inventario: this.inventario,
+      rituais: this.rituais, // <--- EXPORTAR RITUAIS
       bonusManuais: this.bonusManuais,
     };
   }
@@ -279,6 +304,7 @@ class Personagem {
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
       this.inventario = dados.inventario || [];
+      this.rituais = dados.rituais || []; // <--- IMPORTAR RITUAIS
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;
     }
   }
@@ -326,14 +352,6 @@ class Personagem {
         pePorNivel = 4 + presenca;
         sanPorNivel = 5;
         break;
-      default: 
-        pvBase = 16 + vigor;
-        peBase = 3 + presenca;
-        sanBase = 16;
-        pvPorNivel = 3 + vigor;
-        pePorNivel = 3 + presenca;
-        sanPorNivel = 4;
-        break; 
       case "sobrevivente":
         pvBase = 8 + vigor; 
         peBase = 2 + presenca; 
@@ -342,6 +360,14 @@ class Personagem {
         pePorNivel = 1 + presenca;
         sanPorNivel = 2;
         break;
+      default: 
+        pvBase = 16 + vigor;
+        peBase = 3 + presenca;
+        sanBase = 16;
+        pvPorNivel = 3 + vigor;
+        pePorNivel = 3 + presenca;
+        sanPorNivel = 4;
+        break; 
     }
 
     const niveisAcima = Math.max(0, (nex - 5) / 5);

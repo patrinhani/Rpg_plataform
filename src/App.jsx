@@ -12,6 +12,7 @@ import Rituais from './components/Rituais';
 import ModalLoja from './components/ModalLoja';
 import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
+import Identidade from './components/ficha/identidade'; // Necessário para a lista de origens
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
@@ -214,11 +215,22 @@ function App() {
     leitor.readAsText(arquivo);
   };
   
-  // --- Funções de Controle dos Rituais e Inventário (Omitidas para brevidade, mas intactas) ---
+  // --- Funções de Controle dos Rituais e Inventário ---
   const handleAbrirRitualModal = () => setIsRitualModalOpen(true);
   const handleFecharRitualModal = () => setIsRitualModalOpen(false);
-  const handleAddRitual = (ritual) => { fichaInstance.addRitualInventario(ritual); handleFichaChange(null, null, null); };
-  const handleRemoveRitual = (inventarioId) => { fichaInstance.removeRitualInventario(inventarioId); handleFichaChange(null, null, null); };
+  
+  // NOVO: Funções de Adição/Remoção de Rituais
+  const handleAddRitual = (ritual) => { 
+    // Assumindo que addRitualInventario existe no personagem.js
+    fichaInstance.addRitualInventario(ritual); 
+    handleFichaChange(null, null, null); 
+  };
+  const handleRemoveRitual = (inventarioId) => { 
+    // Assumindo que removeRitualInventario existe no personagem.js
+    fichaInstance.removeRitualInventario(inventarioId); 
+    handleFichaChange(null, null, null); 
+  };
+
   const handleAbrirLoja = () => setIsLojaOpen(true);
   const handleFecharLoja = () => setIsLojaOpen(false);
   const handleFecharSelecao = () => { setIsSelecaoOpen(false); setItemPendente(null); };
@@ -466,10 +478,11 @@ function App() {
         onSelect={handleVincularItem} 
       />
 
+      {/* RENDERIZAÇÃO DO MODAL DE RITUAIS */}
       <ModalRituais 
         isOpen={isRitualModalOpen}
         onClose={handleFecharRitualModal}
-        onAddRitual={handleAddRitual}
+        onAddRitual={handleAddRitual} // Passa a função de adição
       />
     </>
   )
