@@ -366,12 +366,20 @@ textarea {
 /* (Removido o estilo do footer daqui, pois foi corrigido acima) */
 
 /* --- 9. Estilo do Hexágono de Atributos --- */
+
 .box-atributos {
   position: relative;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  min-height: 400px;
+  
+  /* Força a caixa a ter a proporção da imagem (quadrada) */
+  aspect-ratio: 1 / 1; 
+  width: 100%; /* Garante que a caixa ocupe o espaço da coluna */
+  /* max-width: 450px; <-- REMOVIDO */
+  margin-left: auto; /* Centraliza a caixa na coluna */
+  margin-right: auto;
+
   padding: 0;
   border: none;
   background-color: transparent;
@@ -414,24 +422,24 @@ input[type="number"].input-hex {
 
 /* --- 10. Posicionamento dos Inputs --- */
 #forca {
-  top: 30%;
+  top: 32%;
   left: 18%;
 }
 #agilidade {
-  top: 10%;
-  left: 45%;
+  top: 14%;
+  left: 46%;
 }
 #intelecto {
-  top: 30%;
-  left: 72%;
+  top: 32%;
+  left: 73%;
 }
 #presenca {
-  top: 66%;
+  top: 65%;
   left: 26%;
 }
 #vigor {
-  top: 66%;
-  left: 64%;
+  top: 65%;
+  left: 65%;
 }
 /* --- 11. Resumo de Cálculo --- */
 .box-calculo {
