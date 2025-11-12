@@ -876,64 +876,149 @@ input[type="number"].input-hex {
   margin-top: 15px;
 }
 
-/* --- 18. (MANTIDO) Estilos de Destaque de Perícia --- */
+/* --- 18. (ATUALIZADO) Estilos de Perícia em Card com "Dado" --- */
+
+/* O Container da Lista (o <ul>) */
+.pericias-grid-container {
+  list-style: none;
+  display: grid;
+  /* Cria colunas de 140px, que se auto-ajustam */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+/* O Card da Perícia (o <li>) */
 .pericia-item {
-  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column; /* Empilha o conteúdo */
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--cor-caixa-recurso);
+  background-color: var(--cor-fundo);
+  min-height: 120px; /* Altura mínima para o card */
+  transition: all 0.2s ease-in-out;
 }
 
-/* Destreinado - Fica "apagado" */
+/* Nome da Perícia */
+.pericia-item span:first-child {
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
+  border-bottom: 1px solid var(--cor-caixa);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+
+/* --- NOVOS ESTILOS PARA O "DADO" --- */
+.pericia-bonus-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto 0;
+  gap: 8px;
+}
+
+.pericia-dado-shape {
+  font-family: "Special Elite", monospace;
+  font-weight: bold;
+  font-size: 1.1em;
+  
+  /* A forma de hexágono */
+  background-color: var(--cor-destaque);
+  color: var(--cor-caixa-recurso); /* Texto escuro */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  
+  /* Tamanho */
+  width: 50px;
+  height: 55px; /* Um pouco mais alto que largo para hexágono */
+  
+  /* Centraliza o texto "5d" dentro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pericia-dado-texto {
+  /* Ajuste fino para o texto "2d (pior)" */
+  font-size: 0.9em;
+  text-align: center;
+  line-height: 1;
+}
+
+.pericia-bonus-texto {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em; /* GRANDE */
+  font-weight: bold;
+  color: var(--cor-destaque);
+  line-height: 1;
+}
+/* --- FIM DOS NOVOS ESTILOS --- */
+
+
+/* O Seletor de Treino */
+.pericia-item select {
+  width: 100%;
+  margin-top: 5px;
+  font-size: 0.9em;
+  padding: 5px;
+}
+
+/* --- Destaques de Treino (versão Card) --- */
+/* (O seletor .pericia-total-bonus foi removido) */
+
+/* Destreinado */
 .pericia-item.treino-0 {
-  opacity: 0.6;
-  border-left-color: transparent;
-  background-color: transparent;
-  filter: none;
-  text-shadow: none;
+  opacity: 0.7;
+  border-color: var(--cor-caixa);
 }
-.pericia-item.treino-0:hover {
-  opacity: 1; /* Volta ao normal no hover */
+.pericia-item.treino-0 .pericia-bonus-texto,
+.pericia-item.treino-0 .pericia-dado-shape {
+  color: var(--cor-texto-label);
+  background-color: var(--cor-caixa-recurso);
 }
-.pericia-item.treino-0 .pericia-total-bonus {
-  color: var(--cor-texto-label); /* Bônus fica cinza */
+.pericia-item.treino-0 .pericia-dado-texto {
+   color: var(--cor-texto-label);
 }
 
-/* Treinado - Destaque normal */
+
+/* Treinado */
 .pericia-item.treino-5 {
   opacity: 1;
-  border-left-color: var(--cor-destaque);
-  border-left-width: 4px;
-}
-.pericia-item.treino-5 .pericia-total-bonus {
-  color: var(--cor-destaque);
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 5px var(--cor-destaque);
 }
 
-/* Veterano - Destaque mais forte */
+/* Veterano */
 .pericia-item.treino-10 {
   opacity: 1;
-  border-left-color: var(--cor-destaque);
-  border-left-width: 5px;
-  background-color: rgba(0, 0, 0, 0.1);
-  filter: brightness(1.1);
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-caixa);
+  box-shadow: 0 0 8px var(--cor-destaque);
 }
-.pericia-item.treino-10 .pericia-total-bonus {
-  color: var(--cor-destaque);
-  filter: brightness(1.1);
-}
-
-/* Expert - Destaque máximo */
-.pericia-item.treino-15 {
-  opacity: 1;
-  border-left-color: var(--cor-destaque);
-  border-left-width: 5px;
-  background-color: rgba(0, 0, 0, 0.15);
-  filter: brightness(1.25);
-  text-shadow: 0 0 3px var(--cor-destaque);
-}
-.pericia-item.treino-15 .pericia-total-bonus {
-  color: var(--cor-destaque);
-  filter: brightness(1.25);
+.pericia-item.treino-10 .pericia-bonus-texto {
   text-shadow: 0 0 5px var(--cor-destaque);
 }
 
+/* Expert */
+.pericia-item.treino-15 {
+  opacity: 1;
+  border-color: var(--cor-destaque);
+  background-color: var(--cor-caixa);
+  box-shadow: 0 0 15px var(--cor-destaque);
+}
+.pericia-item.treino-15 .pericia-bonus-texto {
+  font-size: 2em; /* Maior ainda */
+  text-shadow: 0 0 8px var(--cor-destaque);
+}
+
+/* Garante o contraste do texto do dado em temas claros */
+:root[data-tema="tema-morte"] .pericia-dado-shape,
+:root[data-tema="tema-conhecimento"] .pericia-dado-shape {
+  color: var(--cor-fundo); /* Usa a cor de fundo escura para o texto */
+}
 /* --- 19. (NOVO) Estilo para Bônus de Origem Automático --- */
 .calc-linha.origem-bonus {
   color: var(--cor-destaque);
