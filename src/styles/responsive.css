@@ -8,7 +8,6 @@
       "identidade"
       "controles"
       "defesa"
-      "recursos"
       "atributos"
       "pericias"
       "calculo";
@@ -39,21 +38,12 @@
   .box {
     padding: 15px;
   }
-
-  /* Abas principais */
-  .ficha-abas {
-    padding: 0 10px;
-    gap: 5px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
+  
+  /* --- (ATUALIZADO) Layout Fixo Responsivo --- */
+  .recursos-container-fixo {
+    padding: 10px 10px 0 10px;
   }
-  .ficha-aba-link {
-    font-size: 1em;
-    padding: 8px 12px;
-    flex-shrink: 0;
-  }
-
-  /* Empilhar Recursos */
+  /* Empilhar Recursos (REGRA EXISTENTE) */
   .box-recursos {
     flex-direction: column;
     gap: 15px;
@@ -61,15 +51,38 @@
   .recurso-individual {
     width: 100%;
   }
+  .recurso-header {
+    /* Garante que o input não quebre a linha */
+    flex-wrap: nowrap;
+  }
+  .recurso-individual label {
+    font-size: 1.5em;
+  }
+  .recurso-numeros {
+    font-size: 1.3em;
+  }
+  .recurso-individual .recurso-atual,
+  .recurso-individual .recurso-max,
+  .recurso-individual .recurso-separador {
+    font-size: 1.1em;
+  }
 
-  /* Empilhar Defesa/Status */
-  .box-defesa-status {
-    flex-direction: column;
-    gap: 15px;
+  /* Abas principais */
+  .ficha-abas {
+    padding: 5px 10px; /* Mais compacto */
+    gap: 5px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    /* Ajusta a altura baseado nos 3 recursos empilhados */
+    top: 250px; /* <-- MUDANÇA: Valor ajustado (pode precisar de ajuste fino) */
   }
-  .box-defesa-status .campo-horizontal {
-    width: 100%;
+  .ficha-aba-link {
+    font-size: 1em;
+    padding: 8px 12px;
+    flex-shrink: 0;
   }
+  /* --- FIM DA ATUALIZAÇÃO --- */
+
 
   /* --- Bloco do Hexágono --- */
   .box-atributos {
@@ -83,44 +96,34 @@
 
   /* --- AJUSTE CARDS DE PERÍCIA (Telas Pequenas) --- */
   .pericias-grid-container {
-    /* Diminui o tamanho mínimo dos cards para caberem 3+ */
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 8px;
   }
-  
   .pericia-item {
-    min-height: 100px; /* Altura mínima menor */
+    min-height: 100px; 
     padding: 8px;
   }
-
   .pericia-item span:first-child {
-    font-size: 0.9em; /* Nome da perícia menor */
+    font-size: 0.9em; 
     line-height: 1.1;
   }
-
   .pericia-bonus-container {
-    gap: 5px; /* Menos espaço entre hexágono e bônus */
+    gap: 5px; 
   }
-
   .pericia-dado-shape {
     width: 40px;
     height: 44px;
   }
-
   .pericia-dado-texto {
     font-size: 0.8em;
   }
-
   .pericia-bonus-texto {
-    font-size: 1.5em; /* Bônus menor */
+    font-size: 1.5em; 
   }
-  
   .pericia-item select {
     font-size: 0.8em;
     padding: 4px;
   }
-  /* --- FIM DO AJUSTE DE PERÍCIAS --- */
-
 
   /* Controles */
   .box-controles {
@@ -165,6 +168,10 @@
   body {
     font-size: 90%;
   }
+  
+  .ficha-abas {
+    top: 250px; /* Mantém o ajuste */
+  }
 
   input[type="number"].input-hex {
     font-size: 1.8em;
@@ -173,33 +180,25 @@
 
   /* --- AJUSTE CARDS DE PERÍCIA (Telas Muito Pequenas) --- */
   .pericias-grid-container {
-    /* Diminui ainda mais o tamanho mínimo */
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 5px;
   }
-
   .pericia-item {
     min-height: 90px;
   }
-
   .pericia-bonus-container {
     gap: 4px;
   }
-
   .pericia-dado-shape {
     width: 35px;
     height: 38px;
   }
-
   .pericia-dado-texto {
     font-size: 0.7em;
   }
-
   .pericia-bonus-texto {
     font-size: 1.3em;
   }
-  /* --- FIM DO AJUSTE DE PERÍCIAS --- */
-
 
   /* Força 1 coluna nos cards de item/ritual */
   .loja-lista-itens {

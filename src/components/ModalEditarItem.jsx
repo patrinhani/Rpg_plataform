@@ -1,67 +1,97 @@
 // /src/components/ModalEditarItem.jsx
+// (PASSO 3 - CORREÇÃO DE SINTAXE '??' E '||')
 
 import React, { useState, useEffect } from 'react';
+import { 
+  modificacoesArmas, 
+  modificacoesProtecoes, 
+  modificacoesAcessorios 
+} from '../lib/database.js';
 
-/**
- * Props esperadas do App.jsx:
- * - isOpen: (boolean) Se o modal está visível.
- * - onClose: (função) Para fechar o modal.
- * - onSave: (função) O que fazer quando o usuário clica em "Salvar".
- * - item: (objeto) O item do inventário que está sendo editado.
- * - pericias: (array) A lista completa de perícias (para o select).
- */
+const todasModificacoes = {
+  ...modificacoesArmas.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
+  ...modificacoesProtecoes.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
+  ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
+};
+
 function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   
-  // Estados internos do formulário
   const [nome, setNome] = useState('');
-  const [cat, setCat] = useState(0);
-  const [espacos, setEspacos] = useState(1);
+  const [catBase, setCatBase] = useState(0); 
+  const [espacosBase, setEspacosBase] = useState(1); 
   const [desc, setDesc] = useState('');
   const [defesa, setDefesa] = useState(0);
   const [bonusPericia, setBonusPericia] = useState(0);
   const [periciaSelect, setPericiaSelect] = useState('');
-  
-  // --- A MÁGICA ACONTECE AQUI ---
-  // Este 'useEffect' é disparado sempre que o modal é aberto
-  // ou o 'item' para editar é alterado.
+  const [modsSelecionadas, setModsSelecionadas] = useState([]);
+
   useEffect(() => {
     if (item) {
-      // Preenche os estados do formulário com os dados do item
       setNome(item.nome || '');
-      setCat(item.categoria || 0);
-      setEspacos(item.espacos || 0);
+      
+      // --- CORRIGIDO: Adicionado parênteses para agrupar a lógica ---
+      // Tenta a 'categoriaBase'. Se for null/undefined, tenta 'item.categoria'. Se ambos forem null/undefined, usa 0.
+      setCatBase( (item.categoriaBase ?? item.categoria) ?? 0 );
+      setEspacosBase( (item.espacosBase ?? item.espacos) ?? 0 );
+      // --- FIM DA CORREÇÃO ---
+      
       setDesc(item.descricao || '');
       setDefesa(item.defesa || 0);
       setBonusPericia(item.valorBonus || 0);
       setPericiaSelect(item.periciaVinculada || '');
+      setModsSelecionadas(item.modificacoes || []);
     }
-  }, [item, isOpen]); // Depende do 'item' e 'isOpen'
+  }, [item, isOpen]);
 
-  // --- Handler do Formulário ---
+  const handleModToggle = (modKey) => {
+    setModsSelecionadas(prevMods => {
+      if (prevMods.includes(modKey)) {
+        return prevMods.filter(m => m !== modKey);
+      } else {
+        return [...prevMods, modKey];
+      }
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault(); 
 
     const bonusValor = parseInt(bonusPericia) || 0;
     const periciaNome = periciaSelect;
 
-    // Cria um objeto 'item' atualizado com os dados do formulário
     const itemAtualizado = {
-      ...item, // Mantém o ID original e outras props (como 'elemento', etc)
+      ...item, 
       nome: nome || "Item Editado",
-      categoria: parseInt(cat) || 0,
-      espacos: parseInt(espacos) || 0,
+      categoriaBase: parseInt(catBase) || 0,
+      espacosBase: parseFloat(espacosBase) || 0, 
       descricao: desc || "",
       defesa: parseInt(defesa) || 0,
       valorBonus: bonusValor,
       periciaVinculada: bonusValor > 0 && periciaNome ? periciaNome : null,
       tipoBonus: (bonusValor > 0 && periciaNome) ? (item.id.startsWith('custom_') ? 'custom' : 'generico') : null,
+      modificacoes: modsSelecionadas,
     };
 
-    onSave(itemAtualizado); // Envia o item atualizado para o App.jsx
-    onClose(); // Fecha o modal
+    onSave(itemAtualizado); 
+    onClose(); 
   };
 
-  // --- Handler para fechar o modal clicando no fundo ---
+  const calcularStatsFinais = () => {
+    let categoriaFinal = parseInt(catBase) || 0;
+    let espacosFinal = parseFloat(espacosBase) || 0; 
+
+    modsSelecionadas.forEach(modKey => {
+      const modData = todasModificacoes[modKey];
+      if (modData) {
+        categoriaFinal += (modData.cat || 1); 
+        espacosFinal += (modData.espacos || 0);
+      }
+    });
+    
+    espacosFinal = Math.max(0, espacosFinal);
+    return { categoriaFinal, espacosFinal };
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -71,11 +101,12 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   if (!isOpen) {
     return null;
   }
+  
+  const { categoriaFinal, espacosFinal } = calcularStatsFinais();
 
-  // --- Renderização do Modal (Baseado no ModalLoja) ---
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-conteudo">
+      <div className="modal-conteudo modal-grande"> 
         
         <div className="modal-header">
           <h3>Editar Item: {item ? item.nome : ''}</h3>
@@ -85,23 +116,38 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
         </div>
 
         <div className="modal-body">
-          {/* O formulário é idêntico ao de "Item Personalizado" */}
           <form className="form-custom-item" onSubmit={handleSubmit}>
               
               <div className="campo-horizontal">
                 <label>Nome do Item</label>
                 <input type="text" id="edit-item-nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
-              <div className="form-custom-grid">
+              
+              <div className="form-custom-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
                 <div className="campo-horizontal">
-                  <label>Categoria (I, II, III, IV)</label>
-                  <input type="number" id="edit-item-cat" value={cat} onChange={(e) => setCat(e.target.value)} min="0" max="4" />
+                  <label>Cat. Base</label>
+                  <input type="number" id="edit-item-cat-base" value={catBase} onChange={(e) => setCatBase(e.target.value)} min="0" max="4" />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Espaços (Peso)</label>
-                  <input type="number" id="edit-item-espacos" value={espacos} onChange={(e) => setEspacos(e.target.value)} min="0" />
+                  <label>+ Mods (Cat.)</label>
+                  <input type="text" value={`+${modsSelecionadas.length}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)'}} />
+                </div>
+                <div className="campo-horizontal">
+                  <label>Esp. Base</label>
+                  <input 
+                    type="text" 
+                    id="edit-item-espacos-base" 
+                    value={espacosBase} 
+                    onChange={(e) => setEspacosBase(e.target.value)} 
+                  />
+                </div>
+                <div className="campo-horizontal">
+                  <label>Cat. Final / Esp. Final</label>
+                  {/* Usando toFixed(2) para lidar com '0.5' ou '0.25' */}
+                  <input type="text" value={`CAT ${categoriaFinal} / ESP ${espacosFinal.toFixed(2)}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)', fontWeight: 'bold'}} />
                 </div>
               </div>
+              
               <div className="campo-horizontal">
                 <label>Descrição</label>
                 <textarea id="edit-item-desc" rows="3" value={desc} onChange={(e) => setDesc(e.target.value)}></textarea>
@@ -121,14 +167,57 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
                   <label>Vincular Perícia</label>
                   <select id="edit-item-pericia-select" value={periciaSelect} onChange={(e) => setPericiaSelect(e.target.value)}>
                     <option value="">Nenhuma</option>
-                    {/* Mapeia a lista de perícias recebida por 'props' */}
                     {pericias.map(periciaKey => (
                       <option key={periciaKey} value={periciaKey}>{periciaKey}</option>
                     ))}
                   </select>
                 </div>
               </div>
-              <button type="submit" id="btn-salvar-item-editado">
+
+              <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
+              <div className="form-custom-grid" style={{ 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+                  maxHeight: '200px', 
+                  overflowY: 'auto', 
+                  backgroundColor: 'var(--cor-fundo)', 
+                  padding: '10px', 
+                  borderRadius: '4px',
+                  border: '1px solid var(--cor-caixa-recurso)'
+              }}>
+                
+                {modificacoesArmas.map(mod => (
+                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                    <input 
+                      type="checkbox"
+                      checked={modsSelecionadas.includes(mod.key)}
+                      onChange={() => handleModToggle(mod.key)}
+                    />
+                    {mod.nome}
+                  </label>
+                ))}
+                {modificacoesProtecoes.map(mod => (
+                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                    <input 
+                      type="checkbox"
+                      checked={modsSelecionadas.includes(mod.key)}
+                      onChange={() => handleModToggle(mod.key)}
+                    />
+                    {mod.nome}
+                  </label>
+                ))}
+                {modificacoesAcessorios.map(mod => (
+                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                    <input 
+                      type="checkbox"
+                      checked={modsSelecionadas.includes(mod.key)}
+                      onChange={() => handleModToggle(mod.key)}
+                    />
+                    {mod.nome}
+                  </label>
+                ))}
+              </div>
+              
+              <button type="submit" id="btn-salvar-item-editado" style={{marginTop: '20px'}}>
                 Salvar Alterações
               </button>
             </form>

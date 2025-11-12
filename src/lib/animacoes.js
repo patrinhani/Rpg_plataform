@@ -1,15 +1,10 @@
 // /src/lib/animacoes.js
-// (CORRIGIDO: Removemos as variáveis globais que buscavam elementos do DOM
-// antes do React renderizar. Agora, cada função busca o elemento
-// no momento da execução.)
+// (CORRIGIDO: GSAP agora controla o fade-in/out de Ordem e Energia)
 
 import { gsap } from "gsap";
 
-// --- Variáveis de Controle (sem o DOM) ---
 let activeTimeline = null;
 let particleInterval = null;
-
-// --- Funções de Animação ---
 
 function getCorTransicao(tema) {
   const rootStyles = getComputedStyle(document.documentElement);
@@ -23,9 +18,7 @@ function getCorTransicao(tema) {
   }
 }
 
-// Limpa animações anteriores
 function limparAnimacoesAtivas() {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
 
   if (activeTimeline) {
@@ -37,7 +30,6 @@ function limparAnimacoesAtivas() {
     particleInterval = null;
   }
   
-  // (CORRIGIDO) Adiciona verificação de nulo
   if (transitionOverlay) {
     gsap.killTweensOf(transitionOverlay);
     gsap.killTweensOf(transitionOverlay.children);
@@ -45,14 +37,12 @@ function limparAnimacoesAtivas() {
     transitionOverlay.style.backgroundColor = "transparent";
     transitionOverlay.style.background = "transparent";
     transitionOverlay.style.backgroundImage = "none";
-    transitionOverlay.style.opacity = "0";
+    transitionOverlay.style.opacity = "0"; // Isto é importante para limpar
     transitionOverlay.className = "";
   }
 }
 
-// Cria o símbolo no meio da tela
 function injecarSimboloTransicao(tema) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return null;
   
@@ -86,19 +76,17 @@ function injecarSimboloTransicao(tema) {
   return img;
 }
 
-// --- Animações Específicas ---
+// --- Animações Específicas (Não mudaram) ---
 
 function executarAnimacaoSangue(tema, onMidpoint) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
 
-  transitionOverlay.style.opacity = "1";
+  transitionOverlay.style.opacity = "1"; 
   transitionOverlay.style.backgroundColor = "transparent";
   const novaCorDeFundo = getCorTransicao(tema);
   const simbolo = injecarSimboloTransicao(tema);
 
-  // ... (resto da função de animação é igual) ...
   const numGotas = 100;
   const gotas = [];
   for (let i = 0; i < numGotas; i++) {
@@ -132,7 +120,6 @@ function executarAnimacaoSangue(tema, onMidpoint) {
 }
 
 function executarAnimacaoConhecimento(tema, onMidpoint) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
 
@@ -169,7 +156,6 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
 }
 
 function criarParticula() {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!particleInterval || !transitionOverlay) return;
   const p = document.createElement("div");
@@ -181,7 +167,6 @@ function criarParticula() {
 }
 
 function executarAnimacaoMorte(tema, onMidpoint) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
   
@@ -212,10 +197,8 @@ function executarAnimacaoMorte(tema, onMidpoint) {
 // --- Funções Principais (Exportadas) ---
 
 export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) {
-    // Se não achar o overlay, pelo menos troca o tema
     aplicarTemaSemAnimacao(tema);
     onMidpointCallback();
     return;
@@ -227,16 +210,11 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
     return;
   }
 
-  let animationClass = "anim-ordem";
+  // let animationClass = "anim-ordem"; // <-- REMOVIDO
   let animationTime = 1200;
   const novaCorDeFundo = getCorTransicao(tema);
 
   switch (tema) {
-    case "tema-ordem":
-      transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      animationClass = "anim-ordem";
-      animationTime = 1200;
-      break;
     case "tema-sangue":
       executarAnimacaoSangue(tema, onMidpointCallback);
       return;
@@ -246,49 +224,85 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
     case "tema-conhecimento":
       executarAnimacaoConhecimento(tema, onMidpointCallback);
       return;
+      
+    // Casos padrão (Ordem e Energia)
+    case "tema-ordem":
+      transitionOverlay.style.backgroundColor = novaCorDeFundo;
+      animationTime = 1200;
+      break;
     case "tema-energia":
       transitionOverlay.style.backgroundColor = novaCorDeFundo;
       transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.png')"; 
       transitionOverlay.style.backgroundSize = "cover";
       transitionOverlay.style.backgroundPosition = "center";
       transitionOverlay.style.backgroundRepeat = "no-repeat";
-      animationClass = "anim-energia";
+      // Adiciona a classe APENAS para o glitch
+      transitionOverlay.className = "anim-energia"; 
       animationTime = 1000;
       break;
-    // (NOVO) Adicionado default para segurança
     default:
       transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      animationClass = "anim-ordem";
       animationTime = 1200;
       break;
   }
 
-  // --- Animação Padrão (Ordem e Energia) ---
+  // --- (ATUALIZADO) Animação Padrão (Ordem e Energia) com GSAP ---
   const simbolo = injecarSimboloTransicao(tema);
   const animationTimeInSeconds = animationTime / 1000;
-  transitionOverlay.className = animationClass;
+  const halfTime = animationTimeInSeconds / 2;
+
+  // Limpa a opacidade inline deixada pelo 'limparAnimacoesAtivas'
+  transitionOverlay.style.opacity = ""; 
 
   activeTimeline = gsap.timeline({
     onComplete: () => {
+      // Limpa tudo ao final
       transitionOverlay.className = "";
-      transitionOverlay.style.opacity = "0";
+      transitionOverlay.style.opacity = "0"; 
       transitionOverlay.style.backgroundColor = "transparent";
       transitionOverlay.style.backgroundImage = "none";
+      if (transitionOverlay.innerHTML) transitionOverlay.innerHTML = "";
       activeTimeline = null;
     },
   });
 
-  activeTimeline.call(onMidpointCallback, null, animationTimeInSeconds / 2); // Chama o callback
+  // 1. Fade-in
+  activeTimeline.to(transitionOverlay, { 
+    opacity: 1, 
+    duration: halfTime, 
+    ease: "power1.in" 
+  }, 0); 
+  
+  // 2. Chama o callback no meio
+  activeTimeline.call(onMidpointCallback, null, halfTime); 
+  
+  // 3. Fade-out
+  activeTimeline.to(transitionOverlay, { 
+    opacity: 0, 
+    duration: halfTime, 
+    ease: "power1.out" 
+  }, halfTime); 
+
+  // Animação do símbolo (acontece durante o fade-in e fade-out)
   if (simbolo) {
-    activeTimeline.to(simbolo, { opacity: 1, scale: 1, duration: animationTimeInSeconds * 0.3, ease: "power2.out" }, animationTimeInSeconds * 0.25);
-    activeTimeline.to(simbolo, { opacity: 0, scale: 0.9, duration: animationTimeInSeconds * 0.3, ease: "power2.in" }, animationTimeInSeconds * 0.5);
+    activeTimeline.to(simbolo, { 
+      opacity: 1, 
+      scale: 1, 
+      duration: animationTimeInSeconds * 0.3, 
+      ease: "power2.out" 
+    }, animationTimeInSeconds * 0.25);
+    
+    activeTimeline.to(simbolo, { 
+      opacity: 0, 
+      scale: 0.9, 
+      duration: animationTimeInSeconds * 0.3, 
+      ease: "power2.in" 
+    }, halfTime); // Começa o fade-out do símbolo no meio da animação
   }
-  activeTimeline.to({}, { duration: animationTimeInSeconds });
 }
 
 
 export function aplicarTemaSemAnimacao(tema) {
-  // (CORRIGIDO) Busca o elemento SÓ AGORA
   const rootElement = document.documentElement;
   rootElement.dataset.tema = tema;
   localStorage.setItem("temaFichaOrdem", tema);

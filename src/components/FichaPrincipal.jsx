@@ -1,16 +1,16 @@
 // /src/components/FichaPrincipal.jsx
+// (ATUALIZADO: Removeu o componente <Recursos />)
 
 import React from 'react';
 
 // Caminhos corretos para a pasta ./ficha/ (sem .jsx)
 import Identidade from './ficha/identidade';
 import Atributos from './ficha/atributos';
-import Recursos from './ficha/recursos';
+// import Recursos from './ficha/recursos'; // <-- REMOVIDO
 import DefesaStatus from './ficha/defesa-status';
 import Pericias from './ficha/pericias';
 import Controles from './ficha/controles';
 import CalculoDetalhado from './ficha/calculo-detalhado';
-// ProgressaoHabilidades foi removido desta importação
 
 function FichaPrincipal({
   personagem,
@@ -19,15 +19,13 @@ function FichaPrincipal({
   handleFichaChange,
   controlesProps,
   trilhasPorClasse,
-  progressaoData // A prop ainda é recebida do App.jsx
+  progressaoData 
 }) {
-    // 1. Extrai canChangeTheme do objeto calculados
     const { canChangeTheme } = calculados; 
 
-    // 2. Cria um novo objeto de props para Controles, incluindo o status do NEX
     const controlesComNEX = {
         ...controlesProps,
-        canChangeTheme: canChangeTheme // Repassa o novo status
+        canChangeTheme: canChangeTheme 
     };
 
   return (
@@ -36,20 +34,17 @@ function FichaPrincipal({
       <Identidade 
         dados={personagem.info} 
         onFichaChange={handleFichaChange} 
-        trilhasPorClasse={trilhasPorClasse} // Repassa a prop para Identidade
+        trilhasPorClasse={trilhasPorClasse} 
       />
       
-      <Controles {...controlesComNEX} /> {/* Usa as novas props aqui */}
+      <Controles {...controlesComNEX} /> 
 
       <Atributos 
         dados={personagem.atributos} 
         onFichaChange={handleFichaChange} 
       />
 
-      <Recursos 
-        dados={personagem.recursos}
-        onFichaChange={handleFichaChange}
-      />
+      {/* <Recursos ... /> <-- REMOVIDO DAQUI */}
       
       <DefesaStatus
         dadosInfo={personagem.info}
@@ -64,8 +59,6 @@ function FichaPrincipal({
         dadosCalculados={calculados}
         onFichaChange={handleFichaChange}
       />
-
-      {/* O componente ProgressaoHabilidades foi removido desta seção, pois foi movido para a aba "Progressão". */}
 
       <CalculoDetalhado
         dados={personagem.bonusManuais}

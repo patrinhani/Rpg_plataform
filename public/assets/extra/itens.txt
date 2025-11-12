@@ -1,0 +1,1720 @@
+DESCRIÇÃO   
+DAS ARMAS
+ Acha. Um machado grande e pesado, usado no corte 
+de árvores largas.
+
+ Arco. Um arco e flecha comum, próprio para tiro 
+ao alvo.
+
+ Arco Composto. Este arco moderno usa materiais 
+de alta tensão e um sistema de roldanas para gerar 
+mais pressão. Ao contrário de outras armas de dis
+paro, permite que você aplique seu valor de Força às 
+rolagens de dano.
+
+ Balestra. Uma besta pesada, capaz de disparos  
+poderosos. Exige uma ação de movimento para ser 
+recarregada a cada disparo.
+
+ Bastão. Um cilindro de madeira maciça. Pode ser 
+um taco de beisebol, um cacetete da polícia, uma tonfa 
+ou apenas uma clava envolta em pregos ou arame 
+farpado. Você pode empunhar um bastão com uma 
+mão (dano 1d6) ou com as duas (dano 1d8).
+ 
+ Bazuca. Este lança-foguetes foi concebido como 
+uma arma anti-tanques, mas também se mostrou 
+eficaz contra criaturas. A bazuca causa seu dano no 
+alvo atingido e em todos os seres num raio de 3m; 
+esses seres (mas não o alvo atingido diretamente) têm 
+direito a um teste de Reflexos (DT Agi) para reduzir 
+o dano à metade. Você pode disparar o foguete num 
+ponto qualquer em alcance médio, em vez de num 
+ser específico; nesse caso, não precisa rolar ataque 
+e não tem chance de errar (mas também não acerta 
+nenhum ser diretamente). A bazuca exige uma ação 
+de movimento para ser recarregada a cada disparo.
+
+ Besta. Esta arma da antiguidade exige uma ação 
+de movimento para ser recarregada a cada disparo.
+ 
+ Cajado. Um cabo de madeira ou barra de ferro longo. 
+Espingarda. Arma de fogo longa e com cano liso. A 
+espingarda causa apenas metade do dano em alcance 
+médio ou maior.
+ 
+ Faca. Uma lâmina longa e afiada, como uma navalha, 
+uma faca de churrasco ou uma faca militar (facas 
+de cozinha pequenas causam apenas 1d3 pontos de 
+dano). É uma arma ágil e pode ser arremessada.
+
+ Florete. Esta espada de lâmina fina e comprida é 
+usada por esgrimistas.É uma arma ágil.
+ 
+ Fuzil de Assalto. A arma de fogo padrão da maioria 
+dos exércitos modernos. É uma arma automática.
+ 
+ Fuzil de Caça. Esta arma de fogo é bastante popular 
+entre fazendeiros, caçadores e atiradores esportistas.
+ 
+ Fuzil de Precisão. Esta arma de fogo de uso militar 
+é projetada para disparos longos e precisos. Se for 
+veterano em Pontaria e mirar com um fuzil de pre
+cisão (veja a página 87), você recebe +5 na margem 
+de ameaça de seu ataque.
+ 
+ Gadanho. Uma ferramenta agrícola, o gadanho 
+é uma versão maior da foice, para uso com as duas 
+mãos. Foi criada para ceifar cereais, mas também 
+pode ceifar vidas.
+ 
+ Katana. Originária do Japão, esta espada longa e 
+levemente curvada transcendeu os séculos. É uma 
+arma ágil. Se você for veterano em Luta pode usá-la 
+como uma arma de uma mão.
+
+ Lança. Uma haste de madeira com uma ponta me
+tálica afiada, a lança é uma arma arcaica, mas usada 
+ainda hoje por artistas marciais. Pode ser arremessada.
+
+ Lança-chamas. Equipamento militar que esguicha 
+líquido inflamável incandescente. Um lança-chamas 
+atinge todos os seres em uma linha de 1,5m de largura 
+com alcance curto, mas não alcança além disso. Faça 
+um único teste de ataque e compare o resultado com 
+a Defesa de todos os seres na área. Além de sofrer 
+dano, seres atingidos ficam em chamas.
+ 
+ Cajado. Um cabo de madeira ou barra de ferro longo.
+Inclui cajado o bo usado em artes marciais. É uma 
+arma ágil. Além disso, pode ser usado com Combater 
+com Duas Armas (e poderes similares) para fazer 
+ataques adicionais, como se fosse uma arma de uma 
+mão e uma arma leve.
+ 
+ Corrente. Um pedaço de corrente grossa pode ser 
+usado como uma arma bastante efetiva. A corrente 
+fornece +2 em testes para desarmar e derrubar.
+
+ Espada. Uma arma medieval, como uma espada longa 
+dos cavaleiros europeus ou uma cimitarra sarracena. 
+Você pode empunhar uma espada com uma mão 
+(dano 1d8) ou com as duas (dano 1d10).
+ 58
+ 
+ Machadinha. Ferramenta útil para cortar madeira, 
+pode ser facilmente encontrada em canteiros de obras 
+e fazendas. Pode ser arremessada.
+ 
+ Machado. Uma ferramenta importante para le
+nhadores e bombeiros, um machado pode causar 
+ferimentos terríveis.
+ 
+ Maça. Bastão com uma cabeça metálica cheia de 
+protuberâncias.
+ 
+ 
+ Machete. Uma lâmina longa, muito usada como 
+ferramenta para abrir trilhas.
+ 
+ Marreta. Normalmente usada para demolir paredes, 
+também pode ser usada para demolir pessoas. Use 
+estas estatísticas para outras ferramentas de constru
+ção civil, como picaretas.
+ 
+ Martelo. Esta ferramenta comum pode ser usada 
+como arma na falta de opções melhores.
+ Metralhadora. Uma arma de fogo pesada, de 
+uso militar. Para atacar com uma metralhadora, você 
+precisa ter Força 4 ou maior ou gastar uma ação de 
+movimento para apoiá-la em seu tripé ou suporte 
+apropriado; caso contrário, sofre –5 em seus ataques. 
+Uma metralhadora é uma arma automática.
+
+ Montante. Enorme e pesada, esta espada de 1,5m 
+de comprimento foi uma das armas mais poderosas 
+em seu tempo.
+
+ Motoserra. Uma ferramenta capaz de causar fe
+rimentos profundos; sempre que rolar um 6 em um 
+ dado de dano com uma motosserra, role um dado 
+ de dano adicional. Apesar de potente, esta arma é 
+desajeitada e impõe –O nos seus testes de ataque. 
+Ligar uma motosserra gasta uma ação de movimento.
+ 
+ Nunchaku. Dois bastões curtos de madeira ligados 
+por uma corrente. É uma arma ágil.
+ 
+ Pistola. Uma arma de mão comum entre policiais 
+e militares por ser facilmente recarregável.
+
+ Punhal. Uma faca de lâmina longa e pontiaguda, 
+usada por cultistas em seus rituais. É uma arma ágil.
+ 
+ Revólver. A arma de fogo mais comum, e uma das 
+mais confiáveis
+ 
+ Submetralhadora. Esta arma de fogo automática 
+pode ser empunhada com apenas uma mão.
+
+
+ Baioneta. Uma lâmina projetada para ser fixada em 
+um fuzil ou arma similar. Você pode gastar uma ação 
+de movimento para fixar a baioneta em uma arma de 
+fogo de duas mãos. Se fizer isso, a baioneta se torna 
+uma arma de duas mãos ágil e seu dano aumenta para 
+1d6. Você ainda pode atacar com a arma de fogo, mas 
+sofre –O em ataques à distância com ela.
+ 
+ Bastão Policial. Essencialmente um bastão com 
+uma guarda lateral, esta é a arma branca de uso padrão 
+da maioria das forças policiais. Além de desferir golpes 
+contundentes, pode ser usada para aparar ataques; 
+quando usa a ação especial esquiva com um bastão 
+policial, o bônus que você recebe na Defesa aumenta 
+em +1. Um bastão policial é uma arma ágil.
+ 
+ Espingarda de Cano Duplo. Geralmente usada 
+para caça, essa versão da espingarda conta com dois 
+canos paralelos, cada um com um gatilho e capacidade 
+para um cartucho. Ao contrário de outras armas de 
+fogo, você precisa gastar uma ação de movimento para 
+recarregar a espingarda de cano duplo após disparar 
+seus dois cartuchos. Quando ataca com essa arma, 
+você pode disparar os dois canos no mesmo alvo; se 
+fizer isso, sofre –O no teste de ataque, mas o dano 
+da arma aumenta para 6d6.
+
+Estilingue. Originalmente usado para caçar passari
+nhos, estilingues evoluíram em formato e composição. 
+Ao contrário de outras armas de disparo, permite 
+que você aplique seu valor de Força às rolagens de 
+dano. Um estilingue dispara bolinhas que podem 
+ser reaproveitadas e, na falta destas, você pode usar 
+pedrinhas como munição; um pacote de bolinhas 
+dura uma missão inteira, tem categoria 0 e ocupa o 
+mesmo espaço do estilingue. Um estilingue também 
+pode lançar granadas; fazer isso permite arremessar 
+uma granada em alcance longo
+
+ Faca Tática. Uma faca balanceada para contra-a
+taques rápidos e bloqueios. Se usada na ação especial 
+contra-ataque, fornece +2 no teste de ataque para 
+contra-atacar. Se usada na ação especial bloqueio, 
+você pode gastar 2 PE e sacrificar a faca tática para 
+aumentar a RD do bloqueio em +20. A faca tática é 
+uma arma ágil e pode ser arremessada.
+
+ Gancho de Carne. Usado para pendurar carne em 
+frigoríficos, este gancho metálico pode servir como 
+arma. Também pode ser amarrado a um pedaço de 
+corda ou corrente; isso aumenta seu alcance para 4,5m 
+e o transforma em um item de espaço 2.
+
+ Picareta. Essencialmente uma ferramenta de mine
+ração e demolição, uma picareta pode ser empregada 
+em combate na falta de armas apropriadas.
+
+ Pistola Pesada. Uma versão de calibre superior da 
+tradicional pistola. Sua potência e recuo impõem uma 
+penalidade de –O em testes de ataque; empunhá-la 
+com as duas mãos anula essa penalidade.
+
+ Pregador Pneumático. Outra ferramenta que 
+pode ser empregada como arma em uma situação 
+extrema, um pregador pneumático é um aparelho 
+semelhante a uma pistola que dispara pregos sob 
+pressão. Embora seja um dispositivo mecânico, ele 
+conta como uma arma de fogo para seus poderes 
+que afetam armas deste tipo. Um pregador armazena 
+300 pregos em rolo, o suficiente para durar uma 
+missão inteira.
+ 
+ Revolver Compacto. Uma arma de baixo calibre, 
+projetada para ser facilmente escondida no corpo. Se 
+for treinado em Crime, você consegue carregar uma 
+dessas armas sem que ela ocupe um espaço.
+
+ Shuriken. Pequenos projéteis metálicos em forma 
+de estrelas ou dardos, usados por artistas marciais (e 
+fãs de ninjas). Se for veterano em Pontaria, uma vez 
+por rodada, quando ataca com uma shuriken, você 
+poderá gastar 1 PE para fazer um ataque adicional de 
+shuriken contra o mesmo alvo. Uma única shuriken 
+representa um "pacote" suficiente para duas cenas 
+(ou 10 shurikens, se estiver usando a regra opcional 
+de contagem de munição)
+
+MUNIÇÕES
+ A munição é representada por “pacotes”, como uma 
+  caixa de balas ou aljava de flechas. Cada pacote é 
+suficiente para uma ou mais cenas de combate, inde
+pendentemente de quantos disparos (ataques) você 
+fizer em cada uma. Quando você usar a munição pelo 
+número de cenas especificado, gasta o pacote.
+ 
+ Esse sistema abstrato representa o fato de que no 
+caos de um combate vários disparos são dados, além 
+de que parte da munição pode apresentar problemas 
+ou se perder. Ele existe para manter o foco na ação 
+e eliminar a necessidade de controlar o consumo de 
+munição a cada disparo.
+
+Descrição das Munições
+ 
+ Balas Curtas. Munição básica, usada em pistolas, 
+revólveres e submetralhadoras. Um pacote de balas 
+curtas dura duas cenas.
+ 
+ Balas Longas. Maior e mais potente, esta munição 
+é usada em fuzis e metralhadoras. Um pacote de balas 
+longas dura uma cena.
+ 
+ Cartuchos. Usados em espingardas, esses cartuchos 
+são carregados com esferas de chumbo. Um pacote 
+de cartuchos dura uma cena.
+ Combustível. Um tanque de combustível para 
+  
+  Flechas. Usadas em arcos e bestas, flechas podem 
+ser reaproveitadas após cada combate. Por isso, um 
+pacote de flechas dura uma missão inteira.
+ 
+ Foguete. Disparado por bazucas. Ao contrário de 
+outras munições, cada foguete dura um único dis
+paro, não uma cena. Para fazer vários ataques, você 
+precisará carregar vários foguetes
+
+
+proteções
+
+
+CARACTERÍSTICAS 
+DAS PROTEÇÕES
+ 
+ Defesa. O valor de Defesa fornecido pela proteção.
+ Categoria. A categoria do item, para efeitos de 
+quais equipamentos você pode requisitar.
+ Espaço. O total de espaços ocupados pela proteção 
+em seu inventário.
+ Penalidade por Não Proficiência. Se você 
+usar uma proteção com a qual não seja proficiente, 
+sofre –OO em testes baseados em Força ou Agilidade.
+ 
+ 
+ DESCRIÇÃO
+
+ Proteção Leve. Jaqueta de couro pesada ou um 
+colete de kevlar. Essa proteção é tipicamente usada 
+por seguranças e policiais.
+ 
+ Proteção Pesada. Equipamento usado por forças 
+especiais da polícia e pelo exército. Consiste de capa
+cete, ombreiras, joelheiras e caneleiras, além de um 
+colete com várias camadas de kevlar. Fornece resis
+tência a balístico, corte, impacto e perfuração 2. No 
+entanto, por ser desconfortável e volumosa, impõe –5 
+em testes de perícias que sofrem penalidade de carga.
+
+Escudo. Um escudo medieval ou moderno, como 
+aqueles usados por tropas de choque. Precisa ser 
+empunhado em uma mão e fornece Defesa +2. Bônus 
+na Defesa fornecido por um escudo acumula com 
+o de uma proteção. Para efeitos de proficiência e 
+penalidade por não proficiência, escudos contam 
+como proteção pesada.
+
+
+ Acessórios
+
+ 
+ Kit de Perícia. Um conjunto de ferramentas neces
+sárias para algumas perícias ou usos de perícias. Sem 
+o kit, você sofre –5 no teste. Existe um kit de perícia 
+para cada perícia que exige este item.
+ 
+ Utensílio. Um item comum que tenha uma utili
+dade específica, como um canivete, uma lupa, um 
+smartphone ou um notebook. Um utensílio for
+nece +2 em uma perícia (exceto Luta e Pontaria). 
+Por exemplo, um smartphone pode ser usado para 
+acessar a internet e fornecer bônus em Ciências, 
+enquanto um notebook pode ser preparado para 
+invadir sistemas e fornecer bônus em Tecnologia. 
+Você pode inventar itens menos realistas, como 
+um “detector de mentiras portátil” que fornece +2 
+em Intuição, mas o mestre tem a palavra final se o 
+utensílio é apropriado ou não. Utensílios sempre 
+ocupam 1 espaço e precisam ser empunhados para 
+que o bônus seja aplicado.
+ 
+ Vestimenta. Uma peça de vestuário que fornece 
++2 em uma perícia (exceto Luta ou Pontaria). Por 
+exemplo, um par de botas militares pode fornecer +2 
+em Atletismo, um terno ou vestido elegante pode for
+necer +2 em Diplomacia e um manto com glifos pode 
+fornecer +2 em Ocultismo. Assim como utensílios, o 
+benefício de cada vestimenta deve ser aprovado pelo 
+mestre. Você pode receber os bônus de no máximo 
+duas vestimentas ao mesmo tempo. Vestir ou despir 
+uma vestimenta é uma ação completa
+
+ Amuleto Sagrado. Um utensílio especial na forma 
+de shimenawa, rosário, fio de contas, contas de oração 
+ou qualquer outro objeto que reforce sua fé e ajude a 
+blindá-lo das desgraças do dia a dia. Ocupa o espaço de 
+um item vestido e fornece +2 em Religião e Vontade.
+
+ Celular. Um utensílio especial (embora comum 
+hoje em dia). Serve para tirar fotos, gravar áudios 
+e vídeos, acessar a internet e até, veja só, ligar para 
+outras pessoas. Se tiver acesso a internet, fornece +2 
+em testes de perícia que envolvam adquirir informa
+ções. Por fim, possui uma lanterna fraca, mas útil na 
+falta de um equipamento melhor, que ilumina em 
+um cone de 4,5m.
+
+ Chave de Fenda Universal. Esta ferramenta pode 
+ser considerada um milagre da engenharia humana. 
+Com ela em mãos, você é capaz de resolver quase 
+qualquer problema. Fornece +2 em testes de perícia 
+para criar ou reparar objetos, desde panelas de cozi
+nha até motores de avião. Também fornece o bônus 
+se usada como item de apoio em situações especiais, 
+como lidar com cabos para hackear um servidor.
+ Chaves. Molhos de chaves (de casa, veículo, cadeados 
+etc.) são itens comuns. Usar o barulho de um molho 
+de chaves para distrair alguém (jogando as chaves, 
+por exemplo) fornece +2 em testes de Furtividade 
+feitos na mesma rodada.
+ 
+ Documentos Falsos. Um conjunto de documentos 
+(identidade funcional, carteira de habilitação, cartões 
+de crédito etc.) em nome de uma identidade falsa. 
+Você recebe +2 em testes de Diplomacia, Enganação 
+e Intimidação para se passar pela pessoa representada 
+pelos documentos.
+ 
+ Manual Operacional. Um livro com lições práti
+cas sobre um assunto. Existe um manual operacional 
+para cada perícia; gastar uma ação de interlúdio lendo 
+um manual permite que você use essa perícia como 
+se fosse treinado nela até o próximo interlúdio. Um 
+manual operacional aprimorado (veja OPRPG, p. 64) 
+também fornece +5 na perícia.Você só pode receber 
+o benefício de um manual operacional por vez
+
+ Notebook. Um utensílio especial. Como um celu
+lar, se tiver acesso a internet fornece +2 em testes de 
+perícia que envolvem adquirir informações. Além 
+disso, por sua tela maior, pode ser usado para entre
+tenimento de forma mais agradável; ao relaxar em 
+cenas de interlúdio, você recupera 1 ponto adicional 
+de Sanidade. A luz do monitor ilumina em um cone 
+de 4,5m. Tablets estão inclusos como uma variação 
+de notebook
+
+
+ Explosivos
+
+ Granadas. Para usar uma granada, você precisa 
+empunhá-la e então gastar uma ação padrão para 
+arremessá-la em um ponto à sua escolha em alcance 
+médio. A granada afeta um raio de 6m a partir do 
+ponto de impacto. O efeito que ela causa varia con
+forme o tipo de granada.
+ 
+ IAtordoamento. Também chamadas de flash--bang, por criarem um estouro barulhento e lumi
+noso. Seres na área ficam atordoados por 1 rodada 
+(Fortitude DT Agi reduz para ofuscado e surdo 
+por uma rodada).
+
+ I Fragmentação. Espalha fragmentos perfuran
+tes. Seres na área sofrem 8d6 pontos de dano de 
+perfuração (Reflexos DT Agi reduz à metade).
+
+ I Fumaça. Produz uma fumaça espessa e escura. 
+Seres na área ficam cegos e sob camuflagem total. 
+A fumaça dura 2 rodadas.
+ 
+ I Incendiária. Espalha labaredas incandescentes. 
+Seres na área sofrem 6d6 pontos de dano de fogo 
+e ficam em chamas (Reflexos DT Agi reduz o dano 
+à metade e evita a condição em chamas).
+ 
+ Mina Antipessoal. Esta mina é ativada por con
+trole remoto. Se você estiver a até alcance longo dela, 
+pode gastar uma ação padrão para detoná-la. Ao 
+explodir, a mina dispara centenas de bolas de aço em 
+um cone de 6m, causando 12d6 pontos de dano de 
+perfuração em todos os seres na área (Reflexos DT 
+Int reduz à metade). Você define a direção do cone 
+quando posiciona a mina no chão. Instalar a mina 
+exige uma ação completa e um teste de Tática contra 
+DT 15. Caso falhe, você gasta a mina, mas não ela 
+não funciona. Encontrar uma mina instalada exige 
+um teste de Percepção (DT igual ao resultado do seu 
+teste para instalá-la)
+
+ Dinamite. Dinamite é um artefato explosivo à base 
+de nitroglicerina, ajeitado em um bastão com 20 cm de 
+comprimento. Com a mesma ação padrão é possível 
+acender seu pavio com uma das mãos e arremessá-la 
+com a outra em um ponto à sua escolha em alcance 
+médio. A dinamite afeta um raio de 6m a partir do 
+ponto de impacto; seres e objetos soltos na área sofrem 
+4d6 pontos de dano de impacto e 4d6 pontos de dano 
+de fogo e ficam em chamas (Reflexos DT Agi reduz 
+à metade e evita condição em chamas).
+
+ Explosivo Plástico. Essa massa adesiva do ta
+manho de uma esponja é acompanhada de pinos 
+de ignição e um detonador remoto. Para utilizá-la, 
+você precisa gastar duas rodadas para preparar os 
+pinos e grudar o explosivo em uma superfície. Por 
+fim, você pode detonar o explosivo acionando um 
+detonador (uma ação livre que pode ser feita de 
+alcance longo) ou causando pelo menos 1 ponto de 
+dano de fogo ou eletricidade nele. Quando detonado, 
+o explosivo plástico causa 16d6 pontos de dano de 
+impacto em todos os seres e objetos em um raio de 
+3m (Reflexos DT Int reduz à metade). Se usado por 
+um especialista em explosivos (alguém treinado 
+em Crime ou uma Profissão adequada, a critério 
+do mestre), causa o dobro de dano em objetos e 
+estruturas e ignora sua RD
+
+Galão Vermelho. Galões vermelhos, ou marcados 
+com um símbolo de chama, carregam substâncias 
+inflamáveis. Apesar de serem mais frequentes em 
+ambientes industriais, também são encontrados em 
+ambientes inusitados quando menos se espera. Ao 
+sofrer dano de fogo ou balístico, um galão vermelho 
+explode, atingindo uma esfera de 6m de raio. Seres 
+na área sofrem 12d6 pontos de dano de fogo e ficam 
+em chamas (Reflexos DT 25 reduz à metade e evita 
+a condição). A área afetada pelo raio da explosão 
+fica em chamas (1d6 pontos de dano de fogo por 
+rodada em seres e objetos) até ser apagada ou a cena 
+acabar. Veja mais sobre as consequências de um 
+galão vermelho em Fogo e Fumaça (OPRPG, p. 292).
+ 
+ Granada de Gás Sonífero. Esta granada libera 
+uma fumaça branca que preenche um raio de 6m 
+a partir do ponto de impacto. Seres que comecem 
+seus turnos na área ficam inconscientes e caídos ou, 
+se estiverem envolvidos em atividade física intensa 
+(como combate), ficam exaustos por 1 rodada, depois 
+fatigados (em ambos os casos, Fortitude DT Agi reduz 
+para fatigado por 1d4 rodadas). O gás permanece na 
+área por 2 rodadas.
+ 
+ Granada de PEM. Esta granada emite um poderoso 
+pulso eletromagnético que desativa todos os equi
+pamentos elétricos em um raio de 18m até o fim da 
+cena. Criaturas de Energia na área sofrem 6d6 pontos 
+de dano de impacto e ficam paralisadas por 1 rodada  
+(apenas uma vez por cena, Fortitude DT Agi reduz à 
+metade e evita a condição).
+
+
+Itens Operacionais
+ Algemas. Um par de algemas de aço. Para prender 
+uma pessoa que não esteja indefesa você precisa em
+punhar a algema, agarrar a pessoa (veja “Manobras de 
+Combate”, no Capítulo 4) e então vencer um novo 
+teste de agarrar contra ela. Você pode prender os dois 
+pulsos da pessoa (–5 em testes que exijam o uso das 
+mãos, impede conjuração) ou um dos pulsos dela em 
+um objeto imóvel adjacente, caso haja, para impedir 
+que ela se mova. Escapar das algemas exige um teste 
+de Acrobacia contra DT 30 (ou ter as chaves...)
+
+Arpéu. Um gancho de aço amarrado na ponta de uma 
+corda para se fixar em muros, janelas, parapeitos de 
+prédios... Prender um arpéu exige um teste de Pontaria 
+(DT 15). Subir um muro com a ajuda de uma corda 
+fornece +5 no teste de Atletismo.
+
+ Bandoleira. Um cinto com bolsos e alças. Uma vez 
+por rodada, você pode sacar ou guardar um item em 
+seu inventário como uma ação livre. 
+
+Binóculos. Estes binóculos militares fornecem +5 
+em testes de Percepção para observar coisas distantes.
+ 
+ Bloqueador de Sinal. Este dispositivo compacto 
+emite ondas que “poluem” a frequência de rádio usada 
+por celulares, impedindo que qualquer aparelho desse 
+tipo em alcance médio se conecte.
+
+ Cicatrizante. Um spray contendo um 
+remédio com potente efeito cicatrizante. 
+Você pode gastar uma ação padrão e este item para 
+curar 2d8+2 PV em você ou em um ser adjacente.
+
+ Corda. Um rolo com 10 metros de corda resistente. 
+Possui diversas utilidades: pode ajudar a descer um 
+buraco ou prédio (+5 em testes de Atletismo nessas 
+situações), amarrar pessoas inconscientes etc.
+
+ Equipamento de Sobrevivência. Uma mochila 
+com saco de dormir, panelas, GPS e outros itens úteis 
+para sobreviver no mato. Fornece +5 em testes de 
+Sobrevivência para acampar e orientar-se e permite 
+que você faça esses testes sem treinamento.
+
+ Lanterna Tática. Ilumina lugares escuros. Além 
+disso, você pode gastar uma ação de movimento para 
+mirar a luz nos olhos de um ser em alcance 
+curto. Ele fica ofuscado por 1 rodada, mas 
+imune à lanterna pelo resto da cena.
+
+
+Máscara de gás. Uma máscara com filtro que 
+cobre o rosto inteiro. Fornece +10 em testes de For
+titude contra efeitos que dependam de respiração.
+
+ Mochila Militar. Uma mochila leve e de alta 
+qualidade. Ela não usa nenhum espaço e aumenta 
+sua capacidade de carga em 2 espaços.
+
+ Óculos de Visão Térmica. Estes óculos eliminam 
+a penalidade em testes por camuflagem.
+
+ Pé de cabra. Esta barra de ferro fornece +5 em 
+testes de Força para arrombar portas. Pode ser usada 
+em combate como um bastão.
+ 
+ Pistola de Dardos. Esta arma dispara dardos com 
+um poderoso sonífero. Para disparar em um ser, faça 
+um ataque à distância contra ele. Se acertá-lo, ele fica 
+inconsciente até o fim da cena (Fortitude DT Agi 
+reduz para desprevenida e lenta por uma rodada). A 
+pistola vem com 2 dardos. Uma caixa adicional com 2 
+dardos é um item de categoria 0 que ocupa 1 espaço.
+
+
+ Pistola Sinalizadora. Esta pistola dispara um 
+sinalizador luminoso, útil para chamar outras pes
+soas para sua localização. Pode ser usada como uma 
+arma de disparo leve com alcance curto que causa 
+2d6 pontos de dano de fogo. A pistola vem com 2 
+cargas. Uma caixa adicional com 2 cargas é um item 
+de categoria 0 que ocupa 1 espaço.
+
+ Soqueira. Esta peça de metal e usada entre os 
+dedos e permite socos mais perigosos — fornece 
++1 em rolagens de dano desarmado. Uma soqueira 
+pode receber modificações e maldições de armas 
+corpo a corpo e aplica os efeitos delas em seus ata
+ques desarmados.
+
+ Spray de Pimenta. Este spray dispara um com
+posto químico que causa dor e lacrimejo. Você pode 
+gastar uma ação padrão para atingir um ser adjacente. 
+O ser fica cego por 1d4 rodadas (Fortitude DT Agi 
+evita). A carga do spray dura dois usos.
+ 
+ Taser. Um dispositivo de eletrochoque capaz de 
+atordoar ou até incapacitar um alvo. Você pode gastar 
+uma ação padrão para atingir um ser adjacente. O 
+alvo sofre 1d6 pontos de dano de eletricidade e fica 
+atordoado por uma rodada (Fortitude DT Agi evita). 
+A bateria do taser dura dois usos.
+
+Traje Hazmat. Uma roupa impermeável e que 
+cobre o corpo inteiro, usada para impedir o con
+tato do usuário com materiais tóxicos. Fornece +5 
+em testes de resistência contra efeitos ambientais e 
+resistência a químico 10.
+
+Alarme de Movimento. Este pequeno objeto de 
+fácil aquisição pode ser controlado por um dispo
+sitivo móvel específico ou um aplicativo de celular. 
+Você pode gastar uma ação completa para posicio
+nar e ativar o alarme; após isso, sempre que houver 
+movimento significativo em um cone de 30m para 
+onde ele foi apontado, ele irá sinalizar o dispositivo 
+de controle. Ao acionar o alarme você pode regular 
+sua sensibilidade ao movimento (como padrão, ele é 
+acionado sempre que um ser Pequeno ou maior se 
+move na área). A sinalização pode ser discreta, apenas 
+no dispositivo, ou barulhenta, acionando um alarme 
+sonoro alto e agudo.
+
+ Alimento Energético. Existem diversos alimentos 
+e suplementos de alta tecnologia capazes de recu
+perar as energias mentais de um agente. Você pode 
+gastar uma ação padrão para consumir este item e 
+recuperar 1d4 PE.
+ 
+ Aplicador de Medicamentos. Essa adaptação 
+portátil de bombas injetoras hospitalares pode ser 
+presa ao redor do braço ou perna para aplicar uma 
+substância, como um cicatrizante ou medicamento, 
+com uma ação de movimento. O aplicador tem espaço 
+para três doses de substâncias (já contabilizadas no 
+espaço do item). Carregar uma dose de uma substância 
+no aplicador é uma ação padrão.
+ 
+ Braçadeira Reforçada. Semelhante às proteções 
+usadas em artes marciais e outros esportes de contato, 
+estas braçadeiras ajudam a absorver o impacto ao 
+bloquear golpes com o braço. Elas aumentam em +2 
+a RD que você recebe por usar um bloqueio.
+ 
+ Cão Adestrado. Um cachorro pode ser um parceiro 
+(e amigo!) valioso para um agente. Um personagem 
+treinado em Adestramento pode usar um cão adestra
+do como um aliado (veja o quadro abaixo).
+nOVO ALIADO: CÃO ADESTRADO
+ Um cão corajoso, grande — como um pastor alemão, dobermann, fila brasileiro ou 
+caramelo — e treinado para ajudar em investigação e combate. Veja as regras de 
+aliados em OPRPG, p. 171.
+ Bônus. Você recebe +2 em Investigação e Percepção.
+ Ladrar e Morder. Você pode gastar 1 PE para fazer o cão assumir uma postura 
+defensiva ao seu redor. Você recebe +2 na Defesa por 1 rodada.
+
+ Coldre Saque Rápido. Este coldre é projetado 
+para que a arma possa ser sacada ou armazenada 
+com um movimento mínimo. Uma vez por rodada, 
+você pode sacar ou guardar uma arma de fogo leve 
+como uma ação livre.
+ 
+ Equipamento de Escuta. Este conjunto contém 
+um receptor, com alcance de 90m, e três minúsculos 
+transmissores capazes de captar conversas e outros 
+sons em um raio de 9m. Instalar um transmissor 
+demora alguns minutos e exige um teste de Crime 
+contra DT 20 (uma falha indica que a escuta não 
+irá transmitir). O resultado desse teste é também a 
+DT para outras pessoas encontrarem o transmissor. 
+É possível instalar um transmissor discretamente 
+com outras pessoas presentes; fazer isso é uma ação 
+completa, requer um teste de Furtividade oposto à 
+Percepção dos presentes e aumenta a DT do teste de 
+Crime em +5.
+
+ Estrepes. Uma ferramenta medieval cuja utilidade 
+a manteve ativa até os dias de hoje, um estrepe é uma 
+peça de metal com quatro pontas afiadas, construída 
+de modo que uma ponta sempre fique voltada para 
+cima. Usar um saco de estrepes em combate exige uma 
+ação padrão para cobrir um quadrado de 1,5m de lado. 
+Um ser que pise numa área coberta de estrepes sofre 
+1d4 pontos de dano de perfuração e fica lento por um 
+dia. Em uma cena de perseguição, você pode aplicar 
+os estrepes como parte de sua ação, mas sofre –O em 
+seu teste nessa rodada. Um perseguidor que pise nos 
+estrepes sofre –O em testes de perseguição até o fim 
+da cena. Tanto em combate quanto em perseguição, 
+passar em um teste de Reflexos (DT Agi) evita os 
+estrepes. Os estrepes não afetam seres capazes de 
+resistir a todo o seu dano.
+ 
+ Faixa de Pregos. Este aparato compacto é uma 
+trilha de hastes metálicas sanfonadas com pregos 
+em toda sua extensão. Utilizado primariamente para 
+parar veículos, pode ser empregado contra outros 
+oponentes. Uma faixa de pregos funciona como estre
+pes, exceto que ocupa uma linha de 9m. Além disso, 
+veículos com pneus de borracha que passem pela faixa 
+têm seus pneus automaticamente perfurados, o que 
+reduz seu deslocamento pela metade.
+ 
+ Isqueiro. Existem isqueiros de vários tipos, desde os 
+sofisticados de metal até os descartáveis de plástico. 
+Todos seguem o mesmo princípio; você pode gastar 
+uma ação de movimento para produzir uma pequena 
+chama. Além de incendiar objetos inflamáveis, emite 
+luz em um raio de 3m.
+
+ Medicamentos. Além de cicatrizantes, existem ou
+tros medicamentos que podem ajudar os agentes. Você 
+pode gastar uma ação padrão e o medicamento para 
+aplicar seus efeitos em você ou em um ser adjacente.
+ I Antibiótico: Fortalece a imunidade contra vírus e 
+bactérias. Fornece +5 no próximo teste de Fortitude 
+contra efeitos de uma doença feito até o fim do dia.
+ I Antídoto: Ajuda o corpo a lidar com venenos. 
+Fornece +5 no próximo teste de Fortitude contra 
+efeitos de um veneno até o fim do dia. Um antídoto 
+feito para um veneno específico, em vez disso, 
+remove completamente o veneno.
+ I Antiemético: Remove a condição enjoado e 
+fornece +5 em testes para evitar essa condição 
+até o fim da cena. A critério do mestre, pode 
+funcionar contra outras condições causadas por 
+náuseas e vômitos.
+ I Antihistamínico: Reduz reações alérgicas peri
+gosas. Fornece +5 no próximo teste contra efeitos 
+de uma alergia feito até o fim do dia.
+ I Anti-inflamatório: Reduz reações inflama
+ tórias, diminuindo dor e inchaço. Fornece 1d8+2 
+PV temporários.
+ I Antitérmico: Reduz reações febris perigosas e 
+alivia dores de cabeça, permitindo um novo teste 
+contra uma condição mental que o usuário esteja 
+sofrendo. Só funciona uma vez por cena.
+ I Broncodilatador: Auxilia na respiração. Forne
+ce +5 em testes para evitar as condições asfixiado 
+ou fatigado feitos até o fim do dia.
+ I Coagulante: Aumenta a capacidade de coagu
+lação, fornecendo +5 em testes para se estabilizar 
+da condição sangrando feitos até o fim do dia. Se 
+usado em conjunto com um teste de Medicina para 
+remover a condição morrendo, também fornece 
++5 nesse teste
+
+ Óculos Escuros. Um personagem vestindo óculos 
+escuros não pode ser ofuscado.
+
+ Óculos de Visão Noturna. Alimentados por uma 
+ bateria, estes óculos permitem enxergar no escuro, 
+como se o personagem tivesse visão no escuro. En
+tretanto, o usuário recebe –O em testes de resistência 
+contra a condição ofuscado e efeitos baseados em luz 
+(como uma granada de atordoamento).
+ 
+ Pá. Esta pesada ferramenta fornece +5 em testes de 
+Força para cavar buracos e mover detritos. Pode ser 
+usada em combate como um bastão.
+ 
+ Paraquedas. Anula o dano de queda. Personagens 
+com grau de treinamento veterano em Acrobacia, 
+Pilotagem, Reflexos, Tática ou uma Profissão espe
+cífica sabem usar paraquedas. Caso contrário, ou em 
+quedas muito curtas, usar o paraquedas requer um 
+teste de Reflexos (DT 20). Se falhar, o paraquedas 
+não funciona adequadamente, reduzindo o dano de 
+queda apenas à metade.
+
+Traje de Mergulho. Uma roupa impermeável e 
+que cobre quase o corpo inteiro, usada para garantir 
+a segurança do mergulhador debaixo d’água. Vem 
+acompanhado de tanque e máscara que garantem 1 
+hora de oxigênio. Fornece +5 em testes de resistência 
+contra efeitos ambientais e resistência a dano químico 
+5. Ocupa o espaço de uma vestimenta e vesti-lo ou 
+despi-lo é uma ação completa.
+ 
+ Traje Espacial. Uma roupa impermeável e que co
+bre o corpo inteiro, usada para garantir a segurança do 
+astronauta no vácuo do espaço. Possui um suprimento 
+de água e oxigênio de oito horas, e protege contra os 
+raios cósmicos e de minúsculas rochas errantes no 
+espaço. Fornece +10 em testes de resistência contra 
+efeitos ambientais e resistência a dano químico 20. 
+Ocupa o espaço de uma vestimenta e vesti-lo, ou 
+despi-lo, demora duas rodadas.
+
+
+Itens Paranormais
+ A Ordem não se dedica apenas a combater o Outro 
+Lado, mas também a compreendê-lo. Diversos mem
+bros trabalham para pesquisar e até reproduzir as 
+características dos elementos, mesclando tecnologia 
+avançada e conhecimento ritualístico, o que às vezes 
+resulta na fabricação de itens paranormais. 
+Amarras de (Elemento). Cordas ou correntes 
+feitas de um elemento paranormal específico. As 
+amarras são preparadas para imobilizar criaturas do 
+Outro Lado que sejam vulneráveis ao elemento que 
+as compõem e podem ser usadas de duas formas. 
+
+I Armadilha. Você gasta as amarras, uma ação 
+completa e 2 PE e prepara uma armadilha de 3x3m. 
+Uma criatura que atravesse o espaço pela primeira 
+vez em seu turno precisa fazer um teste de de Re
+flexos (DT Int); se falhar, fica imóvel até o final da 
+cena. Mesmo se passar, considera o espaço ocupado 
+pela armadilha como terreno difícil.
+
+ I Laçar. Você gasta uma ação padrão e 1 PE e esco
+lhe uma criatura em alcance curto. Se falhar num 
+teste de Vontade (DT Agi), a criatura fica paralisada 
+até o início de seu próximo turno, quando pode 
+repetir o teste. Manter a criatura enlaçada requer 
+o gasto de 1 PE por rodada.
+
+ Câmera de Aura Paranormal. Esta câmera amal
+diçoada com Energia possui sigilos de Conhecimento 
+para capturar auras paranormais. Tirar uma foto gasta 
+uma ação padrão e 1 PE. As fotos são instantâneas e 
+revelam a presença de auras paranormais em pessoas 
+e objetos. As auras são da cor associada ao elemento.
+ 
+ Componentes Ritualísticos de (Elemento). 
+Um conjunto de objetos utilizados em rituais de um 
+elemento entre Sangue, Morte, Conhecimento ou 
+Energia (não existem componentes ritualísticos de 
+Medo). Componentes ritualísticos são necessários 
+para a conjuração de rituais do elemento em questão.
+ I Energia: eletricidade, dispositivos tecnológicos 
+(celulares, computadores etc.), circuitos eletrôni
+cos, fontes de calor e luz, pilhas, baterias, cabos 
+de cobre e prata, pólvora, moedas, dados, ímãs...
+ I Sangue: órgãos, carne, sangue, animais vivos (para 
+sacrifício), navalhas, agulhas, arame farpado, cor
+rentes, metal enferrujado, fluídos corporais...
+ I Morte: ossos, dentes, cinzas, fios de cabelo, cris
+tais pretos, relógios, galhos secos, folhas secas, 
+plantas mortas, raízes, areia, poeira, Lodo..
+I Conhecimento: escrituras, papéis, livros, per
+gaminhos, pedras preciosas, ouro, cordas, tecido, 
+cristais brancos, vidro, máscaras, instrumentos de 
+escrita (lápis, caneta, tinta, giz etc.)...
+ 
+ Emissor de Pulsos Paranormais. Esta pequena 
+caixa coberta de sigilos foi desenvolvida para servir 
+como uma “isca” de criaturas paranormais. Ativar a 
+caixa gasta uma ação completa e 1 PE. A caixa emite 
+um pulso de um elemento definido pelo ativador, que 
+atrai criaturas do mesmo elemento e afasta criaturas 
+do elemento oposto. As criaturas afetadas têm direito 
+a um teste de Vontade (DT Pre) para evitar o efeito.
+ 
+ Escuta de Ruídos Paranormais. Este microfone 
+funciona como um aparato espião, com a diferença 
+que consegue captar ruídos paranormais. Ativar a es
+cuta gasta uma ação completa e 2 PE e faz com que ela 
+grave ruídos por até 24 horas. Ouvir a escuta fornece 
++5 em testes de Ocultismo para identificar criatura.
+
+ Medidor de Estabilidade da Membrana. 
+Um dispositivo complexo, composto por diversos 
+medidores — de temperatura, campo magnético, 
+dilatação temporal... Um agente treinado em Ocul
+tismo pode usar o medidor para avaliar o estado da 
+Membrana em uma área (veja a página 97), o que 
+indica a chance de uma entidade se manifestar nela. 
+Um ambiente com valores racionais e constantes ao 
+longo de algumas horas dificilmente originará uma 
+criatura ou manifestação perigosa. Porém, se as 
+leituras apresentarem dados inexplicáveis ou com 
+grandes variações, o lugar poderá conter uma enti
+dade. Apesar de ser um bom indicativo, o medidor 
+não fornece respostas definitivas, já que um ambiente 
+com a Membrana danificada ainda pode não ter sido 
+grave ruídos por até 24 horas. Ouvir a escuta fornece 
++5 em testes de Ocultismo para identificar criatura.
+ 
+ Medidor de Estabilidade da Membrana. 
+Um dispositivo complexo, composto por diversos 
+medidores — de temperatura, campo magnético, 
+dilatação temporal... Um agente treinado em Ocul
+tismo pode usar o medidor para avaliar o estado da 
+Membrana em uma área (veja a página 97), o que 
+indica a chance de uma entidade se manifestar nela. 
+Um ambiente com valores racionais e constantes ao 
+longo de algumas horas dificilmente originará uma 
+criatura ou manifestação perigosa. Porém, se as 
+leituras apresentarem dados inexplicáveis ou com 
+grandes variações, o lugar poderá conter uma enti
+dade. Apesar de ser um bom indicativo, o medidor 
+não fornece respostas definitivas, já que um ambiente 
+com a Membrana danificada ainda pode não ter sido 
+
+
+I TENS AMALDIÇOADOS
+
+MALDIÇÕES 
+PARA ARMAS
+ Estas maldições podem ser aplicadas em armas de 
+qualquer tipo.
+ 
+ 
+ CONHECIMENTO 
+Antielemento. A arma é letal contra criaturas de 
+um elemento. Quando ataca uma criatura desse ele
+mento, você pode gastar 2 PE. Se fizer isso e acertar o 
+ataque, causa +4d8 pontos de dano. Para determinar o 
+elemento aleatoriamente, role 1d4: 1) Conhecimento; 
+2) Energia; 3) Morte; 4) Sangue.
+ 
+ Ritualística. Você pode armazenar na arma um 
+ritual que tenha como alvo um ser ou que afete uma 
+área, gastando os PE como se tivesse conjurado o 
+ritual normalmente. O ritual não gera efeito na hora; 
+em vez disso, fica guardado no item. Quando acerta 
+um ataque com a arma, você pode descarregar o 
+ritual armazenado como uma ação livre. O alvo 
+do ritual, ou o centro da área dele, é o ser atingido. 
+Uma vez que o ritual seja descarregado, outro pode 
+ser armazenado.
+
+Senciente. Você pode gastar uma ação de movi
+mento e 2 PE para imbuir a arma com uma fagulha 
+de sua consciência. A arma flutua ao seu lado e, uma 
+vez por rodada, ataca um ser em alcance curto (ou no 
+alcance da arma, o que for maior) a sua escolha, com 
+as mesmas estatísticas que teria se você a estivesse 
+empunhando. Você pode gastar 1 PE no início de 
+cada um de seus turnos para manter esse efeito. Se 
+não o fizer, a arma cai no chão. Você pode usar uma 
+ação de movimento para apanhar a arma no ar caso 
+precise. Soltar a arma para que volte a flutuar para 
+ativar a maldição é uma ação livre.
+
+
+ ENERGIA 
+
+Empuxo. Com a capacidade de gerar uma descarga 
+momentânea de Energia, a arma ganha a capacidade 
+de ser arremessada em alcance curto (se já podia ser 
+arremessada, seu alcance aumenta em uma catego
+ria) e causa mais um dado de dano do mesmo tipo 
+quando usada dessa forma. Após efetuar um ataque à 
+distância com a arma, ela volta voando para você no 
+mesmo turno. Pegar a arma é uma reação. Somente 
+armas corpo a corpo podem receber essa maldição.
+ 
+ Energética. Você pode gastar 2 PE por ataque 
+para transformar a arma (exceto seu cabo ou em
+punhadura) ou a munição disparada pela arma em 
+Energia pura. Durante este ataque, a arma fornece 
++5 em testes de ataque, ignora resistência a dano e 
+converte todo o dano causado para Energia. Armas 
+de corpo a corpo emanam luz como uma lâmpada; 
+munição toma uma forma plasmática iluminada 
+como feixes de luz.
+
+ Vibrante. A arma vibra constantemente com um 
+fluxo de Energia. Você recebe a habilidade Ataque 
+Extra, da trilha operações especiais, do combatente. 
+Se já a possui, em vez disso o custo para usá-la 
+diminui em –1 PE.
+ 
+ 
+ MORTE 
+
+Consumidora. A arma drena a entropia de se
+res, deixando alvos atingidos lentos até o final da 
+cena. Quando ataca, você pode gastar 2 PE. Se 
+fizer isso e acertar o ataque, o alvo fica imóvel 
+por uma rodada.
+ 
+ Erosiva. A arma acelera o envelhecimento dos 
+alvos, causando +1d8 pontos de dano de Morte. 
+Quando ataca, você pode gastar 2 PE. Se fizer isso e 
+acertar o ataque, a vítima sofre 2d4 pontos de dano 
+de Morte no início de seus turnos pelas próximas 
+duas rodadas
+
+ Repulsora. A arma gera uma aura similar a uma 
+fumaça espiralada que desacelera ataques vindos 
+em sua direção, fornecendo +2 de Defesa enquanto 
+estiver empunhada. Quando você faz um bloqueio, 
+pode gastar 2 PE. Se fizer isso, recebe um bônus 
+adicional de +5 em Defesa.
+
+ SANGUE 
+
+Lancinante. A arma inflige ferimentos terríveis, 
+causando +1d8 de dano de Sangue. Este dado é mul
+tiplicado em acertos críticos. Por exemplo, se a arma 
+possuir crítico x3, em um acerto crítico o dano adi
+cional de lancinante vira +3d8.
+ 
+ Predadora. A arma tem sede de sangue e persegue 
+seus alvos, anulando penalidades por camuflagem 
+e cobertura (mas não cobertura total). Caso a arma 
+seja de ataque à distância, seu alcance também au
+menta em uma categoria. Além disso, a margem de 
+ameaça da arma duplica. Por exemplo, um fuzil de 
+caça predador tem margem de ameaça 17. Efeitos 
+que duplicam a margem de ameaça são aplicados 
+antes de quaisquer efeitos que a aumentem.
+ 
+ Sanguinária. Os ferimentos causados pela arma 
+se rasgam além da área acertada. Um ser atingido 
+fica sangrando. Sangramento causado pela arma 
+é cumulativo — um ser atingido duas vezes sofre 
+2d6 pontos de dano de sangramento por rodada. 
+Além disso, quando você faz um acerto crítico 
+com a arma ela drena o sangue derramado, o que 
+deixa o alvo fraco e concede a você 2d10 pontos 
+de vida temporários.
+ 
+ MALDIÇÕES 
+PARA PROTEÇÕES
+
+ CONHECIMENTO 
+Abascanta. Você recebe +5 em testes de resis
+tência contra rituais. Uma vez por cena, quando 
+você é alvo de um ritual, pode gastar uma reação 
+e PE igual ao custo dele para refleti-lo de volta ao 
+conjurador. As características do ritual (efeitos, 
+DT...) se mantêm, mas você toma quaisquer decisões 
+exigidas por ele.
+ Profética. A proteção concede vislumbres de um 
+possível futuro imediato. Você recebe resistência  
+a Conhecimento 10 e pode gastar 2 PE para rolar 
+novamente um teste de resistência uma vez.
+
+
+Sombria. A proteção confunde os sentidos. Você 
+recebe +5 em Furtividade e ignora a penalidade de 
+carga em testes dessa perícia. Além disso, você pode 
+gastar uma ação de movimento e 1 PE para fazer o 
+item adquirir a aparência de uma roupa comum, mas 
+mantendo suas propriedades (bônus na Defesa, espaço 
+ocupado, penalidade em perícias...).
+
+
+ ENERGIA 
+
+Cinética. A proteção produz uma barreira invisí
+vel que desvia ataques, concedendo +2 em Defesa e 
+resistência a dano 2 (para proteção leve ou escudo) 
+ou 5 (para proteção pesada).
+ 
+ Lépida. A proteção amplifica sua mobilidade, con
+cedendo +10 em testes de Atletismo e +3m de des
+locamento. Você pode gastar 2 PE para se mover de 
+forma sobrenatural. Até o final do turno, você ignora 
+terreno difícil, recebe deslocamento de escalada igual 
+a seu deslocamento terrestre e fica imune a dano por 
+queda de até 9m.
+
+ Voltaica. Você recebe resistência a Energia 10 e 
+pode gastar uma ação de movimento e 2 PE para 
+fazer a proteção emitir arcos de Energia até o fim da 
+cena. Se fizer isso, no fim de cada um de seus turnos 
+você causa 2d6 pontos de dano de Energia em todas 
+os seres adjacentes.
+ 
+ 
+ MORTE 
+
+Letárgica. A proteção desacelera ataques perigosos, 
+concedendo +2 em Defesa. Além disso, você recebe 
+25% de chance (para proteção leve ou escudo) e 50% 
+de chance (para pesada) de ignorar o dano extra de 
+acertos críticos e ataques furtivos. 
+
+Repulsiva. Você recebe resistência a morte 10 e pode 
+gastar uma ação de movimento e 2 PE para cobrir 
+seu corpo com uma camada de lodo preto até o final 
+da cena. Se fizer isso, qualquer ser que o ataque em 
+corpo a corpo sofre 2d8 pontos de dano de Morte.
+ 
+ SANGUE 
+
+Regenerativa. A proteção melhora sua capacidade 
+de resistência e regeneração. Você recebe resistência 
+a Sangue 10 e pode gastar uma ação de movimento e 
+1 PE para recuperar 1d12 pontos de vida.
+ 
+ Sádica. No início de seu turno, você recebe +1 em 
+testes de ataque e rolagens de dano para cada 10 
+pontos de dano que sofreu desde o fim de seu último 
+turno. Por exemplo, se tiver sofrido 45 pontos de dano, 
+recebe +4 em testes de ataque e rolagens de dano.
+ 
+ MALDIÇÕES 
+PARA ACESSÓRIOS
+
+ As maldições a seguir podem ser aplicadas a utensílios 
+e vestuários.
+ 
+ CONHECIMENTO 
+
+Carisma. O acessório gera uma aura que torna você 
+mais carismático e autoconfiante. Você recebe +1 em 
+Presença (este aumento não fornece PE adicionais).
+
+ Conjuração. O acessório tem um ritual de 1º 
+círculo. Se estiver empunhando o item, você pode 
+conjurar o ritual como se o conhecesse. Caso conheça 
+o ritual, seu custo diminui em –1 PE.
+ 
+ Escudo Mental. O acessório gera uma barreira 
+psíquica. Você recebe resistência mental 10.
+ 
+ 
+ Reflexão. Uma vez por rodada, quando você é 
+alvo de um ritual, pode gastar PE igual ao custo 
+dele para refleti-lo de volta ao seu conjurador. As 
+características do ritual (efeitos, DT...) se mantêm, 
+mas você toma quaisquer decisões exigidas por ele.
+ 
+ Sagacidade. Sua mente é acelerada pelas forças do 
+Conhecimento, fornecendo a você +1 em Intelecto 
+(este aumento não fornece perícias treinadas).
+ 
+ ENERGIA 
+
+Defesa. Uma barreira de energia invisível gerada 
+por este acessório fornece +5 de Defesa.
+ 
+ Destreza. Este acessório aprimora sua coordenação 
+e velocidade, fornecendo +1 em Agilidade.
+ 
+ Potência. Este acessório aumenta a DT contra suas 
+magias e habilidades em +1.
+
+ MORTE 
+Esforço Adicional. Este acessório fornece +5 PE. 
+Este efeito só se ativa após um dia de uso.
+ 
+ SANGUE 
+Disposição. Valendo-se do poder do Sangue, você 
+recebe +1 em Vigor.
+
+ Pujança. O acessório aumenta sua potência mus
+cular, fornecendo +1 em Força.
+ Vitalidade. Este acessório fornece +15 PV. Este 
+efeito só se ativa após um dia de uso.
+ 
+ [VARIA]
+ Proteção Elemental. Você recebe resistência 10 
+contra um elemento. Este acessório conta como um 
+item do elemento contra o qual fornece resistência.
+ 14
+
+
+ ITENS 
+AMALDIÇOADOS 
+ESPECIAIS
+
+ Objetos variados, cada um com suas próprias regras. 
+Exceto quando indicado o contrário, contam como 
+itens de categoria II e ocupam 1 espaço. Para efeitos 
+relacionados à sua quantidade de maldições (como 
+pontos de vida e preço da maldição), contam como 
+possuindo uma maldição.
+ 
+
+  Catalisadores Ritualísticos. Componentes 
+ritualísticos que já foram alterados através de expo
+sição paranormal e por isso são mais eficientes. Ao 
+contrário de componentes comuns, um catalisador 
+é consumido ao ser usado. Existem diversos tipos de 
+catalisadores, uma para cada elemento. Você precisa 
+estar empunhando um catalisador para usá-lo e só 
+pode usar um catalisador por ritual. Por sua natureza, 
+catalisadores não podem ser improvisados, como 
+pela habilidade Improvisar Componentes, mas ainda 
+podem ser fabricados em campo (veja p. 94).
+ I Ampliador: Aumenta o alcance do ritual em um 
+passo (apenas de curto para médio, de médio para 
+longo ou de longo para extremo) ou dobra a área 
+de efeito. Por exemplo, uma Dissonância Acústica 
+ampliada tem seu alcance aumentado para longo 
+ou sua área aumentada para 12m de raio.
+ I Perturbador: A DT para resistir ao ritual au
+menta em +2.
+ I Potencializador: O dano do ritual aumenta 
+em um dado do mesmo tipo.
+ I Prolongador: A duração do ritual dobra. Por 
+exemplo, um Distorcer Aparência prolongado tem 
+sua duração aumentada para duas cenas. Não fun
+ciona para rituais instantâneos ou sustentados.
+
+Ligação Direta Infernal. Um amontoado de 
+fios de cobre contaminados com Sangue e Energia. 
+Você pode gastar uma ação completa para usar os fios 
+para ligar um veículo automaticamente. Isso faz os 
+fios invadirem os controles do veículo animando-o 
+de forma paranormal; o veículo recebe resistência a 
+dano 20 (cumulativa com qualquer RD que já possua) 
+e imunidade a Sangue, e você recebe +5 em testes de 
+Pilotagem para conduzi-lo. Entretanto, nesse estado 
+o veículo tentará causar o máximo de confusão possí
+vel; as consequências de qualquer falha nos testes de 
+Pilotagem são amplificadas a critério do mestre (de 
+forma geral, qualquer dano ou penalidade causado 
+por uma falha é dobrado). Remover a ligação direta 
+infernal de um veículo é uma ação completa.
+ 
+ Medidor de Condição Vertebral. Este item 
+grotesco é uma coluna vertebral sustentada por Lodo 
+de Morte e revestida com cabos e fios de Energia. 
+Para ser usado, deve ser conectado à coluna vertebral, 
+em um procedimento que exige uma ação completa 
+e causa profunda dor e agonia, deixando o usuário 
+atordoado por uma rodada. O medidor conta como 
+uma vestimenta que fornece +2 em Fortitude. Além 
+disso, uma vez conectado ele se ilumina em cores que 
+vão do vermelho, na base, passando por amarelo no 
+centro até verde no topo. Essas cores indicam a saúde 
+do usuário, sendo verde a melhor condição. Além 
+disso, se o usuário estiver sob um efeito paranormal,
+ Catalisadores Ritualísticos. Componentes 
+ritualísticos que já foram alterados através de expo
+sição paranormal e por isso são mais eficientes. Ao 
+contrário de componentes comuns, um catalisador 
+é consumido ao ser usado. Existem diversos tipos de 
+catalisadores, uma para cada elemento. Você precisa 
+estar empunhando um catalisador para usá-lo e só 
+pode usar um catalisador por ritual. Por sua natureza, 
+catalisadores não podem ser improvisados, como 
+pela habilidade Improvisar Componentes, mas ainda 
+podem ser fabricados em campo (veja p. 94).
+ I Ampliador: Aumenta o alcance do ritual em um 
+passo (apenas de curto para médio, de médio para 
+longo ou de longo para extremo) ou dobra a área 
+de efeito. Por exemplo, uma Dissonância Acústica 
+ampliada tem seu alcance aumentado para longo 
+ou sua área aumentada para 12m de raio.
+ I Perturbador: A DT para resistir ao ritual au
+menta em +2.
+ I Potencializador: O dano do ritual aumenta 
+em um dado do mesmo tipo.
+ I Prolongador: A duração do ritual dobra. Por 
+exemplo, um Distorcer Aparência prolongado tem 
+sua duração aumentada para duas cenas. Não fun
+ciona para rituais instantâneos ou sustentados.
+ Ligação Direta Infernal. Um amontoado de 
+f
+ ios de cobre contaminados com Sangue e Energia. 
+Você pode gastar uma ação completa para usar os fios 
+para ligar um veículo automaticamente. Isso faz os 
+f
+ ios invadirem os controles do veículo animando-o 
+de forma paranormal; o veículo recebe resistência a 
+dano 20 (cumulativa com qualquer RD que já possua) 
+e imunidade a Sangue, e você recebe +5 em testes de 
+Pilotagem para conduzi-lo. Entretanto, nesse estado 
+o veículo tentará causar o máximo de confusão possí
+vel; as consequências de qualquer falha nos testes de 
+Pilotagem são amplificadas a critério do mestre (de 
+forma geral, qualquer dano ou penalidade causado 
+por uma falha é dobrado). Remover a ligação direta 
+infernal de um veículo é uma ação completa.
+ Medidor de Condição Vertebral. Este item 
+grotesco é uma coluna vertebral sustentada por Lodo 
+de Morte e revestida com cabos e fios de Energia. 
+Para ser usado, deve ser conectado à coluna vertebral, 
+em um procedimento que exige uma ação completa 
+e causa profunda dor e agonia, deixando o usuário 
+atordoado por uma rodada. O medidor conta como 
+uma vestimenta que fornece +2 em Fortitude. Além 
+disso, uma vez conectado ele se ilumina em cores que 
+vão do vermelho, na base, passando por amarelo no 
+centro até verde no topo. Essas cores indicam a saúde 
+do usuário, sendo verde a melhor condição. Além 
+disso, se o usuário estiver sob um efeito paranormal,
+
+ Pé de Morto. Estas botas macabras foram costu
+radas com a pele de cadáveres amaldiçoados pela 
+Morte. Com essa matéria grotesca, a bota mantém 
+os passos do usuário leves e quase inaudíveis, como 
+se ele fosse um fantasma se aproximando sem fazer 
+barulho. Você recebe +5 em Furtividade e, em cenas 
+de furtividade (p. 92), qualquer ação chamativa que 
+envolva apenas se mover (como correr ou saltar) 
+aumenta a visibilidade em apenas +1.
+ 
+ Pen Drive Selado. Este dispositivo está gravado 
+com sigilos dourados de Conhecimento. Graças à 
+proteção desses sigilos, o pen drive não pode ser 
+invadido ou afetado por rituais, seres e efeitos de 
+Energia. Isso mantém seus arquivos protegidos, e 
+permite que ele seja usado para invadir outros dispo
+sitivos sem ser contaminado pela entidade. Existem 
+outros modelos de dispositivos selados, como HDs 
+externos e celulares
+
+Valete da Salvação. Assim como um valete servia 
+a seus senhores, esta carta — um valete de ouros pinta
+da de dourado e coberta com sigilos de Conhecimento 
+— serve para salvá-lo de uma situação complicada. 
+Para usá-la, você deve gastar uma ação padrão para 
+atirá-la ao ar. Ela então irá voar em alcance médio, 
+apontando para a melhor rota de fuga dentro deste 
+alcance, e deixará de existir. Se a carta for gasta em 
+uma cena de perseguição (p. 90), você é bem-sucedido 
+em uma ação de cortar caminho
+
+ SANGUE 
+
+Coração Pulsante
+ Um coração humano banhado em sangue, pulsando 
+como se ainda estivesse dentro de um corpo. Se 
+estiver empunhando o coração pulsante e sofrer 
+dano, você pode gastar uma reação para espremer 
+o item e reduzir esse dano pela metade. Sempre 
+que usa o coração, você deve fazer um teste de 
+Fortitude (DT 15 + 5 por uso adicional no mesmo 
+dia). Se falhar, o item é destruído. Como o coração 
+continua pulsando incessantemente com Sangue, 
+qualquer compartimento em que estiver deve ser 
+drenado uma vez por dia, caso contrário o Sangue 
+poderá escorrer e danificar outros objetos com os 
+quais entrar em contato.
+ 
+ Coroa de Espinhos
+ Uma coroa, colar ou pulseira feita de um material 
+que lembra os espinhos de uma roseira banhados em 
+sangue. Uma vez por rodada, você pode usar uma 
+reação para transformar qualquer dano mental que 
+fosse sofrer em dano de Sangue, mas não consegue 
+mais recuperar sanidade por descanso enquanto 
+estiver vestindo o item. É preciso vestir o item por 
+uma semana para ativar seus efeitos.
+ 
+ Frasco de Vitalidade
+ Este pequeno recipiente de vidro possui uma tampa 
+de metal gravada com um selo de Sangue. Você 
+pode gastar 1 minuto e sofrer até 20 pontos de 
+dano para encher o frasco com seu próprio sangue. 
+Enquanto estiver no recipiente, seu sangue se man
+tém fresco. Você pode gastar uma ação padrão para 
+beber o conteúdo do frasco e recuperar a mesma 
+quantidade de PV que armazenou nele, mas deve 
+passar em um teste de Fortitude (DT 20) para não 
+ficar enjoado por uma rodada.
+ 
+
+ Pérola de Sangue
+ Uma esfera de aproximadamente 2cm de diâmetro, 
+lisa e reluzente como uma pérola, mas de cor verme
+lho-vivo. Você pode gastar uma ação de movimento 
+para forçar a pérola de sangue contra a sua pele e 
+absorvê-la, recebendo uma injeção de adrenalina 
+que fornece +5 em testes de Agilidade, Força e Vi
+gor e testes baseados nesses atributos até o final da 
+cena.  Ao final da cena, você precisa fazer um teste de 
+Fortitude (DT 20). Se falhar, fica fatigado até o final 
+do dia. Se falhar por 5 ou mais, sofre uma parada 
+cardíaca e fica morrendo. Se morrer dessa forma, 
+você se torna uma criatura de sangue de VD similar 
+ao seu NEX, à escolha do mestre.
+ 
+ Punhos Enraivecidos
+ Um par de soqueiras feitas de um metal vermelho 
+vivo e gravado com vários símbolos de Sangue. Seus 
+ataques desarmados passam a causar 1d8 pontos 
+de dano de Sangue. Sempre que acerta um ataque 
+desarmado, pode fazer outro ataque desarmado con
+tra o mesmo alvo, pagando 2 PE por cada ataque já 
+realizado no turno. Ou seja, pode fazer o primeiro 
+ataque extra gastando 2 PE, um segundo ataque extra 
+gastando mais 4 PE e assim por diante, até errar um 
+ataque ou não ter mais pontos de esforço.
+ 
+ Seringa de Transfiguração
+ Esta seringa é feita de um material estranho e de 
+aparência orgânica, cheio de veias pulsantes. Você 
+pode gastar uma ação padrão para sugar o sangue 
+de um alvo adjacente e encher a seringa (se o alvo 
+não for voluntário, você precisa acertá-lo com um 
+ataque corpo a corpo). Se houver sangue na seringa, 
+você pode gastar uma ação padrão para injetá-lo em 
+qualquer outra pessoa adjacente, que terá sua aparên
+cia transfigurada para a do dono do sangue, como se 
+estivesse sob efeito do ritual Distorcer Aparência, com 
+duração aumentada para um dia. Quando o efeito 
+acabar, o alvo deve rolar 1d6. Em um resultado 1, o 
+processo de voltar à sua aparência é especialmente 
+traumático, danificando seus músculos e órgãos e 
+fazendo com que ele perca 1 PV permanentemente.
+ 
+ MORTE 
+Amarras Mortais
+ Um par de correntes de ferro negro que se enrolam 
+nos antebraços do usuário como um bracelete. Uma 
+vez por rodada, você pode gastar uma ação padrão 
+e 2 PE para usar a manobra agarrar contra um alvo
+Grande ou menor em alcance curto, recebendo +10 
+em seu teste oposto. Você também pode usar uma 
+ação de movimento para puxar um alvo agarrado 
+para perto, deixando-o adjacente.
+ 
+ Casaco de Lodo
+ Um sobretudo preto fosco que tem uma cor inexpli
+cavelmente opaca, como se absorvesse a luz comple
+tamente. Essa vestimenta é na verdade feita de Lodo 
+ativo, protegendo o usuário contra ataques ao amor
+tecer o impacto deles. O usuário recebe resistência a 
+corte, impacto, Morte e perfuração 5, mas se torna 
+vulnerável a dano balístico e de Energia.
+ 
+ Coletora
+ Este punhal possui a lâmina completamente negra e 
+a empunhadura em espiral. Você pode gastar uma 
+ação completa para apunhalar uma pessoa que esteja 
+morrendo. Ao fazer isso, você mata o alvo morre e a 
+Coletora absorve os resquícios do tempo de vida dela, 
+armazenando 1d8 PE. O punhal pode armazenar um 
+total de 20 PE, que você pode usar como se fossem 
+seus desde que esteja portando a adaga a pelo menos 
+uma semana. Enquanto portar a adaga, você é acome
+tido por pesadelos sobre o sofrimento final de suas 
+vítimas e sempre tem condições de descanso ruins, 
+independentemente de onde ou como descansar.
+ 
+ Crânio Espiral
+ Um crânio envelhecido, apodrecido e distorcido em 
+um formato espiral. Lodo escorre de seus olhos vazios, 
+como lágrimas negras. Uma vez por rodada, se estiver 
+empunhando o crânio, você pode gastar uma ação 
+livre para ativá-lo. Quando faz isso, você recebe uma 
+ação padrão adicional na rodada. Sempre que usa 
+o crânio, você deve fazer um teste de Vontade (DT 
+15 + 5 por uso adicional no mesmo dia). Se falhar, 
+você recebe os benefícios do item, mas envelhece 
+1d4 anos e não pode mais usá-lo nesse dia.
+
+ Frasco de Lodo
+ Um pequeno frasco contendo lodo de Morte. Apli
+car o conteúdo do frasco em um ferimento é uma 
+ação padrão. Se aplicado em um ferimento recen
+te (sofrido até uma rodada atrás) o lodo recupera 
+6d8+20 pontos de vida. Caso a ferida seja anterior 
+à rodada passada, role um dado: em um resultado 
+par, o lodo recupera 3d8+10 PV; em um resultado 
+ímpar, a ferida infecciona, causando 3d8+10 pontos 
+de dano de Morte. O frasco possui lodo para uma 
+única ativação.
+
+ Vislumbre do Fim
+ Um par de óculos escuros repleto de símbolos e espirais 
+em sua armação metálica. Você pode gastar uma ação 
+de movimento para se concentrar em um ser que 
+esteja vendo e obter informações sobre a morte dele. 
+Em pessoas comuns, essa informação se traduz em 
+um contador de tempo, que pode se alterar conforme 
+as ações de um marcado Modificam seu futuro. Em 
+Marcados ou criaturas, essas informações se traduzem 
+na informação de qual é o pior valor de resistência 
+do alvo (entre Fortitude, Reflexos ou Vontade) e de 
+quaisquer vulnerabilidades que o alvo possua.
+ 
+ CONHECIMENTO 
+
+Anéis do Elo Mental
+ Um par de anéis dourados, cada um contendo um dos 
+símbolos do ritual Ligação Telepática. Os anéis devem 
+ser usados por duas pessoas por 24h para serem ati
+vados. Após esse período, os dois são conectados por 
+um ritual de Invadir Mente (ligação telepática) que 
+dura enquanto estiverem usando os anéis. Enquanto 
+a ligação estiver ativa, as duas pessoas fazem testes 
+de Vontade usando a melhor quantidade de dados e 
+bônus entre as duas. Porém, qualquer dano mental 
+sofrido por uma delas será sofrido pela outra (ou seja, 
+se numa rodada ambas sofrerem 10 pontos de dano 
+mental, cada uma irá perder 20 pontos de sanidade) 
+e qualquer condição mental ou de medo que afetar 
+uma delas automaticamente afetará a outra.
+ 
+ Lanterna Reveladora
+ Uma lanterna dourada decorada com sigilos do Outro 
+Lado. Ativar a lanterna gasta uma ação padrão e 1 
+PE. Ela fica ligada por uma cena e emite luz com as 
+propriedades do ritual Terceiro Olho. A luz da lanterna 
+incomoda criaturas de Sangue. Se elas foram ilumi
+nadas pela luz dela, irão atacá-lo em detrimento de 
+quaisquer outros alvos na mesma categoria de alcance.
+ 
+ Máscara das Pessoas nas Sombras
+ Principal ferramenta e marca registrada da Seita das 
+Máscaras, esse item quando usado por alguém que não 
+pertence à Seita ainda carrega grande poder. O usuário 
+recebe resistência a Conhecimento 10 e pode gastar 
+uma ação de movimento e 2 PE para “entrar” em uma 
+sombra adjacente e se transportar instantaneamente 
+para outra sombra que possa ver em alcance médio. 
+Vestir a Máscara é como assinar um acordo e pode 
+ter consequências severas se seu portador despertar 
+o interesse da mente única das Máscaras..
+
+Munição Jurada
+
+ Uma bala de arma de fogo com um sigilo gravado. 
+O usuário pode fazer um ritual de uma hora para 
+vincular essa munição a um ser que conheça. Se 
+usada contra esse ser, a bala fornece +10 no teste de 
+ataque, dobra a margem de ameaça da arma e causa 
++6d12 pontos de dano de Conhecimento. Possuir uma 
+munição juramentada deixa o usuário obcecado em 
+abater seu alvo, impondo –2 em Defesa e em testes 
+de ataque contra quaisquer outros alvos.
+ 
+ Pergaminho da Pertinácia
+ Um pergaminho amarelado e antigo. Mesmo enrola
+do, é possível vislumbrar sigilos dourados brilhando 
+na parte interior. Você pode gastar uma ação padrão 
+para encarar os sigilos do Outro Lado inscritos no 
+pergaminho, recebendo 5 PE temporários até o fim 
+da cena. Sempre que usa este item, você deve fazer 
+um teste de Ocultismo (DT 15 + 5 por uso adicional 
+no mesmo dia). Se falhar, o pergaminho se desfaz.
+ 
+ ENERGIA 
+
+Arcabuz dos Moretti
+ Uma arma muito antiga, reminiscente do século 
+XV, mas que de alguma forma ainda se mantém 
+funcionando perfeitamente, apesar das rachaduras 
+que cercam toda a superfície do objeto e emitem uma 
+suave luz rosada do interior de suas fissuras. Em seu 
+cabo de madeira está gravado um selo contendo a 
+letra M. O arcabuz é uma arma simples, de fogo e 
+de uma mão que fornece +2 em testes de ataque. 
+Sempre que dispara esta arma, o usuário deve rolar 
+1d6 junto com o teste de ataque. O resultado do d6 
+define qual o dano da arma nesse disparo: 1) 2d4, 2) 
+2d6, 3) 2d8, 4) 2d10, 5) 2d12, 6) 2d20. A arma tem 
+alcance curto, crítico x3 e não precisa de munição.
+ 
+ Bateria Reversa
+ Uma pequena bateria elétrica repleta de sigilos pa
+ranormais. Você pode gastar uma ação padrão e 2 
+PE para fazer a bateria absorver a carga de qualquer 
+dispositivo eletrônico em alcance curto — celular, 
+notebook ou mesmo um automóvel —, fazendo-o 
+ficar automaticamente descarregado. Se a bateria 
+estiver cheia, você pode gastar uma ação padrão 
+para transferir a carga dela para um dispositivo 
+eletrônico descarregado em alcance curto, que é 
+instantaneamente reenergizado. Sempre que usa 
+a bateria, você deve fazer um teste de Ocultismo 
+(DT 15 + 5 por uso adicional no mesmo dia). Se 
+150
+ falhar, ela explode, causando 12d6 pontos de dano 
+de Energia em todos os seres a até 3 metros.
+
+ Peitoral da Segunda Chance
+ Um dispositivo que pode ser vestido como um peque
+no colete que pode ser prendido ao redor do peito, 
+contendo uma peça central em cima do coração 
+formada por um amontoado de partes eletrônicas 
+seguradas por fios metálicos entrelaçados, passando 
+por baixo dos braços e levando até um fecho na parte 
+das costas.  Se você for reduzido a 0 pontos de vida, 
+o colete automaticamente gastará 5 PE seus para 
+reanimá-lo com 4d10 PV através de um surto de 
+Energia por todo o seu corpo. A reanimação falha se 
+você não tiver PE suficiente. Cada vez que o item é 
+ativado, existe uma chance (1 em 1d10) da descarga 
+energética ser forte demais e matá-lo instantanea
+mente, transformando seu corpo e equipamento 
+em plasma de Energia pura (exceto pelo colete).
+ 
+ Relógio de Arnaldo
+ Um relógio de ouro, meio manchado e com um aspecto 
+levemente queimado no exterior. Ao abrir, é possível 
+enxergar a foto de um homem de barba e óculos ao 
+lado de uma criança simpática, também segurando 
+um relógio de ouro. Uma vez por rodada, você pode 
+gastar 1 PE para rolar novamente qualquer dado com 
+o resultado 1. O custo para usar o relógio aumenta 
+em +1 para cada vez que for ativado no mesmo dia.
+
+ Talismã da Sorte
+ Uma figa, moeda, pé de coelho ou qualquer outro 
+badulaque modificado por um ritual. Sempre que 
+você estiver vestindo o talismã e sofrer dano, pode 
+gastar uma reação e 3 PE para rolar 1d4. Em um 
+resultado 2 ou 3, você evita completamente o dano. 
+Em um resultado 4, você evita o dano, mas o talismã 
+queima e vira cinzas. Por fim, em um resultado 1, a 
+sorte se reverte em azar: em vez de evitar o dano, 
+você sofre o dobro do dano que sofreria e o talismã 
+queima e vira cinzas.
+ 
+ Teclado de Conexão Neural
+ Um teclado USB coberto de glifos de Energia. Sem
+pre que você plugar o teclado a um computador 
+(uma ação de movimento), o item irá gerar ondas 
+eletromagnéticas que enviam os sinais do sistema 
+diretamente para as sinapses de seu cérebro, efeti
+vamente conectando a sua mente com a máquina. 
+Você pode usar o computador sem nenhum impe
+dimento tecnológico ou de idioma, recebe +10 em 
+testes para hackear e gasta metade do tempo normal 
+para localizar arquivos. Porém, devido ao estresse 
+que seu cérebro sofre por se conectar diretamente 
+a um sistema digital, você sofre 1d6 pontos de dano 
+mental por rodada que usar o teclado.
+ 
+ Tela do Pesadelo
+ Este dispositivo com tela (celular, tablet, TV...) contém 
+diversos sigilos minúsculos em suas bordas. Você 
+pode gastar uma ação padrão e 2 PE para ativar a 
+tela. A próxima pessoa que tocá-la verá uma imagem 
+horrível saindo da tela e avançando contra ela. A 
+imagem é apenas uma ilusão, mas os traumas que 
+ela causa são reais! A pessoa deve fazer um teste de 
+Vontade (DT determinada pelo usuário da tela +5). 
+Se falhar, fica atordoada, sofre 4d6 pontos de dano 
+mental e precisa repetir o teste na próxima rodada. 
+O efeito continua até a pessoa passar no teste ou 
+enlouquecer (ou outra pessoa destruir a tela). Uma 
+vez que gere esse efeito, a tela fica inerte até você 
+ativá-la novamente.
+ 
+ Veículo Energizado
+ O motor deste veículo foi modificado paranormal
+mente para não precisar de combustível. Além disso, 
+um motorista pode gastar uma reação e fazer um 
+teste de Pilotagem (DT 25) para fazer o carro e seus 
+ocupantes assumirem uma forma de energia pura por 
+um instante, suficiente para evitar colidir com um 
+objeto, atravessando-o como se fossem incorpóreos.
+ 
+ MEDO 
+
+Jaqueta de Veríssimo
+ Uma jaqueta de estilo aviador feita de couro marrom 
+com a gola forrada de pele branca. Esta vestimenta 
+de aparência comum já foi usada por vários agentes 
+importantes e experientes da Ordem, e presenciou 
+inúmeras batalhas e sacrifícios. Ao longo de sua his
+tória, a jaqueta foi passada de um agente para o outro 
+como presente ou herança diversas vezes. Você recebe 
+resistência a dano paranormal 15. Além disso, sempre 
+que um aliado adjacente for sofrer dano de qualquer 
+tipo, você pode gastar uma reação e 2 PE para se 
+tornar o alvo do dano no lugar. Este é um item único 
+(apenas um agente pode escolhê-la) de categoria IV.
+ 
+ [VARIA]
+
+ Dedo Decepado
+ Este item grotesco é um dedo decepado e seco de al
+guém com alto nível de exposição paranormal. Você 
+recebe um poder paranormal que o dono do dedo 
+possuía. O elemento do poder define o elemento 
+da maldição. Sempre que usar as ações dormir ou 
+relaxar em um interlúdio, role 1d4. Em um resultado 
+1, você é assombrado por memórias do dono do 
+dedo e não recupera nenhum PV, PE ou sanidade. 
+Além disso, ser visto usando esse item causa uma 
+penalidade de –10 em testes de Diplomacia e pode 
+causar reações severas de NPCs, a critério do mestre. 
+Você precisa vestir o item por uma semana para que 
+seu efeito comece a funcionar.
+ 
+ Selos Paranormais
+ Um conjunto de sigilos gravados em um objeto peque
+no, como um pergaminho, moeda, pedra preciosa, osso 
+humano... Cada selo contém um ritual. Para ativar um 
+selo, você deve empunhá-lo e ler os sigilos em voz 
+alta. Isso exige uma ação padrão ou a ação necessária 
+para conjurar o ritual, o que for maior. Você também 
+deve conhecer o ritual inscrito nele ou passar em um 
+teste de Ocultismo (CD 20 + custo em PE do ritual).
+ Quando o selo é ativado, o ritual é conjurado e o selo 
+se desfaz em cinzas. Você sofre os efeitos das regras 
+“O Custo do Paranormal” e “Invocando o Medo” 
+(veja a página 121), caso aplicáveis, e toma quais
+quer decisões exigidas pelo ritual, como se o tivesse 
+conjurado você mesmo. Caso conheça o ritual, você 
+pode aplicar quaisquer habilidades que possua que 
+se aplicariam aos seus próprios rituais, e pode usar 
+versões avançadas dele, pagando o custo adicional 
+em pontos de esforço (e apenas o custo adicional). 
+Você não precisa de componentes ritualísticos para 
+ativar um selo, o que o torna um objeto bastante útil 
+para ocultistas em certas situações.
+ A categoria de um selo é igual ao círculo do ritual 
+contido nele: categoria I para rituais de 1º círculo, ca
+tegoria II para rituais de 2º círculo, e assim por diante
+
+
+

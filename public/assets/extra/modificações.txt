@@ -1,0 +1,195 @@
+ Descrição das Modificações
+ 
+ 
+ Alongada. Com um cano mais longo, que aumenta 
+a precisão dos disparos, a arma fornece +2 nos testes 
+de ataque.
+ 
+ 
+ Calibre Grosso. A arma é modificada para dispa
+rar munição de maior calibre, aumentando seu dano 
+em mais um dado do mesmo tipo. Por exemplo, um 
+revolver de calibre grosso causa 3d6 pontos de dano, 
+enquanto um fuzil de precisão causa 3d10. Armas com 
+esta modificação precisam usar munição específica 
+de calibre grosso. Munição de calibre grosso possui o 
+mesmo custo em categoria de munição normal, mas 
+não pode ser usada em armas normais.
+ 
+ 
+ Certeira. Fabricada para ser mais precisa e balan
+ceada, a arma fornece +2 nos testes de ataque.
+ Compensador. Apenas para armas automáticas. 
+Um sistema de amortecimento reduz o coice da arma, 
+anulando a penalidade em testes de ataque por dis
+parar rajadas.
+ 
+ 
+ Cruel. A arma possui lâmina especialmente afiada 
+ou foi fabricada com materiais mais densos. Fornece 
+um bônus de +2 nas rolagens de dano.
+ 
+ 
+ Discreta. A arma possui modificações para ocupar 
+Explosiva. Estas munições possuem uma gota de 
+mercúrio ou glicerina, que fazem a bala explodir ao 
+atingir o alvo. Esta modificação só pode ser aplicada 
+em balas curtas e longas e aumenta o dano causado 
+em +2d6.
+ 
+ 
+ Ferrolho Automático. O mecanismo de ação 
+da arma é modificado para disparar várias vezes 
+em sequência. A arma se torna automática (veja a 
+página 59).
+ 
+ 
+ Mira Laser. Um laser interno cria um reflexo verme
+lho num retículo luminoso, que é visto pelo atirador 
+e ajuda-o a realizar disparos mais letais. Aumenta a 
+margem de ameaça em +2.
+ 
+ 
+ Mira Telescópica. A arma possui uma luneta com 
+marcações de medidas, ideal para disparos precisos de 
+longa distância. Aumenta o alcance da arma em uma 
+categoria (de curto para médio, de médio para longo, 
+de longo para extremo) e permite que a habilidade 
+Ataque Furtivo seja usada em qualquer alcance.
+
+
+ Perigosa. A arma possui lâmina afiada como uma 
+navalha ou foi fabricada com materiais maciços. Seja 
+como for, seus golpes possuem impacto terrível. Au
+menta a margem de ameaça em +2.
+ 
+ 
+ Silenciador. Um silenciador reduz em –10 a pe
+nalidade em Furtividade para se esconder no mesmo 
+turno em que atacou com a arma de fogo.
+ 
+ 
+ Tática. A arma possui cabo texturizado, bandoleira 
+e outros acessórios que facilitam seu manuseio. Você 
+pode sacar a arma como uma ação livre.
+
+
+ Visão de Calor. A mira tem um sistema eletrô
+nico que sobrepõe imagens visíveis e imagens em 
+menos espaço e chamar menos atenção. Se for uma 
+arma de fogo, pode ser desmontável, se for um bas
+tão pode ser retrátil, se for uma espada, pode ter a 
+lâmina dobrável e assim por diante. Reduz o número 
+de espaços ocupados em 1, fornece +5 em testes de 
+Crime para ser ocultada e permite que você faça 
+esse teste mesmo que não seja treinado na perícia. 
+Dum Dum. Estas balas são feitas para se expandir 
+durante o impacto, produzindo ferimentos terríveis. 
+Esta modificação só pode ser aplicada em balas curtas 
+e longas e aumenta o multiplicador de crítico em +1. 
+60
+ 
+ 
+ infravermelho, criando um contraste entre zonas 
+frias e quentes. Ao disparar com a arma, você ignora 
+qualquer camuflagem do alvo
+
+
+
+ MODIFICAÇÕES
+ Assim como armas, proteções podem ser modificadas. 
+Cada modificação aumenta a categoria do item em I 
+e fornece certos benefícios. Modificações iguais não 
+se acumulam.
+ 
+ 
+ Descrição das Modificações
+ 
+ 
+ Antibombas. Quimicamente tratada para resistir ao 
+calor e revestida de preenchimentos para amortecer 
+estilhaços. Acompanha um capacete com viseira para 
+proteger da luz e barulho de explosões. Fornece +5 
+em testes de resistência contra efeitos de área. Só 
+pode ser aplicada em proteções pesadas.
+ 
+ 
+ Blindada. Reforçada com placas de aço e cerâmica 
+costuradas dentro das camadas de kevlar. Aumenta a 
+resistência a dano para 5 e o espaço ocupado em +1. 
+Só pode ser aplicada em proteções pesadas.
+ 
+ 
+ Discreta. Colete compacto feito com kevlar denso 
+para reduzir o volume. Reduz o número de espaços 
+ocupados em 1, fornece +5 em testes de Crime para 
+ser ocultada e permite que você faça esse teste mes
+mo que não seja treinado na perícia. Só pode ser 
+aplicada em proteções leves.
+
+
+ Reforçada. Aumenta a Defesa fornecida em +2 e o 
+espaço ocupado em +1. Uma proteção não pode ser 
+reforçada e discreta ao mesmo tempo
+
+
+ Modificações para Acessórios
+ 
+ 
+ Assim como armas, itens da categoria acessórios 
+podem ser modificados. Cada modificação aumenta 
+a categoria do item em I e fornece certos benefícios. 
+Usando modificações, é possível criar itens variados. 
+Por exemplo, para criar um “smartphone hacker”, 
+podemos começar com um utensílio que concede 
++2 em Atualidades, com aplicativos personalizados 
+para hackear outros aparelhos (modificação fun
+ção adicional, fornecendo +2 em Tecnologia) e que 
+funciona como um kit de tecnologia (modificação 
+instrumental). Este será um item de categoria III. 
+Cada modificação só pode ser aplicada ao mesmo 
+acessório uma vez.
+
+
+ Descrição das Modificações
+
+ Aprimorado. O bônus em perícia concedido pelo 
+acessório aumenta para +5. Se o item tiver função 
+adicional, esta modificação poderá ser escolhida uma 
+segunda vez para esta função.
+ 
+ Discreto. O item é miniaturizado ou disfarçado 
+como outro item inócuo (como um relógio). Reduz 
+o número de espaços ocupados em 1, fornece +5 
+em testes de Crime para ser ocultado e permite que 
+você faça esse teste mesmo que não seja treinado 
+na perícia.
+ 
+ Função Adicional. O acessório fornece +2 em 
+uma perícia adicional à sua escolha, sujeita à apro
+vação do mestre.
+ Instrumental. O acessório pode ser usado como 
+um kit de perícia específico (escolhido ao aplicar 
+esta modificação)
+
+ Bateria Potente. Essa modificação para objetos 
+elétricos aumenta sua eficiência e duração. Se usada 
+em lanternas, celulares e notebooks, dobra a duração 
+da bateria e o alcance da luz projetada. Se usada em 
+um taser, dobra seus usos, aumenta o dano para 1d8 
+e a DT para resistir a ele em +5. Pode afetar outros 
+objetos, conforme proposta dos jogadores, a critério 
+do mestre
+
+
+ MODIFICAÇÕES 
+PARANORMAIS
+ 
+ Lente de Revelação. Esta é uma modificação para 
+câmeras de aura paranormal. Uma câmera de aura 
+modificada com esta lente permite ver seres invisíveis 
+e incorpóreos e ignorar a camuflagem deles. Além 
+disso, você pode gastar uma ação padrão e 1 PE para 
+fotografar uma criatura em alcance curto. Até o fim 
+da cena, a criatura fotografada perde camuflagem e 
+invisibilidade e se torna corpórea (Von DT Pre evita).

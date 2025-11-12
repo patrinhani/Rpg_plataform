@@ -1,17 +1,15 @@
 // /src/app.jsx
-// (COMPLETO: Adiciona a prop 'poderesGerais' ao ModalPoderes)
-// (COMPLETO: Adiciona o ModalEditarItem e sua lógica)
+// (CORRIGIDO: Ordem do <nav> e <Recursos> trocada)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
-// IMPORTAÇÃO CORRIGIDA: Importa as listas de poderes (Classe e Gerais)
 import { 
     database, 
     OpcoesClasse, 
     poderesCombatente, 
     poderesEspecialista, 
     poderesOcultista,
-    poderesGerais // <--- ADICIONADO
+    poderesGerais
 } from './lib/database.js'; 
 import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
@@ -19,6 +17,7 @@ import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByC
 import FichaPrincipal from './components/FichaPrincipal';
 import Inventario from './components/Inventario';
 import Rituais from './components/Rituais';
+import Recursos from './components/ficha/recursos'; // <-- Importado aqui
 import ModalLoja from './components/ModalLoja';
 import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
@@ -27,18 +26,19 @@ import ModalTrilhaCustom from './components/ModalTrilhaCustom';
 import ModalPoderes from './components/ModalPoderes';
 import PoderesAprendidos from './components/PoderesAprendidos'; 
 import Identidade from './components/ficha/identidade'; 
-import ModalEditarItem from './components/ModalEditarItem'; // <-- NOVO: Importa o modal de edição
+import ModalEditarItem from './components/ModalEditarItem';
+import Diario from './components/Diario'; 
+import ModalNota from './components/ModalNota'; 
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
 
-// (Helper para perícias)
+// (Helpers... nenhuma mudança aqui)
 const listaTodasPericias = Object.keys(fichaInstance.pericias); 
 const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
-// (Helper para elementos)
 const opcoesElemento = [
   { nome: 'Sangue', valor: 'sangue' },
   { nome: 'Morte', valor: 'morte' },
@@ -46,7 +46,6 @@ const opcoesElemento = [
   { nome: 'Energia', valor: 'energia' },
 ];
 
-// Mapeamento simplificado das chaves de trilha padrão para a classe
 const MapeamentoTrilhaClasse = {
     aniquilador: 'combatente', comandante_campo: 'combatente', guerreiro: 'combatente',
     operacoes_especiais: 'combatente', tropa_choque: 'combatente', agente_secreto: 'combatente',
@@ -64,8 +63,8 @@ const MapeamentoTrilhaClasse = {
 function App() {
   
   // --- ESTADOS ---
+  // (Nenhuma mudança nos estados)
   const [personagem, setPersonagem] = useState(fichaInstance.getDados());
-  
   const [calculados, setCalculados] = useState({
     defesaTotal: 10,
     cargaAtual: 0,
@@ -75,41 +74,35 @@ function App() {
     bonusPericia: {},
     canChangeTheme: false, 
   });
-
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
-
-  // NOVO: Estado para as trilhas agrupadas (padrão + customizadas)
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({
       combatente: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
       especialista: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
       ocultista: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
       sobrevivente: { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } },
   });
-
-  // (Estados dos Modais)
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
   const [isRitualModalOpen, setIsRitualModalOpen] = useState(false); 
   const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); 
   const [isPoderesModalOpen, setIsPoderesModalOpen] = useState(false); 
-  const [isModalEditarItemOpen, setIsModalEditarItemOpen] = useState(false); // <-- NOVO: Estado do modal de edição
-  const [itemParaEditar, setItemParaEditar] = useState(null); // <-- NOVO: Item que está sendo editado
-
+  const [isModalEditarItemOpen, setIsModalEditarItemOpen] = useState(false); 
+  const [itemParaEditar, setItemParaEditar] = useState(null); 
+  const [isDiarioModalOpen, setIsDiarioModalOpen] = useState(false);
+  const [notaParaEditar, setNotaParaEditar] = useState(null); 
   
   // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
+  // (Nenhuma mudança nas funções de useEffect ou Handlers)
   
-  // Efeito para recalcular as trilhas disponíveis quando os dados mudam
   useEffect(() => {
     const customTrilhas = fichaInstance.getTrilhasPersonalizadas(); 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
     setTrilhasPorClasse(trilhasAgrupadas);
-    
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
   
-  // Efeitos de inicialização e tema (Existentes)
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
     aplicarTemaComAnimacao(tema, temaAtual, () => {
@@ -129,22 +122,18 @@ function App() {
     document.title = `${personagem.info.nome || "Ficha"} - NEX ${personagem.info.nex || "0%"}`;
   }, [personagem.info.nome, personagem.info.nex]); 
   
-  // Efeito Parallax
   useEffect(() => {
     const parallaxContainer = document.getElementById("parallax-background");
     const parallaxSimbolos = parallaxContainer 
       ? parallaxContainer.querySelectorAll(".simbolo-parallax")
       : null;
-
     if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
-
     const handleMouseMove = (e) => {
       const { clientX, clientY } = e;
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       const moveX = (clientX - centerX) * -0.01;
       const moveY = (clientY - centerY) * -0.01;
-
       parallaxSimbolos.forEach((simbolo) => {
         simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
       });
@@ -155,32 +144,23 @@ function App() {
     };
   }, []); 
 
-  // --- Funções de Criação/Gerenciamento de Trilhas Customizadas (Existentes) ---
   const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
   const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
-
   const handleAddTrilha = (trilhaData) => {
     fichaInstance.addTrilhaPersonalizada(trilhaData); 
     handleFichaChange(null, null, null); 
     handleFecharTrilhaModal();
   };
 
-  // --- Funções de Gerenciamento de PODERES (Existentes) ---
   const handleAbrirPoderesModal = () => setIsPoderesModalOpen(true);
   const handleFecharPoderesModal = () => setIsPoderesModalOpen(false);
-  
   const handleTogglePoder = (poder) => {
       const aprendidos = fichaInstance.getPoderesAprendidos();
       const isAprendido = aprendidos.some(p => p.key === poder.key);
-
-      if (isAprendido) {
-          fichaInstance.removePoder(poder.key);
-      } else {
-          fichaInstance.addPoder(poder);
-      }
+      if (isAprendido) { fichaInstance.removePoder(poder.key); } 
+      else { fichaInstance.addPoder(poder); }
       handleFichaChange(null, null, null);
   };
-  
   const getPoderesDisponiveis = (classe) => {
       switch (classe.toLowerCase()) {
           case 'combatente': return poderesCombatente;
@@ -190,8 +170,6 @@ function App() {
       }
   };
 
-
-  // --- FUNÇÕES DE CONTROLE (Salvar, Carregar, etc. - Existentes) ---
   const carregarFicha = () => {
     const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
     if (dadosSalvos) {
@@ -242,10 +220,8 @@ function App() {
     leitor.readAsText(arquivo);
   };
   
-  // --- Funções de Controle de Modais e Itens (Existentes) ---
   const handleAbrirRitualModal = () => setIsRitualModalOpen(true);
   const handleFecharRitualModal = () => setIsRitualModalOpen(false);
-  
   const handleAddRitual = (ritual) => { 
     fichaInstance.addRitualInventario(ritual); 
     handleFichaChange(null, null, null); 
@@ -257,10 +233,7 @@ function App() {
 
   const handleAbrirLoja = () => setIsLojaOpen(true);
   const handleFecharLoja = () => setIsLojaOpen(false);
-  
   const handleFecharSelecao = () => { setIsSelecaoOpen(false); setItemPendente(null); };
-
-  // --- NOVO: Funções de Edição de Item ---
   const handleAbrirModalEdicao = (inventarioId) => {
     const item = personagem.inventario.find(i => i.inventarioId === inventarioId);
     if (item) {
@@ -268,21 +241,17 @@ function App() {
       setIsModalEditarItemOpen(true);
     }
   };
-
   const handleFecharModalEdicao = () => {
     setIsModalEditarItemOpen(false);
     setItemParaEditar(null);
   };
-
   const handleSalvarItemEditado = (itemAtualizado) => {
     if (itemParaEditar) {
       fichaInstance.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado);
       handleFecharModalEdicao();
-      handleFichaChange(null, null, null); // Força recálculo
+      handleFichaChange(null, null, null); 
     }
   };
-  // --- FIM DAS NOVAS FUNÇÕES ---
-
   const handleAddItem = (itemOriginal) => {
     if (itemOriginal.tipoBonus === 'generico') {
       setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia para vincular ao item. (Não pode Luta ou Pontaria)', opcoes: opcoesPericia, tipoVinculo: 'pericia' });
@@ -294,57 +263,65 @@ function App() {
       fichaInstance.addItemInventario(itemOriginal); handleFichaChange(null, null, null); 
     }
   };
-  
   const handleVincularItem = (valorSelecionado) => {
     if (!itemPendente) return;
-    
     const trilhasUnificadas = getMergedTrilhas(fichaInstance.getTrilhasPersonalizadas());
-
     if (itemPendente.tipoVinculo === 'trilhaElemento') {
       const trilhaSelecionada = itemPendente.trilhaValue;
-      
       fichaInstance.setInfo('trilha', trilhaSelecionada);
       fichaInstance.setInfo(`${trilhaSelecionada}_elemento`, valorSelecionado); 
-      
       handleFecharSelecao(); 
       handleFichaChange(null, null, null); 
       return; 
     }
-
     let itemVinculado = { ...itemPendente };
     if (itemPendente.tipoVinculo === 'pericia') { itemVinculado.periciaVinculada = valorSelecionado; } 
     else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); }
     itemVinculado.tipoBonus = null; itemVinculado.tituloModal = undefined; itemVinculado.descricaoModal = undefined; itemVinculado.opcoes = undefined; itemVinculado.tipoVinculo = undefined;
     fichaInstance.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
   };
-  
   const handleRemoveItem = (inventarioId) => { fichaInstance.removeItemInventario(inventarioId); handleFichaChange(null, null, null); };
   const handleToggleItem = (inventarioId) => { fichaInstance.toggleIgnorarCalculos(inventarioId); handleFichaChange(null, null, null); };
   
+  const handleAbrirDiarioModal = (nota) => {
+    setNotaParaEditar(nota); 
+    setIsDiarioModalOpen(true);
+  };
+  const handleFecharDiarioModal = () => {
+    setIsDiarioModalOpen(false);
+    setNotaParaEditar(null); 
+  };
+  const handleSalvarNota = (dadosNota) => {
+    if (notaParaEditar) {
+      fichaInstance.updateNotaDiario(notaParaEditar.id, dadosNota);
+    } else {
+      fichaInstance.addNotaDiario(dadosNota);
+    }
+    handleFichaChange(null, null, null); 
+  };
+  const handleRemoverNota = (notaId) => {
+    if (window.confirm("Tem certeza que deseja apagar esta anotação?")) {
+      fichaInstance.removeNotaDiario(notaId);
+      handleFichaChange(null, null, null); 
+    }
+  };
 
-  // --- FUNÇÃO CÉREBRO (handleFichaChange) ---
   function handleFichaChange(secao, campo, valor) {
-    
+    // (Nenhuma mudança na função handleFichaChange)
     let skipUpdate = false;
     const trilhasUnificadas = getMergedTrilhas(fichaInstance.getTrilhasPersonalizadas());
-
     if (secao) {
       if (secao === 'info') {
-        
         if (campo === 'nex') {
             let nexValue = String(valor).replace(/[^0-9]/g, '');
             let nexNumber = parseInt(nexValue) || 0;
             if (nexNumber > 100) nexNumber = 100;
             valor = `${nexNumber}%`;
         }
-        
-        // --- LÓGICA DE ESCOLHA DE TRILHA (COM TRATATIVA DE MODAL) ---
         if (campo === 'trilha') {
             const trilhaSelecionada = valor;
             const dadosTrilha = trilhasUnificadas[trilhaSelecionada]; 
-            
             if (dadosTrilha && dadosTrilha.requiresChoice === 'elemento' && trilhaSelecionada !== 'nenhuma') {
-                
                 setItemPendente({ 
                     trilhaValue: trilhaSelecionada,
                     tituloModal: `Escolher Elemento da Trilha`, 
@@ -354,33 +331,24 @@ function App() {
                 });
                 setIsSelecaoOpen(true);
                 skipUpdate = true;
-                
             } else {
                 fichaInstance.setInfo(campo, valor);
             }
-
         } 
-        // Lógica de validação de trilha ao trocar a classe
         else if (campo === 'classe') {
             const novaClasse = valor;
             const trilhasValidas = Object.values(trilhasPorClasse[novaClasse.toLowerCase()] || {}).map(t => t.key); 
             const trilhaAtual = fichaInstance.info.trilha; 
-            
             const trilhaInvalida = trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual);
-            
             if (trilhaInvalida) {
                 fichaInstance.setInfo('trilha', 'nenhuma');
                 fichaInstance.setInfo(`${trilhaAtual}_elemento`, '');
             }
-
             fichaInstance.setInfo(campo, valor);
         }
-        // Outros campos de info
         else if (!skipUpdate) {
             fichaInstance.setInfo(campo, valor);
         }
-        // FIM DA LÓGICA DE INFO
-
       } else if (secao === 'atributos') {
         fichaInstance.setAtributo(campo, valor); 
       } else if (secao === 'recursos') {
@@ -391,25 +359,17 @@ function App() {
         fichaInstance.setTreinoPericia(campo, valor);
       } else if (secao === 'bonusManuais') {
         fichaInstance.setBonusManual(campo, valor);
-      }
+      } 
     }
-
-    if (skipUpdate) {
-        return;
-    }
-
-    // --- Recalcula TUDO ---
+    if (skipUpdate) { return; }
     const bonusDefesaInventario = fichaInstance.getBonusDefesaInventario();
     fichaInstance.setDefesa('equip', bonusDefesaInventario);
-    
     const bonusPericiaCalculado = {};
     const periciasAtuais = fichaInstance.pericias || {};
     Object.keys(periciasAtuais).forEach(periciaKey => {
       bonusPericiaCalculado[periciaKey] = fichaInstance.getBonusPericiaInventario(periciaKey);
     });
-
     fichaInstance.calcularValoresMaximos(); 
-
     const agi = parseInt(fichaInstance.atributos.agi) || 0;
     const equip = fichaInstance.defesa.equip || 0;
     const outros = parseInt(fichaInstance.defesa.outros) || 0;
@@ -418,10 +378,8 @@ function App() {
       bonusOrigemDefesa = 2;
     }
     const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
-
     const cargaAtual = fichaInstance.getPesoTotal();
     const cargaMax = fichaInstance.getMaxPeso();
-
     const int = parseInt(fichaInstance.atributos.int) || 0;
     const classe = fichaInstance.info.classe;
     let bonusClassePericias = 0;
@@ -431,10 +389,8 @@ function App() {
       case "ocultista": bonusClassePericias = 3 + int; break;
       default: bonusClassePericias = 0;
     }
-    
     const origem = fichaInstance.info.origem;
     let bonusOrigemPericias = 0;
-    
     if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
       const { fixas, escolhas } = database.periciasPorOrigem[origem];
       bonusOrigemPericias += fixas.length;
@@ -443,20 +399,16 @@ function App() {
       });
     }
     const periciasTotal = bonusClassePericias + bonusOrigemPericias;
-
     let periciasTreinadas = 0;
     Object.values(fichaInstance.pericias).forEach((treino) => {
       if (parseInt(treino) >= 5) {
         periciasTreinadas++;
       }
     });
-
     const novosDados = fichaInstance.getDados();
-
     const nexString = novosDados.info.nex || '0%';
     const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
     const canChangeTheme = nexNumeric >= 50;
-
     setCalculados({
       defesaTotal: defesaTotal,
       cargaAtual: cargaAtual,
@@ -466,11 +418,9 @@ function App() {
       bonusPericia: bonusPericiaCalculado,
       canChangeTheme: canChangeTheme, 
     });
-
     setPersonagem({ ...novosDados });
   }
 
-  // Agrupa as props do <Controles />
   const controlesProps = {
     temaAtual: tema, 
     onSave: salvarFicha,
@@ -485,7 +435,6 @@ function App() {
   return (
     <>
       <div id="parallax-background">
-        {/* CORREÇÃO FINAL: Usar caminhos estáticos para o Vite */}
         <img src="/assets/images/SimboloSemafinidade.png" id="simbolo-ordem" className="simbolo-parallax" />
         <img src="/assets/images/SimboloSangue.png" id="simbolo-sangue" className="simbolo-parallax" />
         <img src="/assets/images/SimboloMorte.png" id="simbolo-morte" className="simbolo-parallax" />
@@ -494,6 +443,14 @@ function App() {
       </div>
       
       <div id="transition-overlay"></div>
+
+      {/* <-- MUDANÇA: ORDEM TROCADA --> */}
+      <div className="recursos-container-fixo">
+        <Recursos 
+          dados={personagem.recursos}
+          onFichaChange={handleFichaChange}
+        />
+      </div>
 
       <nav className="ficha-abas">
         <button 
@@ -514,23 +471,26 @@ function App() {
         >
           Rituais
         </button>
-        
-        {/* NOVA ABA: PODERES */}
         <button 
           className={`ficha-aba-link ${abaAtiva === 'poderes' ? 'active' : ''}`}
           onClick={() => setAbaAtiva('poderes')}
         >
           Poderes
         </button>
-        
-        {/* NOVA ABA: PROGRESSÃO */}
         <button 
           className={`ficha-aba-link ${abaAtiva === 'progressao' ? 'active' : ''}`}
           onClick={() => setAbaAtiva('progressao')}
         >
           Progressão
         </button>
+        <button 
+          className={`ficha-aba-link ${abaAtiva === 'diario' ? 'active' : ''}`}
+          onClick={() => setAbaAtiva('diario')}
+        >
+          Diário
+        </button>
       </nav>
+      {/* <-- FIM DA MUDANÇA --> */}
       
       {abaAtiva === 'principal' && (
         <FichaPrincipal
@@ -539,7 +499,6 @@ function App() {
           fichaInstance={fichaInstance} 
           handleFichaChange={handleFichaChange}
           controlesProps={controlesProps}
-          // Passando o mapeamento de trilhas por classe para Identidade
           trilhasPorClasse={trilhasPorClasse} 
         />
       )}
@@ -550,7 +509,7 @@ function App() {
           onAbrirLoja={handleAbrirLoja}
           onRemoveItem={handleRemoveItem}
           onToggleItem={handleToggleItem}
-          onEditItem={handleAbrirModalEdicao} // <-- NOVO: Passa a função de edição
+          onEditItem={handleAbrirModalEdicao} 
         />
       )}
 
@@ -562,15 +521,13 @@ function App() {
         />
       )}
       
-      {/* NOVO: ABA PODERES */}
       {abaAtiva === 'poderes' && (
         <PoderesAprendidos 
             poderesAprendidos={personagem.poderes_aprendidos}
-            onAbrirModal={handleAbrirPoderesModal} // <--- Abre o ModalPoderes
+            onAbrirModal={handleAbrirPoderesModal} 
         />
       )}
       
-      {/* RENDERIZAÇÃO NA NOVA ABA (AGORA LIMPA) */}
       {abaAtiva === 'progressao' && (
         <div className="ficha-aba-conteudo active">
           <button 
@@ -586,18 +543,26 @@ function App() {
             trilha={personagem.info.trilha}
             nexString={personagem.info.nex}
             progressaoClasses={progressaoClasses}
-            progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} // Passa Trilhas UNIFICADAS
+            progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} 
             info={personagem.info}
-            poderesAprendidos={personagem.poderes_aprendidos} // <--- PASSA PODERES PARA EXIBIÇÃO
+            poderesAprendidos={personagem.poderes_aprendidos} 
           />
         </div>
+      )}
+
+      {abaAtiva === 'diario' && (
+        <Diario
+          diarioData={personagem.diario}
+          onAbrirModal={handleAbrirDiarioModal}
+          onRemoveNota={handleRemoverNota}
+        />
       )}
 
       <footer>
         <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
       </footer>
 
-      {/* --- Modais (Existentes) --- */}
+      {/* --- Modais --- */}
       <ModalLoja 
         isOpen={isLojaOpen}
         onClose={handleFecharLoja}
@@ -618,15 +583,13 @@ function App() {
         onAddRitual={handleAddRitual} 
       />
 
-      {/* NOVO: MODAL DE CRIAÇÃO DE TRILHA */}
       <ModalTrilhaCustom
         isOpen={isTrilhaModalOpen}
         onClose={handleFecharTrilhaModal}
         onAddTrilha={handleAddTrilha}
-        classesList={OpcoesClasse} // Passa a lista de classes do database (OpçõesClasse)
+        classesList={OpcoesClasse} 
       />
       
-      {/* NOVO: MODAL DE SELEÇÃO DE PODERES */}
       <ModalPoderes
         isOpen={isPoderesModalOpen}
         onClose={handleFecharPoderesModal}
@@ -634,16 +597,22 @@ function App() {
         poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)}
         poderesAprendidos={personagem.poderes_aprendidos}
         onTogglePoder={handleTogglePoder}
-        poderesGerais={poderesGerais} // <--- ADICIONADO
+        poderesGerais={poderesGerais} 
       />
 
-      {/* <-- NOVO: MODAL DE EDIÇÃO DE ITEM --> */}
       <ModalEditarItem
         isOpen={isModalEditarItemOpen}
         onClose={handleFecharModalEdicao}
         onSave={handleSalvarItemEditado}
         item={itemParaEditar}
         pericias={listaTodasPericias}
+      />
+
+      <ModalNota
+        isOpen={isDiarioModalOpen}
+        onClose={handleFecharDiarioModal}
+        onSave={handleSalvarNota}
+        notaAtual={notaParaEditar}
       />
     </>
   )

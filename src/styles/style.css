@@ -1,11 +1,10 @@
-/* css/style.css - Versão Completa com Destaque de Perícia (Tema) */
+/* css/style.css */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
 
 @font-face {
   font-family: "SigilosDeConhecimento";
-  /* CAMINHO CORRIGIDO: de ../assets/ para /assets/ */
   src: url("/assets/fonte/SigilosDeConhecimento.ttf") format("truetype");
 }
 
@@ -19,14 +18,11 @@
   --cor-texto-principal: #f0f0f0;
   --cor-texto-label: #9e9e9e;
   --cor-caixa-recurso: #0a0a0a;
-  /* Cores de transição usam o fundo real */
   --cor-trans-ordem: #001a2e;
   --cor-trans-sangue: #2a0000;
   --cor-trans-morte: #1e1e1e;
-  --cor-trans-conhecimento: #2b2800; /* Fundo (Amarelo-Escuro) */
+  --cor-trans-conhecimento: #2b2800;
   --cor-trans-energia: #2a002e;
-
-  /* Cor de destaque para os símbolos */
   --cor-destaque-conhecimento: #ffeb3b;
 }
 /* --- Paletas de Cores por Tema --- */
@@ -94,13 +90,12 @@ body {
   padding: 20px;
   gap: 20px;
   grid-template-columns: 1fr 1.5fr;
-  /* (CORRIGIDO) "footer" foi removido do grid para funcionar com as abas */
+  /* (CORRIGIDO) "recursos" foi removido do grid */
   grid-template-areas:
     "identidade pericias"
     "controles  pericias"
     "atributos  pericias"
     "defesa     pericias"
-    "recursos   pericias"
     "progressao progressao"
     "calculo    calculo";
 }
@@ -116,21 +111,18 @@ body {
 #grid-defesa-status {
   grid-area: defesa;
 }
-#grid-recursos {
-  grid-area: recursos;
-}
+/* #grid-recursos não é mais uma área */
 #grid-pericias {
   grid-area: pericias;
 }
-#grid-progressao { /* <-- NOVA DEFINIÇÃO */
+#grid-progressao { 
   grid-area: progressao;
 }
 #grid-calculo {
   grid-area: calculo;
 }
-/* (CORRIGIDO) Footer agora é estilizado fora do grid */
 footer {
-  grid-area: unset; /* <-- CORREÇÃO AQUI */
+  grid-area: unset; 
   text-align: center;
   padding: 20px;
   margin-top: 20px;
@@ -179,87 +171,41 @@ footer {
   font-family: "Special Elite", monospace;
 }
 
-.pericia-item {
-  display: grid;
-  grid-template-columns: 1fr 180px 100px;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  padding: 8px 10px;
-  border-bottom: 1px solid #333;
-  border-left: 3px solid transparent;
-  transition: all 0.3s ease;
-}
-.pericia-item span:first-child {
-  font-size: 1.1em;
-}
-.pericia-item select {
-  width: 100%;
-}
-.pericia-total-bonus {
-  text-align: center;
-  color: var(--cor-destaque);
-  font-size: 1em;
-  font-family: "Special Elite", monospace;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
+/* --- Estilo dos Recursos --- */
 .box-recursos {
   flex-direction: row;
   justify-content: space-between;
-  gap: 10px;
+  gap: 20px; 
   background-color: transparent;
   border: none;
   padding: 0;
 }
 .recurso-individual {
-  background-color: var(--cor-caixa-recurso);
-  border: 2px solid var(--cor-borda);
-  border-radius: 4px;
-  padding: 10px;
-  text-align: center;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  text-align: center; /* Centraliza o label */
   width: 33%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center; /* Centraliza tudo */
 }
-.recurso-individual .recurso-atual {
-  font-family: "Special Elite", monospace;
-  font-size: 2.5em;
-  color: var(--cor-texto-principal);
-  background: none;
-  border: none;
-  text-align: center;
-  width: 80%;
-  padding: 0;
-}
+
+/* Label (PV, PE, SAN) */
 .recurso-individual label {
-  font-size: 1.5em;
+  font-size: 1.8em;
   color: var(--cor-destaque);
-  margin: 0;
+  margin-bottom: 5px;
 }
-.recurso-individual .recurso-max {
-  color: var(--cor-texto-label);
-}
-.recurso-individual .recurso-max input {
-  width: 40px;
-  background-color: var(--cor-caixa);
-  padding: 2px;
-}
-.recurso-individual span {
-  font-family: "Special Elite", monospace;
-  font-size: 0.8em;
-  color: var(--cor-texto-label);
-  text-transform: uppercase;
-}
+
+/* Barra de Recurso */
 .barra-recurso {
-  width: 90%;
-  height: 12px;
+  width: 100%;
+  height: 15px; 
   background-color: var(--cor-fundo);
   border: 1px solid var(--cor-texto-label);
-  border-radius: 2px;
-  margin: 5px auto 10px auto;
+  border-radius: 10px; 
+  margin: 0 0 8px 0; /* Espaço abaixo da barra */
   overflow: hidden;
 }
 .barra-preenchimento {
@@ -267,7 +213,68 @@ footer {
   background-color: var(--cor-destaque);
   width: 100%;
   transition: width 0.3s ease;
+  border-radius: 10px;
 }
+
+/* Container dos números (Atual / Max) */
+.recurso-numeros {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.recurso-individual .recurso-atual {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em; /* Tamanho grande */
+  color: var(--cor-texto-principal);
+  background-color: var(--cor-caixa); /* Fundo de caixa */
+  border: 1px solid var(--cor-borda); /* Borda de destaque */
+  border-radius: 4px;
+  text-align: center;
+  width: 80px; /* Largura maior */
+  padding: 2px 5px;
+}
+
+.recurso-separador {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em;
+  color: var(--cor-texto-label);
+  padding: 0 5px;
+}
+
+.recurso-individual .recurso-max {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em; /* Tamanho grande */
+  color: var(--cor-texto-label); /* Cor de label */
+  background: none; /* Sem fundo */
+  border: none; /* Sem borda */
+  text-align: center;
+  width: 80px; /* Largura igual ao atual */
+  padding: 2px 5px;
+  cursor: default;
+}
+
+/* Remove as setas dos inputs de número */
+.recurso-individual input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.recurso-individual input[type="number"]::-webkit-outer-spin-button,
+.recurso-individual input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Garante que o CSS antigo não interfira */
+.recurso-header { display: none; }
+.recurso-individual .recurso-max input { display: none; }
+.recurso-individual span:last-child { display: none; }
+
+/* --- FIM DA ATUALIZAÇÃO DE RECURSOS --- */
+
+
 :root[data-tema="tema-morte"] .box-controles button,
 :root[data-tema="tema-morte"]
   .box-controles
@@ -280,8 +287,13 @@ footer {
   input[type="file"]::file-selector-button {
   color: #121212;
 }
+:root[data-tema="tema-morte"] .btn-add-item {
+  color: var(--cor-caixa-recurso); 
+}
+:root[data-tema="tema-conhecimento"] .btn-add-item {
+  color: var(--cor-caixa-recurso);
+}
 
-/* Estilo para Bloco de Defesa e Carga */
 .box-defesa-status {
   flex-direction: row;
   justify-content: space-between;
@@ -296,9 +308,8 @@ footer {
   padding: 10px;
   border-radius: 4px;
 }
-.box-defesa-status .campo-horizontal:first-child, /* NEX */
+.box-defesa-status .campo-horizontal:first-child, 
 .box-defesa-status .campo-horizontal:nth-child(2) {
-  /* DESL */
   background-color: transparent;
   border: none;
   padding: 0;
@@ -322,7 +333,6 @@ footer {
   background-color: var(--cor-fundo);
   margin-top: 5px;
 }
-/* Input readonly da defesa */
 .box-defesa-status input[readonly] {
   background-color: #111;
   color: var(--cor-texto-label);
@@ -363,28 +373,21 @@ textarea {
   font-family: "Roboto Condensed", sans-serif;
   font-size: 1.1em;
 }
-/* (Removido o estilo do footer daqui, pois foi corrigido acima) */
 
 /* --- 9. Estilo do Hexágono de Atributos --- */
-
 .box-atributos {
   position: relative;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  
-  /* Força a caixa a ter a proporção da imagem (quadrada) */
   aspect-ratio: 1 / 1; 
-  width: 100%; /* Garante que a caixa ocupe o espaço da coluna */
-  /* max-width: 450px; <-- REMOVIDO */
-  margin-left: auto; /* Centraliza a caixa na coluna */
+  width: 100%; 
+  margin-left: auto; 
   margin-right: auto;
-
   padding: 0;
   border: none;
   background-color: transparent;
 }
-/* CAMINHOS CORRIGIDOS (../assets/ -> /assets/) */
 :root[data-tema="tema-ordem"] .box-atributos {
   background-image: url("/assets/images/hexagono.png");
 }
@@ -406,7 +409,7 @@ input[type="number"].input-hex {
   border: none;
   color: var(--cor-texto-principal);
   font-family: "Special Elite", monospace;
-  font-size: 2.5em;
+  font-size: 2.5em; 
   width: 60px;
   text-align: center;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
@@ -422,25 +425,26 @@ input[type="number"].input-hex {
 
 /* --- 10. Posicionamento dos Inputs --- */
 #forca {
-  top: 32%;
+  top: 30%;
   left: 18%;
 }
 #agilidade {
-  top: 14%;
-  left: 46%;
+  top: 10%;
+  left: 45%;
 }
 #intelecto {
-  top: 32%;
-  left: 73%;
+  top: 30%;
+  left: 72%;
 }
 #presenca {
-  top: 65%;
+  top: 66%;
   left: 26%;
 }
 #vigor {
-  top: 65%;
-  left: 65%;
+  top: 66%;
+  left: 64%;
 }
+
 /* --- 11. Resumo de Cálculo --- */
 .box-calculo {
   flex-direction: row;
@@ -518,7 +522,7 @@ input[type="number"].input-hex {
   padding: 15px;
   border: 1px solid var(--cor-caixa);
   border-radius: 4px;
-  background-color: var(--cor-fundo); /* Fundo um pouco mais escuro */
+  background-color: var(--cor-fundo); 
 }
 .calc-bloco-coluna h4 {
   font-family: "Special Elite", monospace;
@@ -597,39 +601,19 @@ input[type="number"].input-hex {
   clip-path: revert;
   overflow: hidden;
 }
-
-/* --- Classes de Animação (JS) --- */
-
-/* 1. Ordem (Fade Limpo) */
-#transition-overlay.anim-ordem {
-  /* O JS (main.js) aplica o 'backgroundColor' */
-  animation: anim-fade 1.2s ease-in-out;
-}
-
-/* 2. Estilo base para as partículas de GOTA DE SANGUE */
 .particula-sangue {
   position: absolute;
   background-color: var(--cor-trans-sangue);
-  border-radius: 50%; /* Círculo (JS vai esticar com scaleY) */
+  border-radius: 50%; 
   transform-origin: top center;
   filter: blur(1px);
 }
-
-/* 3. Estilo base para as partículas de poeira da Morte */
 .particula-morte {
   position: absolute;
   background-color: #000;
   filter: blur(3px);
   border-radius: 50%;
 }
-
-/* 4. Energia (Glitch de Imagem) */
-#transition-overlay.anim-energia {
-  /* O JS (main.js) aplica 'backgroundColor', 'backgroundImage', 'backgroundSize', etc. */
-  animation: anim-glitch-image 1s ease;
-}
-
-/* Estilo dos Sigilos (para Conhecimento) */
 .glitch-text {
   position: absolute;
   color: var(--cor-destaque-conhecimento);
@@ -639,10 +623,8 @@ input[type="number"].input-hex {
   text-shadow: 0 0 8px var(--cor-destaque-conhecimento),
     0 0 15px rgba(255, 235, 59, 0.4);
 }
-
 /* --- Definição das Animações (Keyframes) --- */
 
-/* 1. Animação de FADE (Ordem) */
 @keyframes anim-fade {
   0% {
     opacity: 0;
@@ -655,62 +637,62 @@ input[type="number"].input-hex {
   }
 }
 
-/* 5. Animação de ENERGIA (Glitch de Imagem) */
+
+/* 4. Energia (Glitch de Imagem) */
+#transition-overlay.anim-energia {
+  /* Esta regra aplica a animação de glitch (transform) */
+  animation: anim-glitch-image 1s ease;
+}
+
+/* ... (resto do CSS) ... */
+
+/* 5. Animação de ENERGIA (Glitch de Imagem) - SOMENTE TRANSFORM */
+
 @keyframes anim-glitch-image {
   0% {
-    opacity: 0;
+    transform: translateX(0px);
   }
   10% {
-    opacity: 0.8;
     transform: translateX(-5px);
   }
   20% {
-    opacity: 0.9;
     transform: translateX(5px);
   }
   30% {
-    opacity: 0.7;
     transform: translateX(-3px);
   }
   40% {
-    opacity: 1;
     transform: translateX(3px);
   }
   50% {
-    opacity: 1;
     transform: translateX(0px);
   }
   60% {
-    opacity: 0.8;
     transform: translateX(4px);
   }
   70% {
-    opacity: 0.9;
     transform: translateX(-4px);
   }
   80% {
-    opacity: 0.7;
     transform: translateX(2px);
   }
   90% {
-    opacity: 0.5;
     transform: translateX(-2px);
   }
   100% {
-    opacity: 0;
+    transform: translateX(0px);
   }
 }
 
+/* ... (resto do seu CSS) ... */
 /* --- 13. Estilos de Carga e Inventário --- */
-
-/* (NOVO) Layout da Aba de Inventário (e Rituais) */
 .ficha-container-inventario {
   max-width: 1400px;
-  margin: 20px auto;
+  margin: 0 auto; /* <-- MUDANÇA: margin-top removido */
   padding: 20px;
+  /* <-- MUDANÇA: padding-top removido */
 }
 
-/* (NOVO) Bloco de Inventário (e Rituais) */
 .box-inventario {
   background-color: var(--cor-caixa);
   border: 2px solid var(--cor-borda);
@@ -726,7 +708,7 @@ input[type="number"].input-hex {
   margin-bottom: 15px;
 }
 .inventario-header h2 {
-  border-bottom: none; /* Remove a borda duplicada do h2 */
+  border-bottom: none; 
   margin-bottom: 0;
   padding-bottom: 0;
 }
@@ -793,7 +775,7 @@ input[type="number"].input-hex {
 }
 .modal-abas {
   display: flex;
-  flex-wrap: wrap; /* Permite quebra de linha em telas pequenas */
+  flex-wrap: wrap; 
   border-bottom: 1px solid var(--cor-caixa-recurso);
   margin-bottom: 20px;
 }
@@ -807,7 +789,7 @@ input[type="number"].input-hex {
   font-size: 1.1em;
   text-transform: uppercase;
   border-bottom: 3px solid transparent;
-  margin-bottom: -2px; /* Alinha com a borda principal */
+  margin-bottom: -2px; 
 }
 .modal-abas .aba-link:hover {
   color: var(--cor-texto-principal);
@@ -817,26 +799,25 @@ input[type="number"].input-hex {
   border-bottom: 3px solid var(--cor-destaque);
 }
 .modal-body .aba-conteudo {
-  display: none; /* JS controla a exibição */
+  display: none; 
 }
 .modal-body .aba-conteudo.active {
   display: block;
 }
 
-/* (ATUALIZADO) Lista de Itens (Loja, Inventário e Rituais) */
 .loja-lista-itens {
   list-style: none;
   display: grid;
-  /* Grid responsivo para os cards */
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
 }
 #lista-inventario-pessoal .item-placeholder,
-#lista-rituais .item-placeholder {
+#lista-rituais .item-placeholder,
+#lista-diario .item-placeholder { 
   color: var(--cor-texto-label);
   text-align: center;
   padding: 20px;
-  grid-column: 1 / -1; /* Ocupa a linha inteira */
+  grid-column: 1 / -1; 
 }
 
 /* --- 17. Formulário de Item Personalizado --- */
@@ -877,30 +858,23 @@ input[type="number"].input-hex {
 }
 
 /* --- 18. (ATUALIZADO) Estilos de Perícia em Card com "Dado" --- */
-
-/* O Container da Lista (o <ul>) */
 .pericias-grid-container {
   list-style: none;
   display: grid;
-  /* Cria colunas de 140px, que se auto-ajustam */
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
-
-/* O Card da Perícia (o <li>) */
 .pericia-item {
   display: flex;
-  flex-direction: column; /* Empilha o conteúdo */
+  flex-direction: column; 
   justify-content: space-between;
   padding: 10px;
   border-radius: 4px;
   border: 1px solid var(--cor-caixa-recurso);
   background-color: var(--cor-fundo);
-  min-height: 120px; /* Altura mínima para o card */
+  min-height: 120px; 
   transition: all 0.2s ease-in-out;
 }
-
-/* Nome da Perícia */
 .pericia-item span:first-child {
   font-size: 1.1em;
   font-weight: bold;
@@ -910,8 +884,6 @@ input[type="number"].input-hex {
   padding-bottom: 5px;
   margin-bottom: 5px;
 }
-
-/* --- NOVOS ESTILOS PARA O "DADO" --- */
 .pericia-bonus-container {
   display: flex;
   align-items: center;
@@ -919,57 +891,38 @@ input[type="number"].input-hex {
   margin: auto 0;
   gap: 8px;
 }
-
 .pericia-dado-shape {
   font-family: "Special Elite", monospace;
   font-weight: bold;
   font-size: 1.1em;
-  
-  /* A forma de hexágono */
   background-color: var(--cor-destaque);
-  color: var(--cor-caixa-recurso); /* Texto escuro */
+  color: var(--cor-caixa-recurso); 
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  
-  /* Tamanho */
   width: 50px;
-  height: 55px; /* Um pouco mais alto que largo para hexágono */
-  
-  /* Centraliza o texto "5d" dentro */
+  height: 55px; 
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-
 .pericia-dado-texto {
-  /* Ajuste fino para o texto "2d (pior)" */
   font-size: 0.9em;
   text-align: center;
   line-height: 1;
 }
-
 .pericia-bonus-texto {
   font-family: "Special Elite", monospace;
-  font-size: 1.8em; /* GRANDE */
+  font-size: 1.8em; 
   font-weight: bold;
   color: var(--cor-destaque);
   line-height: 1;
 }
-/* --- FIM DOS NOVOS ESTILOS --- */
-
-
-/* O Seletor de Treino */
 .pericia-item select {
   width: 100%;
   margin-top: 5px;
   font-size: 0.9em;
   padding: 5px;
 }
-
-/* --- Destaques de Treino (versão Card) --- */
-/* (O seletor .pericia-total-bonus foi removido) */
-
-/* Destreinado */
 .pericia-item.treino-0 {
   opacity: 0.7;
   border-color: var(--cor-caixa);
@@ -982,16 +935,11 @@ input[type="number"].input-hex {
 .pericia-item.treino-0 .pericia-dado-texto {
    color: var(--cor-texto-label);
 }
-
-
-/* Treinado */
 .pericia-item.treino-5 {
   opacity: 1;
   border-color: var(--cor-destaque);
   box-shadow: 0 0 5px var(--cor-destaque);
 }
-
-/* Veterano */
 .pericia-item.treino-10 {
   opacity: 1;
   border-color: var(--cor-destaque);
@@ -1001,8 +949,6 @@ input[type="number"].input-hex {
 .pericia-item.treino-10 .pericia-bonus-texto {
   text-shadow: 0 0 5px var(--cor-destaque);
 }
-
-/* Expert */
 .pericia-item.treino-15 {
   opacity: 1;
   border-color: var(--cor-destaque);
@@ -1010,15 +956,24 @@ input[type="number"].input-hex {
   box-shadow: 0 0 15px var(--cor-destaque);
 }
 .pericia-item.treino-15 .pericia-bonus-texto {
-  font-size: 2em; /* Maior ainda */
+  font-size: 2em; 
   text-shadow: 0 0 8px var(--cor-destaque);
 }
-
 /* Garante o contraste do texto do dado em temas claros */
-:root[data-tema="tema-morte"] .pericia-dado-shape,
-:root[data-tema="tema-conhecimento"] .pericia-dado-shape {
-  color: var(--cor-fundo); /* Usa a cor de fundo escura para o texto */
+
+/* Define a cor do texto do dado (o "5d", "2d", etc.) para escuro */
+:root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-texto,
+:root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-texto {
+  color: var(--cor-fundo); 
 }
+
+/* Garante que o bônus (+5, +10) também use a cor escura nesses temas */
+:root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-shape,
+:root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-shape {
+  color: var(--cor-fundo);
+}
+
+
 /* --- 19. (NOVO) Estilo para Bônus de Origem Automático --- */
 .calc-linha.origem-bonus {
   color: var(--cor-destaque);
@@ -1043,7 +998,6 @@ input[type="number"].input-hex {
   margin-bottom: 15px;
 }
 .pericias-header h2 {
-  /* Remove a estilização antiga para não duplicar a borda */
   border-bottom: none;
   padding-bottom: 0;
   margin-bottom: 0;
@@ -1061,100 +1015,76 @@ input[type="number"].input-hex {
   color: var(--cor-destaque);
   padding: 0 3px;
 }
-/* O <span> de perícias escolhidas (X) */
 #pericias-escolhidas {
   color: var(--cor-texto-principal);
 }
 
 /* --- 21. (NOVO) Estilos do Parallax Background --- */
-
 #parallax-background {
-  position: fixed; /* Fica fixo na tela */
+  position: fixed; 
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1; /* Fica atrás de todo o conteúdo */
-  overflow: hidden; /* Esconde partes da imagem que saem da tela */
-  pointer-events: none; /* Permite clicar através dele */
+  z-index: -1; 
+  overflow: hidden; 
+  pointer-events: none; 
 }
-
 .simbolo-parallax {
   position: absolute;
   top: 50%;
   left: 50%;
-
-  /* Um tamanho grande, mas que não ultrapassa 800px */
   width: 80%;
   max-width: 800px;
-
-  /* Centraliza a imagem perfeitamente */
   transform: translate(-50%, -50%);
-
-  /* Começa invisível */
   opacity: 0;
-
-  /* Transições suaves para a opacidade (quando troca o tema) 
-       e para o transform (quando mexe o mouse) */
   transition: opacity 0.8s ease-in-out, transform 0.2s ease-out;
 }
-
-/* Regras para MOSTRAR o símbolo do tema ativo */
-/* (A opacidade é baixa para não atrapalhar a leitura da ficha) */
-
 :root[data-tema="tema-ordem"] #simbolo-ordem {
-  opacity: 0.05; /* Ordem (Sem Afinidade) é o mais sutil */
+  opacity: 0.05; 
 }
-
 :root[data-tema="tema-sangue"] #simbolo-sangue {
   opacity: 0.1;
 }
-
 :root[data-tema="tema-morte"] #simbolo-morte {
   opacity: 0.1;
 }
-
 :root[data-tema="tema-conhecimento"] #simbolo-conhecimento {
-  opacity: 0.08; /* Conhecimento é brilhante, então um pouco menos */
+  opacity: 0.08; 
 }
-
 :root[data-tema="tema-energia"] #simbolo-energia {
-  opacity: 0.07; /* Energia também é brilhante */
+  opacity: 0.07; 
 }
 
 /* --- 22. (NOVO) Estilo do Símbolo na Transição --- */
-
 .transition-symbol {
   position: absolute;
   top: 50%;
   left: 50%;
-
-  /* Tamanho do símbolo na transição */
   width: 60%;
   max-width: 500px;
-
-  /* Começa invisível e um pouco menor */
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.8);
-
   pointer-events: none;
-
-  /* Adiciona um filtro de "brilho" para destacar */
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
 }
-
-/* O símbolo de Morte (preto) precisa de um brilho branco para aparecer no fundo escuro */
 #transition-overlay.anim-morte .transition-symbol {
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.7)) brightness(2);
 }
 
-/* --- 23. (NOVO) Abas Principais --- */
+/* --- 23. (ATUALIZADO) Abas Principais --- */
 .ficha-abas {
   max-width: 1400px;
-  margin: 20px auto 0 auto;
-  padding: 0 20px;
+  margin: 0 auto; /* Margin-top removido */
+  padding: 10px 20px; /* Adicionado padding vertical */
   display: flex;
   gap: 10px;
+  
+  position: sticky;
+  top: 90px; /* <-- MUDANÇA: Ajustado para a altura da nova barra de recursos */
+  background: var(--cor-fundo);
+  z-index: 800;
+  border-bottom: 2px solid var(--cor-caixa); /* Borda mais sutil */
 }
 .ficha-aba-link {
   padding: 10px 20px;
@@ -1174,13 +1104,12 @@ input[type="number"].input-hex {
 .ficha-aba-conteudo.active {
   display: block;
 }
-/* Faz a aba principal (grid) não ter margem no topo */
+/* Remove a margem do topo da FichaPrincipal quando ela está ativa */
 .ficha-aba-conteudo.active .ficha-container {
   margin-top: 0;
 }
 
 /* --- 24. (NOVO) Card de Item (Inventário & Loja) --- */
-/* A lista de inventário agora usa o mesmo grid da loja */
 #lista-inventario-pessoal {
   list-style: none;
   display: grid;
@@ -1191,7 +1120,7 @@ input[type="number"].input-hex {
   color: var(--cor-texto-label);
   text-align: center;
   padding: 20px;
-  grid-column: 1 / -1; /* Ocupa a linha inteira */
+  grid-column: 1 / -1; 
 }
 .item-card {
   background-color: var(--cor-fundo);
@@ -1266,8 +1195,21 @@ input[type="number"].input-hex {
   color: var(--cor-texto-label);
   font-size: 0.9em;
 }
+.item-footer .item-inventario-editar {
+  margin-left: auto; 
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-destaque);
+  color: var(--cor-destaque);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.item-footer .item-inventario-editar:hover {
+  background-color: var(--cor-destaque);
+  color: var(--cor-caixa-recurso); 
+}
 .item-footer .item-inventario-remover {
-  margin-left: auto;
+  margin-left: 5px; 
   background-color: #401a1a;
   border: 1px solid var(--cor-trans-sangue);
   color: #f0f0f0;
@@ -1277,7 +1219,6 @@ input[type="number"].input-hex {
 .item-footer .item-inventario-remover:hover {
   background-color: var(--cor-trans-sangue);
 }
-/* Botão de adicionar na loja */
 .loja-item-add {
   width: 100%;
   margin: 0;
@@ -1291,46 +1232,11 @@ input[type="number"].input-hex {
   color: var(--cor-caixa);
 }
 
-/* ... (outros estilos do item-footer) ... */
-
-/* ESTA É A NOVA REGRA */
-.item-footer .item-inventario-editar {
-  margin-left: auto; /* Joga os botões para a direita */
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-destaque);
-  color: var(--cor-destaque);
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 2px;
-}
-.item-footer .item-inventario-editar:hover {
-  background-color: var(--cor-destaque);
-  color: var(--cor-caixa-recurso); /* Texto escuro no hover */
-}
-
-/* ESTA REGRA FOI MODIFICADA */
-.item-footer .item-inventario-remover {
-  margin-left: 5px; /* <-- MUDADO DE 'auto' PARA '5px' */
-  background-color: #401a1a;
-  border: 1px solid var(--cor-trans-sangue);
-  color: #f0f0f0;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-/* ... (resto do arquivo) ... */
-
 /* --- 25. (CORRIGIDO) Card de Ritual --- */
-
-/* A borda do card e o texto do cabeçalho terão a cor do elemento */
-/* O fundo do cabeçalho será o padrão (escuro) */
-
 .ritual-card .item-header {
-  /* Garante que o fundo do cabeçalho do ritual seja o padrão, não o do elemento */
   background-color: var(--cor-caixa-recurso);
-  border-bottom: 1px solid var(--cor-caixa); /* Borda interna escura */
+  border-bottom: 1px solid var(--cor-caixa); 
 }
-
-/* Conhecimento (Amarelo) */
 .ritual-card.conhecimento {
   border-color: #ffeb3b;
 }
@@ -1338,8 +1244,6 @@ input[type="number"].input-hex {
 .ritual-card.conhecimento .item-header-info {
   color: #ffeb3b;
 }
-
-/* Energia (Roxo) */
 .ritual-card.energia {
   border-color: #be29ec;
 }
@@ -1347,8 +1251,6 @@ input[type="number"].input-hex {
 .ritual-card.energia .item-header-info {
   color: #be29ec;
 }
-
-/* Sangue (Vermelho) */
 .ritual-card.sangue {
   border-color: #d40000;
 }
@@ -1356,17 +1258,13 @@ input[type="number"].input-hex {
 .ritual-card.sangue .item-header-info {
   color: #d40000;
 }
-
-/* Morte (Preto -> Texto Cinza/Branco) */
 .ritual-card.morte {
   border-color: #aaaaaa;
-} /* Borda Cinza Clara */
+} 
 .ritual-card.morte .item-header h3,
 .ritual-card.morte .item-header-info {
-  color: #f0f0f0; /* Texto Branco (Padrão) */
+  color: #f0f0f0; 
 }
-
-/* Medo (Cinza Claro) */
 .ritual-card.medo {
   border-color: #aaaaaa;
 }
@@ -1374,8 +1272,6 @@ input[type="number"].input-hex {
 .ritual-card.medo .item-header-info {
   color: #aaaaaa;
 }
-
-/* Cor dos aprimoramentos (usa a cor do tema ATUAL, para destaque) */
 .ritual-card .item-detalhe.bonus.discente {
   color: var(--cor-destaque);
   font-weight: normal;
@@ -1388,19 +1284,16 @@ input[type="number"].input-hex {
 }
 
 /* --- 26. (NOVO) Modal de Seleção de Perícia --- */
-
 .modal-conteudo.modal-pequeno {
-  max-width: 500px; /* Modal menor */
+  max-width: 500px; 
   max-height: 80vh;
 }
-
 #modal-pericia-descricao {
   color: var(--cor-texto-label);
   font-size: 1.1em;
   margin-bottom: 20px;
   text-align: center;
 }
-
 #lista-selecao-pericia {
   list-style: none;
   display: flex;
@@ -1408,7 +1301,6 @@ input[type="number"].input-hex {
   gap: 10px;
   justify-content: center;
 }
-
 #lista-selecao-pericia li {
   background-color: var(--cor-fundo);
   border: 1px solid var(--cor-borda);
@@ -1418,29 +1310,35 @@ input[type="number"].input-hex {
   cursor: pointer;
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
-  flex-basis: 130px; /* Largura base de cada botão */
+  flex-basis: 130px; 
   text-align: center;
   transition: all 0.2s ease;
 }
-
 #lista-selecao-pericia li:hover {
   background-color: var(--cor-destaque);
   color: var(--cor-fundo);
   transform: scale(1.05);
 }
-
 :root[data-tema="tema-morte"] #lista-selecao-pericia li:hover,
 :root[data-tema="tema-conhecimento"] #lista-selecao-pericia li:hover {
-  color: #111; /* Garante contraste no hover de Morte/Conhecimento */
-}
-/* CORREÇÃO: Força a cor do texto do botão '+' nos temas claros */
-
-:root[data-tema="tema-morte"] .btn-add-item {
-  /* Define o texto do '+' para preto */
-  color: var(--cor-caixa-recurso); 
+  color: #111; 
 }
 
-:root[data-tema="tema-conhecimento"] .btn-add-item {
-   /* Define o texto do '+' para preto (corrige o tema Conhecimento também) */
-  color: var(--cor-caixa-recurso);
+/* --- 27. (ATUALIZADO) Container Fixo de Recursos --- */
+.recursos-container-fixo {
+  max-width: 1400px; 
+  margin: 0 auto;
+  padding: 15px 20px 10px 20px; /* Padding ajustado */
+  background-color: var(--cor-caixa-recurso); /* Fundo escuro da barra */
+  border-bottom: 2px solid var(--cor-borda); /* Borda de destaque */
+  
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+/* Ajusta o padding do container de inventário/rituais/etc */
+.ficha-container-inventario {
+  padding-top: 20px; /* <-- MUDANÇA: Devolvido o padding superior */
+  margin-top: 0;
 }

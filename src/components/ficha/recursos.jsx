@@ -1,16 +1,13 @@
 // /src/components/ficha/recursos.jsx
+// (ATUALIZADO: Nova estrutura HTML com inputs visíveis abaixo da barra)
 
 import React from 'react';
 
-// Recebe os dados (personagem.recursos) e a função principal
 function Recursos({ dados, onFichaChange }) {
 
-  // Handler local para simplificar
   const handleChange = (e) => {
     const campo = e.target.id; // ex: "pv_atual"
     const valor = e.target.value;
-    
-    // Chama a função principal no App.jsx, avisando a seção 'recursos'
     onFichaChange('recursos', campo, valor);
   };
 
@@ -24,43 +21,38 @@ function Recursos({ dados, onFichaChange }) {
       
       {/* --- PONTOS DE VIDA --- */}
       <div className="recurso-individual" id="bloco-pv">
-        <input 
-          type="number" 
-          id="pv_atual" 
-          className="recurso-atual" 
-          value={dados.pv_atual}
-          onChange={handleChange}
-        />
-        <label>PV</label>
-        <div className="barra-recurso">
-          {/* O estilo da barra é controlado pelo React agora */}
+        <label htmlFor="pv_atual">PV</label> {/* 1. Label no topo */}
+        
+        <div className="barra-recurso"> {/* 2. Barra no meio */}
           <div 
             className="barra-preenchimento" 
             id="barra-pv"
             style={{ width: `${pvPerc}%` }} 
           ></div>
         </div>
-        <span className="recurso-max">
-          / <input 
-              type="number" 
-              id="pv_max" 
-              value={dados.pv_max} 
-              readOnly // O React vai calcular isso, então o usuário não deve editar
-            />
-        </span>
-        <span>PONTOS DE VIDA</span>
+        
+        <div className="recurso-numeros"> {/* 3. Inputs embaixo */}
+          <input 
+            type="number" 
+            id="pv_atual" 
+            className="recurso-atual" 
+            value={dados.pv_atual}
+            onChange={handleChange}
+          />
+          <span className="recurso-separador">/</span>
+          <input 
+            type="number" 
+            id="pv_max" 
+            className="recurso-max"
+            value={dados.pv_max} 
+            readOnly // O Máx é calculado, então é apenas leitura
+          />
+        </div>
       </div>
 
       {/* --- PONTOS DE ESFORÇO --- */}
       <div className="recurso-individual" id="bloco-pe">
-        <input 
-          type="number" 
-          id="pe_atual" 
-          className="recurso-atual"
-          value={dados.pe_atual}
-          onChange={handleChange}
-        />
-        <label>PE</label>
+        <label htmlFor="pe_atual">PE</label>
         <div className="barra-recurso">
           <div 
             className="barra-preenchimento" 
@@ -68,27 +60,28 @@ function Recursos({ dados, onFichaChange }) {
             style={{ width: `${pePerc}%` }}
           ></div>
         </div>
-        <span className="recurso-max">
-          / <input 
-              type="number" 
-              id="pe_max" 
-              value={dados.pe_max} 
-              readOnly 
-            />
-        </span>
-        <span>PONTOS DE ESFORÇO</span>
+        <div className="recurso-numeros">
+          <input 
+            type="number" 
+            id="pe_atual" 
+            className="recurso-atual"
+            value={dados.pe_atual}
+            onChange={handleChange}
+          />
+          <span className="recurso-separador">/</span>
+          <input 
+            type="number" 
+            id="pe_max" 
+            className="recurso-max"
+            value={dados.pe_max} 
+            readOnly 
+          />
+        </div>
       </div>
 
       {/* --- SANIDADE --- */}
       <div className="recurso-individual" id="bloco-san">
-        <input 
-          type="number" 
-          id="san_atual" 
-          className="recurso-atual"
-          value={dados.san_atual}
-          onChange={handleChange}
-        />
-        <label>SAN</label>
+        <label htmlFor="san_atual">SAN</label>
         <div className="barra-recurso">
           <div 
             className="barra-preenchimento" 
@@ -96,15 +89,23 @@ function Recursos({ dados, onFichaChange }) {
             style={{ width: `${sanPerc}%` }}
           ></div>
         </div>
-        <span className="recurso-max">
-          / <input 
-              type="number" 
-              id="san_max" 
-              value={dados.san_max} 
-              readOnly 
-            />
-        </span>
-        <span>SANIDADE</span>
+        <div className="recurso-numeros">
+          <input 
+            type="number" 
+            id="san_atual" 
+            className="recurso-atual"
+            value={dados.san_atual}
+            onChange={handleChange}
+          />
+          <span className="recurso-separador">/</span>
+          <input 
+            type="number" 
+            id="san_max" 
+            className="recurso-max"
+            value={dados.san_max} 
+            readOnly 
+          />
+        </div>
       </div>
 
     </section>

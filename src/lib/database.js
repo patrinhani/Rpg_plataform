@@ -1,11 +1,11 @@
 /**
  * js/database.js
- * (CORRIGIDO)
- * - Corrigido o 'id' do Escudo Balístico (linha 389).
- * - Limpas as marcações de citação '[cite]' de todas as descrições.
- * - (NOVO) Adicionada a propriedade 'elemento' a todos os itens paranormais.
- * - (NOVO) Adicionada a propriedade 'tipoBonus: "escolhaElemento"' aos itens "Varia".
- */// --- CONSTANTES DE FICHA ---
+ * (REVISADO E CORRIGIDO)
+ * - Adicionadas listas de Modificações (Armas, Proteções, Acessórios).
+ * - Lista 'equipGeral' totalmente refeita com base no 'itens.txt' (Acessórios, Explosivos, Itens Operacionais).
+ * - Itens duplicados (como "Granada (SaH)") foram removidos para evitar confusão.
+ * - Itens "Utensílio" e "Vestimenta" removidos em favor de itens reais e modificações.
+ */
 
 import { 
     poderesCombatente, 
@@ -14,6 +14,51 @@ import {
     poderesGerais
 } from './poderes.js';
 
+// --- (NOVO) LISTAS DE MODIFICAÇÕES ---
+//
+const modificacoesArmas = [
+  // Tipo: 'arma' (qualquer), 'arma-fogo', 'arma-fogo-balas', 'arma-fogo-automatica', 'arma-fogo-mira', 'arma-corpo-a-corpo'
+  { key: "alongada", nome: "Alongada", tipo: ['arma-fogo'], cat: 1, descricao: "Fornece +2 nos testes de ataque." },
+  { key: "calibre_grosso", nome: "Calibre Grosso", tipo: ['arma-fogo'], cat: 1, descricao: "Aumenta o dano em mais um dado do mesmo tipo. Requer munição de calibre grosso." },
+  { key: "certeira", nome: "Certeira", tipo: ['arma-corpo-a-corpo'], cat: 1, descricao: "Fornece +2 nos testes de ataque." },
+  { key: "compensador", nome: "Compensador", tipo: ['arma-fogo-automatica'], cat: 1, descricao: "Anula a penalidade em testes de ataque por disparar rajadas." },
+  { key: "cruel", nome: "Cruel", tipo: ['arma-corpo-a-corpo'], cat: 1, descricao: "Fornece +2 nas rolagens de dano." },
+  { key: "discreta_arma", nome: "Discreta", tipo: ['arma'], cat: 1, espacos: -1, descricao: "Reduz o número de espaços ocupados em 1 (mínimo 0), +5 em Crime para ocultar." },
+  { key: "dum_dum", nome: "Dum Dum", tipo: ['arma-fogo-balas'], cat: 1, descricao: "Aumenta o multiplicador de crítico em +1." },
+  { key: "explosiva", nome: "Explosiva", tipo: ['arma-fogo-balas'], cat: 1, descricao: "Aumenta o dano em +2d6." },
+  { key: "ferrolho_automatico", nome: "Ferrolho Automático", tipo: ['arma-fogo'], cat: 1, descricao: "A arma se torna automática." },
+  { key: "mira_laser", nome: "Mira Laser", tipo: ['arma-fogo-mira'], cat: 1, descricao: "Aumenta a margem de ameaça em +2." },
+  { key: "mira_telescopica", nome: "Mira Telescópica", tipo: ['arma-fogo-mira'], cat: 1, descricao: "Aumenta o alcance em uma categoria. Permite Ataque Furtivo em qualquer alcance." },
+  { key: "perigosa", nome: "Perigosa", tipo: ['arma-corpo-a-corpo'], cat: 1, descricao: "Aumenta a margem de ameaça em +2." },
+  { key: "silenciador", nome: "Silenciador", tipo: ['arma-fogo'], cat: 1, descricao: "Reduz em –10 a penalidade em Furtividade por se esconder no mesmo turno em que atacou." },
+  { key: "tatica", nome: "Tática", tipo: ['arma'], cat: 1, descricao: "Você pode sacar a arma como uma ação livre." },
+  { key: "visao_de_calor", nome: "Visão de Calor", tipo: ['arma-fogo-mira'], cat: 1, descricao: "Ao disparar com a arma, você ignora qualquer camuflagem do alvo." },
+];
+
+const modificacoesProtecoes = [
+  // Tipo: 'protecao' (qualquer), 'protecao-leve', 'protecao-pesada'
+  { key: "antibombas", nome: "Antibombas", tipo: ['protecao-pesada'], cat: 1, descricao: "Fornece +5 em testes de resistência contra efeitos de área." },
+  { key: "blindada", nome: "Blindada", tipo: ['protecao-pesada'], cat: 1, espacos: 1, descricao: "Aumenta a RD para 5 e o espaço em +1." },
+  { key: "discreta_protecao", nome: "Discreta", tipo: ['protecao-leve'], cat: 1, espacos: -1, descricao: "Reduz o espaço em 1 (mínimo 0), +5 em Crime para ocultar." },
+  { key: "reforcada", nome: "Reforçada", tipo: ['protecao'], cat: 1, espacos: 1, descricao: "Aumenta a Defesa fornecida em +2 e o espaço em +1." },
+];
+
+const modificacoesAcessorios = [
+  // Tipo: 'acessorio', 'acessorio-eletrico'
+  { key: "aprimorado", nome: "Aprimorado", tipo: ['acessorio'], cat: 1, descricao: "O bônus em perícia do acessório aumenta para +5. Pode ser escolhida uma segunda vez para uma Função Adicional." },
+  { key: "discreto_acessorio", nome: "Discreto", tipo: ['acessorio'], cat: 1, espacos: -1, descricao: "Reduz o espaço em 1 (mínimo 0), +5 em Crime para ocultar." },
+  { key: "funcao_adicional", nome: "Função Adicional", tipo: ['acessorio'], cat: 1, descricao: "Fornece +2 em uma perícia adicional à sua escolha (aprovada pelo mestre)." },
+  { key: "instrumental", nome: "Instrumental", tipo: ['acessorio'], cat: 1, descricao: "Pode ser usado como um kit de perícia específico (escolhido ao aplicar)." },
+  { key: "bateria_potente", nome: "Bateria Potente", tipo: ['acessorio-eletrico'], cat: 1, descricao: "Dobra a duração da bateria/alcance de luz, ou dobra usos/dano/DT de taser." },
+];
+
+const modificacoesParanormais = [
+  { key: "lente_revelacao", nome: "Lente de Revelação", tipo: ['item-paranormal'], cat: 1, descricao: "Modificação de Câmera de Aura. Permite ver invisíveis/incorpóreos. Ação padrão (1 PE): fotografar criatura (curto), ela perde camuflagem/invisibilidade (Von DT Pre evita)." },
+];
+// --- FIM DAS MODIFICAÇÕES ---
+
+
+// --- CONSTANTES DE FICHA ---
 const NiveisNex = {
     "5%": "5%", "10%": "10%", "15%": "15%",
     "20%": "20%", "25%": "25%", "30%": "30%",
@@ -48,12 +93,9 @@ const OpcoesOrigem = {
 };
 // --- FIM DAS CONSTANTES DE FICHA ---
 
-// ... (O restante do seu objeto database, com listas de itens e rituais)
-
 const database = {
 
-  
-  // Tabela 3.3: Armas (Simples)
+  //
   armasSimples: [
     {
       id: "faca",
@@ -64,8 +106,7 @@ const database = {
       alcance: "Curto",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Uma lâmina longa e afiada, como uma navalha, uma faca de churrasco ou uma faca militar. É uma arma ágil e pode ser arremessada.",
+      descricao: "Uma lâmina longa e afiada. É uma arma ágil e pode ser arremessada.",
     },
     {
       id: "martelo",
@@ -76,8 +117,7 @@ const database = {
       alcance: "-",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Esta ferramenta comum pode ser usada como arma na falta de opções melhores.",
+      descricao: "Esta ferramenta comum pode ser usada como arma na falta de opções melhores.",
     },
     {
       id: "punhal",
@@ -88,8 +128,7 @@ const database = {
       alcance: "-",
       tipo: "P",
       espacos: 1,
-      descricao:
-        "Uma faca de lâmina longa e pontiaguda, usada por cultistas em seus rituais. É uma arma ágil.",
+      descricao: "Uma faca de lâmina longa e pontiaguda, usada por cultistas. É uma arma ágil.",
     },
     {
       id: "bastao",
@@ -100,8 +139,7 @@ const database = {
       alcance: "-",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Um cilindro de madeira maciça. Pode ser um taco de beisebol, um cacetete da polícia... Você pode empunhar com uma mão (dano 1d6) ou com as duas (dano 1d8).",
+      descricao: "Um cilindro de madeira maciça. Pode ser empunhado com uma mão (dano 1d6) ou com as duas (dano 1d8).",
     },
     {
       id: "machete",
@@ -112,8 +150,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Uma lâmina longa, muito usada como ferramenta para abrir trilhas.",
+      descricao: "Uma lâmina longa, muito usada como ferramenta para abrir trilhas.",
     },
     {
       id: "lanca",
@@ -124,8 +161,7 @@ const database = {
       alcance: "Curto",
       tipo: "P",
       espacos: 1,
-      descricao:
-        "Uma haste de madeira com uma ponta metálica afiada. Pode ser arremessada.",
+      descricao: "Uma haste de madeira com uma ponta metálica afiada. Pode ser arremessada.",
     },
     {
       id: "cajado",
@@ -158,8 +194,7 @@ const database = {
       alcance: "Médio",
       tipo: "P",
       espacos: 2,
-      descricao:
-        "Esta arma da antiguidade exige uma ação de movimento para ser recarregada a cada disparo.",
+      descricao: "Exige uma ação de movimento para ser recarregada a cada disparo.",
     },
     {
       id: "pistola",
@@ -170,8 +205,7 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 1,
-      descricao:
-        "Uma arma de mão comum entre policiais e militares por ser facilmente recarregável.",
+      descricao: "Uma arma de mão comum entre policiais e militares.",
     },
     {
       id: "revolver",
@@ -193,11 +227,10 @@ const database = {
       alcance: "Médio",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "Esta arma de fogo é bastante popular entre fazendeiros, caçadores e atiradores esportistas.",
+      descricao: "Popular entre fazendeiros, caçadores e atiradores esportistas.",
     },
     {
-      id: "estilingue",
+      id: "estilingue", // SaH
       nome: "Estilingue",
       categoria: 0,
       dano: "1d4",
@@ -205,11 +238,10 @@ const database = {
       alcance: "Curto",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Originalmente usado para caçar passarinhos, pode ser usado para arremessar pequenas pedras ou granadas.",
-    }, // SaH p.38
+      descricao: "Aplica Força ao dano. Pode arremessar granadas em alcance longo.",
+    },
     {
-      id: "pregador_pneumatico",
+      id: "pregador_pneumatico", // SaH
       nome: "Pregador Pneumático",
       categoria: 0,
       dano: "1d4",
@@ -217,11 +249,10 @@ const database = {
       alcance: "Curto",
       tipo: "P",
       espacos: 1,
-      descricao:
-        "Ferramenta que dispara pregos sob pressão. Conta como arma de fogo para poderes.",
-    }, // SaH p.38
+      descricao: "Ferramenta que dispara pregos. Conta como arma de fogo para poderes.",
+    },
     {
-      id: "revolver_compacto",
+      id: "revolver_compacto", // SaH
       nome: "Revólver Compacto",
       categoria: 1,
       dano: "2d4",
@@ -229,11 +260,10 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 1,
-      descricao:
-        "Arma de baixo calibre, projetada para ser facilmente escondida.",
-    }, // SaH p.38
+      descricao: "Arma de baixo calibre, projetada para ser facilmente escondida.",
+    },
   ],
-  // Tabela 3.3: Armas (Táticas)
+  //
   armasTaticas: [
     {
       id: "machadinha",
@@ -255,8 +285,7 @@ const database = {
       alcance: "-",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Dois bastões curtos de madeira ligados por uma corrente. É uma arma ágil.",
+      descricao: "Dois bastões curtos de madeira ligados por uma corrente. É uma arma ágil.",
     },
     {
       id: "corrente",
@@ -267,8 +296,7 @@ const database = {
       alcance: "-",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Um pedaço de corrente grossa. Fornece +2 em testes para desarmar e derrubar.",
+      descricao: "Um pedaço de corrente grossa. Fornece +2 em testes para desarmar e derrubar.",
     },
     {
       id: "espada",
@@ -279,8 +307,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Uma arma medieval. Você pode empunhar com uma mão (dano 1d8) ou com as duas (dano 1d10).",
+      descricao: "Uma arma medieval. Pode ser empunhada com uma mão (dano 1d8) ou com as duas (dano 1d10).",
     },
     {
       id: "florete",
@@ -291,8 +318,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Esta espada de lâmina fina e comprida é usada por esgrimistas. É uma arma ágil.",
+      descricao: "Esta espada de lâmina fina e comprida é usada por esgrimistas. É uma arma ágil.",
     },
     {
       id: "machado",
@@ -303,8 +329,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Uma ferramenta importante para lenhadores e bombeiros, um machado pode causar ferimentos terríveis.",
+      descricao: "Uma ferramenta importante para lenhadores e bombeiros.",
     },
     {
       id: "maca",
@@ -326,8 +351,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 2,
-      descricao:
-        "Um machado grande e pesado, usado no corte de árvores largas.",
+      descricao: "Um machado grande e pesado, usado no corte de árvores largas.",
     },
     {
       id: "gadanho",
@@ -338,8 +362,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 2,
-      descricao:
-        "Uma ferramenta agrícola, versão maior da foice, para uso com as duas mãos.",
+      descricao: "Uma ferramenta agrícola, versão maior da foice, para uso com as duas mãos.",
     },
     {
       id: "katana",
@@ -350,8 +373,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 2,
-      descricao:
-        "Originária do Japão, esta espada longa e levemente curvada. É uma arma ágil.",
+      descricao: "Espada longa e levemente curvada. É uma arma ágil.",
     },
     {
       id: "marreta",
@@ -362,8 +384,7 @@ const database = {
       alcance: "-",
       tipo: "I",
       espacos: 2,
-      descricao:
-        "Normalmente usada para demolir paredes, também pode ser usada para demolir pessoas.",
+      descricao: "Normalmente usada para demolir paredes.",
     },
     {
       id: "montante",
@@ -374,8 +395,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 2,
-      descricao:
-        "Enorme e pesada, esta espada de 1,5m de comprimento foi uma das armas mais poderosas em seu tempo.",
+      descricao: "Enorme e pesada, esta espada de 1,5m de comprimento.",
     },
     {
       id: "motosserra",
@@ -386,8 +406,7 @@ const database = {
       alcance: "-",
       tipo: "C",
       espacos: 2,
-      descricao:
-        "Uma ferramenta capaz de causar ferimentos profundos. Impõe -5 nos seus testes de ataque.",
+      descricao: "Capaz de causar ferimentos profundos. Impõe -5 nos seus testes de ataque.",
     },
     {
       id: "arco_composto",
@@ -398,8 +417,7 @@ const database = {
       alcance: "Médio",
       tipo: "P",
       espacos: 2,
-      descricao:
-        "Este arco moderno permite que você aplique seu valor de Força às rolagens de dano.",
+      descricao: "Este arco moderno permite que você aplique sua Força às rolagens de dano.",
     },
     {
       id: "balestra",
@@ -410,8 +428,7 @@ const database = {
       alcance: "Médio",
       tipo: "P",
       espacos: 2,
-      descricao:
-        "Uma besta pesada. Exige uma ação de movimento para ser recarregada a cada disparo.",
+      descricao: "Uma besta pesada. Exige uma ação de movimento para ser recarregada a cada disparo.",
     },
     {
       id: "submetralhadora",
@@ -422,8 +439,7 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 1,
-      descricao:
-        "Esta arma de fogo automática pode ser empunhada com apenas uma mão.",
+      descricao: "Esta arma de fogo automática pode ser empunhada com apenas uma mão.",
     },
     {
       id: "espingarda",
@@ -434,8 +450,7 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "Arma de fogo longa e com cano liso. Causa apenas metade do dano em alcance médio ou maior.",
+      descricao: "Arma de fogo longa e com cano liso. Causa metade do dano em alcance médio ou maior.",
     },
     {
       id: "fuzil_assalto",
@@ -446,8 +461,7 @@ const database = {
       alcance: "Médio",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "A arma de fogo padrão da maioria dos exércitos modernos. É uma arma automática.",
+      descricao: "A arma de fogo padrão dos exércitos modernos. É uma arma automática.",
     },
     {
       id: "fuzil_precisao",
@@ -458,11 +472,10 @@ const database = {
       alcance: "Longo",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "Esta arma de fogo de uso militar é projetada for disparos longos e precisos.",
+      descricao: "Projetada para disparos longos e precisos.",
     },
     {
-      id: "baioneta",
+      id: "baioneta", // SaH
       nome: "Baioneta",
       categoria: 0,
       dano: "1d4",
@@ -470,11 +483,10 @@ const database = {
       alcance: "-",
       tipo: "P",
       espacos: 1,
-      descricao:
-        "Lâmina projetada para ser fixada em um fuzil. Pode ser usada em um fuzil (dano 1d6, Ágil) ou como uma faca.",
-    }, // SaH p.38
+      descricao: "Lâmina para ser fixada em um fuzil (dano 1d6, Ágil) ou usada como uma faca.",
+    },
     {
-      id: "bastao_policial",
+      id: "bastao_policial", // SaH
       nome: "Bastão Policial",
       categoria: 1,
       dano: "1d6",
@@ -482,11 +494,10 @@ const database = {
       alcance: "Curto",
       tipo: "I",
       espacos: 1,
-      descricao:
-        "Bastão com guarda lateral. Fornece +1 na Defesa ao usar a ação esquiva. É uma arma ágil.",
-    }, // SaH p.38
+      descricao: "Bastão com guarda lateral. Fornece +1 na Defesa ao usar a ação esquiva. É ágil.",
+    },
     {
-      id: "espingarda_cano_duplo",
+      id: "espingarda_cano_duplo", // SaH
       nome: "Espingarda de Cano Duplo",
       categoria: 1,
       dano: "4d6",
@@ -494,11 +505,10 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "Versão de caça da espingarda. Exige recarga (ação de movimento) após 2 disparos. Pode disparar os dois canos (dano 6d6, sofre -2 no ataque).",
-    }, // SaH p.38
+      descricao: "Exige recarga (ação de movimento) após 2 disparos. Pode disparar os dois canos (dano 6d6, -2 no ataque).",
+    },
     {
-      id: "faca_tatica",
+      id: "faca_tatica", // SaH
       nome: "Faca Tática",
       categoria: 1,
       dano: "1d6",
@@ -506,11 +516,10 @@ const database = {
       alcance: "Curto",
       tipo: "C",
       espacos: 1,
-      descricao:
-        "Faca balanceada. Fornece +2 no teste de contra-ataque. Pode ser sacrificada para dar +20 de RD num bloqueio. É ágil.",
-    }, // SaH p.38
+      descricao: "Balanceada. Fornece +2 no teste de contra-ataque. Pode ser sacrificada para dar +20 RD num bloqueio. É ágil.",
+    },
     {
-      id: "gancho_carne",
+      id: "gancho_carne", // SaH
       nome: "Gancho de Carne",
       categoria: 0,
       dano: "1d4",
@@ -518,11 +527,10 @@ const database = {
       alcance: "-",
       tipo: "P",
       espacos: 1,
-      descricao:
-        "Gancho metálico usado em frigoríficos. Pode ser amarrado a uma corda (alcance 4,5m, 2 espaços).",
-    }, // SaH p.38
+      descricao: "Gancho metálico usado em frigoríficos. Pode ser amarrado a uma corda (alcance 4,5m, 2 espaços).",
+    },
     {
-      id: "picareta",
+      id: "picareta", // SaH
       nome: "Picareta",
       categoria: 0,
       dano: "1d6",
@@ -531,9 +539,9 @@ const database = {
       tipo: "P",
       espacos: 1,
       descricao: "Ferramenta de mineração e demolição.",
-    }, // SaH p.38
+    },
     {
-      id: "shuriken",
+      id: "shuriken", // SaH
       nome: "Shuriken",
       categoria: 1,
       dano: "1d4",
@@ -541,11 +549,10 @@ const database = {
       alcance: "Curto",
       tipo: "P",
       espacos: 0.5,
-      descricao:
-        "Projéteis metálicos em forma de estrela. Um pacote dura duas cenas.",
-    }, // SaH p.38
+      descricao: "Projéteis metálicos em forma de estrela. Um pacote dura duas cenas.",
+    },
     {
-      id: "pistola_pesada",
+      id: "pistola_pesada", // SaH
       nome: "Pistola Pesada",
       categoria: 1,
       dano: "2d8",
@@ -553,11 +560,10 @@ const database = {
       alcance: "Curto",
       tipo: "B",
       espacos: 1,
-      descricao:
-        "Pistola de calibre superior. Impõe -2 em testes de ataque (empunhar com as duas mãos anula isso).",
-    }, // SaH p.38
+      descricao: "Pistola de calibre superior. Impõe -2 em testes de ataque (anulado se empunhar com duas mãos).",
+    },
   ],
-  // Tabela 3.3: Armas (Pesadas)
+  //
   armasPesadas: [
     {
       id: "bazuca",
@@ -568,8 +574,7 @@ const database = {
       alcance: "Médio",
       tipo: "I",
       espacos: 2,
-      descricao:
-        "Este lança-foguetes causa seu dano no alvo e em todos os seres num raio de 3m (Reflexos DT Agi reduz à metade).",
+      descricao: "Causa dano em área (3m, Reflexos DT Agi reduz à metade). Recarga de 1 ação de movimento.",
     },
     {
       id: "lanca_chamas",
@@ -580,8 +585,7 @@ const database = {
       alcance: "Curto",
       tipo: "Fogo",
       espacos: 2,
-      descricao:
-        "Equipamento militar que esguicha líquido inflamável. Atinge todos os seres em uma linha de 1,5m de largura com alcance curto.",
+      descricao: "Atinge todos os seres em uma linha de 1,5m de largura com alcance curto. Alvos ficam em chamas.",
     },
     {
       id: "metralhadora",
@@ -592,23 +596,10 @@ const database = {
       alcance: "Médio",
       tipo: "B",
       espacos: 2,
-      descricao:
-        "Uma arma de fogo pesada, de uso militar. Exige Força 4 ou gastar uma ação de movimento para apoiá-la. É uma arma automática.",
+      descricao: "Exige Força 4 ou gastar uma ação de movimento para apoiá-la. É uma arma automática.",
     },
-
     {
-      id: "fuzil_caca_sah", // ID alterado para evitar duplicata
-      nome: "Fuzil de Caça (SaH)",
-      categoria: 2,
-      dano: "2d10",
-      critico: "19/x3",
-      alcance: "Longo",
-      tipo: "B",
-      espacos: 2,
-      descricao: "Um fuzil de ferrolho (bolt-action) com mira telescópica.",
-    }, // SaH p.38
-    {
-      id: "gatling",
+      id: "gatling", // SaH
       nome: "Metralhadora Gatling",
       categoria: 3,
       dano: "4d6",
@@ -616,39 +607,24 @@ const database = {
       alcance: "Médio",
       tipo: "B",
       espacos: 10,
-      descricao:
-        "Uma arma de canos rotativos com alta cadência. Requer ação de movimento para 'aquecer' (mirar). Se não aquecer, impõe -2d20 nos ataques. Disparar gasta 10 balas.",
-    }, // SaH p.38
-    {
-      id: "lanca_chamas_sah", // ID alterado para evitar duplicata
-      nome: "Lança-chamas (SaH)",
-      categoria: 3,
-      dano: "6d6",
-      critico: "x2",
-      alcance: "Curto",
-      tipo: "Químico",
-      espacos: 5,
-      descricao:
-        "Dispara um cone de 6m de fogo. Alvos podem gastar ação completa para apagar (Reflexos DT AGI). Causa 3d6 de dano no próximo turno se não apagar.",
-    }, // SaH p.38
+      descricao: "Alta cadência. Requer ação de movimento para 'aquecer' (mirar). Se não aquecer, impõe -2d20 nos ataques. Gasta 10 balas por disparo.",
+    },
   ],
-  // Tabela 3.4: Munições
+  //
   municoes: [
     {
       id: "balas_curtas",
       nome: "Balas Curtas",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Munição básica para pistolas, revólveres e submetralhadoras. Dura duas cenas.",
+      descricao: "Munição para pistolas, revólveres e submetralhadoras. Dura duas cenas.",
     },
     {
       id: "balas_longas",
       nome: "Balas Longas",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Munição maior e mais potente, usada em fuzis e metralhadoras. Dura uma cena.",
+      descricao: "Munição para fuzis e metralhadoras. Dura uma cena.",
     },
     {
       id: "cartuchos",
@@ -679,30 +655,21 @@ const database = {
       descricao: "Munição para bazuca. Cada foguete dura um único disparo.",
     },
     {
-      id: "bolinhas_estilingue",
+      id: "bolinhas_estilingue", // SaH
       nome: "Bolinhas (Estilingue)",
       categoria: 0,
       espacos: 0.5,
-      descricao:
-        "Bolinhas de metal ou pedras para estilingue. Dura uma missão inteira.",
-    }, // SaH p.38
+      descricao: "Bolinhas de metal ou pedras para estilingue. Dura uma missão inteira.",
+    },
     {
-      id: "pregos_pregador",
+      id: "pregos_pregador", // SaH
       nome: "Pregos (Pregador)",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Rolo de pregos para um pregador pneumático. Dura uma missão inteira.",
-    }, // SaH p.38
-    {
-      id: "combustivel_lanca_chamas_sah", // ID alterado para evitar duplicata
-      nome: "Combustível (Lança-chamas SaH)",
-      categoria: 2,
-      espacos: 2,
-      descricao: "Tanque de combustível para 5 disparos de lança-chamas.",
-    }, // SaH p.41
+      descricao: "Rolo de pregos para um pregador pneumático. Dura uma missão inteira.",
+    },
   ],
-  // Tabela 3.6: Proteções
+  //
   protecoes: [
     {
       id: "protecao_leve",
@@ -710,8 +677,7 @@ const database = {
       categoria: 1,
       defesa: 5,
       espacos: 2,
-      descricao:
-        "Jaqueta de couro pesada ou um colete de kevlar. Fornece +5 na Defesa.",
+      descricao: "Jaqueta de couro pesada ou um colete de kevlar. Fornece +5 na Defesa.",
     },
     {
       id: "protecao_pesada",
@@ -719,8 +685,7 @@ const database = {
       categoria: 2,
       defesa: 10,
       espacos: 5,
-      descricao:
-        "Equipamento tático completo. Fornece +10 na Defesa e RD 2 a balístico, corte, impacto e perfuração. Impõe -5 em testes de perícias com penalidade de carga.",
+      descricao: "Equipamento tático completo. Fornece +10 na Defesa e RD 2 (Balístico, Corte, Impacto, Perfuração). Impõe -5 em testes com penalidade de carga.",
     },
     {
       id: "escudo",
@@ -728,143 +693,190 @@ const database = {
       categoria: 1,
       defesa: 2,
       espacos: 2,
-      descricao:
-        "Um escudo balístico. Fornece +2 na Defesa. Conta como proteção pesada para proficiência e penalidade de carga.",
+      descricao: "Um escudo balístico ou medieval. Fornece +2 na Defesa. Conta como proteção pesada para proficiência.",
     },
-
     {
-      id: "armadura_couro",
-      nome: "Armadura de Couro",
-      categoria: 1,
-      defesa: 3,
-      espacos: 2,
-      descricao:
-        "Armadura improvisada de couro batido. Subtrai 1d20 de testes de Agilidade e Vigor.",
-    }, // SaH p.39
-    {
-      id: "escudo_balistico", // <-- CORRIGIDO AQUI (era id_escudo)
-      nome: "Escudo Balístico",
+      id: "escudo_balistico_sah", // SaH
+      nome: "Escudo Balístico (SaH)",
       categoria: 2,
       defesa: 5,
       espacos: 3,
-      descricao:
-        "Escudo pesado usado por unidades táticas. Concede +10 em Defesa (total) se usar ação 'Proteger'. Subtrai 2d20 de testes de Agilidade e Vigor.",
-    }, // SaH p.39
-    {
-      id: "roupa_mergulho",
-      nome: "Roupa de Mergulho",
-      categoria: 1,
-      defesa: 1,
-      espacos: 2,
-      descricao:
-        "Traje isolante. Fornece RD 5 a frio e calor. Anula a penalidade de nadar (Atletismo). Subtrai 1d20 de testes de Agilidade e Vigor (fora d'água).",
-    }, // SaH p.39
+      descricao: "Escudo pesado. Concede +10 em Defesa (total) se usar ação 'Proteger'. Subtrai 2d20 de testes de Agilidade e Vigor.",
+    },
   ],
-  // Tabela 3.8: Equipamentos Gerais
+  //
   equipGeral: [
+    // --- Acessórios ---
     {
       id: "kit_pericia",
       nome: "Kit de Perícia",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Um kit de ferramentas para uma perícia específica (ex: Kit de Medicina, Kit de Tecnologia). Sem o kit, você sofre -5 no teste.",
+      descricao: "Um kit de ferramentas para uma perícia (ex: Medicina, Tecnologia). Sem o kit, você sofre -5 no teste.",
       tipoBonus: "kit",
     },
     {
-      id: "utensilio",
-      nome: "Utensílio",
-      categoria: 1,
+      id: "amuleto_sagrado",
+      nome: "Amuleto Sagrado",
+      categoria: 1, // Utensílio Especial
       espacos: 1,
-      descricao:
-        "Fornece +2 em uma perícia (exceto Luta e Pontaria). Ex: Lupa (Investigação), Smartphone (Atualidades).",
-      tipoBonus: "generico",
+      descricao: "Um utensílio que reforça sua fé. Ocupa o espaço de um item vestido e fornece +2 em Religião e Vontade.",
       valorBonus: 2,
+      periciaVinculada: "religiao", // Bônus principal
+      // Nota: Bônus duplo (Vontade) pode ser adicionado com modificação "Função Adicional"
     },
     {
-      id: "vestimenta",
-      nome: "Vestimenta",
-      categoria: 1,
+      id: "celular",
+      nome: "Celular",
+      categoria: 1, // Utensílio Especial
       espacos: 1,
-      descricao:
-        "Fornece +2 em uma perícia (exceto Luta ou Pontaria). Ex: Botas (Atletismo), Terno (Diplomacia).",
-      tipoBonus: "generico",
+      descricao: "Acessa a internet, tira fotos, grava áudio/vídeo. Se tiver acesso a internet, fornece +2 em testes para adquirir informações.",
       valorBonus: 2,
+      periciaVinculada: "atualidades", // Exemplo de perícia de informação
     },
+    {
+      id: "chave_fenda_universal",
+      nome: "Chave de Fenda Universal",
+      categoria: 1, // Utensílio Especial
+      espacos: 1,
+      descricao: "Fornece +2 em testes de perícia para criar ou reparar objetos (ex: Profissão, Tecnologia).",
+      valorBonus: 2,
+      periciaVinculada: "profissao", // Bônus principal
+    },
+    {
+      id: "chaves",
+      nome: "Chaves",
+      categoria: 1, // Utensílio Especial
+      espacos: 0.5, // Ajustado (menor que um utensílio padrão)
+      descricao: "Molho de chaves. Fornece +2 em testes de Furtividade para distrair (jogando as chaves).",
+      valorBonus: 2,
+      periciaVinculada: "furtividade",
+    },
+    {
+      id: "documentos_falsos",
+      nome: "Documentos Falsos",
+      categoria: 1, // Utensílio Especial
+      espacos: 1,
+      descricao: "Identidade falsa, cartões. Fornece +2 em testes de Diplomacia, Enganação e Intimidação para se passar pela identidade.",
+      valorBonus: 2,
+      periciaVinculada: "enganacao", // Bônus principal
+    },
+    {
+      id: "manual_operacional",
+      nome: "Manual Operacional",
+      categoria: 1, // Acessório
+      espacos: 1,
+      descricao: "Gastar uma ação de interlúdio lendo permite que você use a perícia como se fosse treinado nela até o próximo interlúdio.",
+    },
+    {
+      id: "notebook",
+      nome: "Notebook",
+      categoria: 1, // Utensílio Especial
+      espacos: 2, // Ajustado (maior que celular)
+      descricao: "Se tiver acesso a internet, fornece +2 em testes para adquirir informações. Recupera +1 SAN ao relaxar em interlúdio.",
+      valorBonus: 2,
+      periciaVinculada: "tecnologia", // Exemplo de perícia
+    },
+    // --- Explosivos ---
     {
       id: "granada_atordoamento",
       nome: "Granada de Atordoamento",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Seres na área (6m) ficam atordoados por 1 rodada (Fortitude DT Agi reduz para ofuscado e surdo).",
+      descricao: "Ação padrão. Área (6m). Alvos ficam atordoados por 1 rodada (Fortitude DT Agi reduz para ofuscado e surdo).",
     },
     {
       id: "granada_fumaca",
       nome: "Granada de Fumaça",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Cria uma nuvem de fumaça (6m). Seres na área ficam cegos e sob camuflagem total. Dura 2 rodadas.",
+      descricao: "Ação padrão. Área (6m). Seres na área ficam cegos e sob camuflagem total. Dura 2 rodadas.",
     },
     {
       id: "granada_fragmentacao",
       nome: "Granada de Fragmentação",
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Seres na área (6m) sofrem 8d6 de dano de perfuração (Reflexos DT Agi reduz à metade).",
+      descricao: "Ação padrão. Área (6m). Sofrem 8d6 de dano de perfuração (Reflexos DT Agi reduz à metade).",
     },
     {
       id: "granada_incendiaria",
       nome: "Granada Incendiária",
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Seres na área (6m) sofrem 6d6 de dano de fogo e ficam em chamas (Reflexos DT Agi reduz à metade e evita chamas).",
+      descricao: "Ação padrão. Área (6m). Sofrem 6d6 de dano de fogo e ficam em chamas (Reflexos DT Agi reduz à metade e evita chamas).",
+    },
+    {
+      id: "granada_gas_sonifero",
+      nome: "Granada de Gás Sonífero",
+      categoria: 1, // SaH
+      espacos: 1,
+      descricao: "Ação padrão. Área (6m). Seres na área ficam inconscientes (Fortitude DT Agi reduz para fatigado). Dura 2 rodadas.",
+    },
+    {
+      id: "granada_pem",
+      nome: "Granada de PEM",
+      categoria: 2, // SaH
+      espacos: 1,
+      descricao: "Ação padrão. Desativa eletrônicos em 18m. Criaturas de Energia sofrem 6d6 dano de impacto e ficam paralisadas (Fortitude DT Agi reduz à metade e evita).",
     },
     {
       id: "mina_antipessoal",
       nome: "Mina Antipessoal",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Detonação por ação padrão (alcance longo). Causa 12d6 de dano de perfuração em um cone de 6m (Reflexos DT Int reduz à metade).",
+      descricao: "Ação completa para instalar (Tática DT 15). Detonação por ação padrão (alcance longo). Causa 12d6 dano de perfuração (cone 6m, Reflexos DT Int reduz à metade).",
     },
+    {
+      id: "dinamite",
+      nome: "Dinamite",
+      categoria: 1, // SaH
+      espacos: 1,
+      descricao: "Ação padrão. Área (6m). Sofrem 4d6 impacto e 4d6 fogo, e ficam em chamas (Reflexos DT Agi reduz à metade e evita chamas).",
+    },
+    {
+      id: "explosivo_plastico",
+      nome: "Explosivo Plástico",
+      categoria: 2, // SaH
+      espacos: 1,
+      descricao: "Duas rodadas para preparar. Detonação (ação livre). Área (3m). Causa 16d6 dano de impacto (Reflexos DT Int reduz à metade). Dobro de dano a objetos/estruturas.",
+    },
+    {
+      id: "galao_vermelho",
+      nome: "Galão Vermelho",
+      categoria: 1, // SaH
+      espacos: 1,
+      descricao: "Explode ao sofrer dano de fogo/balístico. Área (6m). Causa 12d6 dano de fogo e deixa em chamas (Reflexos DT 25 reduz à metade e evita).",
+    },
+    // --- Itens Operacionais ---
     {
       id: "algemas",
       nome: "Algemas",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Algemas de aço. Prender um alvo não indefeso exige agarrar e vencer um novo teste de agarrar.",
+      descricao: "Prender um alvo exige agarrar e vencer um novo teste de agarrar.",
     },
     {
       id: "arpeu",
       nome: "Arpéu",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Gancho de aço com corda. Prender exige teste de Pontaria (DT 15). Fornece +5 em Atletismo para escalar.",
+      descricao: "Gancho de aço com corda. Prender exige teste de Pontaria (DT 15). Fornece +5 em Atletismo para escalar.",
     },
     {
       id: "bandoleira",
       nome: "Bandoleira",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Cinto com bolsos e alças. Uma vez por rodada, pode sacar ou guardar um item como ação livre.",
+      descricao: "Cinto com bolsos e alças. Uma vez por rodada, pode sacar ou guardar um item como ação livre.",
     },
     {
       id: "binoculos",
       nome: "Binóculos",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Fornece +5 em testes de Percepção para observar coisas distantes.",
-      tipoBonus: "especifico",
-      periciaVinculada: "percepcao",
-      valorBonus: 5,
+      descricao: "Fornece +5 em testes de Percepção para observar coisas distantes.",
+      tipoBonus: "especifico", periciaVinculada: "percepcao", valorBonus: 5,
     },
     {
       id: "bloqueador_sinal",
@@ -878,8 +890,7 @@ const database = {
       nome: "Cicatrizante",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Ação padrão para curar 2d8+2 PV em você ou em um ser adjacente.",
+      descricao: "Ação padrão para curar 2d8+2 PV em você ou em um ser adjacente.",
     },
     {
       id: "corda",
@@ -893,38 +904,30 @@ const database = {
       nome: "Equip. de Sobrevivência",
       categoria: 0,
       espacos: 2,
-      descricao:
-        "Mochila com saco de dormir, GPS, etc. Fornece +5 em Sobrevivência (acampar/orientar-se) e permite uso destreinado.",
-      tipoBonus: "especifico",
-      periciaVinculada: "sobrevivencia",
-      valorBonus: 5,
+      descricao: "Mochila com saco de dormir, GPS, etc. Fornece +5 em Sobrevivência (acampar/orientar-se) e permite uso destreinado.",
+      tipoBonus: "especifico", periciaVinculada: "sobrevivencia", valorBonus: 5,
     },
     {
       id: "lanterna_tatica",
       nome: "Lanterna Tática",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Ilumina. Ação de movimento para mirar nos olhos de um ser (alcance curto), deixando-o ofuscado por 1 rodada.",
+      descricao: "Ilumina. Ação de movimento para mirar nos olhos de um ser (alcance curto), deixando-o ofuscado por 1 rodada.",
     },
     {
       id: "mascara_gas",
       nome: "Máscara de Gás",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Fornece +10 em testes de Fortitude contra efeitos de respiração.",
-      tipoBonus: "especifico",
-      periciaVinculada: "fortitude",
-      valorBonus: 10,
+      descricao: "Fornece +10 em testes de Fortitude contra efeitos de respiração.",
+      tipoBonus: "especifico", periciaVinculada: "fortitude", valorBonus: 10,
     },
     {
       id: "mochila_militar",
       nome: "Mochila Militar",
       categoria: 1,
       espacos: 0,
-      descricao:
-        "Não usa espaço e aumenta sua capacidade de carga em 2 espaços. (O item em si ocupa 0).",
+      descricao: "Não usa espaço e aumenta sua capacidade de carga em 2 espaços.",
     },
     {
       id: "oculos_visao_termica",
@@ -938,839 +941,537 @@ const database = {
       nome: "Pé de Cabra",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Fornece +5 em testes de Força para arrombar portas. Pode ser usado como um bastão.",
+      descricao: "Fornece +5 em testes de Força para arrombar portas. Pode ser usado como um bastão.",
     },
     {
       id: "pistola_dardos",
       nome: "Pistola de Dardos",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Ataque à distância. Se acertar, alvo fica inconsciente (Fortitude DT Agi reduz para desprevenido e lento por 1 rodada). Vem com 2 dardos.",
+      descricao: "Ataque à distância. Se acertar, alvo fica inconsciente (Fortitude DT Agi reduz para desprevenido e lento). Vem com 2 dardos.",
     },
     {
       id: "pistola_sinalizadora",
       nome: "Pistola Sinalizadora",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Dispara sinalizador. Pode ser usada como arma de disparo (curto, 2d6 de fogo). Vem com 2 cargas.",
+      descricao: "Dispara sinalizador. Pode ser usada como arma de disparo (curto, 2d6 de fogo). Vem com 2 cargas.",
     },
     {
       id: "soqueira",
       nome: "Soqueira",
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Fornece +1 em rolagens de dano desarmado. Pode receber modificações e maldições de armas corpo a corpo.",
+      descricao: "Fornece +1 em rolagens de dano desarmado. Pode receber modificações/maldições de armas corpo a corpo.",
     },
     {
       id: "spray_pimenta",
       nome: "Spray de Pimenta",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Ação padrão para atingir ser adjacente. Alvo fica cego por 1d4 rodadas (Fortitude DT Agi evita). 2 usos.",
+      descricao: "Ação padrão. Ser adjacente fica cego por 1d4 rodadas (Fortitude DT Agi evita). 2 usos.",
     },
     {
       id: "taser",
       nome: "Taser",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Ação padrão para atingir ser adjacente. Alvo sofre 1d6 dano de eletricidade e fica atordoado por 1 rodada (Fortitude DT Agi evita). 2 usos.",
+      descricao: "Ação padrão. Ser adjacente sofre 1d6 dano de eletricidade e fica atordoado por 1 rodada (Fortitude DT Agi evita). 2 usos.",
     },
     {
       id: "traje_hazmat",
       nome: "Traje Hazmat",
       categoria: 1,
       espacos: 2,
-      descricao:
-        "Roupa impermeável. Fornece +5 em testes de resistência contra efeitos ambientais e RD 10 a químico.",
+      descricao: "Fornece +5 em testes de resistência contra efeitos ambientais e RD 10 a químico.",
+    },
+    // --- Itens Operacionais (SaH) ---
+    {
+      id: "alarme_movimento", // SaH
+      nome: "Alarme de Movimento",
+      categoria: 1,
+      espacos: 0.5, // Ajustado
+      descricao: "Ação completa para ativar. Sinaliza movimento em cone de 30m. Pode ser discreto ou barulhento.",
     },
     {
-      id: "alicate",
-      nome: "Alicate",
-      categoria: 0,
-      espacos: 1,
-      descricao:
-        "Ferramenta para cortar e prender. Concede +2 em testes de Tática (desarmar explosivos) ou Crime.",
-    }, // SaH p.40
-    {
-      id: "arpeu_corda",
-      nome: "Arpéu e Corda",
-      categoria: 1,
-      espacos: 2,
-      descricao:
-        "Gancho com 15m de corda. Concede +5 em testes de Atletismo (escalar).",
-    }, // SaH p.40
-    {
-      id: "barraca",
-      nome: "Barraca",
-      categoria: 1,
-      espacos: 2,
-      descricao:
-        "Barraca para duas pessoas. Protege de chuva e frio. Essencial para descansar em ermos.",
-    }, // SaH p.40
-    {
-      id: "bateria_pilhas",
-      nome: "Bateria/Pilhas",
-      categoria: 0,
+      id: "alimento_energetico", // SaH
+      nome: "Alimento Energético",
+      categoria: 0, // Ajustado
       espacos: 0.5,
-      descricao:
-        "Carga extra para eletrônicos. Recarrega um item (lanterna, celular).",
-    }, // SaH p.40
-    {
-      id: "binoculos_sah",
-      nome: "Binóculos (SaH)",
-      categoria: 1,
-      espacos: 1,
-      descricao:
-        "Permite enxergar a longas distâncias. Concede +2 em Percepção (avistar).",
-    }, // SaH p.40
-    {
-      id: "bussola",
-      nome: "Bússola",
-      categoria: 0,
-      espacos: 0.5,
-      descricao: "Indica o norte. Concede +2 em Sobrevivência (navegar).",
-    }, // SaH p.40
-    {
-      id: "detector_metais",
-      nome: "Detector de Metais",
-      categoria: 1,
-      espacos: 1,
-      descricao:
-        "Detecta metais (até 1,5m). Concede +2 em Investigação (procurar objetos).",
-    }, // SaH p.40
-    {
-      id: "detector_movimento",
-      nome: "Detector de Movimento",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Detecta movimento (alcance 12m). Cobre uma área de 6m.",
-    }, // SaH p.40
-    {
-      id: "filtro_agua",
-      nome: "Filtro de Água",
-      categoria: 1,
-      espacos: 1,
-      descricao:
-        "Purifica água (10 usos). Concede +5 em Sobrevivência (encontrar água).",
-    }, // SaH p.40
-    {
-      id: "lona_plastica",
-      nome: "Lona Plástica",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Lona (3x3m) impermeável. Usada para cobertura ou improviso.",
-    }, // SaH p.40
-    {
-      id: "luz_quimica",
-      nome: "Luz Química",
-      categoria: 0,
-      espacos: 0.5,
-      descricao:
-        "Bastão de neon (dura 1 cena). Ilumina 3m. Pode ser arremessado.",
-    }, // SaH p.40
-    {
-      id: "mochila_tatica",
-      nome: "Mochila Tática",
-      categoria: 1,
-      espacos: 2, // O espaço do item em si
-      descricao: "Aumenta o limite de carga em +5 Espaços.",
-    }, // SaH p.40
-    {
-      id: "racao_campo",
-      nome: "Ração de Campo",
-      categoria: 0,
-      espacos: 0.5,
-      descricao: "Comida MRE (1 uso). Remove 1 dado de penalidade de fome.",
-    }, // SaH p.40
-    {
-      id: "saco_dormir",
-      nome: "Saco de Dormir",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Permite descansar confortavelmente em locais impróprios.",
-    }, // SaH p.40
-    {
-      id: "walkie_talkie",
-      nome: "Walkie-Talkie",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Comunicador (alcance 1,5km). Bateria dura 1 dia.",
-    }, // SaH p.40
-    {
-      id: "manto_capuz",
-      nome: "Manto com Capuz",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Concede +2 em Furtividade (esconder-se).",
-    }, // SaH p.40
-    {
-      id: "bandana_mascara",
-      nome: "Bandana/Máscara",
-      categoria: 0,
-      espacos: 0,
-      descricao: "Concede +1 em Intimidação (interrogar).",
-    }, // SaH p.40
-    {
-      id: "coldre_discreto",
-      nome: "Coldre Discreto",
-      categoria: 1,
-      espacos: 0,
-      descricao: "Concede +5 em Crime (esconder arma pequena).",
-    }, // SaH p.40
-    {
-      id: "coroa_espinho",
-      nome: "Coroa de Espinhos",
-      categoria: 1,
-      espacos: 1,
-      descricao: "Concede +2 em Ocultismo (resistir a rituais).",
-    }, // SaH p.40
-    {
-      id: "oculos_protecao",
-      nome: "Óculos de Proteção",
-      categoria: 1,
-      espacos: 0,
-      descricao:
-        "Protege contra efeitos de cegueira (ignora 1 condição 'cego').",
+      descricao: "Ação padrão para consumir. Recupera 1d4 PE.",
     },
-    // (NOVOS ITENS - SaH p. 41 - Cole no final do array 'equipGeral')
-
     {
-      id: "coquetel_molotov",
-      nome: "Coquetel Molotov (SaH)",
+      id: "aplicador_medicamentos", // SaH
+      nome: "Aplicador de Medicamentos",
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Explosivo improvisado. Causa 6d6 de dano de fogo (alcance 6m, área 3m). Alvos em chamas (ver Lança-chamas).",
-    }, // SaH p.41
-
+      descricao: "Aplica medicamentos (cicatrizante, etc.) como ação de movimento. Comporta 3 doses.",
+    },
     {
-      id: "granada_atordoamento_sah",
-      nome: "Granada de Atordoamento (SaH)",
+      id: "bracadeira_reforcada", // SaH
+      nome: "Braçadeira Reforçada",
       categoria: 1,
-      espacos: 0.5,
-      descricao:
-        "Flashbang. Alvos na área (3m) ficam Atordoados (Reflexos DT 20 evita). Não causa dano.",
-    }, // SaH p.41
-
+      espacos: 1,
+      descricao: "Aumenta em +2 a RD recebida por usar um bloqueio.",
+    },
     {
-      id: "granada_fumaca_sah",
-      nome: "Granada de Fumaça (SaH)",
+      id: "cao_adestrado", // SaH
+      nome: "Cão Adestrado",
+      categoria: 2, // Requer Treino em Adestramento
+      espacos: 0, // Aliado
+      descricao: "Aliado. Fornece +2 em Investigação e Percepção. (1 PE): +2 na Defesa por 1 rodada.",
+    },
+    {
+      id: "coldre_saque_rapido", // SaH
+      nome: "Coldre Saque Rápido",
       categoria: 1,
-      espacos: 0.5,
-      descricao: "Cria nuvem de fumaça (raio 6m). Concede camuflagem total.",
-    }, // SaH p.41
-
+      espacos: 1,
+      descricao: "Uma vez por rodada, pode sacar ou guardar uma arma de fogo leve como ação livre.",
+    },
     {
-      id: "granada_incendiaria_sah",
-      nome: "Granada Incendiária (SaH)",
-      categoria: 2,
+      id: "equip_escuta", // SaH
+      nome: "Equipamento de Escuta",
+      categoria: 1,
+      espacos: 1,
+      descricao: "Receptor (alcance 90m) e 3 transmissores (raio 9m). Instalar exige teste de Crime (DT 20).",
+    },
+    {
+      id: "estrepes", // SaH
+      nome: "Estrepes",
+      categoria: 0, // Ajustado
+      espacos: 1,
+      descricao: "Ação padrão. Cobre 1,5m. Causa 1d4 dano de perfuração e deixa lento (Reflexos DT Agi evita).",
+    },
+    {
+      id: "faixa_pregos", // SaH
+      nome: "Faixa de Pregos",
+      categoria: 1,
+      espacos: 2,
+      descricao: "Funciona como estrepes, mas ocupa uma linha de 9m. Fura pneus de veículos.",
+    },
+    {
+      id: "isqueiro", // SaH
+      nome: "Isqueiro",
+      categoria: 0,
+      espacos: 0, // Ajustado
+      descricao: "Ação de movimento para produzir chama. Ilumina 3m.",
+    },
+    {
+      id: "medicamentos", // SaH
+      nome: "Medicamentos (Dose)",
+      categoria: 0,
       espacos: 0.5,
-      descricao:
-        "Fósforo branco. Causa 8d6 de dano de fogo (área 3m). Alvos em chamas (ver Lança-chamas).",
-    }, // SaH p.41
+      descricao: "Ação padrão. (Antibiótico, Antídoto, Antiemético, Antihistamínico, Anti-inflamatório, Antitérmico, Broncodilatador, Coagulante).",
+    },
+    {
+      id: "oculos_escuros", // SaH
+      nome: "Óculos Escuros",
+      categoria: 0,
+      espacos: 0,
+      descricao: "Não pode ser ofuscado.",
+    },
+    {
+      id: "oculos_visao_noturna", // SaH
+      nome: "Óculos de Visão Noturna",
+      categoria: 1,
+      espacos: 1,
+      descricao: "Permite enxergar no escuro. Impõe –O em testes de resistência contra ofuscado e efeitos de luz.",
+    },
+    {
+      id: "pa", // SaH
+      nome: "Pá",
+      categoria: 0,
+      espacos: 1,
+      descricao: "Fornece +5 em testes de Força para cavar. Pode ser usada como um bastão.",
+    },
+    {
+      id: "paraquedas", // SaH
+      nome: "Paraquedas",
+      categoria: 1,
+      espacos: 2,
+      descricao: "Anula o dano de queda. Requer treino ou teste de Reflexos (DT 20).",
+    },
+    {
+      id: "traje_mergulho", // SaH
+      nome: "Traje de Mergulho",
+      categoria: 1,
+      espacos: 2,
+      descricao: "Tanque (1 hora de oxigênio). Fornece +5 em resistência contra efeitos ambientais e RD 5 a químico.",
+    },
+    {
+      id: "traje_espacial", // SaH
+      nome: "Traje Espacial",
+      categoria: 3, // Ajustado
+      espacos: 5, // Ajustado
+      descricao: "Suprimento (8 horas de oxigênio). Fornece +10 em resistência contra efeitos ambientais e RD 20 a químico.",
+    },
   ],
 
-  // Tabela 3.10: Itens Paranormais
-  // (ATUALIZADO COM 'elemento' E 'tipoBonus')
+  //
   itensParanormais: [
+    // --- Itens Operacionais Paranormais ---
     {
       id: "amarras_elemento",
       nome: "Amarras de (Elemento)",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Ação padrão, 1 PE, 1 criatura em alcance curto. Se falhar em Vontade (DT Agi), fica paralisada por 1 rodada.",
+      descricao: "Ação padrão, 1 PE, 1 criatura (curto). Fica paralisada por 1 rodada (Vontade DT Agi anula).",
     },
     {
       id: "camera_aura",
       nome: "Câmera de Aura Paranormal",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Ação padrão, 1 PE. Tira foto instantânea que revela auras paranormais em pessoas e objetos.",
+      descricao: "Ação padrão, 1 PE. Tira foto instantânea que revela auras paranormais.",
     },
     {
       id: "componentes_ritualisticos",
       nome: "Componentes Ritualísticos",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: 0,
       espacos: 1,
-      descricao:
-        "Itens necessários para conjurar rituais de um elemento (Sangue, Morte, Conhecimento ou Energia).",
+      descricao: "Necessários para conjurar rituais de um elemento (Sangue, Morte, Conhecimento ou Energia).",
     },
     {
       id: "emissor_pulsos",
       nome: "Emissor de Pulsos Paranormais",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Ação completa, 1 PE. Atrai criaturas do elemento escolhido e afasta do oposto (Vontade DT Pre evita).",
+      descricao: "Ação completa, 1 PE. Atrai criaturas do elemento escolhido e afasta do oposto (Vontade DT Pre evita).",
     },
     {
       id: "escuta_ruidos",
       nome: "Escuta de Ruídos Paranormais",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Ação completa, 2 PE. Grava ruídos por 24h. Fornece +5 em Ocultismo para identificar criatura.",
-      tipoBonus: "especifico",
-      periciaVinculada: "ocultismo",
-      valorBonus: 5,
+      descricao: "Ação completa, 2 PE. Grava ruídos por 24h. Fornece +5 em Ocultismo para identificar criatura.",
+      tipoBonus: "especifico", periciaVinculada: "ocultismo", valorBonus: 5,
     },
     {
       id: "medidor_membrana",
       nome: "Medidor de Estabilidade da Membrana",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 1,
       espacos: 1,
-      descricao:
-        "Permite avaliar o estado da Membrana em uma área (requer Ocultismo).",
+      descricao: "Permite avaliar o estado da Membrana em uma área (requer Ocultismo).",
     },
     {
       id: "scanner_manifestacao",
       nome: "Scanner de Manifestação de (Elemento)",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Ação padrão, 1 PE/rodada. Sabe a direção de todas as manifestações (rituais, criaturas, etc.) do elemento escolhido em alcance longo.",
+      descricao: "Ação padrão, 1 PE/rodada. Sabe a direção de todas as manifestações do elemento (alcance longo).",
     },
-    // --- (NOVOS ITENS PARANORMAIS - Sobrevivendo ao Horror p. 44-45) ---
+    // --- Catalisadores (SaH / itens.txt) ---
     {
       id: "catalisador_ampliador",
       nome: "Catalisador (Ampliador)",
-      // (Sem elemento fixo)
       categoria: 1,
       espacos: 0.5,
-      descricao:
-        "Consumível. Aumenta o alcance do ritual em um passo ou dobra a área de efeito.",
-    }, // SaH p.44
+      descricao: "Consumível. Aumenta o alcance do ritual em um passo ou dobra a área de efeito.",
+    },
     {
       id: "catalisador_perturbador",
       nome: "Catalisador (Perturbador)",
-      // (Sem elemento fixo)
       categoria: 1,
       espacos: 0.5,
       descricao: "Consumível. A DT para resistir ao ritual aumenta em +2.",
-    }, // SaH p.44
+    },
     {
       id: "catalisador_potencializador",
       nome: "Catalisador (Potencializador)",
-      // (Sem elemento fixo)
       categoria: 1,
       espacos: 0.5,
-      descricao:
-        "Consumível. O dano do ritual aumenta em um dado do mesmo tipo.",
-    }, // SaH p.44
+      descricao: "Consumível. O dano do ritual aumenta em um dado do mesmo tipo.",
+    },
     {
       id: "catalisador_prolongador",
       nome: "Catalisador (Prolongador)",
-      // (Sem elemento fixo)
       categoria: 1,
       espacos: 0.5,
-      descricao:
-        "Consumível. A duração do ritual dobra (não funciona em instantâneos ou sustentados).",
-    }, // SaH p.44
+      descricao: "Consumível. A duração do ritual dobra (não funciona em instantâneos ou sustentados).",
+    },
+    // --- Itens Especiais (SaH / itens.txt) ---
     {
       id: "ligacao_infernal",
       nome: "Ligação Direta Infernal",
-      elemento: "Sangue", // <--- ADICIONADO (Baseado no 'imune a Sangue')
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Fios (Sangue/Energia). Ação completa para ligar um veículo. Veículo ganha RD 20, imune a Sangue, +5 em Pilotagem, mas ações do motorista podem ser caóticas.",
-    }, // SaH p.44
+      descricao: "Fios (Sangue/Energia). Ação completa para ligar veículo. Veículo ganha RD 20, imune a Sangue, +5 em Pilotagem.",
+    },
     {
       id: "medidor_vertebral",
       nome: "Medidor de Condição Vertebral",
-      elemento: "Morte", // <--- ADICIONADO (Baseado no 'Morte/Energia')
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Vestimenta (Morte/Energia). Requer ação completa para conectar (causa atordoamento 1 rodada). Fornece +2 em Fortitude, indica PV (cores) e efeitos paranormais (luz lilás). +5 em Medicina para auxiliar o usuário.",
-    }, // SaH p.44
+      descricao: "Vestimenta (Morte/Energia). Ação completa para conectar (causa atordoamento). Fornece +2 em Fortitude, indica PV e efeitos.",
+    },
     {
       id: "pe_de_morto",
       nome: "Pé de Morto",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "Botas (Morte). Concede +5 em Furtividade. Em cenas de furtividade, ações chamativas de movimento aumentam visibilidade em +1 (em vez de +2).",
-    }, // SaH p.45
+      descricao: "Botas (Morte). Concede +5 em Furtividade. Em cenas de furtividade, ações de movimento aumentam visibilidade em +1 (em vez de +2).",
+    },
     {
       id: "pendrive_selado",
       nome: "Pendrive Selado",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 0.5,
-      descricao:
-        "Pen drive (Conhecimento). Não pode ser invadido ou afetado por rituais, seres ou efeitos de Energia.",
-    }, // SaH p.45
+      descricao: "Pen drive (Conhecimento). Não pode ser invadido ou afetado por rituais, seres ou efeitos de Energia.",
+    },
     {
       id: "valete_salvacao",
       nome: "Valete da Salvação",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 1,
       espacos: 0.5,
-      descricao:
-        "Carta (Conhecimento). Ação padrão para atirar ao ar. Voa e aponta para a melhor rota de fuga (alcance médio). Em perseguição, concede 1 sucesso em 'cortar caminho'.",
-    }, // SaH p.45
+      descricao: "Carta (Conhecimento). Ação padrão. Voa e aponta para a melhor rota de fuga (alcance médio).",
+    },
 
-    // --- (ITENS AMALDIÇOADOS ESPECIAIS - OPRPG p. 156-160) ---
-    // SANGUE (OPRPG)
+    // --- ITENS AMALDIÇOADOS ESPECIAIS (OPRPG / itens.txt) ---
+    // SANGUE
     {
       id: "coracao_pulsante",
       nome: "Coração Pulsante",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Reação: espremer o item para reduzir um dano sofrido pela metade. Requer teste de Fortitude (DT 15 +5 por uso/dia) ou é destruído.",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Reação: reduzir um dano sofrido pela metade. Requer teste de Fortitude (DT 15 +5 por uso/dia) ou é destruído.",
+    },
     {
-      id: "coroa_espinhos_amald", // ID alterado para evitar duplicata
+      id: "coroa_espinhos_amald",
       nome: "Coroa de Espinhos (Amaldiçoada)",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Vestimenta. Reação (1 vez/rodada): transformar dano mental sofrido em dano de Sangue. Impede recuperar sanidade por descanso. Requer 1 semana de uso.",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Vestimenta. Reação (1 vez/rodada): transformar dano mental sofrido em dano de Sangue. Impede recuperar sanidade por descanso.",
+    },
     {
       id: "frasco_vitalidade",
       nome: "Frasco de Vitalidade",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Ação (1 minuto): sofrer até 20 de dano para encher o frasco. Ação padrão: beber o frasco para curar o PV armazenado (Fortitude DT 20 evita 'enjoado').",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Ação (1 min): sofrer até 20 de dano para encher. Ação padrão: beber para curar o PV armazenado (Fortitude DT 20 evita 'enjoado').",
+    },
     {
       id: "perola_sangue",
       nome: "Pérola de Sangue",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Ação de movimento: absorver a pérola. Recebe +5 em testes de AGI, FOR e VIG até o fim da cena. No fim da cena, Fortitude (DT 20) ou fica 'fatigado'. Falha por 5+ fica morrendo.",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Ação de movimento: absorver. Recebe +5 em testes de AGI, FOR e VIG. No fim da cena, Fortitude (DT 20) ou fica 'fatigado'.",
+    },
     {
       id: "punhos_enraivecidos",
       nome: "Punhos Enraivecidos",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Soqueira. Ataques desarmados causam 1d8 dano de Sangue. Ação (Agredir): pode gastar 2 PE para ataque extra, +2 PE para cada ataque extra subsequente.",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Soqueira. Ataques desarmados causam 1d8 dano de Sangue. Ação (Agredir): pode gastar 2 PE para ataque extra, +2 PE para cada subsequente.",
+    },
     {
       id: "seringa_transfiguracao",
       nome: "Seringa de Transfiguração",
-      elemento: "Sangue", // <--- ADICIONADO
+      elemento: "Sangue", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Sangue) Ação padrão: sugar sangue de alvo adjacente. Ação padrão: injetar em outro alvo. Alvo assume a aparência do dono do sangue (como Distorcer Aparência) por 1 dia.",
-    }, // OPRPG p.156
+      descricao: "(Sangue) Ação padrão: sugar sangue. Ação padrão: injetar em outro alvo. Alvo assume a aparência (como Distorcer Aparência) por 1 dia.",
+    },
 
-    // MORTE (OPRPG)
+    // MORTE
     {
       id: "amarras_mortais",
       nome: "Amarras Mortais",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Bracelete. Ação padrão (1 vez/rodada, 2 PE): manobra 'Agarrar' (alcance curto, +10 no teste). Ação de movimento: puxar alvo agarrado para adjacente.",
-    }, // OPRPG p.157
+      descricao: "(Morte) Bracelete. Ação padrão (1 vez/rodada, 2 PE): manobra 'Agarrar' (alcance curto, +10 no teste).",
+    },
     {
       id: "casaco_lodo",
       nome: "Casaco de Lodo",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Vestimenta. Concede RD 5 (Corte, Impacto, Morte, Perfuração). Concede Vulnerabilidade a Dano Balístico e de Energia.",
-    }, // OPRPG p.157
+      descricao: "(Morte) Vestimenta. Concede RD 5 (Corte, Impacto, Morte, Perfuração). Concede Vulnerabilidade a Dano Balístico e de Energia.",
+    },
     {
       id: "coletora",
       nome: "Coletora",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Punhal. Ação completa: apunhalar alvo morrendo para matá-lo. Armazena 1d8 PE (máx 20 PE). PE podem ser usados pelo portador. Causa pesadelos (sempre descanso ruim).",
-    }, // OPRPG p.157
+      descricao: "(Morte) Punhal. Ação completa: apunhalar alvo morrendo para matá-lo. Armazena 1d8 PE (máx 20 PE). Causa pesadelos.",
+    },
     {
       id: "cranio_espiral",
       nome: "Crânio Espiral",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Ação livre (1 vez/rodada): ativar para receber 1 Ação Padrão adicional. Requer teste de Vontade (DT 15 +5 por uso/dia) ou envelhece 1d4 anos e não pode mais usar no dia.",
-    }, // OPRPG p.157
+      descricao: "(Morte) Ação livre (1 vez/rodada): +1 Ação Padrão. Requer teste de Vontade (DT 15 +5 por uso/dia) ou envelhece 1d4 anos.",
+    },
     {
       id: "frasco_lodo",
       nome: "Frasco de Lodo",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Ação padrão: aplicar em ferimento. Se ferido na última rodada, cura 6d8+20 PV. Se ferido antes, 50% chance de curar 3d8+10 PV ou causar 3d8+10 dano de Morte. 1 uso.",
-    }, // OPRPG p.157
+      descricao: "(Morte) Ação padrão: aplicar em ferimento. Se ferido na última rodada, cura 6d8+20 PV. Se não, 50% chance de curar 3d8+10 ou causar 3d8+10 dano. 1 uso.",
+    },
     {
       id: "vislumbre_fim",
       nome: "Vislumbre do Fim",
-      elemento: "Morte", // <--- ADICIONADO
+      elemento: "Morte", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Morte) Óculos. Ação de movimento: concentrar em 1 ser. Descobre pior resistência (Fort, Ref, Von) e vulnerabilidades. Em não-Marcados, vê um contador de tempo.",
-    }, // OPRPG p.157
+      descricao: "(Morte) Óculos. Ação de movimento: descobre pior resistência (Fort, Ref, Von) e vulnerabilidades do alvo.",
+    },
 
-    // CONHECIMENTO (OPRPG)
+    // CONHECIMENTO
     {
       id: "aneis_elo_mental",
       nome: "Anéis do Elo Mental",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Conhecimento) Par de anéis. Requer 24h de uso por 2 pessoas. Cria Ligação Telepática (Invadir Mente) permanente. Ambos usam o melhor bônus de Vontade. Dano mental sofrido por um afeta o outro.",
-    }, // OPRPG p.158
+      descricao: "(Conhecimento) Par de anéis. Cria Ligação Telepática (Invadir Mente) permanente entre 2 usuários. Usam o melhor bônus de Vontade. Dano mental sofrido por um afeta o outro.",
+    },
     {
       id: "lanterna_reveladora",
       nome: "Lanterna Reveladora",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Conhecimento) Ação padrão (1 PE/rodada): ativa luz com efeito de Terceiro Olho. Criaturas de Sangue iluminadas atacam o portador preferencialmente.",
-    }, // OPRPG p.158
+      descricao: "(Conhecimento) Ação padrão (1 PE/rodada): ativa luz com efeito de Terceiro Olho. Criaturas de Sangue atacam o portador preferencialmente.",
+    },
     {
       id: "mascara_sombras",
       nome: "Máscara das Pessoas nas Sombras",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Conhecimento) Concede RD 10 (Conhecimento). Ação de movimento (2 PE): teletransportar-se para outra sombra em alcance médio.",
-    }, // OPRPG p.158
+      descricao: "(Conhecimento) Concede RD 10 (Conhecimento). Ação de movimento (2 PE): teletransportar-se para outra sombra em alcance médio.",
+    },
     {
       id: "municao_jurada",
       nome: "Munição Jurada",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Conhecimento) Bala. Ritual (1 hora) para vincular a 1 ser conhecido. Contra esse ser: +10 no ataque, dobra margem de ameaça, +6d12 dano de Conhecimento. Concede -2 Defesa e ataque contra outros alvos.",
-    }, // OPRPG p.158
+      descricao: "(Conhecimento) Bala. Ritual (1 hora) para vincular a 1 ser. Contra esse ser: +10 ataque, dobra margem de ameaça, +6d12 dano de Conhecimento.",
+    },
     {
       id: "pergaminho_pertinacia",
       nome: "Pergaminho da Pertinácia",
-      elemento: "Conhecimento", // <--- ADICIONADO
+      elemento: "Conhecimento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Conhecimento) Ação padrão: encarar sigilos. Recebe 5 PE temporários. Requer teste de Ocultismo (DT 15 +5 por uso/dia) ou o item se desfaz.",
-    }, // OPRPG p.158
+      descricao: "(Conhecimento) Ação padrão: recebe 5 PE temporários. Requer teste de Ocultismo (DT 15 +5 por uso/dia) ou o item se desfaz.",
+    },
 
-    // ENERGIA (OPRPG)
+    // ENERGIA
     {
       id: "arcabuz_moretti",
       nome: "Arcabuz dos Moretti",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Arma de Fogo (simples, 1 mão). +2 no ataque. Alcance Curto, Crítico x3. Dano 1d6 (rolar 1d6 no ataque): 1 (2d4), 2 (2d6), 3 (2d8), 4 (2d10), 5 (2d12), 6 (2d20). Não usa munição.",
-    }, // OPRPG p.159
+      descricao: "(Energia) Arma de Fogo (simples, 1 mão). +2 ataque. Dano 1d6 (rolar 1d6 no ataque): 1(2d4), 2(2d6), 3(2d8), 4(2d10), 5(2d12), 6(2d20). Não usa munição.",
+    },
     {
       id: "bateria_reversa",
       nome: "Bateria Reversa",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Ação padrão (2 PE): descarrega 1 eletrônico (alcance curto). Ação padrão: recarrega 1 eletrônico. Requer teste Ocultismo (DT 15 +5 por uso/dia) ou explode (12d6 dano Energia em 3m).",
-    }, // OPRPG p.159
+      descricao: "(Energia) Ação padrão (2 PE): descarrega 1 eletrônico (curto). Ação padrão: recarrega 1 eletrônico. Requer teste Ocultismo (DT 15 +5/dia) ou explode (12d6 dano).",
+    },
     {
       id: "peitoral_segunda_chance",
       nome: "Peitoral da Segunda Chance",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Vestimenta. Se reduzido a 0 PV, gasta 5 PE seus e cura 4d10 PV. 10% (1 em 1d10) chance de falha (morte instantânea, vira plasma).",
-    }, // OPRPG p.159
+      descricao: "(Energia) Vestimenta. Se reduzido a 0 PV, gasta 5 PE e cura 4d10 PV. 10% chance de falha (morte instantânea).",
+    },
     {
       id: "relogio_arnaldo",
       nome: "Relógio de Arnaldo",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Ação (1 vez/rodada, 1 PE): rolar novamente qualquer dado com resultado 1. Custo aumenta em +1 PE a cada uso no dia.",
-    }, // OPRPG p.159
+      descricao: "(Energia) Ação (1 vez/rodada, 1 PE): rolar novamente qualquer dado com resultado 1. Custo aumenta em +1 PE a cada uso no dia.",
+    },
     {
       id: "talisma_sorte",
       nome: "Talismã da Sorte",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Vestimenta. Reação (3 PE) ao sofrer dano: rolar 1d4. 1 (Dobra o dano, item quebra), 2-3 (Evita o dano), 4 (Evita o dano, item quebra).",
-    }, // OPRPG p.159
+      descricao: "(Energia) Vestimenta. Reação (3 PE) ao sofrer dano: rolar 1d4. 1 (Dobra o dano, quebra), 2-3 (Evita o dano), 4 (Evita o dano, quebra).",
+    },
     {
       id: "teclado_neural",
       nome: "Teclado de Conexão Neural",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Conectar (ação movimento). Concede +10 em testes de Hackear, -50% tempo para Localizar Arquivo. Causa 1d6 dano mental/rodada de uso.",
-    }, // OPRPG p.159
+      descricao: "(Energia) Conectar (ação movimento). +10 em Hackear, -50% tempo para Localizar Arquivo. Causa 1d6 dano mental/rodada de uso.",
+    },
     {
       id: "tela_pesadelo",
       nome: "Tela do Pesadelo",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Ação padrão (2 PE): ativar. Próximo a tocar vê ilusão. Teste Vontade (DT usuário +5) ou fica Atordoado, sofre 4d6 dano mental e repete teste/rodada.",
-    }, // OPRPG p.159
+      descricao: "(Energia) Ação padrão (2 PE): ativar. Próximo a tocar vê ilusão. Teste Vontade (DT usuário +5) ou fica Atordoado, sofre 4d6 dano mental.",
+    },
     {
       id: "veiculo_energizado",
       nome: "Veículo Energizado",
-      elemento: "Energia", // <--- ADICIONADO
+      elemento: "Energia", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Energia) Motor não usa combustível. Reação (teste Pilotagem DT 25): atravessa 1 objeto sólido (fica incorpóreo).",
-    }, // OPRPG p.159
+      descricao: "(Energia) Motor não usa combustível. Reação (teste Pilotagem DT 25): atravessa 1 objeto sólido (fica incorpóreo).",
+    },
 
-    // MEDO/VARIA (OPRPG)
+    // MEDO/VARIA
     {
       id: "jaqueta_verissimo",
       nome: "Jaqueta de Veríssimo",
-      elemento: "Medo", // <--- ADICIONADO
+      elemento: "Medo", 
       categoria: 4,
       espacos: 1,
-      descricao:
-        "(Medo) Vestimenta. Concede RD 15 (Paranormal). Reação (2 PE): tomar o dano de 1 aliado adjacente no seu lugar. Item Único.",
-    }, // OPRPG p.160
+      descricao: "(Medo) Vestimenta. Concede RD 15 (Paranormal). Reação (2 PE): tomar o dano de 1 aliado adjacente no seu lugar. Item Único.",
+    },
     {
       id: "dedo_decepado",
       nome: "Dedo Decepado",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: 2,
       espacos: 1,
-      descricao:
-        "(Varia) Vestimenta. Concede 1 Poder Paranormal (elemento do poder define a maldição). 25% (1 em 1d4) chance de não recuperar PV/PE/SAN ao descansar. -10 em Diplomacia.",
-    }, // OPRPG p.160
+      descricao: "(Varia) Vestimenta. Concede 1 Poder Paranormal. 25% chance de não recuperar PV/PE/SAN ao descansar.",
+    },
     {
       id: "selo_paranormal",
       nome: "Selo Paranormal",
-      tipoBonus: "escolhaElemento", // <--- ADICIONADO
+      tipoBonus: "escolhaElemento", 
       categoria: "Varia",
       espacos: 1,
-      descricao:
-        "(Varia) Contém 1 ritual. Ação padrão (ou ação do ritual) para conjurar. Requer teste de Ocultismo (DT 20 + Custo PE) se não conhecer o ritual. Consumido após o uso. Categoria = Círculo do Ritual.",
-    }, // OPRPG p.160
-
-    // --- (ITENS AMALDIÇOADOS ESPECIAIS - Sobrevivendo ao Horror p. 57-62) ---
-    // SANGUE (SaH)
-    {
-      id: "conector_membros",
-      nome: "Conector de Membros",
-      elemento: "Sangue", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Sangue) Ação padrão: reconectar membro decepado (até 3 rodadas). Alvo volta a 1 PV (de 0 ou morto). 25% chance de o membro ganhar 'vontade própria' (penalidades).",
-    }, // SaH p.57
-    {
-      id: "dose_praga",
-      nome: "Dose d'A Praga",
-      elemento: "Sangue", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Sangue) Ação padrão: aplicar em si ou alvo adj. Concede poderes Arma de Sangue, Sangue de Ferro e Sangue Vivo por 1 cena. No fim da cena, Fortitude (DT 20 +5 por dose/dia) ou sofre 2d4 dano mental e fica sob Ódio Incontrolável na próxima cena.",
-    }, // SaH p.57
-    {
-      id: "mandibula_agonizante",
-      nome: "Mandíbula Agonizante",
-      elemento: "Sangue", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Sangue) Ação padrão: arremessar (médio). Grita alto, acobertando som (raio 30m) por 1 cena. Concede sucesso automático em 'Distrair' (furtividade). Atrai criaturas de Sangue (Vontade DT 35 evita). Recarrega após 1 cena.",
-    }, // SaH p.57
-    {
-      id: "retalho_tenebroso",
-      nome: "Retalho Tenebroso",
-      elemento: "Sangue", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Sangue) Máscara (Vestimenta). Concede Faro e Visão no Escuro. Concede Vulnerabilidade a Morte e -2D em perícias sociais. +1 em dano (cumulativo) por dia de uso. Causa 1d6 PV/dia (Fortitude DT 15 +5/dia evita).",
-    }, // SaH p.57
-
-    // MORTE (SaH)
-    {
-      id: "ampulheta_tempo_sofrido",
-      nome: "Ampulheta do Tempo Sofrido",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Morte) Ação (5 PE): Recebe benefício de 1 ação de interlúdio. Requer 1 ação de interlúdio gasta para recarregar.",
-    }, // SaH p.59
-    {
-      id: "injecao_lodo",
-      nome: "Injeção de Lodo",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 0.5,
-      descricao:
-        "(Morte) Ação padrão: aplicar em ser voluntário. Alvo ganha Vulnerabilidade (Balístico, Energia). Na próxima vez que for reduzido a 0 PV na cena, fica com 1 PV.",
-    }, // SaH p.60
-    {
-      id: "instantaneo_mortal",
-      nome: "Instantâneo Mortal",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 0.5,
-      descricao:
-        "(Morte) Foto. Ação (Procurar Pistas, 1 PE): +1d20 no teste se a perícia for relacionada à morte da pessoa na foto (a critério do mestre).",
-    }, // SaH p.60
-    {
-      id: "projetil_lodo_curto",
-      nome: "Projétil de Lodo (Curto)",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 1,
-      espacos: 1,
-      descricao:
-        "(Morte) Pacote de balas curtas. Muda o dano da arma para Morte. A arma se degrada e é destruída no fim da cena.",
-    }, // SaH p.60
-    {
-      id: "projetil_lodo_longo",
-      nome: "Projétil de Lodo (Longo)",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Morte) Pacote de balas longas. Muda o dano da arma para Morte. A arma se degrada e é destruída no fim da cena.",
-    }, // SaH p.60
-    {
-      id: "radio_chiador",
-      nome: "Rádio Chiador",
-      elemento: "Morte", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Morte) Emite chiado estático se houver criatura Paranormal (alcance extremo). Chiado aumenta com proximidade. Atrai criaturas. Bateria dura 12h.",
-    }, // SaH p.60
-
-    // CONHECIMENTO (SaH)
-    {
-      id: "camera_obscura",
-      nome: "Câmera Obscura",
-      elemento: "Conhecimento", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Conhecimento) Câmera de Aura (OPRPG p. 67) com Lente de Revelação (SaH p. 45). DT para resistir ao efeito é +10. Se falhar, criaturas (invisíveis/incorpóreas/camufladas) sofrem 6d6 dano de frio.",
-    }, // SaH p.60
-    {
-      id: "enxame_fantasmagorico",
-      nome: "Enxame Fantasmagórico",
-      elemento: "Conhecimento", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Conhecimento) Manto (Vestimenta). Concede 'Invisível' (SaH p. 125). Causa 1 dano mental (ignora RD) por turno ao usuário.",
-    }, // SaH p.60
-    {
-      id: "repositorio_fracasso",
-      nome: "Repositório do Fracasso",
-      elemento: "Conhecimento", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Conhecimento) Caixa. Ganha 1 carga (máx 6) quando criatura (médio) tira 1 em teste. Ação (1 vez/rodada): gastar 1 carga para recuperar 1d4 PE. Cada uso impõe -1 cumulativo em Vontade (até próximo interlúdio).",
-    }, // SaH p.60
-    {
-      id: "tabula_saber_custoso",
-      nome: "Tábula do Saber Custoso",
-      elemento: "Conhecimento", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Conhecimento) Tábula. Concede 'Treinado' em uma perícia por 1 teste. Custa SAN igual ao atributo-base da perícia usada.",
-    }, // SaH p.60
-
-    // ENERGIA (SaH)
-    {
-      id: "arreio_neural",
-      nome: "Arreio Neural",
-      elemento: "Energia", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Energia) Vestimenta. Sempre que sofrer 5+ dano de Eletricidade ou Energia, recupera 1 PE (máx 2x VIG por dia).",
-    }, // SaH p.61
-    {
-      id: "centrifugador_existencial",
-      nome: "Centrifugador Existencial",
-      elemento: "Energia", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Energia) Ação padrão (3 PE): ganha 1 turno extra no fim da rodada (dividido em 2 'vocês'). Requer teste Ocultismo (DT 15 +5 por uso/dia) ou perde metade dos atributos (recupera 1/interlúdio).",
-    }, // SaH p.61
-    {
-      id: "espelho_refletor",
-      nome: "Espelho Refletor",
-      elemento: "Energia", // <--- ADICIONADO
-      categoria: 2,
-      espacos: 1,
-      descricao:
-        "(Energia) Ação movimento: observar ponto (médio) fora de visão, +2D Percepção. Reação (Sacrificar item): evitar 1 dano de Energia e refleti-lo à origem.",
-    }, // SaH p.61
-    {
-      id: "fuzil_alheio",
-      nome: "Fuzil Alheio",
-      elemento: "Energia", // <--- ADICIONADO
-      categoria: 4,
-      espacos: 2,
-      descricao:
-        "(Energia) Fuzil de Precisão com Mira Telescópica e Mira Laser. Causa dano de Energia e não usa munição.",
-    }, // SaH p.61
-
-    // MEDO (SaH)
-    {
-      id: "primeira_adaga",
-      nome: "A Primeira Adaga",
-      elemento: "Medo", // <--- ADICIONADO
-      categoria: 3,
-      espacos: 1,
-      descricao:
-        "(Medo) Adaga. Usada como componente, concede efeitos de 4 catalisadores (Ampliador, Perturbador, Potencializador, Prolongador) e execução vira 1 rodada. Custa metade dos PV totais do conjurador (conta como dano massivo).",
-    }, // SaH p.62
+      descricao: "(Varia) Contém 1 ritual. Ação padrão para conjurar. Requer teste de Ocultismo (DT 20 + Custo PE) se não conhecer. Consumido. Categoria = Círculo do Ritual.",
+    },
   ],
 
   // (MANTIDO) 'periciasPorOrigem' é USADO PELO CONTADOR
@@ -1857,6 +1558,11 @@ const database = {
     },
   },
   
+  // A lista de rituais permanece a mesma
+  
+
+
+// A EXPORTAÇÃO FINAL DEVE INCLUIR TUDO:
 
 
   rituais: [
@@ -3512,9 +3218,6 @@ const database = {
 };
 // --- LISTAS DE PODERES DE CLASSE (COLE NO FINAL DO ARQUIVO) ---
 
-
-
-// A EXPORTAÇÃO FINAL DEVE INCLUIR TUDO:
 export { 
     database, 
     NiveisNex, 
@@ -3523,5 +3226,11 @@ export {
     poderesCombatente,        
     poderesEspecialista,      
     poderesOcultista,
-    poderesGerais      
+    poderesGerais,
+    
+    // --- EXPORTA AS MODIFICAÇÕES ---
+    modificacoesArmas,
+    modificacoesProtecoes,
+    modificacoesAcessorios,
+    modificacoesParanormais
 };
