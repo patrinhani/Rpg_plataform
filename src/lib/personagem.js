@@ -184,6 +184,24 @@ class Personagem {
       (item) => item.inventarioId !== inventarioId
     );
   }
+
+  // --- NOVO MÉTODO DE ATUALIZAÇÃO ---
+  updateItemInventario(inventarioId, dadosAtualizados) {
+    const index = this.inventario.findIndex(item => item.inventarioId === inventarioId);
+    
+    if (index !== -1) {
+      // Pega o item antigo para garantir que 'inventarioId' e 'ignorarCalculos' sejam mantidos
+      const itemOriginal = this.inventario[index];
+      
+      this.inventario[index] = {
+        ...dadosAtualizados, // Aplica todas as mudanças do formulário
+        inventarioId: itemOriginal.inventarioId, // Garante que o ID único não mude
+        ignorarCalculos: itemOriginal.ignorarCalculos // Garante que o estado do toggle não mude
+      };
+    }
+  }
+  // --- FIM DO NOVO MÉTODO ---
+
   toggleIgnorarCalculos(inventarioId) {
     const item = this.inventario.find(
       (item) => item.inventarioId === inventarioId
@@ -235,54 +253,89 @@ class Personagem {
     if (escudo) {
       bonusEscudo = escudo.defesa || 2;
     }
+    
+    // ATUALIZADO: Usar parseInt para garantir que é número
     const bonusCustom = inventarioAtivo
-      .filter((item) => item.id === "custom" && item.defesa > 0)
-      .reduce((acc, item) => acc + (item.defesa || 0), 0);
-    return bonusProtecao + bonusEscudo + bonusCustom;
+      .filter((item) => item.defesa > 0) // Simplificado: qualquer item com 'defesa'
+      .reduce((acc, item) => acc + (parseInt(item.defesa) || 0), 0);
+      
+    // Remove o bônus das proteções se elas já estiverem no bonusCustom (caso o usuário edite uma proteção)
+    if (bonusProtecao > 0 && inventarioAtivo.some(item => (item.id === "protecao_leve" || item.id === "protecao_pesada") && item.defesa > 0)) {
+       // Se o item de proteção foi editado, seu valor já está em 'bonusCustom'
+       // Mas precisamos subtrair o valor base que foi somado
+       if (protecaoPesada) bonusProtecao = 0; 
+       else if (protecaoLeve) bonusProtecao = 0;
+    }
+    if (bonusEscudo > 0 && inventarioAtivo.some(item => item.id === "escudo" && item.defesa > 0)) {
+       bonusEscudo = 0; // Mesmo para o escudo
+    }
+
+    // Soma final (garante que itens custom não sejam somados duas vezes)
+    const bonusProtecaoFinal = protecaoPesada ? (protecaoPesada.defesa || 10) : (protecaoLeve ? (protecaoLeve.defesa || 5) : 0);
+    const bonusEscudoFinal = escudo ? (escudo.defesa || 2) : 0;
+    
+    const bonusOutrosItens = inventarioAtivo
+      .filter(item => 
+          item.defesa > 0 && 
+          item.id !== "protecao_leve" && 
+          item.id !== "protecao_pesada" && 
+          item.id !== "escudo"
+      )
+      .reduce((acc, item) => acc + (parseInt(item.defesa) || 0), 0);
+
+    return bonusProtecaoFinal + bonusEscudoFinal + bonusOutrosItens;
   }
+
   getBonusPericiaInventario(periciaKey) {
     const inventarioAtivo = this.inventario.filter(
       (item) => !item.ignorarCalculos
     );
+    
+    // Converte todos os valores de bônus para números
     const bonusVestimentas = inventarioAtivo
       .filter(
         (item) =>
           (item.id === "vestimenta" || item.tipoBonus === "generico") &&
           item.periciaVinculada === periciaKey
       )
-      .map((item) => item.valorBonus || 0)
+      .map((item) => parseInt(item.valorBonus) || 0) // <-- parseInt
       .sort((a, b) => b - a)
       .slice(0, 2)
       .reduce((a, b) => a + b, 0);
+      
     const bonusUtensilios = inventarioAtivo
       .filter(
         (item) =>
           (item.id === "utensilio" || item.tipoBonus === "generico") &&
           item.periciaVinculada === periciaKey
       )
-      .map((item) => item.valorBonus || 0)
+      .map((item) => parseInt(item.valorBonus) || 0) // <-- parseInt
       .sort((a, b) => b - a)
       .slice(0, 2)
       .reduce((a, b) => a + b, 0);
+      
     const bonusEspecificos = inventarioAtivo
       .filter(
         (item) =>
           item.tipoBonus === "especifico" &&
           item.periciaVinculada === periciaKey
       )
-      .map((item) => item.valorBonus || 0)
+      .map((item) => parseInt(item.valorBonus) || 0) // <-- parseInt
       .reduce((a, b) => a + b, 0);
+      
     const bonusCustom = inventarioAtivo
       .filter(
-        (item) => item.id === "custom" && item.periciaVinculada === periciaKey
+        (item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey
       )
-      .reduce((acc, item) => acc + (item.valorBonus || 0), 0);
+      .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); // <-- parseInt
+      
     return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
   }
+  
   getPesoTotal() {
     let pesoBase = this.inventario
       .filter((item) => !item.ignorarCalculos)
-      .reduce((acc, item) => acc + (item.espacos || 0), 0);
+      .reduce((acc, item) => acc + (parseFloat(item.espacos) || 0), 0); // <-- parseFloat
     return pesoBase;
   }
   

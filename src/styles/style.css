@@ -1206,6 +1206,34 @@ input[type="number"].input-hex {
   color: var(--cor-caixa);
 }
 
+/* ... (outros estilos do item-footer) ... */
+
+/* ESTA É A NOVA REGRA */
+.item-footer .item-inventario-editar {
+  margin-left: auto; /* Joga os botões para a direita */
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-destaque);
+  color: var(--cor-destaque);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.item-footer .item-inventario-editar:hover {
+  background-color: var(--cor-destaque);
+  color: var(--cor-caixa-recurso); /* Texto escuro no hover */
+}
+
+/* ESTA REGRA FOI MODIFICADA */
+.item-footer .item-inventario-remover {
+  margin-left: 5px; /* <-- MUDADO DE 'auto' PARA '5px' */
+  background-color: #401a1a;
+  border: 1px solid var(--cor-trans-sangue);
+  color: #f0f0f0;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+/* ... (resto do arquivo) ... */
+
 /* --- 25. (CORRIGIDO) Card de Ritual --- */
 
 /* A borda do card e o texto do cabeçalho terão a cor do elemento */

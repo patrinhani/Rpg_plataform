@@ -11,8 +11,9 @@ import React from 'react';
  * - onAdd: Função para adicionar (usada na loja)
  * - onRemove: Função para remover (usada no inventário)
  * - onToggle: Função para o "auto-toggle" (usada no inventário)
+ * - onEdit: Função para abrir o modal de edição // <-- NOVA PROP
  */
-function ItemCard({ item, tipo, onAdd, onRemove, onToggle }) {
+function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) { // <-- onEdit ADICIONADO
 
   // --- 1. Lógica do Footer (Botões) ---
   // Decidimos qual <div className="item-footer"></div> renderizar
@@ -45,6 +46,16 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle }) {
           />
           <label>Auto</label>
         </div>
+
+        {/* --- NOVO BOTÃO DE EDITAR --- */}
+        <button 
+          className="item-inventario-editar"
+          onClick={() => onEdit(item.inventarioId)} // <-- CHAMA A NOVA PROP
+        >
+          Editar
+        </button>
+        {/* --- FIM DO NOVO BOTÃO --- */}
+
         <button 
           className="item-inventario-remover" 
           // Chama a função onRemove (do App.jsx) com o ID do item

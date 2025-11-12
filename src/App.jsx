@@ -1,5 +1,6 @@
 // /src/app.jsx
 // (COMPLETO: Adiciona a prop 'poderesGerais' ao ModalPoderes)
+// (COMPLETO: Adiciona o ModalEditarItem e sua lógica)
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
@@ -26,6 +27,7 @@ import ModalTrilhaCustom from './components/ModalTrilhaCustom';
 import ModalPoderes from './components/ModalPoderes';
 import PoderesAprendidos from './components/PoderesAprendidos'; 
 import Identidade from './components/ficha/identidade'; 
+import ModalEditarItem from './components/ModalEditarItem'; // <-- NOVO: Importa o modal de edição
 
 // Importa as funções de animação
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
@@ -92,6 +94,8 @@ function App() {
   const [isRitualModalOpen, setIsRitualModalOpen] = useState(false); 
   const [isTrilhaModalOpen, setIsTrilhaModalOpen] = useState(false); 
   const [isPoderesModalOpen, setIsPoderesModalOpen] = useState(false); 
+  const [isModalEditarItemOpen, setIsModalEditarItemOpen] = useState(false); // <-- NOVO: Estado do modal de edição
+  const [itemParaEditar, setItemParaEditar] = useState(null); // <-- NOVO: Item que está sendo editado
 
   
   // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
@@ -255,6 +259,29 @@ function App() {
   const handleFecharLoja = () => setIsLojaOpen(false);
   
   const handleFecharSelecao = () => { setIsSelecaoOpen(false); setItemPendente(null); };
+
+  // --- NOVO: Funções de Edição de Item ---
+  const handleAbrirModalEdicao = (inventarioId) => {
+    const item = personagem.inventario.find(i => i.inventarioId === inventarioId);
+    if (item) {
+      setItemParaEditar(item);
+      setIsModalEditarItemOpen(true);
+    }
+  };
+
+  const handleFecharModalEdicao = () => {
+    setIsModalEditarItemOpen(false);
+    setItemParaEditar(null);
+  };
+
+  const handleSalvarItemEditado = (itemAtualizado) => {
+    if (itemParaEditar) {
+      fichaInstance.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado);
+      handleFecharModalEdicao();
+      handleFichaChange(null, null, null); // Força recálculo
+    }
+  };
+  // --- FIM DAS NOVAS FUNÇÕES ---
 
   const handleAddItem = (itemOriginal) => {
     if (itemOriginal.tipoBonus === 'generico') {
@@ -523,6 +550,7 @@ function App() {
           onAbrirLoja={handleAbrirLoja}
           onRemoveItem={handleRemoveItem}
           onToggleItem={handleToggleItem}
+          onEditItem={handleAbrirModalEdicao} // <-- NOVO: Passa a função de edição
         />
       )}
 
@@ -607,6 +635,15 @@ function App() {
         poderesAprendidos={personagem.poderes_aprendidos}
         onTogglePoder={handleTogglePoder}
         poderesGerais={poderesGerais} // <--- ADICIONADO
+      />
+
+      {/* <-- NOVO: MODAL DE EDIÇÃO DE ITEM --> */}
+      <ModalEditarItem
+        isOpen={isModalEditarItemOpen}
+        onClose={handleFecharModalEdicao}
+        onSave={handleSalvarItemEditado}
+        item={itemParaEditar}
+        pericias={listaTodasPericias}
       />
     </>
   )

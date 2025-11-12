@@ -1,5 +1,6 @@
 // /src/components/Inventario.jsx
 // ATUALIZADO (para exibir o inventário real)
+// (ATUALIZADO: Adiciona a prop 'onEditItem' e a repassa para o ItemCard)
 
 import React from 'react';
 import ItemCard from './ItemCard.jsx'; // Importa o card
@@ -10,8 +11,9 @@ import ItemCard from './ItemCard.jsx'; // Importa o card
  * - onAbrirLoja: (função) Para abrir o modal da loja
  * - onRemoveItem: (função) Para remover um item
  * - onToggleItem: (função) Para o "auto-toggle"
+ * - onEditItem: (função) Para abrir o modal de edição // <-- NOVO
  */
-function Inventario({ inventario, onAbrirLoja, onRemoveItem, onToggleItem }) {
+function Inventario({ inventario, onAbrirLoja, onRemoveItem, onToggleItem, onEditItem }) { // <-- NOVO
   
   return (
     <main className="ficha-container-inventario">
@@ -39,6 +41,7 @@ function Inventario({ inventario, onAbrirLoja, onRemoveItem, onToggleItem }) {
                 tipo="inventario" // Define o tipo para "inventario"
                 onRemove={onRemoveItem}
                 onToggle={onToggleItem}
+                onEdit={onEditItem} // <-- NOVO: Passando a prop para o card
               />
             ))
           ) : (
