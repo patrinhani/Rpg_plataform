@@ -1,5 +1,5 @@
 // /src/lib/animacoes.js
-// (VERSÃO COMPLETA - ANIMAÇÃO DE SANGUE COM TIMING AJUSTADO)
+// (VERSÃO CORRIGIDA - Centralização dos símbolos com xPercent/yPercent)
 
 import { gsap } from "gsap";
 
@@ -212,21 +212,38 @@ function executarAnimacaoSangue(tema, onMidpoint) {
   
   // 4. Símbolo do Sangue
   if (simbolo) {
+    // *** INÍCIO DA CORREÇÃO ***
     activeTimeline.fromTo(simbolo, 
-      { opacity: 0, scale: 0.8, filter: "brightness(1)" },
+      { 
+        opacity: 0, 
+        scale: 0.8, 
+        filter: "brightness(1)",
+        xPercent: -50, // <-- Adicionado
+        yPercent: -50  // <-- Adicionado
+      },
       { 
         opacity: 0.8, 
         scale: 1, 
         filter: "brightness(2)",
+        xPercent: -50, // <-- Adicionado
+        yPercent: -50, // <-- Adicionado
         duration: 0.4, 
         ease: "power2.out" 
       }, 
       0.6 // <-- MUDANÇA: Começa um pouco mais tarde
     );
     activeTimeline.to(simbolo, 
-      { opacity: 0, scale: 1.2, duration: 0.5, ease: "power1.in" }, 
+      { 
+        opacity: 0, 
+        scale: 1.2, 
+        duration: 0.5, 
+        ease: "power1.in",
+        xPercent: -50, // <-- Adicionado
+        yPercent: -50  // <-- Adicionado
+      }, 
       fadeOutTime // <-- MUDANÇA: Desaparece junto com o fade out
     );
+    // *** FIM DA CORREÇÃO ***
   }
 
   // 5. O Midpoint e o Fade Out da Transição
@@ -282,8 +299,24 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { duration: 0.2, opacity: 1 })
   if (simbolo) {
-    activeTimeline.to(simbolo, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }, 0.5)
-    activeTimeline.to(simbolo, { opacity: 0, scale: 1.2, duration: 0.3, ease: "power2.in" }, 0.8)
+    // *** INÍCIO DA CORREÇÃO ***
+    activeTimeline.to(simbolo, { 
+      opacity: 1, 
+      scale: 1, 
+      duration: 0.3, 
+      ease: "power2.out",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
+    }, 0.5)
+    activeTimeline.to(simbolo, { 
+      opacity: 0, 
+      scale: 1.2, 
+      duration: 0.3, 
+      ease: "power2.in",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
+    }, 0.8)
+    // *** FIM DA CORREÇÃO ***
   }
   activeTimeline.call(onMidpoint, null, 0.6) 
   activeTimeline.to(transitionOverlay, { duration: 0.8, opacity: 0, delay: 0.8 });
@@ -329,8 +362,23 @@ function executarAnimacaoMorte(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { backgroundColor: novaCorDeFundo, duration: 2.0, ease: "power1.in" })
   if(simbolo) {
-    activeTimeline.to(simbolo, { opacity: 0.3, scale: 1, duration: 1.0, ease: "power1.inOut" }, 1.0)
-    activeTimeline.to(simbolo, { opacity: 0, duration: 0.5, ease: "power1.out" }, 2.0)
+    // *** INÍCIO DA CORREÇÃO ***
+    activeTimeline.to(simbolo, { 
+      opacity: 0.3, 
+      scale: 1, 
+      duration: 1.0, 
+      ease: "power1.inOut",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
+    }, 1.0)
+    activeTimeline.to(simbolo, { 
+      opacity: 0, 
+      duration: 0.5, 
+      ease: "power1.out",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
+    }, 2.0)
+    // *** FIM DA CORREÇÃO ***
   }
   activeTimeline.call(onMidpoint, null, 1.0) 
   activeTimeline.to(transitionOverlay, { opacity: 0, duration: 1.5, ease: "power1.out" });
@@ -375,7 +423,7 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       animationTime = 1200;
       break;
     case "tema-energia":
-      transitionOverlay.style.backgroundColor = novaCorDeFBundo;
+      transitionOverlay.style.backgroundColor = novaCorDeFundo;
       transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.png')"; 
       transitionOverlay.style.backgroundSize = "cover";
       transitionOverlay.style.backgroundPosition = "center";
@@ -426,19 +474,25 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // Animação do símbolo
   if (simbolo) {
+    // *** INÍCIO DA CORREÇÃO ***
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 
       duration: animationTimeInSeconds * 0.3, 
-      ease: "power2.out" 
+      ease: "power2.out",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
     }, animationTimeInSeconds * 0.25);
     
     activeTimeline.to(simbolo, { 
       opacity: 0, 
       scale: 0.9, 
       duration: animationTimeInSeconds * 0.3, 
-      ease: "power2.in" 
+      ease: "power2.in",
+      xPercent: -50, // <-- Adicionado
+      yPercent: -50  // <-- Adicionado
     }, halfTime); 
+    // *** FIM DA CORREÇÃO ***
   }
 }
 
