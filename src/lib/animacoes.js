@@ -1,11 +1,14 @@
 // /src/lib/animacoes.js
-// (CORRIGIDO: GSAP agora controla o fade-in/out de Ordem e Energia)
+// (VERSÃO COMPLETA - ANIMAÇÃO DE SANGUE COM TIMING AJUSTADO)
 
 import { gsap } from "gsap";
 
 let activeTimeline = null;
 let particleInterval = null;
 
+/**
+ * Pega o valor da variável de cor CSS para a transição.
+ */
 function getCorTransicao(tema) {
   const rootStyles = getComputedStyle(document.documentElement);
   switch (tema) {
@@ -18,6 +21,9 @@ function getCorTransicao(tema) {
   }
 }
 
+/**
+ * Para e limpa qualquer animação de transição anterior.
+ */
 function limparAnimacoesAtivas() {
   const transitionOverlay = document.getElementById("transition-overlay");
 
@@ -37,11 +43,14 @@ function limparAnimacoesAtivas() {
     transitionOverlay.style.backgroundColor = "transparent";
     transitionOverlay.style.background = "transparent";
     transitionOverlay.style.backgroundImage = "none";
-    transitionOverlay.style.opacity = "0"; // Isto é importante para limpar
+    transitionOverlay.style.opacity = "0"; // Garante que esteja invisível
     transitionOverlay.className = "";
   }
 }
 
+/**
+ * Cria e adiciona o símbolo do elemento ao overlay de transição.
+ */
 function injecarSimboloTransicao(tema) {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return null;
@@ -76,27 +85,23 @@ function injecarSimboloTransicao(tema) {
   return img;
 }
 
-// --- Animações Específicas (Não mudaram) ---
+// --- Animações Específicas ---
 
+/**
+ * (TIMING AJUSTADO) Animação de Cortes Aleatórios e Splatter para SANGUE
+ */
 function executarAnimacaoSangue(tema, onMidpoint) {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
 
-  transitionOverlay.style.opacity = "1"; 
-  transitionOverlay.style.backgroundColor = "transparent";
-  const novaCorDeFundo = getCorTransicao(tema);
+  transitionOverlay.style.opacity = "1";
+  transitionOverlay.style.backgroundColor = "transparent"; 
   const simbolo = injecarSimboloTransicao(tema);
 
-  const numGotas = 100;
-  const gotas = [];
-  for (let i = 0; i < numGotas; i++) {
-    const gota = document.createElement("div");
-    gota.className = "particula-sangue";
-    transitionOverlay.appendChild(gota);
-    const size = Math.random() * 10 + 5 + "px";
-    gsap.set(gota, { top: -150, left: () => Math.random() * 100 + "vw", width: size, height: size, scaleY: 1, opacity: 0 });
-    gotas.push(gota);
-  }
+  const numCortes = 15;
+  const numSplatters = 40;
+  const corSangue = getCorTransicao(tema);
+
   activeTimeline = gsap.timeline({
     onComplete: () => {
       if (transitionOverlay) transitionOverlay.innerHTML = "";
@@ -105,20 +110,147 @@ function executarAnimacaoSangue(tema, onMidpoint) {
       activeTimeline = null;
     },
   });
-  const pulso = { progress: 0 };
-  activeTimeline.to(pulso, { duration: 1.2, progress: 1, ease: "power1.in", onUpdate: () => {
-    const size = Math.min(100, pulso.progress * 400);
-    if (transitionOverlay) transitionOverlay.style.background = `radial-gradient(circle at center, ${novaCorDeFundo} ${size / 2}%, rgba(0,0,0,0) ${size}%)`;
-  }}, 0);
-  activeTimeline.to(gotas, { duration: 1.5, y: "110vh", opacity: 1, scaleY: () => Math.random() * 15 + 10, stagger: { each: 0.02, from: "random" }, ease: "power2.in" }, 0.1);
-  if (simbolo) {
-    activeTimeline.to(simbolo, { opacity: 0.5, scale: 1, duration: 0.5, ease: "power2.out" }, 0.7);
-    activeTimeline.to(simbolo, { opacity: 0, scale: 1.1, duration: 0.4, ease: "power2.in" }, 1.2);
+  
+  // --- AJUSTES DE TIMING ---
+  const totalDuration = 2.5; // <-- MUDANÇA 1: Duração total aumentada (era 1.5s)
+  // Os cortes vão começar a aparecer ao longo de 1.75s (em vez de 0.6s)
+  const staggerWindowCortes = totalDuration * 0.7; 
+  // Os splatters vão aparecer ao longo de 1.5s (em vez de 0.3s)
+  const staggerWindowSplatters = totalDuration * 0.6;
+  // O ponto de troca e fade-out agora é em 1.8s (em vez de 1.0s)
+  const fadeOutTime = totalDuration - 0.7; 
+  // -------------------------
+
+  // 2. Animação dos CORTES (Linhas Pretas)
+  for (let i = 0; i < numCortes; i++) {
+    const corte = document.createElement("div");
+    corte.className = "particula-corte";
+    const sangue = document.createElement("div");
+    sangue.className = "particula-sangue-splatter";
+    
+    transitionOverlay.appendChild(sangue);
+    transitionOverlay.appendChild(corte);
+
+    const angulo = Math.random() * 180 - 90;
+    const isHorizontal = Math.abs(angulo) < 45 || Math.abs(angulo) > 135;
+    const comprimento = isHorizontal ? "150vw" : "150vh";
+    const espessura = Math.random() * 8 + 4; 
+
+    gsap.set([corte, sangue], {
+        left: Math.random() * 100 + "vw",
+        top: Math.random() * 100 + "vh",
+        rotation: angulo,
+        width: comprimento,
+        height: espessura + "px",
+        xPercent: -50,
+        yPercent: -50,
+    });
+    
+    const clipStart = "polygon(0% 45%, 0% 55%, 100% 55%, 100% 45%)";
+    const clipEnd = `polygon(0% ${Math.random()*20}%, 100% ${Math.random()*20+10}%, 100% ${Math.random()*20+80}%, 0% ${Math.random()*20+70}%)`;
+    gsap.set(corte, { clipPath: clipStart });
+    
+    const sangueClipStart = "polygon(0% 50%, 0% 50%, 100% 50%, 100% 50%)";
+    const sangueClipEnd = "polygon(-50% -500%, 150% -500%, 150% 600%, -50% 600%)";
+    gsap.set(sangue, { 
+      clipPath: sangueClipStart,
+      backgroundColor: corSangue,
+      opacity: 0.8,
+    });
+    
+    // --- O "CRESCENDO" (Timing Ajustado) ---
+    // O delay (atraso) de cada corte é espalhado pela "janela de stagger"
+    const delay = (i / numCortes) * staggerWindowCortes; // ex: 0s, 0.11s, 0.22s... 1.75s
+    // A duração de cada corte diminui conforme o delay aumenta
+    // O primeiro corte dura 1.0s. O último dura 1.0 - (1.75 * 0.4) = 0.3s
+    const duration = 1.0 - (delay * 0.4); // <-- MUDANÇA 2: Aceleração mais suave
+    
+    // Anima o "rasgo" preto
+    activeTimeline.to(corte, {
+        clipPath: clipEnd,
+        duration: duration,
+        ease: "power3.inOut"
+    }, delay);
+    
+    // Anima o "espirro" de sangue
+    activeTimeline.to(sangue, {
+        clipPath: sangueClipEnd,
+        duration: duration * 0.8, // Um pouco mais rápido que o corte
+        ease: "power2.out"
+    }, delay + 0.05); // Começa logo depois do corte
   }
-  activeTimeline.call(onMidpoint, null, 1.0); 
-  activeTimeline.to(transitionOverlay, { opacity: 0, duration: 0.5, ease: "power1.out" }, 1.3);
+  
+  // 3. Animação dos SPLATTERS (Sangue Adicional)
+  for (let i = 0; i < numSplatters; i++) {
+    const splatter = document.createElement("div");
+    splatter.className = "particula-sangue-splatter";
+    transitionOverlay.appendChild(splatter);
+    
+    // O delay dos splatters também é espalhado por uma janela longa
+    const startDelay = Math.random() * staggerWindowSplatters + 0.2; // <-- MUDANÇA 3: Janela maior
+    
+    gsap.set(splatter, {
+      top: Math.random() * 100 + "vh",
+      left: Math.random() * 100 + "vw",
+      scale: 0,
+      opacity: 0,
+    });
+
+    activeTimeline.to(splatter, {
+      scale: Math.random() * 6 + 4, 
+      opacity: Math.random() * 0.5 + 0.5,
+      duration: 0.4,
+      ease: "power3.out",
+    }, startDelay);
+    
+    activeTimeline.to(splatter, {
+      opacity: 0, 
+      duration: 0.6,
+      ease: "power1.in",
+    }, startDelay + 0.4); 
+  }
+  
+  // 4. Símbolo do Sangue
+  if (simbolo) {
+    activeTimeline.fromTo(simbolo, 
+      { opacity: 0, scale: 0.8, filter: "brightness(1)" },
+      { 
+        opacity: 0.8, 
+        scale: 1, 
+        filter: "brightness(2)",
+        duration: 0.4, 
+        ease: "power2.out" 
+      }, 
+      0.6 // <-- MUDANÇA: Começa um pouco mais tarde
+    );
+    activeTimeline.to(simbolo, 
+      { opacity: 0, scale: 1.2, duration: 0.5, ease: "power1.in" }, 
+      fadeOutTime // <-- MUDANÇA: Desaparece junto com o fade out
+    );
+  }
+
+  // 5. O Midpoint e o Fade Out da Transição
+  activeTimeline.call(onMidpoint, null, fadeOutTime); // <-- MUDANÇA: Midpoint em 1.8s
+  
+  // Fundo vermelho sólido que preenche por baixo dos splatters
+  activeTimeline.fromTo(transitionOverlay, 
+    { backgroundColor: "transparent" },
+    { backgroundColor: corSangue, duration: 0.5 }, // <-- MUDANÇA: Fade in do fundo mais longo
+    0.8 // <-- MUDANÇA: Começa a preencher o fundo aos 0.8s
+  );
+  
+  // O FADE OUT GERAL
+  activeTimeline.to(transitionOverlay, { 
+    opacity: 0, 
+    duration: 0.7, // <-- MUDANÇA: Fade out dura 0.7s
+    ease: "power1.out" 
+  }, fadeOutTime); // <-- MUDANÇA: Começa o fade out geral aos 1.8s
 }
 
+
+/**
+ * Animação de Glifos para CONHECIMENTO
+ */
 function executarAnimacaoConhecimento(tema, onMidpoint) {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
@@ -139,6 +271,7 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
       .to(span, { opacity: Math.random() * 0.8 + 0.2, y: "-=" + (Math.random() * 50 + 20), duration: Math.random() * 1.5 + 0.5, ease: "power2.out", delay: Math.random() * 0.8 })
       .to(span, { opacity: 0, y: "+=" + (Math.random() * 30 + 10), duration: Math.random() * 1 + 0.5, ease: "power1.in" });
   }
+  
   activeTimeline = gsap.timeline({
     onComplete: () => {
       if (transitionOverlay) transitionOverlay.innerHTML = "";
@@ -146,6 +279,7 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
       activeTimeline = null;
     },
   });
+  
   activeTimeline.to(transitionOverlay, { duration: 0.2, opacity: 1 })
   if (simbolo) {
     activeTimeline.to(simbolo, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }, 0.5)
@@ -155,6 +289,9 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
   activeTimeline.to(transitionOverlay, { duration: 0.8, opacity: 0, delay: 0.8 });
 }
 
+/**
+ * Helper para criar partículas de MORTE
+ */
 function criarParticula() {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!particleInterval || !transitionOverlay) return;
@@ -166,6 +303,9 @@ function criarParticula() {
   gsap.to(p, { duration: Math.random() * 2 + 1.5, x: "110vw", rotation: () => Math.random() * 720 - 360, ease: "none", onComplete: () => p.remove() });
 }
 
+/**
+ * Animação de Lodo/Cinzas para MORTE
+ */
 function executarAnimacaoMorte(tema, onMidpoint) {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) return;
@@ -175,6 +315,7 @@ function executarAnimacaoMorte(tema, onMidpoint) {
   const novaCorDeFundo = getCorTransicao(tema);
   const simbolo = injecarSimboloTransicao(tema);
   particleInterval = setInterval(criarParticula, 30);
+  
   activeTimeline = gsap.timeline({
     onComplete: () => {
       if (transitionOverlay) transitionOverlay.innerHTML = "";
@@ -185,6 +326,7 @@ function executarAnimacaoMorte(tema, onMidpoint) {
       activeTimeline = null;
     },
   });
+  
   activeTimeline.to(transitionOverlay, { backgroundColor: novaCorDeFundo, duration: 2.0, ease: "power1.in" })
   if(simbolo) {
     activeTimeline.to(simbolo, { opacity: 0.3, scale: 1, duration: 1.0, ease: "power1.inOut" }, 1.0)
@@ -196,6 +338,9 @@ function executarAnimacaoMorte(tema, onMidpoint) {
 
 // --- Funções Principais (Exportadas) ---
 
+/**
+ * Função principal que decide qual animação tocar.
+ */
 export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
   const transitionOverlay = document.getElementById("transition-overlay");
   if (!transitionOverlay) {
@@ -210,13 +355,13 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
     return;
   }
 
-  // let animationClass = "anim-ordem"; // <-- REMOVIDO
   let animationTime = 1200;
   const novaCorDeFundo = getCorTransicao(tema);
 
+  // 1. Escolhe a animação
   switch (tema) {
     case "tema-sangue":
-      executarAnimacaoSangue(tema, onMidpointCallback);
+      executarAnimacaoSangue(tema, onMidpointCallback); // Nova animação de cortes
       return;
     case "tema-morte":
       executarAnimacaoMorte(tema, onMidpointCallback);
@@ -225,18 +370,16 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       executarAnimacaoConhecimento(tema, onMidpointCallback);
       return;
       
-    // Casos padrão (Ordem e Energia)
     case "tema-ordem":
       transitionOverlay.style.backgroundColor = novaCorDeFundo;
       animationTime = 1200;
       break;
     case "tema-energia":
-      transitionOverlay.style.backgroundColor = novaCorDeFundo;
+      transitionOverlay.style.backgroundColor = novaCorDeFBundo;
       transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.png')"; 
       transitionOverlay.style.backgroundSize = "cover";
       transitionOverlay.style.backgroundPosition = "center";
       transitionOverlay.style.backgroundRepeat = "no-repeat";
-      // Adiciona a classe APENAS para o glitch
       transitionOverlay.className = "anim-energia"; 
       animationTime = 1000;
       break;
@@ -246,17 +389,15 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       break;
   }
 
-  // --- (ATUALIZADO) Animação Padrão (Ordem e Energia) com GSAP ---
+  // --- 2. Animação Padrão (Usada por Ordem e Energia) ---
   const simbolo = injecarSimboloTransicao(tema);
   const animationTimeInSeconds = animationTime / 1000;
   const halfTime = animationTimeInSeconds / 2;
 
-  // Limpa a opacidade inline deixada pelo 'limparAnimacoesAtivas'
   transitionOverlay.style.opacity = ""; 
 
   activeTimeline = gsap.timeline({
     onComplete: () => {
-      // Limpa tudo ao final
       transitionOverlay.className = "";
       transitionOverlay.style.opacity = "0"; 
       transitionOverlay.style.backgroundColor = "transparent";
@@ -266,24 +407,24 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
     },
   });
 
-  // 1. Fade-in
+  // Fade-in
   activeTimeline.to(transitionOverlay, { 
     opacity: 1, 
     duration: halfTime, 
     ease: "power1.in" 
   }, 0); 
   
-  // 2. Chama o callback no meio
+  // Chama o callback no meio
   activeTimeline.call(onMidpointCallback, null, halfTime); 
   
-  // 3. Fade-out
+  // Fade-out
   activeTimeline.to(transitionOverlay, { 
     opacity: 0, 
     duration: halfTime, 
     ease: "power1.out" 
   }, halfTime); 
 
-  // Animação do símbolo (acontece durante o fade-in e fade-out)
+  // Animação do símbolo
   if (simbolo) {
     activeTimeline.to(simbolo, { 
       opacity: 1, 
@@ -297,11 +438,13 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       scale: 0.9, 
       duration: animationTimeInSeconds * 0.3, 
       ease: "power2.in" 
-    }, halfTime); // Começa o fade-out do símbolo no meio da animação
+    }, halfTime); 
   }
 }
 
-
+/**
+ * Aplica o tema instantaneamente (usado no carregamento da página).
+ */
 export function aplicarTemaSemAnimacao(tema) {
   const rootElement = document.documentElement;
   rootElement.dataset.tema = tema;

@@ -601,13 +601,26 @@ input[type="number"].input-hex {
   clip-path: revert;
   overflow: hidden;
 }
+
+/* 1. O "CORTE" (A RASGADURA) */
+.particula-corte {
+  position: absolute;
+  background-color: #000;
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+  transform-origin: center center;
+  z-index: 1002;
+}
+
 .particula-sangue {
   position: absolute;
+  border-radius: 50%;
   background-color: var(--cor-trans-sangue);
-  border-radius: 50%; 
-  transform-origin: top center;
-  filter: blur(1px);
+  filter: blur(2px) brightness(1.4) saturate(1.2);
+  opacity: 0.9;
+  transform-origin: center center;
+  z-index: 1001;
 }
+
 .particula-morte {
   position: absolute;
   background-color: #000;
@@ -1056,6 +1069,7 @@ input[type="number"].input-hex {
   opacity: 0.07; 
 }
 
+/* --- 22. (NOVO) Estilo do Símbolo na Transição --- */
 /* --- 22. (NOVO) Estilo do Símbolo na Transição --- */
 .transition-symbol {
   position: absolute;
