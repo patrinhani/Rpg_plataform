@@ -1,5 +1,5 @@
 // /src/app.jsx
-// (CORRIGIDO: Ordem do <nav> e <Recursos> trocada)
+// (ATUALIZADO: Importa e usa o componente AnimacaoSangue.jsx para o tema 'sangue')
 
 import { useState, useEffect } from 'react';
 import { ficha as fichaInstance } from './lib/personagem.js'; 
@@ -17,7 +17,7 @@ import { progressaoClasses, progressaoTrilhas, getMergedTrilhas, groupTrilhasByC
 import FichaPrincipal from './components/FichaPrincipal';
 import Inventario from './components/Inventario';
 import Rituais from './components/Rituais';
-import Recursos from './components/ficha/recursos'; // <-- Importado aqui
+import Recursos from './components/ficha/recursos';
 import ModalLoja from './components/ModalLoja';
 import ModalSelecao from './components/ModalSelecao';
 import ModalRituais from './components/ModalRituais'; 
@@ -30,8 +30,12 @@ import ModalEditarItem from './components/ModalEditarItem';
 import Diario from './components/Diario'; 
 import ModalNota from './components/ModalNota'; 
 
-// Importa as funções de animação
+// Importa as funções de animação (GSAP para outros temas)
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js';
+
+// --- (NOVO) IMPORTAR O NOVO COMPONENTE DE ANIMAÇÃO ---
+import AnimacaoSangue from './components/AnimacaoSangue.jsx';
+
 
 // (Helpers... nenhuma mudança aqui)
 const listaTodasPericias = Object.keys(fichaInstance.pericias); 
@@ -63,7 +67,6 @@ const MapeamentoTrilhaClasse = {
 function App() {
   
   // --- ESTADOS ---
-  // (Nenhuma mudança nos estados)
   const [personagem, setPersonagem] = useState(fichaInstance.getDados());
   const [calculados, setCalculados] = useState({
     defesaTotal: 10,
@@ -93,8 +96,11 @@ function App() {
   const [isDiarioModalOpen, setIsDiarioModalOpen] = useState(false);
   const [notaParaEditar, setNotaParaEditar] = useState(null); 
   
+  // --- (NOVO) ESTADO PARA CONTROLAR A ANIMAÇÃO DE SANGUE ---
+  const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
+  
+
   // --- FUNÇÕES DE LÓGICA / CÁLCULO ---
-  // (Nenhuma mudança nas funções de useEffect ou Handlers)
   
   useEffect(() => {
     const customTrilhas = fichaInstance.getTrilhasPersonalizadas(); 
@@ -103,13 +109,31 @@ function App() {
     setTrilhasPorClasse(trilhasAgrupadas);
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
   
+  // --- useEffect [tema] ATUALIZADO ---
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
-    aplicarTemaComAnimacao(tema, temaAtual, () => {
-      document.documentElement.dataset.tema = tema;
-      localStorage.setItem("temaFichaOrdem", tema);
-    });
-  }, [tema]); 
+    
+    if (tema === temaAtual) {
+      // Se o tema já for o atual, não faz nada
+      return; 
+    }
+
+    if (tema === "tema-sangue") {
+      // 1. Se o tema for "Sangue", ativa o nosso componente React
+      setIsSangueAnimVisible(true);
+      // A própria animação (no AnimacaoSangue.jsx) vai se encarregar de 
+      // chamar onComplete, que vai esconder a animação e aplicar o tema.
+      
+    } else {
+      // 2. Para todos os outros temas (Ordem, Morte, Energia, etc.)
+      //    usa a animação GSAP/CSS antiga (do animacoes.js).
+      aplicarTemaComAnimacao(tema, temaAtual, () => {
+        // Este é o 'onMidpointCallback'
+        document.documentElement.dataset.tema = tema;
+        localStorage.setItem("temaFichaOrdem", tema);
+      });
+    }
+  }, [tema]); // O gatilho continua sendo a mudança do 'tema'
 
   useEffect(() => {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
@@ -128,21 +152,28 @@ function App() {
       ? parallaxContainer.querySelectorAll(".simbolo-parallax")
       : null;
     if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
+    
     const handleMouseMove = (e) => {
       const { clientX, clientY } = e;
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       const moveX = (clientX - centerX) * -0.01;
       const moveY = (clientY - centerY) * -0.01;
+      
       parallaxSimbolos.forEach((simbolo) => {
-        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+        // Correção: Mantém a base do transform e adiciona o movimento
+        // Pega o 'translate(-50%, -50%)' base
+        const baseTransform = 'translate(-50%, -50%)'; 
+        // Aplica o movimento de parallax
+        simbolo.style.transform = `${baseTransform} translateX(${moveX}px) translateY(${moveY}px)`;
       });
     };
+    
     window.addEventListener("mousemove", handleMouseMove);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, []); 
+  }, []); // Roda apenas uma vez
 
   const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
   const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
@@ -188,7 +219,8 @@ function App() {
     alert("Ficha salva com sucesso no navegador!");
   };
   const limparFicha = () => {
-    if (window.confirm("Isso apagará a ficha salva. Deseja continuar?")) {
+    // Usando 'confirm' (pode não funcionar em todos os contextos de sandbox, mas é o padrão)
+    if (confirm("Isso apagará a ficha salva. Deseja continuar?")) {
       localStorage.removeItem("fichaOrdemParanormal");
       alert("Ficha apagada.");
       window.location.reload(); 
@@ -300,14 +332,13 @@ function App() {
     handleFichaChange(null, null, null); 
   };
   const handleRemoverNota = (notaId) => {
-    if (window.confirm("Tem certeza que deseja apagar esta anotação?")) {
+    if (confirm("Tem certeza que deseja apagar esta anotação?")) {
       fichaInstance.removeNotaDiario(notaId);
       handleFichaChange(null, null, null); 
     }
   };
 
   function handleFichaChange(secao, campo, valor) {
-    // (Nenhuma mudança na função handleFichaChange)
     let skipUpdate = false;
     const trilhasUnificadas = getMergedTrilhas(fichaInstance.getTrilhasPersonalizadas());
     if (secao) {
@@ -442,9 +473,25 @@ function App() {
         <img src="/assets/images/SimboloEnergia.png" id="simbolo-energia" className="simbolo-parallax" />
       </div>
       
+      {/* Overlay antigo (para Energia, Morte, etc.) */}
       <div id="transition-overlay"></div>
+      
+      {/* --- (NOVO) RENDERIZA O COMPONENTE DA ANIMAÇÃO --- */}
+      {/* Ele fica aqui, invisível, até 'isSangueAnimVisible' ser true */}
+      {isSangueAnimVisible && (
+          <AnimacaoSangue 
+            isVisible={isSangueAnimVisible} 
+            onComplete={() => {
+              // Quando a animação avisar que terminou (após ~2.5s)
+              setIsSangueAnimVisible(false); // 1. Esconde a animação
+              aplicarTemaSemAnimacao('tema-sangue'); // 2. Aplica o tema de fundo
+            }} 
+          />
+      )}
+      {/* --- FIM DA ADIÇÃO --- */}
 
-      {/* <-- MUDANÇA: ORDEM TROCADA --> */}
+
+      {/* Container fixo dos Recursos */}
       <div className="recursos-container-fixo">
         <Recursos 
           dados={personagem.recursos}
@@ -452,6 +499,7 @@ function App() {
         />
       </div>
 
+      {/* Navegação por Abas */}
       <nav className="ficha-abas">
         <button 
           className={`ficha-aba-link ${abaAtiva === 'principal' ? 'active' : ''}`} 
@@ -490,8 +538,8 @@ function App() {
           Diário
         </button>
       </nav>
-      {/* <-- FIM DA MUDANÇA --> */}
       
+      {/* Renderização condicional das Abas */}
       {abaAtiva === 'principal' && (
         <FichaPrincipal
           personagem={personagem}
