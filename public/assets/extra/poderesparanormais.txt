@@ -1,0 +1,335 @@
+PODERES PARANORMAIS
+
+
+Sem Elemento expecificado 
+ Aprender Ritual 
+Através de uma conexão com as memórias de ocul
+tistas do passado e os segredos das entidades, você 
+aprende e pode conjurar um ritual de 1º círculo à sua 
+escolha. Além disso, você pode substituir um ritual 
+que já conhece por outro. A partir de 45% de NEX, 
+quando escolhe este poder, você aprende um ritual 
+de até 2º círculo e, a partir de 75% de NEX, aprende 
+um ritual de até 3º círculo. Você pode escolher esse 
+poder quantas vezes quiser, mas está sujeito ao limite 
+de rituais conhecidos. Este poder conta como um poder 
+do elemento do ritual escolhido.
+ 
+
+Resistir a <Elemento>  <necessario escolher elemento>
+ Escolha entre Conhecimento, Energia, Morte ou San
+gue. Você recebe resistência 10 contra esse elemento. 
+Este poder conta como um poder do elemento escolhido.
+ Afinidade: aumenta a resistência para 20
+
+
+ PODERES DE SANGUE
+
+ esPreitAr dA bestA
+ O Sangue do Outro Lado deu a você o poder de con
+trolar seu corpo e se mover exatamente como as bestas 
+predadoras fazem. Você recebe +5 em Furtividade. Em 
+cenas de perseguição (p. 90), se for o caçador, pode 
+usar Furtividade em vez de Atletismo. Em cenas de 
+furtividade (p. 92), seus movimentos são calculados 
+pelos seus instintos, o que permite que faça ações 
+discretas sem sofrer –O de penalidade.
+ Afinidade: o bônus em Furtividade aumenta para 
++10.
+
+ instintos sAnguinários
+ Ao se conectar com o Sangue do Outro Lado, você 
+desperta instintos animalescos paranormais. Você 
+recebe visão no escuro e faro.
+ Afinidade: seus instintos aguçados transformam o 
+terror da perseguição em uma tempestade viciante de 
+adrenalina. Você não pode mais ser flanqueado, não 
+fica desprevenido e recebe +5 em testes de resistência 
+contra armadilhas da realidade ou paranormais.
+
+ Anatomia Insana
+ O seu corpo é transfigurado e parece desenvolver um 
+instinto próprio separado da sua consciência. Você 
+tem 50% de chance (resultado par em 1d4) de igno
+rar o dano adicional de um acerto crítico ou ataque 
+furtivo. Pré-requisito: Sangue 2.
+ Afinidade: você é imune aos efeitos de acertos crí
+ticos e ataques furtivos.
+ 
+Arma de Sangue
+ O Sangue devora parte de seu corpo e se manifesta 
+como parte de você. Você pode gastar uma ação de 
+movimento e 2 PE para produzir garras, chifres ou 
+uma lâmina de sangue cristalizado que brota de seu 
+antebraço. Qualquer que seja sua escolha, é consi
+derada uma arma simples leve que você não precisa 
+empunhar e causa 1d6 pontos de dano de Sangue. Uma 
+vez por turno, quando você usa a ação agredir, pode 
+gastar 1 PE para fazer um ataque corpo a corpo adi
+cional com essa arma. A arma dura até o final da cena, 
+e então se desfaz numa poça de sangue coagulado.
+ Afinidade: a arma se torna permanentemente parte 
+de você e causa 1d10 pontos de dano de Sangue.
+ 
+Sangue de Ferro
+ O seu sangue flui de forma paranormal e agressiva, 
+concedendo vigor não natural. Você recebe +2 pon
+tos de vida por NEX. Quando sobe de NEX, os PV 
+que recebe por este poder aumentam de acordo. Por 
+exemplo, se escolher este poder em NEX 50%, recebe 
+20 PV. Quando subir para NEX 55%, recebe +2 PV, 
+e assim por diante.
+ Afinidade: você recebe +5 em Fortitude e se torna 
+imune a venenos e doenças.
+ 
+Sangue Fervente
+ A intensidade da dor desperta em você sentimentos 
+bestiais e prazerosos que você nem imaginava que 
+existiam. Enquanto estiver machucado, você recebe +1 
+em Agilidade ou Força, à sua escolha (escolha sempre 
+que este efeito for ativado). Pré-requisito: Sangue 2.
+ Afinidade: o bônus que você recebe em Agilidade 
+ou Força aumenta para +2.
+ 
+Sangue Vivo
+ A carnificina não pode parar, o Sangue precisa con
+tinuar fluindo. Na primeira vez que ficar machucado 
+durante uma cena, você recebe cura acelerada 2 
+(veja a página 179). Esse efeito nunca cura você 
+acima da metade dos PV máximos (ou seja, você 
+nunca deixa de estar machucado) e termina no fim 
+da cena ou caso você perca a condição machucado. 
+Pré-requisito: Sangue 1.
+ Afinidade: a cura acelerada aumenta para 5
+
+ PODERES DE MORTE
+
+ AnteciPAr VitAlidAde
+ Sua ligação com a Morte permite que você sacrifi
+que sua vitalidade futura para auxiliar seu presente. 
+Quando faz um teste, você pode acumular uma carga 
+de antecipação para adicionar +O a esse teste. Você 
+pode acumular um máximo de cargas de antecipação 
+igual ao seu Vigor. Enquanto tiver uma carga de an
+tecipação, em sua próxima ação de interlúdio dormir 
+em vez de recuperar pontos de vida você perde uma 
+dessas cargas. 
+Afinidade: você amplia sua capacidade de sacrificar 
+o presente pelo futuro. O limite de cargas de anteci
+pação que você pode acumular aumenta em +2 e você 
+passa a perder 2 cargas por ação dormir.
+ 
+ AurA de PAVor
+ Ao receber esse poder, você é tomado por uma aura 
+de Morte que nunca mais o abandona. Do ponto de 
+vista dos outros, é como se o mundo ao seu redor 
+perdesse as cores e se tornasse mais opressor. Você 
+pode gastar 2 PE e uma ação de movimento para deixar 
+uma pessoa ou animal em alcance médio apavorado 
+(Vontade DT Pre reduz para abalado). O alvo não 
+precisa ser capaz de ver você. Esta condição termina 
+ao fim da cena, se o alvo se afastar de você além de 
+alcance médio ou se você usar este efeito em outro 
+alvo. Uma mesma pessoa ou animal só pode sofrer o 
+efeito deste poder uma vez por dia.
+ Afinidade: a DT para resistir ao poder aumenta 
+em +5 e o número de alvos muda para quaisquer 
+pessoas ou animais escolhidos no alcance
+
+ Encarar a Morte
+ Sua conexão com a Morte faz com que você não hesite 
+em situações de perigo. Durante cenas de ação, seu 
+limite de gasto de PE aumenta em +1 (isso não afeta 
+a DT de seus efeitos).
+ Afinidade: durante cenas de ação, seu limite de 
+gasto de PE aumenta em +2 (para um total de +3). 
+
+Escapar da Morte
+ A Morte tem um interesse especial em sua caminhada. 
+Uma vez por cena, quando receber dano que o deixaria 
+com 0 PV, você fica com 1 PV. Não funciona em caso 
+de dano massivo. Pré-requisito: Morte 1.
+ Afinidade: em vez do normal, você evita comple
+tamente o dano. Em caso de dano massivo, você fica 
+com 1 PV.
+ 
+Potencial Aprimorado 
+A Morte lhe concede potencial latente de momen
+tos roubados de outro lugar. Você recebe +1 ponto 
+de esforço por NEX. Quando sobe de NEX, os PE 
+que recebe por este poder aumentam de acordo. Por 
+exemplo, se escolher este poder em NEX 30%, recebe 
+6 PE. Quando subir para NEX 35%, recebe +1 PE 
+adicional, e assim por diante.
+ Afinidade: você recebe +1 PE adicional por NEX 
+(para um total de +2 PE por NEX).
+ 
+Potencial Reaproveitado
+ Você absorve os momentos desperdiçados de outros 
+seres. Uma vez por rodada, quando passa num teste de 
+resistência, você ganha 2 PE temporários cumulativos. 
+Os pontos desaparecem no final da cena.
+ Afinidade: você ganha 3 PE temporários, em vez 
+de 2.
+ 
+Surto Temporal 
+A sua percepção temporal se torna distorcida e es
+piralizada, fazendo com que a noção de passagem 
+do tempo nunca mais seja a mesma para você. Uma 
+vez por cena, durante seu turno, você pode gastar 
+3 PE para realizar uma ação padrão adicional. Pré--requisito: Morte 2.
+ Afinidade: em vez de uma vez por cena, você pode 
+usar este poder uma vez por turno
+
+
+PODERES DE CONHECIMENTO  
+
+AbsorVer conheciMento
+ Você se conecta com o Conhecimento do Outro Lado 
+para adquirir informação de forma paranormal, sem 
+precisar gastar tempo de pesquisa. Se estiver empu
+nhando uma fonte de conhecimento escrito (como 
+um livro, um texto aberto em um celular ou uma 
+pedra de runas), você pode gastar 1 PE e uma ação 
+completa para fazer uma pergunta a esta fonte. Se a 
+resposta estiver armazenada na fonte, você a obtém 
+automaticamente. Se usar este poder em conjunto 
+com a ação de interlúdio ler, você aumenta o dado 
+de bônus recebido por esta ação em um passo (de d6 
+para 1d8, por exemplo).
+ Afinidade: quando usa um ritual de Conhecimento 
+que tenha como alvo 1 pessoa (exceto você), se puder 
+tocar o alvo o custo desse ritual é reduzido em –1 PE.
+
+ APAtiA herege
+ Saber tudo é perder tudo. Contudo, não se deve su
+bestimar a capacidade de adaptação humana. Ao se 
+conectar com o Conhecimento do Outro Lado, você
+ usa as experiências grotescas que já viveu para desligar 
+suas emoções e blindar sua mente. Quando faz um 
+teste contra uma condição de medo, você pode gastar 
+2 PE para rolar o teste novamente. Você deve aceitar 
+o resultado da segunda rolagem, mesmo que seja 
+menor que a primeira. Pré-requisito: Conhecimento 1.
+ Afinidade: você pode usar esse poder depois de 
+saber se passou no teste, além de poder escolher a 
+melhor rolagem entre as duas
+
+Expansão de Conhecimento
+ Você se conecta com o Conhecimento do Outro Lado, 
+rompendo os limites de sua compreensão. Você apren
+de um poder de classe que não pertença à sua classe 
+(caso o poder possua pré-requisitos, você precisa 
+preenchê-los).  Pré-requisito: Conhecimento 1.
+ Afinidade: você aprende um segundo poder de 
+classe que não pertença à sua classe.
+ 
+Percepção Paranormal
+ O Conhecimento sussurra em sua mente. Em cenas de 
+investigação, sempre que fizer um teste para procurar 
+pistas, você pode rolar novamente um dado com re
+sultado menor que 10. Você deve aceitar a segunda 
+rolagem, mesmo que seja menor que a primeira.
+ Afinidade: você pode rolar novamente até dois 
+dados com resultado menor que 10. 
+
+Precognição
+ Você possui um “sexto sentido” que o avisa do perigo 
+antes que ele aconteça. Você recebe +2 em Defesa e em 
+testes de resistência. Pré-requisito: Conhecimento 1.
+ Afinidade: você fica imune à condição desprevenido. 
+
+ Sensitivo
+ Você consegue sentir as emoções e intenções de outros 
+personagens, como medo, raiva ou malícia, recebendo 
++5 em testes de Diplomacia, Intimidação e Intuição.
+ Afinidade: quando você faz um teste oposto usando 
+uma dessas perícias, o oponente sofre menos 1 dado.
+
+Visão do Oculto
+ Você não enxerga mais pelos olhos, mas sim pela 
+percepção do Conhecimento em sua mente. Você 
+recebe +5 em testes de Percepção e enxerga no escuro.
+ Afinidade: você ignora camuflagem
+
+PODERES DE ENERGIA
+
+ conexão eMPáticA
+ Você consegue usar a Energia do Outro Lado para se 
+conectar com objetos tecnológicos energizados. Você 
+pode gastar uma ação completa e 2 PE para tocar um 
+objeto elétrico que esteja ligado, como um celular, uma 
+batedeira ou uma máquina de lavar roupa. Até o fim 
+da cena, ou até deixar de tocá-lo, você pode conver
+sar com o objeto como se ele fosse um ser senciente, 
+e de algum jeito consegue escutar respostas. Um 
+objeto tem percepção limitada de seus arredores, e 
+sua personalidade e memórias são definidas apenas 
+pelos arquivos ou programas que contém registrado 
+em si; um objeto não tem lembranças do que ocorreu 
+em seus arredores a não ser que tenha uma câmera 
+e arquivos de vídeo em seu sistema, por exemplo. O 
+objeto possui uma atitude inicial indiferente, mas pode 
+ser persuadido com testes de Diplomacia (objetos 
+normalmente têm Vontade 1, mas objetos particular
+mente sofisticados ou protegidos podem ter Vontade 
+2 ou 3, a critério do mestre). Apenas você é capaz de 
+“ouvir” o objeto e precisa falar em voz alta para que 
+ele te “escute”. Quando o efeito termina, o item emite 
+um lamento enquanto experimenta uma sensação 
+traumática de morte; se você tentar falar novamente 
+com ele, sua atitude será hostil devido ao sofrimento 
+ao qual foi exposto. Pré-requisito: Energia 1.
+ Afinidade: você recebe +5 em testes de perícias 
+baseadas em Intelecto ou Presença com o item.
+ 
+ VAler-se do cAos
+ Você pode tentar manipular o caos do mundo ao seu 
+redor, um ato que fornece grande poder às custas da 
+ordem de sua mente. Quando faz um teste, você pode 
+escolher tentar controlar o caos. Se fizer isso, você 
+recebe +O nesse teste. Entretanto, se o teste for uma 
+falha, ou se o resultado desse d20 adicional (use um 
+dado de cor diferente para identificá-lo) for igual ou 
+menor que 5, você perde 1d4 pontos de Sanidade.
+ Afinidade: você perde Sanidade se o teste for uma 
+falha ou se o resultado do O extra for 1 ou 2 
+
+ Afortunado
+ A Energia considera resultados medíocres entediantes. 
+Uma vez por rolagem, você pode rolar novamente 
+um resultado 1 em qualquer dado que não seja d20.
+ Afinidade: além disso, uma vez por teste, você pode 
+rolar novamente um resultado 1 em d20.
+ 
+Campo Protetor
+ Você consegue gerar um campo de Energia que o 
+protege de perigos. Quando usa a ação esquiva, 
+você pode gastar 1 PE para receber +5 em Defesa. 
+Pré-requisito: Energia 1.
+ Afinidade: quando usa este poder, você também 
+recebe +5 em Reflexo e, até o início de seu próximo 
+turno, se passar em um teste de Reflexo que reduziria 
+o dano à metade, em vez disso não sofre nenhum dano.
+
+Causalidade Fortuita
+ A Energia o conduz rumo à descobertas. Em cenas 
+de investigação, a DT para procurar pistas diminui 
+em –5 para você até você encontrar uma pista.
+ Afinidade: a DT para procurar pistas sempre di
+minui em –5 para você.
+ 
+Golpe de Sorte
+ Seus ataques recebem +1 na margem de ameaça. 
+Pré-requisito: Energia 1.
+ Afinidade: seus ataques recebem +1 no multipli
+cador de crítico.
+ 
+Manipular Entropia
+ Nada diverte mais a Energia do que a possibilidade 
+de um desastre ainda maior. Você pode gastar 2 PE 
+para fazer um alvo em alcance curto (exceto você 
+mesmo) rolar novamente um dos dados em um teste 
+de perícia. Pré-requisito: Energia 1.
+ Afinidade: o alvo rola novamente todos os dados 
+que você escolher.

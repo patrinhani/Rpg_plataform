@@ -11,7 +11,8 @@ import {
     poderesCombatente, 
     poderesEspecialista, 
     poderesOcultista,
-    poderesGerais
+    poderesGerais,
+    poderesParanormais
 } from './poderes.js';
 
 // --- (NOVO) LISTAS DE MODIFICAÇÕES ---
@@ -3227,7 +3228,7 @@ export {
     poderesEspecialista,      
     poderesOcultista,
     poderesGerais,
-    
+    poderesParanormais, 
     // --- EXPORTA AS MODIFICAÇÕES ---
     modificacoesArmas,
     modificacoesProtecoes,
