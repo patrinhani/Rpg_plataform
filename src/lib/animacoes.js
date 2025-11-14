@@ -1,5 +1,5 @@
 // /src/lib/animacoes.js
-// (VERSÃO CORRIGIDA - Centralização dos símbolos com xPercent/yPercent)
+// (VERSÃO CORRIGIDA - Centralização do símbolo de 'tema-ordem')
 
 import { gsap } from "gsap";
 
@@ -88,7 +88,7 @@ function injecarSimboloTransicao(tema) {
 // --- Animações Específicas ---
 
 /**
- * (TIMING AJUSTADO) Animação de Cortes Aleatórios e Splatter para SANGUE
+ * Animação de Cortes Aleatórios e Splatter para SANGUE
  */
 function executarAnimacaoSangue(tema, onMidpoint) {
   const transitionOverlay = document.getElementById("transition-overlay");
@@ -111,15 +111,10 @@ function executarAnimacaoSangue(tema, onMidpoint) {
     },
   });
   
-  // --- AJUSTES DE TIMING ---
-  const totalDuration = 2.5; // <-- MUDANÇA 1: Duração total aumentada (era 1.5s)
-  // Os cortes vão começar a aparecer ao longo de 1.75s (em vez de 0.6s)
+  const totalDuration = 2.5;
   const staggerWindowCortes = totalDuration * 0.7; 
-  // Os splatters vão aparecer ao longo de 1.5s (em vez de 0.3s)
   const staggerWindowSplatters = totalDuration * 0.6;
-  // O ponto de troca e fade-out agora é em 1.8s (em vez de 1.0s)
   const fadeOutTime = totalDuration - 0.7; 
-  // -------------------------
 
   // 2. Animação dos CORTES (Linhas Pretas)
   for (let i = 0; i < numCortes; i++) {
@@ -158,26 +153,20 @@ function executarAnimacaoSangue(tema, onMidpoint) {
       opacity: 0.8,
     });
     
-    // --- O "CRESCENDO" (Timing Ajustado) ---
-    // O delay (atraso) de cada corte é espalhado pela "janela de stagger"
-    const delay = (i / numCortes) * staggerWindowCortes; // ex: 0s, 0.11s, 0.22s... 1.75s
-    // A duração de cada corte diminui conforme o delay aumenta
-    // O primeiro corte dura 1.0s. O último dura 1.0 - (1.75 * 0.4) = 0.3s
-    const duration = 1.0 - (delay * 0.4); // <-- MUDANÇA 2: Aceleração mais suave
+    const delay = (i / numCortes) * staggerWindowCortes;
+    const duration = 1.0 - (delay * 0.4);
     
-    // Anima o "rasgo" preto
     activeTimeline.to(corte, {
         clipPath: clipEnd,
         duration: duration,
         ease: "power3.inOut"
     }, delay);
     
-    // Anima o "espirro" de sangue
     activeTimeline.to(sangue, {
         clipPath: sangueClipEnd,
-        duration: duration * 0.8, // Um pouco mais rápido que o corte
+        duration: duration * 0.8,
         ease: "power2.out"
-    }, delay + 0.05); // Começa logo depois do corte
+    }, delay + 0.05);
   }
   
   // 3. Animação dos SPLATTERS (Sangue Adicional)
@@ -186,8 +175,7 @@ function executarAnimacaoSangue(tema, onMidpoint) {
     splatter.className = "particula-sangue-splatter";
     transitionOverlay.appendChild(splatter);
     
-    // O delay dos splatters também é espalhado por uma janela longa
-    const startDelay = Math.random() * staggerWindowSplatters + 0.2; // <-- MUDANÇA 3: Janela maior
+    const startDelay = Math.random() * staggerWindowSplatters + 0.2;
     
     gsap.set(splatter, {
       top: Math.random() * 100 + "vh",
@@ -210,27 +198,26 @@ function executarAnimacaoSangue(tema, onMidpoint) {
     }, startDelay + 0.4); 
   }
   
-  // 4. Símbolo do Sangue
+  // 4. Símbolo do Sangue (Centralizado)
   if (simbolo) {
-    // *** INÍCIO DA CORREÇÃO ***
     activeTimeline.fromTo(simbolo, 
       { 
         opacity: 0, 
         scale: 0.8, 
         filter: "brightness(1)",
-        xPercent: -50, // <-- Adicionado
-        yPercent: -50  // <-- Adicionado
+        xPercent: -50, // <-- Centraliza
+        yPercent: -50  // <-- Centraliza
       },
       { 
         opacity: 0.8, 
         scale: 1, 
         filter: "brightness(2)",
-        xPercent: -50, // <-- Adicionado
-        yPercent: -50, // <-- Adicionado
+        xPercent: -50,
+        yPercent: -50,
         duration: 0.4, 
         ease: "power2.out" 
       }, 
-      0.6 // <-- MUDANÇA: Começa um pouco mais tarde
+      0.6 
     );
     activeTimeline.to(simbolo, 
       { 
@@ -238,30 +225,27 @@ function executarAnimacaoSangue(tema, onMidpoint) {
         scale: 1.2, 
         duration: 0.5, 
         ease: "power1.in",
-        xPercent: -50, // <-- Adicionado
-        yPercent: -50  // <-- Adicionado
+        xPercent: -50,
+        yPercent: -50
       }, 
-      fadeOutTime // <-- MUDANÇA: Desaparece junto com o fade out
+      fadeOutTime 
     );
-    // *** FIM DA CORREÇÃO ***
   }
 
   // 5. O Midpoint e o Fade Out da Transição
-  activeTimeline.call(onMidpoint, null, fadeOutTime); // <-- MUDANÇA: Midpoint em 1.8s
+  activeTimeline.call(onMidpoint, null, fadeOutTime);
   
-  // Fundo vermelho sólido que preenche por baixo dos splatters
   activeTimeline.fromTo(transitionOverlay, 
     { backgroundColor: "transparent" },
-    { backgroundColor: corSangue, duration: 0.5 }, // <-- MUDANÇA: Fade in do fundo mais longo
-    0.8 // <-- MUDANÇA: Começa a preencher o fundo aos 0.8s
+    { backgroundColor: corSangue, duration: 0.5 },
+    0.8
   );
   
-  // O FADE OUT GERAL
   activeTimeline.to(transitionOverlay, { 
     opacity: 0, 
-    duration: 0.7, // <-- MUDANÇA: Fade out dura 0.7s
+    duration: 0.7,
     ease: "power1.out" 
-  }, fadeOutTime); // <-- MUDANÇA: Começa o fade out geral aos 1.8s
+  }, fadeOutTime);
 }
 
 
@@ -299,24 +283,23 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { duration: 0.2, opacity: 1 })
   if (simbolo) {
-    // *** INÍCIO DA CORREÇÃO ***
+    // Símbolo do Conhecimento (Centralizado)
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 
       duration: 0.3, 
       ease: "power2.out",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50, // <-- Centraliza
+      yPercent: -50  // <-- Centraliza
     }, 0.5)
     activeTimeline.to(simbolo, { 
       opacity: 0, 
       scale: 1.2, 
       duration: 0.3, 
       ease: "power2.in",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50,
+      yPercent: -50
     }, 0.8)
-    // *** FIM DA CORREÇÃO ***
   }
   activeTimeline.call(onMidpoint, null, 0.6) 
   activeTimeline.to(transitionOverlay, { duration: 0.8, opacity: 0, delay: 0.8 });
@@ -362,23 +345,22 @@ function executarAnimacaoMorte(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { backgroundColor: novaCorDeFundo, duration: 2.0, ease: "power1.in" })
   if(simbolo) {
-    // *** INÍCIO DA CORREÇÃO ***
+    // Símbolo da Morte (Centralizado)
     activeTimeline.to(simbolo, { 
       opacity: 0.3, 
       scale: 1, 
       duration: 1.0, 
       ease: "power1.inOut",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50, // <-- Centraliza
+      yPercent: -50  // <-- Centraliza
     }, 1.0)
     activeTimeline.to(simbolo, { 
       opacity: 0, 
       duration: 0.5, 
       ease: "power1.out",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50,
+      yPercent: -50
     }, 2.0)
-    // *** FIM DA CORREÇÃO ***
   }
   activeTimeline.call(onMidpoint, null, 1.0) 
   activeTimeline.to(transitionOverlay, { opacity: 0, duration: 1.5, ease: "power1.out" });
@@ -409,7 +391,9 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
   // 1. Escolhe a animação
   switch (tema) {
     case "tema-sangue":
-      executarAnimacaoSangue(tema, onMidpointCallback); // Nova animação de cortes
+      // A animação de sangue agora é tratada pelo App.jsx (com Three.js)
+      // Mas deixamos um fallback caso o App.jsx chame esta função por engano
+      executarAnimacaoSangue(tema, onMidpointCallback);
       return;
     case "tema-morte":
       executarAnimacaoMorte(tema, onMidpointCallback);
@@ -474,14 +458,16 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // Animação do símbolo
   if (simbolo) {
-    // *** INÍCIO DA CORREÇÃO ***
+    // --- INÍCIO DA CORREÇÃO ---
+    // Adiciona xPercent e yPercent para forçar a centralização
+    // que já está no CSS (garante que a animação GSAP não a sobrescreva)
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 
       duration: animationTimeInSeconds * 0.3, 
       ease: "power2.out",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50, // <-- CORREÇÃO
+      yPercent: -50  // <-- CORREÇÃO
     }, animationTimeInSeconds * 0.25);
     
     activeTimeline.to(simbolo, { 
@@ -489,10 +475,10 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       scale: 0.9, 
       duration: animationTimeInSeconds * 0.3, 
       ease: "power2.in",
-      xPercent: -50, // <-- Adicionado
-      yPercent: -50  // <-- Adicionado
+      xPercent: -50, // <-- CORREÇÃO
+      yPercent: -50  // <-- CORREÇÃO
     }, halfTime); 
-    // *** FIM DA CORREÇÃO ***
+    // --- FIM DA CORREÇÃO ---
   }
 }
 
