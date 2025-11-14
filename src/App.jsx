@@ -1,5 +1,5 @@
 // src/App.jsx
-// (VERSÃO COMPLETA CORRIGIDA - 'fichaInstance' trocado por 'FichaClass' na contagem de perícias)
+// (ATUALIZADO: Lógica de tensão/sucesso)
 
 import React, { useState, useEffect } from 'react';
 // Importações de estilos e bibliotecas de animação
@@ -139,6 +139,38 @@ function App() {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []); 
+
+  // --- (EFEITO ATUALIZADO) ---
+  // Efeito para aplicar a classe de "tensão" ou "sucesso" global
+  useEffect(() => {
+    const rootElement = document.documentElement; // <html> tag
+    const falhas = personagem.perseguicao.falhas || 0;
+    const sucessos = personagem.perseguicao.sucessos || 0;
+
+    // Tensão (Prioridade Alta)
+    if (falhas >= 3) {
+      rootElement.classList.add('modo-tensao');
+      rootElement.classList.remove('modo-sucesso'); // Remove sucesso se houver falha
+    } 
+    // Sucesso (Prioridade Baixa)
+    else if (sucessos >= 3) {
+      rootElement.classList.add('modo-sucesso');
+      rootElement.classList.remove('modo-tensao'); // Garante que tensão não está
+    } 
+    // Normal (Nenhum dos dois)
+    else {
+      rootElement.classList.remove('modo-tensao');
+      rootElement.classList.remove('modo-sucesso');
+    }
+    
+    // Cleanup function
+    return () => {
+      rootElement.classList.remove('modo-tensao');
+      rootElement.classList.remove('modo-sucesso');
+    };
+  }, [personagem.perseguicao.falhas, personagem.perseguicao.sucessos]); // Depende de ambos
+  // --- (FIM DA ATUALIZAÇÃO) ---
+
 
   // --- FUNÇÕES DE PERSISTÊNCIA ---
   
@@ -391,6 +423,10 @@ function App() {
             }
         } else if (secao === 'atributos') { FichaClass.setAtributo(campo, valor); } 
           else if (secao === 'recursos') { FichaClass.setRecurso(campo, valor); } 
+          
+          // --- ADICIONADO ---
+          else if (secao === 'perseguicao') { FichaClass.setPerseguicao(campo, valor); } 
+          
           else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
           else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
           else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); } 
@@ -498,9 +534,11 @@ function App() {
           />
       )}
 
+      {/* --- ATUALIZADO AQUI --- */}
       <div className="recursos-container-fixo">
         <Recursos 
           dados={personagem.recursos}
+          dadosPerseguicao={personagem.perseguicao} 
           onFichaChange={handleFichaChange}
         />
       </div>

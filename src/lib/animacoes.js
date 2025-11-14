@@ -111,7 +111,7 @@ function executarAnimacaoSangue(tema, onMidpoint) {
     },
   });
   
-  const totalDuration = 2.5;
+  const totalDuration = 2.5; 
   const staggerWindowCortes = totalDuration * 0.7; 
   const staggerWindowSplatters = totalDuration * 0.6;
   const fadeOutTime = totalDuration - 0.7; 
@@ -390,9 +390,8 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // 1. Escolhe a animação
   switch (tema) {
+    // O 'tema-sangue' é tratado no App.jsx, mas deixamos um fallback
     case "tema-sangue":
-      // A animação de sangue agora é tratada pelo App.jsx (com Three.js)
-      // Mas deixamos um fallback caso o App.jsx chame esta função por engano
       executarAnimacaoSangue(tema, onMidpointCallback);
       return;
     case "tema-morte":
@@ -460,7 +459,6 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
   if (simbolo) {
     // --- INÍCIO DA CORREÇÃO ---
     // Adiciona xPercent e yPercent para forçar a centralização
-    // que já está no CSS (garante que a animação GSAP não a sobrescreva)
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 

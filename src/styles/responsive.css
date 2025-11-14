@@ -73,8 +73,8 @@
     gap: 5px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    /* Ajusta a altura baseado nos 3 recursos empilhados */
-    top: 250px; /* <-- MUDANÇA: Valor ajustado (pode precisar de ajuste fino) */
+    /* Ajusta a altura baseado nos 4 recursos empilhados */
+    top: 360px; /* <-- MUDANÇA: Era 250px */
   }
   .ficha-aba-link {
     font-size: 1em;
@@ -170,7 +170,7 @@
   }
   
   .ficha-abas {
-    top: 250px; /* Mantém o ajuste */
+    top: 360px; /* <-- MUDANÇA: Era 250px */
   }
 
   input[type="number"].input-hex {

@@ -1,8 +1,12 @@
+// /src/lib/personagem.js
+
 /**
  * js/personagem.js
  * (ATUALIZADO PARA O PASSO 2 - MODIFICAÇÕES)
  * - 'addItemInventario' e 'updateItemInventario' agora lidam
  * com 'categoriaBase', 'espacosBase' e 'modificacoes'.
+ * (ATUALIZADO P/ PERSEGUIÇÃO)
+ * - Adicionado 'this.perseguicao'
  */
 
 class Personagem {
@@ -62,6 +66,9 @@ class Personagem {
       equip: 0,
       outros: 0,
     };
+    
+    // --- NOVO ---
+    this.perseguicao = { sucessos: 0, falhas: 0 };
 
     this.inventario = []; 
     this.rituais = []; 
@@ -92,8 +99,21 @@ class Personagem {
       san_total: 0,
     };
   }
-
-  // --- Métodos "Set" (Sem alterações) ---
+  
+  // --- NOVO MÉTODO ---
+  setPerseguicao(tipo, valor) {
+    if (tipo === 'sucessos' || tipo === 'falhas') {
+      let num = parseInt(valor) || 0;
+      if (num < 0) num = 0;
+      if (num > 3) num = 3; // Trava em 3
+      this.perseguicao[tipo] = num;
+    } else if (tipo === 'reset') {
+      // Um 'reset' zera ambos
+      this.perseguicao = { sucessos: 0, falhas: 0 };
+    }
+  }
+  
+  // --- Métodos "Set" ---
   setAtributo(campo, valor) {
     if (valor === "") {
       this.atributos[campo] = "";
@@ -118,7 +138,7 @@ class Personagem {
     this.defesa[campo] = parseInt(valor) || 0;
   }
 
-  // --- MÉTODOS PARA TRILHAS (Sem alterações) ---
+  // --- MÉTODOS PARA TRILHAS ---
   addTrilhaPersonalizada(trilhaData) {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
       const newTrilha = {
@@ -138,7 +158,7 @@ class Personagem {
       return this.trilhas_personalizadas;
   }
   
-  // --- MÉTODOS PARA PODERES (Sem alterações) ---
+  // --- MÉTODOS PARA PODERES ---
   addPoder(poder) {
       if (!this.poderes_aprendidos.some(p => p.key === poder.key)) {
           this.poderes_aprendidos.push(poder);
@@ -151,7 +171,7 @@ class Personagem {
       return this.poderes_aprendidos;
   }
 
-  // --- MÉTODOS DE INVENTÁRIO/RITUAIS (MODIFICADOS) ---
+  // --- MÉTODOS DE INVENTÁRIO/RITUAIS ---
   
   getBonusTotalPericia(pericia, atributoBase) {
     return this.pericias[pericia] || 0;
@@ -223,7 +243,7 @@ class Personagem {
     return this.inventario;
   }
   
-  // --- Rituais (Sem alterações) ---
+  // --- Rituais ---
   addRitualInventario(ritual) {
     const ritualComId = {
       ...ritual,
@@ -240,8 +260,7 @@ class Personagem {
     return this.rituais;
   }
   
-  // --- Funções de Cálculo (Sem alterações nesta etapa) ---
-  // (A lógica de cálculo das modificações será feita nos componentes React)
+  // --- Funções de Cálculo ---
   
   getBonusDefesaInventario() {
     // ... (Esta função permanece a mesma por enquanto)
@@ -386,7 +405,7 @@ class Personagem {
     return maxPesoBase;
   }
 
-  // --- Métodos de Salvamento/Carregamento (Sem alterações) ---
+  // --- Métodos de Salvamento/Carregamento ---
   getDados() {
     return {
       atributos: this.atributos,
@@ -394,6 +413,7 @@ class Personagem {
       info: this.info, 
       recursos: this.recursos,
       defesa: this.defesa,
+      perseguicao: this.perseguicao, // <-- ADICIONADO
       inventario: this.inventario,
       rituais: this.rituais, 
       bonusManuais: this.bonusManuais,
@@ -409,6 +429,7 @@ class Personagem {
       this.info = { ...this.info, ...dados.info };
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
+      this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; // <-- ADICIONADO
       this.inventario = dados.inventario || [];
       this.rituais = dados.rituais || []; 
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;
@@ -417,7 +438,7 @@ class Personagem {
     }
   }
 
-  // --- CÁLCULO DE RECURSOS MÁXIMOS (Sem alterações) ---
+  // --- CÁLCULO DE RECURSOS MÁXIMOS ---
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
