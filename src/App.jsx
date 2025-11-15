@@ -1,12 +1,10 @@
 // src/App.jsx
-// (ATUALIZADO: Lógica de tensão/sucesso/morte)
+// (OTIMIZADO: Code Splitting, Performance de Runtime, Assets WebP, Correções de Memo)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 // Importações de estilos e bibliotecas de animação
 import './App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js'; 
-import AnimacaoSangue from './components/AnimacaoSangue.jsx'; 
-
 // Importa a classe principal do personagem e as listas de poderes/dados
 import { ficha as FichaClass } from './lib/personagem.js'; 
 import { 
@@ -20,26 +18,31 @@ import {
 } from './lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
-// Importa os componentes das abas e modais (COM .jsx)
-import FichaPrincipal from './components/FichaPrincipal.jsx';
-import Inventario from './components/Inventario.jsx';
-import PoderesAprendidos from './components/PoderesAprendidos.jsx';
-import Rituais from './components/Rituais.jsx';
+// --- Carregamento de Componentes ---
+// Componentes principais carregados imediatamente
+import FichaPrincipal from './components/FichaPrincipal.jsx'; 
 import Recursos from './components/ficha/recursos.jsx';
-import ModalLoja from './components/ModalLoja.jsx';
-import ModalEditarItem from './components/ModalEditarItem.jsx';
-import ModalSelecao from './components/ModalSelecao.jsx';
-import ModalPoderes from './components/ModalPoderes.jsx';
-import ModalRituais from './components/ModalRituais.jsx';
-import ModalTrilhaCustom from './components/ModalTrilhaCustom.jsx';
-import ModalNota from './components/ModalNota.jsx';
-import Diario from './components/Diario.jsx';
-import ProgressaoHabilidades from './components/ficha/ProgressaoHabilidades.jsx';
+// Otimização: Animação de Sangue só é carregada se o tema for Sangue
+const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
-// Lista consolidada de todos os poderes para pesquisa rápida (para vinculação)
+// Otimização: Abas e Modais carregados "sob demanda" (lazy)
+const Inventario = lazy(() => import('./components/Inventario.jsx'));
+const PoderesAprendidos = lazy(() => import('./components/PoderesAprendidos.jsx'));
+const Rituais = lazy(() => import('./components/Rituais.jsx'));
+const Diario = lazy(() => import('./components/Diario.jsx'));
+const ProgressaoHabilidades = lazy(() => import('./components/ficha/ProgressaoHabilidades.jsx'));
+
+const ModalLoja = lazy(() => import('./components/ModalLoja.jsx'));
+const ModalEditarItem = lazy(() => import('./components/ModalEditarItem.jsx'));
+const ModalSelecao = lazy(() => import('./components/ModalSelecao.jsx'));
+const ModalPoderes = lazy(() => import('./components/ModalPoderes.jsx'));
+const ModalRituais = lazy(() => import('./components/ModalRituais.jsx'));
+const ModalTrilhaCustom = lazy(() => import('./components/ModalTrilhaCustom.jsx'));
+const ModalNota = lazy(() => import('./components/ModalNota.jsx'));
+
+// --- Listas Constantes ---
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 
-// Opções de Elemento (Hardcoded para ModalSelecao)
 const opcoesElemento = [
     { nome: 'Sangue', valor: 'sangue' },
     { nome: 'Morte', valor: 'morte' },
@@ -47,7 +50,6 @@ const opcoesElemento = [
     { nome: 'Energia', valor: 'energia' },
 ];
 
-// Lista de todas as perícias (para seleção em itens)
 const listaTodasPericias = Object.keys(FichaClass.getDados().pericias); 
 const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
@@ -140,7 +142,7 @@ function App() {
     };
   }, []); 
 
-  // --- (EFEITO ATUALIZADO COM HIERARQUIA) ---
+  // Efeito de Status Global (Tensão, Sucesso, Morte)
   useEffect(() => {
     const rootElement = document.documentElement; // <html> tag
     const visibilidade = personagem.visibilidade || 0;
@@ -210,13 +212,17 @@ function App() {
   const exportarFicha = () => {
     handleFichaChange(null, null, null); 
     const dadosFicha = FichaClass.getDados();
-    const nomeArquivo = "ficha-ordem.json";
+    const nomeArquivo = `${(personagem.info.nome || "ficha-ordem").replace(/[^a-z0-9]/gi, '_')}.json`;
     const dadosString = JSON.stringify(dadosFicha, null, 2);
+    
+    const blob = new Blob([dadosString], { type: "application/json" });
     const link = document.createElement("a");
-    link.href = "data:text/json;charset=utf-8," + encodeURIComponent(dadosString);
+    link.href = URL.createObjectURL(blob);
+    link.download = nomeArquivo;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // Limpa a referência do objeto
   };
   const importarFicha = (arquivo) => {
     if (!arquivo) return;
@@ -290,12 +296,38 @@ function App() {
   
   const handleAbrirDiarioModal = (nota) => { setNotaParaEditar(nota); setIsDiarioModalOpen(true); };
   const handleFecharDiarioModal = () => { setIsDiarioModalOpen(false); setNotaParaEditar(null); };
+  
+  // CORREÇÃO/GARANTIA: Assegura que os métodos do Diário existam na instância da FichaClass
+  if (!FichaClass.addNotaDiario) {
+    FichaClass.diario = FichaClass.diario || []; // Garante que a propriedade exista
+    FichaClass.addNotaDiario = (dadosNota) => {
+      const novaNota = { ...dadosNota, id: `nota_${Date.now()}` };
+      FichaClass.diario.push(novaNota);
+    };
+    FichaClass.updateNotaDiario = (notaId, dadosNota) => {
+      const index = FichaClass.diario.findIndex(n => n.id === notaId);
+      if (index !== -1) {
+        FichaClass.diario[index] = { ...FichaClass.diario[index], ...dadosNota };
+      }
+    };
+    FichaClass.removeNotaDiario = (notaId) => {
+      FichaClass.diario = FichaClass.diario.filter(n => n.id !== notaId);
+    };
+  }
+  // --- Fim da correção do Diário ---
+
   const handleSalvarNota = (dadosNota) => {
     if (notaParaEditar) { FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); } 
     else { FichaClass.addNotaDiario(dadosNota); }
-    handleFichaChange(null, null, null); 
+    handleFichaChange(null, null, null); // Força atualização leve para refletir a mudança
+    handleFecharDiarioModal(); // Fecha o modal após salvar
   };
-  const handleRemoverNota = (notaId) => { if (window.confirm("Tem certeza que deseja apagar esta anotação?")) { FichaClass.removeNotaDiario(notaId); handleFichaChange(null, null, null); } };
+  const handleRemoverNota = (notaId) => { 
+    if (window.confirm("Tem certeza que deseja apagar esta anotação?")) { 
+      FichaClass.removeNotaDiario(notaId); 
+      handleFichaChange(null, null, null); // Força atualização leve
+    } 
+  };
   
   // Lógica de Seleção de Poder (PARA "RESISTIR A ELEMENTO")
   const handleAbrirSelecaoPoder = (poder) => {
@@ -386,14 +418,15 @@ function App() {
   // --- FIM DA LÓGICA DE SELEÇÃO DE PODER ---
 
 
-  // --- FUNÇÃO DE MUDANÇA DE FICHA/CÁLCULO ---
+  // --- FUNÇÃO DE MUDANÇA DE FICHA/CÁLCULO (OTIMIZADA) ---
 
   function handleFichaChange(secao, campo, valor) {
     let skipUpdate = false;
-    const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
     
+    // --- 1. Lógica Rápida de SET (Aplica a mudança na classe) ---
     if (secao) {
         if (secao === 'info') {
+            const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
             if (campo === 'nex') {
                 let nexValue = String(valor).replace(/[^0-9]/g, '');
                 let nexNumber = parseInt(nexValue) || 0;
@@ -419,9 +452,13 @@ function App() {
             } 
             else if (campo === 'classe') {
                 const novaClasse = valor;
-                const trilhasValidas = Object.values(trilhasPorClasse[novaClasse.toLowerCase()] || {}).map(t => t.key); 
+                // Garante que trilhasPorClasse[novaClasse.toLowerCase()] não seja undefined
+                const trilhasDaClasse = trilhasPorClasse[novaClasse.toLowerCase()] || {};
+                const trilhasValidas = Object.values(trilhasDaClasse).map(t => t.key); 
+                
                 const trilhaAtual = FichaClass.getDados().info.trilha; 
                 const trilhaInvalida = trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual);
+                
                 if (trilhaInvalida) {
                     FichaClass.setInfo('trilha', 'nenhuma');
                     FichaClass.setInfo(`${trilhaAtual}_elemento`, '');
@@ -431,84 +468,98 @@ function App() {
             else if (!skipUpdate) {
                 FichaClass.setInfo(campo, valor);
             }
-        } else if (secao === 'atributos') { FichaClass.setAtributo(campo, valor); } 
-          else if (secao === 'recursos') { FichaClass.setRecurso(campo, valor); } 
-          else if (secao === 'perseguicao') { FichaClass.setPerseguicao(campo, valor); } 
-          
-          // --- ATUALIZADO ---
-          else if (secao === 'visibilidade_mudar') { FichaClass.setVisibilidade(campo, valor); } // 'valor' será +1 ou -1
-          
-          else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
-          else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
-          else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); } 
+        } 
+        else if (secao === 'atributos') { FichaClass.setAtributo(campo, valor); } 
+        else if (secao === 'recursos') { FichaClass.setRecurso(campo, valor); } 
+        else if (secao === 'perseguicao') { FichaClass.setPerseguicao(campo, valor); } 
+        else if (secao === 'visibilidade_mudar') { FichaClass.setVisibilidade(campo, valor); }
+        else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
+        else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
+        else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); } 
     }
+    
     if (skipUpdate) { return; }
-    
-    // Recalcula e atualiza o estado
-    const novosDados = FichaClass.getDados();
-    
-    FichaClass.calcularValoresMaximos();
-    
-    const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
-    FichaClass.setDefesa('equip', bonusDefesaInventario);
 
-    const agi = parseInt(FichaClass.getDados().atributos.agi) || 0;
-    const equip = FichaClass.getDados().defesa.equip || 0;
-    const outros = parseInt(FichaClass.getDados().defesa.outros) || 0;
-    let bonusOrigemDefesa = novosDados.info.origem === "policial" ? 2 : 0;
-    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
+    // --- 2. Lógica de Otimização ---
+    // Verifica se a mudança foi "leve" (só afeta os recursos atuais ou trackers)
+    const isLightUpdate = secao === 'recursos' || secao === 'perseguicao' || secao === 'visibilidade_mudar';
+
+    if (isLightUpdate && secao !== null) { // secao === null força recalcular tudo (usado no load)
+      // ATUALIZAÇÃO LEVE:
+      // Apenas atualiza o estado 'personagem'. Não recalcula 'calculados'.
+      setPersonagem(FichaClass.getDados());
     
-    const nexString = novosDados.info.nex || '0%';
-    const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
-    const canChangeTheme = nexNumeric >= 50;
+    } else {
+      // ATUALIZAÇÃO PESADA: (Mudou atributos, nex, pericias, inventário, etc.)
+      
+      const novosDados = FichaClass.getDados();
+      
+      FichaClass.calcularValoresMaximos();
+      
+      const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
+      FichaClass.setDefesa('equip', bonusDefesaInventario);
 
-    const bonusPericiaCalculado = {};
-    Object.keys(novosDados.pericias).forEach(periciaKey => {
-      bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
-    });
+      const agi = parseInt(FichaClass.getDados().atributos.agi) || 0;
+      const equip = FichaClass.getDados().defesa.equip || 0;
+      const outros = parseInt(FichaClass.getDados().defesa.outros) || 0;
+      let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
+      const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
+      
+      const nexString = novosDados.info.nex || '0%';
+      const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
+      const canChangeTheme = nexNumeric >= 50;
 
-    // --- INÍCIO DA CORREÇÃO (fichaInstance -> FichaClass) ---
-    const int = parseInt(FichaClass.atributos.int) || 0;
-    const classe = FichaClass.info.classe;
-    let bonusClassePericias = 0;
-    switch (classe) {
-      case "combatente": bonusClassePericias = 1 + int; break;
-      case "especialista": bonusClassePericias = 7 + int; break;
-      case "ocultista": bonusClassePericias = 3 + int; break;
-      default: bonusClassePericias = 0;
-    }
-    const origem = FichaClass.info.origem;
-    let bonusOrigemPericias = 0;
-    if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
-      const { fixas, escolhas } = database.periciasPorOrigem[origem];
-      bonusOrigemPericias += fixas.length;
-      if (escolhas) {
-        escolhas.forEach((e) => {
-          bonusOrigemPericias += e.quantidade;
-        });
+      const bonusPericiaCalculado = {};
+      Object.keys(novosDados.pericias).forEach(periciaKey => {
+        bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
+      });
+
+      // Cálculo de Perícias Treinadas
+      const int = parseInt(FichaClass.atributos.int) || 0;
+      const classe = FichaClass.info.classe;
+      let bonusClassePericias = 0;
+      switch (classe) {
+        case "combatente": bonusClassePericias = 1 + int; break;
+        case "especialista": bonusClassePericias = 7 + int; break;
+        case "ocultista": bonusClassePericias = 3 + int; break;
+        case "sobrevivente": bonusClassePericias = 0; break; // Sobrevivente não ganha perícia por Int
+        default: bonusClassePericias = 0;
       }
-    }
-    const periciasTotal = bonusClassePericias + bonusOrigemPericias;
-    let periciasTreinadas = 0;
-    Object.values(FichaClass.pericias).forEach((treino) => {
-      if (parseInt(treino) >= 5) {
-        periciasTreinadas++;
+      const origem = FichaClass.info.origem;
+      let bonusOrigemPericias = 0;
+      if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
+        const { fixas, escolhas } = database.periciasPorOrigem[origem];
+        bonusOrigemPericias += fixas.length;
+        if (escolhas) {
+          escolhas.forEach((e) => {
+            bonusOrigemPericias += e.quantidade;
+          });
+        }
       }
-    });
-    // --- FIM DA CORREÇÃO ---
-
-    setCalculados(prev => ({
-      ...prev,
-      defesaTotal: defesaTotal,
-      cargaAtual: FichaClass.getPesoTotal(),
-      cargaMax: FichaClass.getMaxPeso(),
-      periciasTreinadas: periciasTreinadas,
-      periciasTotal: periciasTotal,
-      bonusPericia: bonusPericiaCalculado,
-      canChangeTheme: canChangeTheme, 
-    }));
-    setPersonagem({ ...novosDados });
+      const periciasTotal = bonusClassePericias + bonusOrigemPericias;
+      let periciasTreinadas = 0;
+      Object.values(FichaClass.pericias).forEach((treino) => {
+        if (parseInt(treino) >= 5) {
+          periciasTreinadas++;
+        }
+      });
+      
+      // Atualiza os dois estados
+      setCalculados(prev => ({
+        ...prev,
+        defesaTotal: defesaTotal,
+        cargaAtual: FichaClass.getPesoTotal(),
+        cargaMax: FichaClass.getMaxPeso(),
+        periciasTreinadas: periciasTreinadas,
+        periciasTotal: periciasTotal,
+        bonusPericia: bonusPericiaCalculado,
+        canChangeTheme: canChangeTheme, 
+      }));
+      
+      setPersonagem({ ...novosDados });
+    }
   }
+
 
   // --- PROPS PARA CONTROLES ---
   const controlesProps = {
@@ -520,32 +571,52 @@ function App() {
     onThemeChange: setTema,
     canChangeTheme: calculados.canChangeTheme
   };
+  
+  // Componente de Fallback (Carregamento)
+  const LoadingComponent = () => (
+    <div 
+      className="item-placeholder" 
+      style={{
+        padding: '50px', 
+        maxWidth: '1400px', 
+        margin: '20px auto', 
+        backgroundColor: 'var(--cor-caixa)', 
+        border: '2px solid var(--cor-borda)', 
+        borderRadius: '4px',
+        textAlign: 'center'
+      }}>
+      Carregando...
+    </div>
+  );
 
   // --- RENDERIZAÇÃO ---
   return (
     <>
       <div id="parallax-background">
-        <img src="/assets/images/SimboloSemafinidade.png" id="simbolo-ordem" className="simbolo-parallax" />
-        <img src="/assets/images/SimboloSangue.png" id="simbolo-sangue" className="simbolo-parallax" />
-        <img src="/assets/images/SimboloMorte.png" id="simbolo-morte" className="simbolo-parallax" />
-        <img src="/assets/images/SimboloConhecimento.png" id="simbolo-conhecimento" className="simbolo-parallax" />
-        <img src="/assets/images/SimboloEnergia.png" id="simbolo-energia" className="simbolo-parallax" />
+        {/* OTIMIZAÇÃO: Alterado .png para .webp e adicionado alt="" */}
+        <img src="/assets/images/SimboloSemafinidade.webp" id="simbolo-ordem" className="simbolo-parallax" alt=""/>
+        <img src="/assets/images/SimboloSangue.webp" id="simbolo-sangue" className="simbolo-parallax" alt=""/>
+        <img src="/assets/images/SimboloMorte.webp" id="simbolo-morte" className="simbolo-parallax" alt=""/>
+        <img src="/assets/images/SimboloConhecimento.webp" id="simbolo-conhecimento" className="simbolo-parallax" alt=""/>
+        <img src="/assets/images/SimboloEnergia.webp" id="simbolo-energia" className="simbolo-parallax" alt=""/>
       </div>
       
       <div id="transition-overlay"></div>
 
       {/* Bloco da animação de sangue (Three.js) */}
-      {isSangueAnimVisible && (
-          <AnimacaoSangue 
-            isVisible={isSangueAnimVisible} 
-            onComplete={() => {
-              setIsSangueAnimVisible(false); 
-              aplicarTemaSemAnimacao('tema-sangue'); 
-            }} 
-          />
-      )}
+      <Suspense fallback={null}>
+        {isSangueAnimVisible && (
+            <AnimacaoSangue 
+              isVisible={isSangueAnimVisible} 
+              onComplete={() => {
+                setIsSangueAnimVisible(false); 
+                aplicarTemaSemAnimacao('tema-sangue'); 
+              }} 
+            />
+        )}
+      </Suspense>
 
-      {/* --- ATUALIZADO AQUI --- */}
+      {/* Container Fixo de Recursos (Carrega Imediatamente) */}
       <div className="recursos-container-fixo">
         <Recursos 
           dados={personagem.recursos}
@@ -564,128 +635,147 @@ function App() {
         <button className={`ficha-aba-link ${abaAtiva === 'diario' ? 'active' : ''}`} onClick={() => setAbaAtiva('diario')}>Diário</button>
       </nav>
       
-      {abaAtiva === 'principal' && (
-        <FichaPrincipal
-          personagem={personagem}
-          calculados={calculados} 
-          fichaInstance={FichaClass} // Passando FichaClass
-          handleFichaChange={handleFichaChange}
-          controlesProps={controlesProps}
-          trilhasPorClasse={trilhasPorClasse} 
-        />
-      )}
-      
-      {abaAtiva === 'inventario' && (
-        <Inventario 
-          inventario={personagem.inventario} 
-          onAbrirLoja={handleAbrirLoja}
-          onRemoveItem={handleRemoveItem}
-          onToggleItem={handleToggleItem}
-          onEditItem={handleAbrirModalEdicao} 
-        />
-      )}
-
-      {abaAtiva === 'rituais' && (
-        <Rituais 
-          rituais={personagem.rituais} 
-          onAbrirModal={handleAbrirRitualModal} 
-          onRemoveRitual={handleRemoveRitual} 
-        />
-      )}
-      
-      {abaAtiva === 'poderes' && (
-        <PoderesAprendidos 
-            poderesAprendidos={personagem.poderes_aprendidos}
-            onAbrirModal={handleAbrirPoderesModal} 
-        />
-      )}
-      
-      {abaAtiva === 'progressao' && (
-        <div className="ficha-aba-conteudo active">
-          <button 
-            className="btn-add-item" 
-            onClick={handleAbrirTrilhaModal}
-            style={{ float: 'right', margin: '10px 0', padding: '5px 15px', fontSize: '1.2em' }}
-          >
-            + Criar Trilha
-          </button>
-          <ProgressaoHabilidades
-            classe={personagem.info.classe}
-            trilha={personagem.info.trilha}
-            nexString={personagem.info.nex}
-            progressaoClasses={progressaoClasses}
-            progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} 
-            info={personagem.info}
+      {/* OTIMIZAÇÃO: Suspense envolve todas as abas e modais */}
+      <Suspense fallback={<LoadingComponent />}>
+        {abaAtiva === 'principal' && (
+          <FichaPrincipal
+            personagem={personagem}
+            calculados={calculados} 
+            fichaInstance={FichaClass} 
+            handleFichaChange={handleFichaChange}
+            controlesProps={controlesProps}
+            trilhasPorClasse={trilhasPorClasse} 
           />
-        </div>
-      )}
+        )}
+        
+        {abaAtiva === 'inventario' && (
+          <Inventario 
+            inventario={personagem.inventario} 
+            onAbrirLoja={handleAbrirLoja}
+            onRemoveItem={handleRemoveItem}
+            onToggleItem={handleToggleItem}
+            onEditItem={handleAbrirModalEdicao} 
+          />
+        )}
 
-      {abaAtiva === 'diario' && (
-        <Diario
-          diarioData={personagem.diario}
-          onAbrirModal={handleAbrirDiarioModal}
-          onRemoveNota={handleRemoverNota}
-        />
-      )}
+        {abaAtiva === 'rituais' && (
+          <Rituais 
+            rituais={personagem.rituais} 
+            onAbrirModal={handleAbrirRitualModal} 
+            onRemoveRitual={handleRemoveRitual} 
+          />
+        )}
+        
+        {abaAtiva === 'poderes' && (
+          <PoderesAprendidos 
+              poderesAprendidos={personagem.poderes_aprendidos}
+              onAbrirModal={handleAbrirPoderesModal} 
+          />
+        )}
+        
+        {abaAtiva === 'progressao' && (
+          // Layout corrigido para centralizar a progressão
+          <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
+            <button 
+              className="btn-add-item" 
+              onClick={handleAbrirTrilhaModal}
+              style={{ float: 'right', margin: '10px 0', padding: '5px 15px', fontSize: '1.2em' }}
+            >
+              + Criar Trilha
+            </button>
+            <ProgressaoHabilidades
+              classe={personagem.info.classe}
+              trilha={personagem.info.trilha}
+              nexString={personagem.info.nex}
+              progressaoClasses={progressaoClasses}
+              progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} 
+              info={personagem.info}
+            />
+          </div>
+        )}
 
-      <footer>
-        <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
-      </footer>
+        {abaAtiva === 'diario' && (
+          <Diario
+            diarioData={FichaClass.diario} // CORREÇÃO: Passa a referência estável da classe
+            onAbrirModal={handleAbrirDiarioModal}
+            onRemoveNota={handleRemoverNota}
+          />
+        )}
 
-      {/* --- Modais --- */}
-      <ModalLoja 
-        isOpen={isLojaOpen}
-        onClose={handleFecharLoja}
-        onAddItem={handleAddItem}
-        pericias={listaTodasPericias} 
-      />
-      
-      <ModalSelecao 
-        isOpen={isSelecaoOpen && !!itemPendente}
-        onClose={handleFecharSelecao}
-        item={itemPendente} 
-        onSelect={handleVincularItem} 
-      />
+        <footer>
+          <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
+        </footer>
 
-      <ModalRituais 
-        isOpen={isRitualModalOpen}
-        onClose={handleFecharRitualModal}
-        onAddRitual={handleAddRitual} 
-      />
+        {/* OTIMIZAÇÃO: Modais só renderizam quando abertos */}
+        
+        {isLojaOpen && (
+          <ModalLoja 
+            isOpen={isLojaOpen}
+            onClose={handleFecharLoja}
+            onAddItem={handleAddItem}
+            pericias={listaTodasPericias} 
+          />
+        )}
+        
+        {isSelecaoOpen && !!itemPendente && (
+          <ModalSelecao 
+            isOpen={isSelecaoOpen && !!itemPendente}
+            onClose={handleFecharSelecao}
+            item={itemPendente} 
+            onSelect={handleVincularItem} 
+          />
+        )}
 
-      <ModalTrilhaCustom
-        isOpen={isTrilhaModalOpen}
-        onClose={handleFecharTrilhaModal}
-        onAddTrilha={handleAddTrilha}
-        classesList={OpcoesClasse} 
-      />
-      
-      <ModalPoderes
-        isOpen={isPoderesModalOpen}
-        onClose={handleFecharPoderesModal}
-        classe={personagem.info.classe}
-        poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)}
-        poderesAprendidos={personagem.poderes_aprendidos}
-        onTogglePoder={handleTogglePoder}
-        onAbrirSelecaoPoder={handleAbrirSelecaoPoder} 
-        poderesGerais={poderesGerais} 
-        poderesParanormais={poderesParanormais} 
-      />
+        {isRitualModalOpen && (
+          <ModalRituais 
+            isOpen={isRitualModalOpen}
+            onClose={handleFecharRitualModal}
+            onAddRitual={handleAddRitual} 
+          />
+        )}
 
-      <ModalEditarItem
-        isOpen={isModalEditarItemOpen}
-        onClose={handleFecharModalEdicao}
-        onSave={handleSalvarItemEditado}
-        item={itemParaEditar}
-        pericias={listaTodasPericias}
-      />
+        {isTrilhaModalOpen && (
+          <ModalTrilhaCustom
+            isOpen={isTrilhaModalOpen}
+            onClose={handleFecharTrilhaModal}
+            onAddTrilha={handleAddTrilha}
+            classesList={OpcoesClasse} 
+          />
+        )}
+        
+        {isPoderesModalOpen && (
+          <ModalPoderes
+            isOpen={isPoderesModalOpen}
+            onClose={handleFecharPoderesModal}
+            classe={personagem.info.classe}
+            poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)}
+            poderesAprendidos={personagem.poderes_aprendidos}
+            onTogglePoder={handleTogglePoder}
+            onAbrirSelecaoPoder={handleAbrirSelecaoPoder} 
+            poderesGerais={poderesGerais} 
+            poderesParanormais={poderesParanormais} 
+          />
+        )}
 
-      <ModalNota
-        isOpen={isDiarioModalOpen}
-        onClose={handleFecharDiarioModal}
-        onSave={handleSalvarNota}
-        notaAtual={notaParaEditar}
-      />
+        {isModalEditarItemOpen && (
+          <ModalEditarItem
+            isOpen={isModalEditarItemOpen}
+            onClose={handleFecharModalEdicao}
+            onSave={handleSalvarItemEditado}
+            item={itemParaEditar}
+            pericias={listaTodasPericias}
+          />
+        )}
+
+        {isDiarioModalOpen && (
+          <ModalNota
+            isOpen={isDiarioModalOpen}
+            onClose={handleFecharDiarioModal}
+            onSave={handleSalvarNota}
+            notaAtual={notaParaEditar}
+          />
+        )}
+      </Suspense> 
     </>
   )
 }

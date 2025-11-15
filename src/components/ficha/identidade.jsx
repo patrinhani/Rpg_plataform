@@ -1,6 +1,7 @@
 // /src/components/Ficha/Identidade.jsx
+// (OTIMIZADO COM React.memo)
 
-import React from 'react';
+import React, { memo } from 'react'; // 1. Importar o 'memo'
 // <-- NOVO: Importar a lista de origens do database
 import { OpcoesOrigem } from '../../lib/database.js';
 
@@ -11,6 +12,7 @@ import { OpcoesOrigem } from '../../lib/database.js';
  * @param {function} props.onFichaChange - Função de callback para mudança.
  * @param {object} props.trilhasPorClasse - O objeto de trilhas agrupadas (padrão + customizadas).
  */
+// 2. A função do componente permanece idêntica
 function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
 
   const handleChange = (e) => {
@@ -149,4 +151,5 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
   );
 }
 
-export default Identidade;
+// 3. Exportar a versão "memorizada"
+export default memo(Identidade);

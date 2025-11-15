@@ -6,6 +6,7 @@
 @font-face {
   font-family: "SigilosDeConhecimento";
   src: url("/assets/fonte/SigilosDeConhecimento.ttf") format("truetype");
+  font-display: swap; /* Otimização de fonte */
 }
 
 /* --- 2. Reset Básico e Variáveis de Cor --- */
@@ -388,21 +389,24 @@ textarea {
   border: none;
   background-color: transparent;
 }
+/* ----- ALTERAÇÕES AQUI ----- */
 :root[data-tema="tema-ordem"] .box-atributos {
-  background-image: url("/assets/images/hexagono.png");
+  background-image: url("/assets/images/hexagono.webp");
 }
 :root[data-tema="tema-sangue"] .box-atributos {
-  background-image: url("/assets/images/hexagonoSangue.png");
+  background-image: url("/assets/images/hexagonoSangue.webp");
 }
 :root[data-tema="tema-morte"] .box-atributos {
-  background-image: url("/assets/images/hexagonoMorte.png");
+  background-image: url("/assets/images/hexagonoMorte.webp");
 }
 :root[data-tema="tema-conhecimento"] .box-atributos {
-  background-image: url("/assets/images/hexagonoConhecimento.png");
+  background-image: url("/assets/images/hexagonoConhecimento.webp");
 }
 :root[data-tema="tema-energia"] .box-atributos {
-  background-image: url("/assets/images/hexagonoEnergia.png");
+  background-image: url("/assets/images/hexagonoEnergia.webp");
 }
+/* ----- FIM DAS ALTERAÇÕES ----- */
+
 input[type="number"].input-hex {
   position: absolute;
   background: transparent;

@@ -1,6 +1,7 @@
 // /src/components/RitualCard.jsx
+// (OTIMIZADO COM React.memo)
 
-import React from 'react';
+import React, { memo } from 'react'; // 1. Importar 'memo'
 
 /**
  * ATUALIZADO: Agora recebe props para interatividade
@@ -86,4 +87,5 @@ function RitualCard({ ritual, tipo, onAdd, onRemove }) {
   );
 }
 
-export default RitualCard;
+// 3. Exportar a versão "memorizada"
+export default memo(RitualCard);

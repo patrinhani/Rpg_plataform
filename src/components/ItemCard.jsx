@@ -1,7 +1,8 @@
 // /src/components/ItemCard.jsx
 // (ATUALIZADO PARA O PASSO 4 - COM DESCRIÇÃO NO TITLE)
+// (OTIMIZADO COM React.memo)
 
-import React from 'react';
+import React, { memo } from 'react'; // 1. Importar o 'memo'
 // 1. Importar as listas de modificações (do Passo 1)
 import { 
   modificacoesArmas, 
@@ -166,4 +167,5 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   );
 }
 
-export default ItemCard;
+// 3. Exportar a versão "memorizada"
+export default memo(ItemCard);

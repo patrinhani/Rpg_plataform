@@ -1,6 +1,7 @@
 // /src/components/NotaCard.jsx
+// (OTIMIZADO COM React.memo)
 
-import React from 'react';
+import React, { memo } from 'react'; // 1. Importar 'memo'
 
 /**
  * Props esperadas do App.jsx (através do Diario.jsx):
@@ -51,4 +52,5 @@ function NotaCard({ nota, onEdit, onRemove }) {
   );
 }
 
-export default NotaCard;
+// 3. Exportar a versão "memorizada"
+export default memo(NotaCard);
