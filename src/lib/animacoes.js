@@ -1,5 +1,5 @@
 // /src/lib/animacoes.js
-// (VERSÃO CORRIGIDA - Caminhos atualizados para .webp)
+// (VERSÃO CORRIGIDA - Caminhos atualizados para .webp na pasta /images/)
 
 import { gsap } from "gsap";
 
@@ -58,26 +58,26 @@ function injecarSimboloTransicao(tema) {
   const img = document.createElement("img");
   img.className = "transition-symbol";
 
-  // --- CORREÇÃO APLICADA AQUI (usando .webp) ---
+  // --- CORREÇÃO APLICADA AQUI (usando .webp da pasta /images/) ---
   switch (tema) {
     case "tema-ordem":
-      img.src = "/assets/images/SimboloSemafinidade.webp"; // Alterado de .png para .webp
+      img.src = "/assets/images/SimboloSemafinidade.webp";
       img.id = "simbolo-ordem-trans";
       break;
     case "tema-sangue":
-      img.src = "/assets/images/SimboloSangue.webp"; // Alterado de .png para .webp
+      img.src = "/assets/images/SimboloSangue.webp";
       img.id = "simbolo-sangue-trans";
       break;
     case "tema-morte":
-      img.src = "/assets/images/SimboloMorte.webp"; // Alterado de .png para .webp
+      img.src = "/assets/images/SimboloMorte.webp";
       img.id = "simbolo-morte-trans";
       break;
     case "tema-conhecimento":
-      img.src = "/assets/images/SimboloConhecimento.webp"; // Alterado de .png para .webp
+      img.src = "/assets/images/SimboloConhecimento.webp";
       img.id = "simbolo-conhecimento-trans";
       break;
     case "tema-energia":
-      img.src = "/assets/images/SimboloEnergia.webp"; // Alterado de .png para .webp
+      img.src = "/assets/images/SimboloEnergia.webp";
       img.id = "simbolo-energia-trans";
       break;
   }
@@ -98,11 +98,11 @@ function executarAnimacaoSangue(tema, onMidpoint) {
 
   transitionOverlay.style.opacity = "1";
   transitionOverlay.style.backgroundColor = "transparent"; 
-  const simbolo = injecarSimboloTransicao(tema);
+  const simbolo = injecarSimboloTransicao(tema); // <- Agora pega o .webp branco
 
   const numCortes = 15;
   const numSplatters = 40;
-  const corSangue = getCorTransicao(tema);
+  const corSangue = getCorTransicao(tema); // <- Pega a cor vermelha de fundo
 
   activeTimeline = gsap.timeline({
     onComplete: () => {
@@ -201,17 +201,18 @@ function executarAnimacaoSangue(tema, onMidpoint) {
   }
   
   // 4. Símbolo do Sangue (Centralizado)
+  // O símbolo .webp (branco) irá contrastar com o fundo vermelho
   if (simbolo) {
     activeTimeline.fromTo(simbolo, 
       { 
         opacity: 0, 
         scale: 0.8, 
         filter: "brightness(1)",
-        xPercent: -50, // <-- Centraliza
-        yPercent: -50  // <-- Centraliza
+        xPercent: -50,
+        yPercent: -50
       },
       { 
-        opacity: 0.8, 
+        opacity: 0.8, // Opacidade do símbolo
         scale: 1, 
         filter: "brightness(2)",
         xPercent: -50,
@@ -239,7 +240,7 @@ function executarAnimacaoSangue(tema, onMidpoint) {
   
   activeTimeline.fromTo(transitionOverlay, 
     { backgroundColor: "transparent" },
-    { backgroundColor: corSangue, duration: 0.5 },
+    { backgroundColor: corSangue, duration: 0.5 }, // O "quadrado vermelho"
     0.8
   );
   
@@ -285,14 +286,13 @@ function executarAnimacaoConhecimento(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { duration: 0.2, opacity: 1 })
   if (simbolo) {
-    // Símbolo do Conhecimento (Centralizado)
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 
       duration: 0.3, 
       ease: "power2.out",
-      xPercent: -50, // <-- Centraliza
-      yPercent: -50  // <-- Centraliza
+      xPercent: -50,
+      yPercent: -50
     }, 0.5)
     activeTimeline.to(simbolo, { 
       opacity: 0, 
@@ -347,14 +347,13 @@ function executarAnimacaoMorte(tema, onMidpoint) {
   
   activeTimeline.to(transitionOverlay, { backgroundColor: novaCorDeFundo, duration: 2.0, ease: "power1.in" })
   if(simbolo) {
-    // Símbolo da Morte (Centralizado)
     activeTimeline.to(simbolo, { 
       opacity: 0.3, 
       scale: 1, 
       duration: 1.0, 
       ease: "power1.inOut",
-      xPercent: -50, // <-- Centraliza
-      yPercent: -50  // <-- Centraliza
+      xPercent: -50,
+      yPercent: -50
     }, 1.0)
     activeTimeline.to(simbolo, { 
       opacity: 0, 
@@ -392,7 +391,6 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // 1. Escolhe a animação
   switch (tema) {
-    // O 'tema-sangue' é tratado no App.jsx, mas deixamos um fallback
     case "tema-sangue":
       executarAnimacaoSangue(tema, onMidpointCallback);
       return;
@@ -410,7 +408,7 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
     case "tema-energia":
       transitionOverlay.style.backgroundColor = novaCorDeFundo;
       // --- CORREÇÃO APLICADA AQUI (Glitch .webp) ---
-      transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.webp')"; // Alterado de .png para .webp
+      transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.webp')"; 
       // --- FIM DA CORREÇÃO ---
       transitionOverlay.style.backgroundSize = "cover";
       transitionOverlay.style.backgroundPosition = "center";
@@ -461,7 +459,6 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // Animação do símbolo
   if (simbolo) {
-    // Adiciona xPercent e yPercent para forçar a centralização
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 

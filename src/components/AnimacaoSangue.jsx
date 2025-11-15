@@ -1,5 +1,5 @@
 // /src/components/AnimacaoSangue.jsx
-// (ATUALIZADO: Duração total de 4s, aceleração mais agressiva e símbolo atrasado)
+// (VERSÃO CORRIGIDA - Caminho da textura do símbolo corrigido para .webp)
 
 import React, { useEffect, useRef, memo } from 'react';
 import * as THREE from 'three';
@@ -13,7 +13,7 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
         renderer: null,
         clock: null,
         allCuts: [],
-        symbolMaterial: null, // <-- MUDANÇA: Referência para o material do símbolo
+        symbolMaterial: null, 
         timeToNextCut: 0.4,
         cutInterval: 0.4,
         animationFrameId: null,
@@ -139,8 +139,7 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
         const mount = mountRef.current;
         
         const minInterval = 0.005;
-        // <-- MUDANÇA 1: ACELERAÇÃO MAIS AGRESSIVA
-        const accelerationFactor = 0.82; // Era 0.88
+        const accelerationFactor = 0.82; 
 
         function init() {
             state.clock = new THREE.Clock();
@@ -163,23 +162,26 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
             mount.appendChild(state.renderer.domElement);
 
             const textureLoader = new THREE.TextureLoader();
+            
+            // --- INÍCIO DA CORREÇÃO ---
+            // O caminho foi corrigido de .png para .webp
             textureLoader.load(
-                '/assets/images/SimboloSangue.png', 
+                '/assets/images/SimboloSangue.webp', 
+            // --- FIM DA CORREÇÃO ---
                 (texture) => {
                     const symbolAspect = texture.image.width / texture.image.height;
                     const symbolHeight = 5;
                     const symbolWidth = symbolHeight * symbolAspect;
                     const symbolGeo = new THREE.PlaneGeometry(symbolWidth, symbolHeight);
                     
-                    // <-- MUDANÇA 2: SÍMBOLO COMEÇA INVISÍVEL
                     const symbolMat = new THREE.MeshBasicMaterial({ 
                         map: texture, 
                         transparent: true,
-                        color: 0xffffff,
-                        opacity: 0.0 // Começa invisível
+                        color: 0xffffff, // Multiplica a textura por branco (mantém a cor original)
+                        opacity: 0.0 
                     });
                     
-                    state.symbolMaterial = symbolMat; // Salva a referência do material
+                    state.symbolMaterial = symbolMat; 
                     
                     const symbolMesh = new THREE.Mesh(symbolGeo, symbolMat);
                     symbolMesh.position.z = 0;
@@ -187,9 +189,11 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
                 },
                 undefined,
                 (err) => {
+                    // Se falhar (mesmo com o .webp), ele mostrará um quadrado vermelho
+                    // que foi o que provavelmente aconteceu antes.
                     console.error('Erro ao carregar a textura do símbolo:', err); 
                     const symbolGeo = new THREE.PlaneGeometry(3, 3);
-                    const symbolMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                    const symbolMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Fallback
                     const symbolMesh = new THREE.Mesh(symbolGeo, symbolMat);
                     symbolMesh.position.z = 0;
                     state.scene.add(symbolMesh);
@@ -303,13 +307,12 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
                 state.timeToNextCut = state.cutInterval;
             }
 
-            // <-- MUDANÇA 3: FAZ OS CORTES DURAREM MENOS (0.66s)
-            const cutLifeSpan = 1.5; // (1.0 / 1.5 = 0.66s de vida)
+            const cutLifeSpan = 1.5; 
 
             for (let i = state.allCuts.length - 1; i >= 0; i--) {
                 const cut = state.allCuts[i];
                 cut.material.uniforms.u_time.value = elapsedTime;
-                cut.material.uniforms.u_age.value += delta * cutLifeSpan; // <-- Aplica a vida mais curta
+                cut.material.uniforms.u_age.value += delta * cutLifeSpan; 
 
                 if (cut.material.uniforms.u_age.value > 1.0) {
                     if(cut.mesh.parent) {
@@ -321,17 +324,13 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
                 }
             }
 
-            // <-- MUDANÇA 4: LÓGICA DE FADE-IN DO SÍMBOLO
             if (state.symbolMaterial) {
-                const fadeInStart = 1.5; // Começa a aparecer em 1.5s
-                const fadeInDuration = 1.5; // Leva 1.5s para aparecer
+                const fadeInStart = 1.5; 
+                const fadeInDuration = 1.5; 
                 
-                // Calcula o progresso (0 a 1)
                 const progress = (elapsedTime - fadeInStart) / fadeInDuration;
-                // Garante que a opacidade fique entre 0 e 1
                 const opacity = Math.max(0.0, Math.min(1.0, progress));
                 
-                // Define a opacidade (max 80%)
                 state.symbolMaterial.opacity = opacity * 0.8; 
             }
             
@@ -343,7 +342,6 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
         if (isVisible) {
             init();
             
-            // <-- MUDANÇA 5: DURAÇÃO TOTAL AUMENTADA
             timeoutId = setTimeout(() => {
                 onComplete(); 
             }, 4000); // 4 segundos
