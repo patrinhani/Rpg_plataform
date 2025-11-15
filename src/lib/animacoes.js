@@ -1,5 +1,5 @@
 // /src/lib/animacoes.js
-// (VERSÃO CORRIGIDA - Centralização do símbolo de 'tema-ordem')
+// (VERSÃO CORRIGIDA - Caminhos atualizados para .webp)
 
 import { gsap } from "gsap";
 
@@ -58,28 +58,30 @@ function injecarSimboloTransicao(tema) {
   const img = document.createElement("img");
   img.className = "transition-symbol";
 
+  // --- CORREÇÃO APLICADA AQUI (usando .webp) ---
   switch (tema) {
     case "tema-ordem":
-      img.src = "/assets/images/SimboloSemafinidade.png";
+      img.src = "/assets/images/SimboloSemafinidade.webp"; // Alterado de .png para .webp
       img.id = "simbolo-ordem-trans";
       break;
     case "tema-sangue":
-      img.src = "/assets/images/SimboloSangue.png";
+      img.src = "/assets/images/SimboloSangue.webp"; // Alterado de .png para .webp
       img.id = "simbolo-sangue-trans";
       break;
     case "tema-morte":
-      img.src = "/assets/images/SimboloMorte.png";
+      img.src = "/assets/images/SimboloMorte.webp"; // Alterado de .png para .webp
       img.id = "simbolo-morte-trans";
       break;
     case "tema-conhecimento":
-      img.src = "/assets/images/SimboloConhecimento.png";
+      img.src = "/assets/images/SimboloConhecimento.webp"; // Alterado de .png para .webp
       img.id = "simbolo-conhecimento-trans";
       break;
     case "tema-energia":
-      img.src = "/assets/images/SimboloEnergia.png";
+      img.src = "/assets/images/SimboloEnergia.webp"; // Alterado de .png para .webp
       img.id = "simbolo-energia-trans";
       break;
   }
+  // --- FIM DA CORREÇÃO ---
 
   transitionOverlay.appendChild(img);
   return img;
@@ -407,7 +409,9 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       break;
     case "tema-energia":
       transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.png')"; 
+      // --- CORREÇÃO APLICADA AQUI (Glitch .webp) ---
+      transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.webp')"; // Alterado de .png para .webp
+      // --- FIM DA CORREÇÃO ---
       transitionOverlay.style.backgroundSize = "cover";
       transitionOverlay.style.backgroundPosition = "center";
       transitionOverlay.style.backgroundRepeat = "no-repeat";
@@ -457,15 +461,14 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
 
   // Animação do símbolo
   if (simbolo) {
-    // --- INÍCIO DA CORREÇÃO ---
     // Adiciona xPercent e yPercent para forçar a centralização
     activeTimeline.to(simbolo, { 
       opacity: 1, 
       scale: 1, 
       duration: animationTimeInSeconds * 0.3, 
       ease: "power2.out",
-      xPercent: -50, // <-- CORREÇÃO
-      yPercent: -50  // <-- CORREÇÃO
+      xPercent: -50,
+      yPercent: -50
     }, animationTimeInSeconds * 0.25);
     
     activeTimeline.to(simbolo, { 
@@ -473,10 +476,9 @@ export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
       scale: 0.9, 
       duration: animationTimeInSeconds * 0.3, 
       ease: "power2.in",
-      xPercent: -50, // <-- CORREÇÃO
-      yPercent: -50  // <-- CORREÇÃO
+      xPercent: -50,
+      yPercent: -50
     }, halfTime); 
-    // --- FIM DA CORREÇÃO ---
   }
 }
 
