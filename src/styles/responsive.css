@@ -1,26 +1,36 @@
 /* css/responsive.css */
-/* (Layout Móvel Reestruturado para Recursos 2x2 e Hexágono) */
+/* (Layout Móvel Reestruturado - Recursos 3+1 com inputs menores) */
 
 /* --- 1. Telas Médias (Tablets) --- */
 @media (max-width: 1100px) {
   
-  /* --- NOVO LAYOUT 2X2 PARA RECURSOS --- */
+  /* --- LAYOUT 2X2 PARA RECURSOS (TABLET) --- */
   .recursos-container-fixo {
     padding: 10px;
   }
   .box-recursos {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 colunas */
-    grid-template-rows: auto auto; /* 2 linhas */
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
     gap: 10px;
   }
   .recurso-individual {
-    width: 100%; /* Ocupa a célula do grid */
+    width: 100%; 
     padding: 5px;
     background-color: var(--cor-caixa);
     border: 1px solid var(--cor-borda);
     border-radius: 4px;
+    min-height: 110px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
+  
+  #bloco-furtividade {
+     height: auto; 
+     justify-content: flex-start;
+  }
+
   .recurso-individual label {
     font-size: 1.3em;
   }
@@ -28,7 +38,7 @@
   .recurso-individual .recurso-max,
   .recurso-individual .recurso-separador {
     font-size: 1.3em;
-    width: 60px; /* Inputs menores */
+    width: 60px;
   }
   .barra-recurso {
     height: 10px;
@@ -36,8 +46,7 @@
 
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    /* (Altura do grid 2x2 + padding) */
-    top: 220px; 
+    top: 240px; 
     padding: 10px;
   }
 
@@ -46,14 +55,14 @@
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "identidade identidade"
-      "atributos  defesa"     /* Atributos e Defesa lado a lado */
+      "atributos  defesa"
       "pericias   pericias"
       "controles  controles"
       "calculo    calculo";
   }
 
   .box-atributos {
-    max-width: 100%; /* Hexágono ocupa sua coluna */
+    max-width: 100%;
   }
 
   input[type="number"].input-hex {
@@ -99,33 +108,57 @@
     padding: 15px;
   }
   
-  /* Layout Fixo Responsivo (Recursos 2x2) */
+  /* --- (NOVO) Layout Fixo Responsivo (Recursos 3 + 1) --- */
   .recursos-container-fixo {
     padding: 10px 10px 5px 10px;
   }
   .box-recursos {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
   .recurso-individual {
-    padding: 5px;
+    flex-basis: calc(33.33% - 6px);
+    flex-grow: 1;
+    min-width: 90px;
+    
+    padding: 5px 4px; /* Reduz o padding lateral */
+    background-color: var(--cor-caixa);
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+    min-height: 0;
   }
+  
+  #bloco-furtividade {
+    flex-basis: 100%;
+    width: 100%;
+    min-height: 0;
+  }
+
   .recurso-individual label {
-    font-size: 1.2em;
+    font-size: 1.1em; 
     margin-bottom: 2px;
   }
   .barra-recurso {
     margin-bottom: 5px;
   }
+
+  /* --- INÍCIO DA CORREÇÃO --- */
+  .recurso-numeros {
+    gap: 2px; /* Reduz o espaço entre os números */
+  }
   .recurso-individual .recurso-atual,
   .recurso-individual .recurso-max,
   .recurso-individual .recurso-separador {
-    font-size: 1.2em;
-    width: 50px;
+    font-size: 1.1em; /* Fonte menor */
+    width: 38px;      /* Inputs menores */
   }
+  /* --- FIM DA CORREÇÃO --- */
+
 
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    top: 210px; /* Posição ajustada para o grid 2x2 */
+    top: 175px; 
     padding: 5px 10px;
     gap: 5px;
     overflow-x: auto;
@@ -139,22 +172,20 @@
 
   /* --- Layout da Ficha Principal (Celular) --- */
   .ficha-container {
-    grid-template-columns: 1fr; /* Coluna única */
+    grid-template-columns: 1fr; 
     grid-template-areas:
       "identidade"
-      "atributos"  /* Hexágono mantido */
+      "atributos"
       "defesa"
       "pericias"   
       "controles"  
       "calculo";
   }
 
-  /* Bloco do Hexágono */
   .box-atributos {
-     max-width: 400px; /* Limita o tamanho do hexágono no centro */
+     max-width: 400px; 
   }
   
-  /* Bloco de Defesa (força 2x2) */
   .box-defesa-status {
      flex-wrap: wrap;
   }
@@ -169,7 +200,6 @@
   }
   
   /* --- AJUSTE FINO (CELULAR) --- */
-  /* (Valores ajustados para um max-width de 400px) */
   #forca {
     top: 31%;
     left: 16%;
@@ -270,14 +300,13 @@
     font-size: 90%;
   }
   
-  /* Posição das abas (depende do 2x2 grid de recursos) */
   .ficha-abas {
-    top: 200px; /* Ajuste fino para telas menores */
+    top: 170px; 
   }
 
   /* Hexágono e Inputs */
   .box-atributos {
-     max-width: 320px; /* Hexágono ainda menor */
+     max-width: 320px; 
   }
   input[type="number"].input-hex {
     font-size: 1.8em;
@@ -285,7 +314,6 @@
   }
   
   /* --- AJUSTE FINO (CELULAR PEQUENO) --- */
-  /* (Valores ajustados para um max-width de 320px) */
   #forca {
     top: 31%;
     left: 16%;
@@ -306,7 +334,6 @@
     top: 64%;
     left: 63%;
   }
-
 
   /* Ajuste Cards de Perícia */
   .pericias-grid-container {
@@ -344,11 +371,18 @@
     flex-basis: auto;
   }
   
-  /* Recursos (Inputs menores) */
+  /* --- INÍCIO DA CORREÇÃO --- */
+  .recurso-individual {
+    padding: 5px 2px; /* Padding lateral ainda menor */
+  }
+  .recurso-numeros {
+    gap: 1px; /* Gap mínimo */
+  }
   .recurso-individual .recurso-atual,
   .recurso-individual .recurso-max,
   .recurso-individual .recurso-separador {
-    font-size: 1.1em;
-    width: 45px;
+    font-size: 1.0em; /* Fonte bem pequena */
+    width: 35px;      /* Inputs bem pequenos */
   }
+  /* --- FIM DA CORREÇÃO --- */
 }
