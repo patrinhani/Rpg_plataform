@@ -703,7 +703,7 @@ function App() {
         )}
 
         <footer>
-          <p>Este é um projeto de fã. Baseado no sistema Ordem Paranormal RPG.</p>
+          <p></p>
         </footer>
 
         {/* OTIMIZAÇÃO: Modais só renderizam quando abertos */}

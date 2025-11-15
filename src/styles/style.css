@@ -1,4 +1,5 @@
 /* css/style.css */
+/* (VERSÃO CORRIGIDA - Traz de volta o Posicionamento Absoluto do Hexágono) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -6,7 +7,7 @@
 @font-face {
   font-family: "SigilosDeConhecimento";
   src: url("/assets/fonte/SigilosDeConhecimento.ttf") format("truetype");
-  font-display: swap; /* Otimização de fonte */
+  font-display: swap; 
 }
 
 /* --- 2. Reset Básico e Variáveis de Cor --- */
@@ -26,7 +27,6 @@
   --cor-trans-energia: #2a002e;
   --cor-destaque-conhecimento: #ffeb3b;
   
-  /* --- Cores de Tensão/Sucesso/Morte --- */
   --cor-tensao: #a10000;
   --cor-tensao-brilho: #ff4444;
   --cor-sucesso: #0091ff;
@@ -85,7 +85,7 @@ h2 {
   font-size: 1.4em;
 }
 
-/* --- 4. Layout Principal com CSS Grid --- */
+/* --- 4. Layout Principal com CSS Grid (Desktop) --- */
 body {
   font-family: "Roboto Condensed", sans-serif;
   background-color: var(--cor-fundo);
@@ -104,7 +104,6 @@ body {
     "controles  pericias"
     "atributos  pericias"
     "defesa     pericias"
-    "progressao progressao"
     "calculo    calculo";
 }
 #grid-identidade {
@@ -148,7 +147,7 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  transition: border-color 0.5s ease; /* Transição para o modo tensão */
+  transition: border-color 0.5s ease;
 }
 
 /* --- 6. Estilos Específicos dos Blocos --- */
@@ -192,28 +191,24 @@ footer {
   background-color: transparent;
   border: none;
   padding: 0;
-  text-align: center; /* Centraliza o label */
-  width: 25%; /* Ajustado para 4 colunas */
+  text-align: center;
+  width: 25%;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centraliza tudo */
+  align-items: center;
 }
-
-/* Label (PV, PE, SAN) */
 .recurso-individual label {
   font-size: 1.8em;
   color: var(--cor-destaque);
   margin-bottom: 5px;
 }
-
-/* Barra de Recurso */
 .barra-recurso {
   width: 100%;
   height: 15px; 
   background-color: var(--cor-fundo);
   border: 1px solid var(--cor-texto-label);
   border-radius: 10px; 
-  margin: 0 0 8px 0; /* Espaço abaixo da barra */
+  margin: 0 0 8px 0;
   overflow: hidden;
 }
 .barra-preenchimento {
@@ -223,8 +218,6 @@ footer {
   transition: width 0.3s ease;
   border-radius: 10px;
 }
-
-/* Container dos números (Atual / Max) */
 .recurso-numeros {
   display: flex;
   align-items: center;
@@ -232,39 +225,34 @@ footer {
   gap: 5px;
   width: 100%;
 }
-
 .recurso-individual .recurso-atual {
   font-family: "Special Elite", monospace;
-  font-size: 1.8em; /* Tamanho grande */
+  font-size: 1.8em;
   color: var(--cor-texto-principal);
-  background-color: var(--cor-caixa); /* Fundo de caixa */
-  border: 1px solid var(--cor-borda); /* Borda de destaque */
+  background-color: var(--cor-caixa);
+  border: 1px solid var(--cor-borda);
   border-radius: 4px;
   text-align: center;
-  width: 80px; /* Largura maior */
+  width: 80px;
   padding: 2px 5px;
 }
-
 .recurso-separador {
   font-family: "Special Elite", monospace;
   font-size: 1.8em;
   color: var(--cor-texto-label);
   padding: 0 5px;
 }
-
 .recurso-individual .recurso-max {
   font-family: "Special Elite", monospace;
-  font-size: 1.8em; /* Tamanho grande */
-  color: var(--cor-texto-label); /* Cor de label */
-  background: none; /* Sem fundo */
-  border: none; /* Sem borda */
+  font-size: 1.8em;
+  color: var(--cor-texto-label);
+  background: none;
+  border: none;
   text-align: center;
-  width: 80px; /* Largura igual ao atual */
+  width: 80px;
   padding: 2px 5px;
   cursor: default;
 }
-
-/* Remove as setas dos inputs de número */
 .recurso-individual input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -274,8 +262,6 @@ footer {
   -webkit-appearance: none;
   margin: 0;
 }
-
-
 :root[data-tema="tema-morte"] .box-controles button,
 :root[data-tema="tema-morte"]
   .box-controles
@@ -375,7 +361,7 @@ textarea {
   font-size: 1.1em;
 }
 
-/* --- 9. Estilo do Hexágono de Atributos --- */
+/* --- 9. Estilo do Hexágono de Atributos (DESKTOP) --- */
 .box-atributos {
   position: relative;
   background-size: contain;
@@ -389,7 +375,6 @@ textarea {
   border: none;
   background-color: transparent;
 }
-/* ----- ALTERAÇÕES AQUI ----- */
 :root[data-tema="tema-ordem"] .box-atributos {
   background-image: url("/assets/images/hexagono.webp");
 }
@@ -405,7 +390,6 @@ textarea {
 :root[data-tema="tema-energia"] .box-atributos {
   background-image: url("/assets/images/hexagonoEnergia.webp");
 }
-/* ----- FIM DAS ALTERAÇÕES ----- */
 
 input[type="number"].input-hex {
   position: absolute;
@@ -427,25 +411,25 @@ input[type="number"].input-hex {
   margin: 0;
 }
 
-/* --- 10. Posicionamento dos Inputs --- */
+/* --- 10. Posicionamento dos Inputs (DESKTOP) --- */
 #forca {
-  top: 30%;
-  left: 18%;
+  top: 32%;
+  left: 17%;
 }
 #agilidade {
-  top: 10%;
-  left: 45%;
+  top: 14%;
+  left: 44%;
 }
 #intelecto {
-  top: 30%;
-  left: 72%;
+  top: 32%;
+  left: 71%;
 }
 #presenca {
-  top: 66%;
-  left: 26%;
+  top: 64%;
+  left: 25%;
 }
 #vigor {
-  top: 66%;
+  top: 64%;
   left: 64%;
 }
 
@@ -605,8 +589,6 @@ input[type="number"].input-hex {
   clip-path: revert;
   overflow: hidden;
 }
-
-/* 1. O "CORTE" (A RASGADURA) */
 .particula-corte {
   position: absolute;
   background-color: #000;
@@ -614,8 +596,7 @@ input[type="number"].input-hex {
   transform-origin: center center;
   z-index: 1002;
 }
-
-.particula-sangue {
+.particula-sangue-splatter {
   position: absolute;
   border-radius: 50%;
   background-color: var(--cor-trans-sangue);
@@ -624,7 +605,6 @@ input[type="number"].input-hex {
   transform-origin: center center;
   z-index: 1001;
 }
-
 .particula-morte {
   position: absolute;
   background-color: #000;
@@ -640,8 +620,6 @@ input[type="number"].input-hex {
   text-shadow: 0 0 8px var(--cor-destaque-conhecimento),
     0 0 15px rgba(255, 235, 59, 0.4);
 }
-/* --- Definição das Animações (Keyframes) --- */
-
 @keyframes anim-fade {
   0% {
     opacity: 0;
@@ -653,18 +631,9 @@ input[type="number"].input-hex {
     opacity: 0;
   }
 }
-
-
-/* 4. Energia (Glitch de Imagem) */
 #transition-overlay.anim-energia {
-  /* Esta regra aplica a animação de glitch (transform) */
   animation: anim-glitch-image 1s ease;
 }
-
-/* ... (resto do CSS) ... */
-
-/* 5. Animação de ENERGIA (Glitch de Imagem) - SOMENTE TRANSFORM */
-
 @keyframes anim-glitch-image {
   0% {
     transform: translateX(0px);
@@ -701,15 +670,12 @@ input[type="number"].input-hex {
   }
 }
 
-/* ... (resto do seu CSS) ... */
 /* --- 13. Estilos de Carga e Inventário --- */
 .ficha-container-inventario {
   max-width: 1400px;
-  margin: 0 auto; /* <-- MUDANÇA: margin-top removido */
+  margin: 0 auto; 
   padding: 20px;
-  /* <-- MUDANÇA: padding-top removido */
 }
-
 .box-inventario {
   background-color: var(--cor-caixa);
   border: 2px solid var(--cor-borda);
@@ -874,7 +840,7 @@ input[type="number"].input-hex {
   margin-top: 15px;
 }
 
-/* --- 18. (ATUALIZADO) Estilos de Perícia em Card com "Dado" --- */
+/* --- 18. Estilos de Perícia em Card com "Dado" --- */
 .pericias-grid-container {
   list-style: none;
   display: grid;
@@ -976,22 +942,16 @@ input[type="number"].input-hex {
   font-size: 2em; 
   text-shadow: 0 0 8px var(--cor-destaque);
 }
-/* Garante o contraste do texto do dado em temas claros */
-
-/* Define a cor do texto do dado (o "5d", "2d", etc.) para escuro */
 :root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-texto,
 :root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-texto {
   color: var(--cor-fundo); 
 }
-
-/* Garante que o bônus (+5, +10) também use a cor escura nesses temas */
 :root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-shape,
 :root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-shape {
   color: var(--cor-fundo);
 }
 
-
-/* --- 19. (NOVO) Estilo para Bônus de Origem Automático --- */
+/* --- 19. Estilo para Bônus de Origem Automático --- */
 .calc-linha.origem-bonus {
   color: var(--cor-destaque);
 }
@@ -1005,7 +965,7 @@ input[type="number"].input-hex {
   font-size: 1.2em;
 }
 
-/* --- 20. (NOVO) Estilos do Contador de Perícias --- */
+/* --- 20. Estilos do Contador de Perícias --- */
 .pericias-header {
   display: flex;
   justify-content: space-between;
@@ -1036,7 +996,7 @@ input[type="number"].input-hex {
   color: var(--cor-texto-principal);
 }
 
-/* --- 21. (NOVO) Estilos do Parallax Background --- */
+/* --- 21. Estilos do Parallax Background --- */
 #parallax-background {
   position: fixed; 
   top: 0;
@@ -1055,7 +1015,7 @@ input[type="number"].input-hex {
   max-width: 800px;
   transform: translate(-50%, -50%);
   opacity: 0;
-  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out, filter 0.5s ease; /* Adicionado filter */
+  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out, filter 0.5s ease;
 }
 :root[data-tema="tema-ordem"] #simbolo-ordem {
   opacity: 0.05; 
@@ -1073,7 +1033,7 @@ input[type="number"].input-hex {
   opacity: 0.07; 
 }
 
-/* --- 22. (NOVO) Estilo do Símbolo na Transição --- */
+/* --- 22. Estilo do Símbolo na Transição --- */
 .transition-symbol {
   position: absolute;
   top: 50%;
@@ -1089,19 +1049,19 @@ input[type="number"].input-hex {
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.7)) brightness(2);
 }
 
-/* --- 23. (ATUALIZADO) Abas Principais --- */
+/* --- 23. Abas Principais --- */
 .ficha-abas {
   max-width: 1400px;
-  margin: 0 auto; /* Margin-top removido */
-  padding: 10px 20px; /* Adicionado padding vertical */
+  margin: 0 auto;
+  padding: 10px 20px; 
   display: flex;
   gap: 10px;
   
   position: sticky;
-  top: 90px; /* <-- MUDANÇA: Ajustado para a altura da nova barra de recursos */
+  top: 90px; 
   background: var(--cor-fundo);
   z-index: 800;
-  border-bottom: 2px solid var(--cor-caixa); /* Borda mais sutil */
+  border-bottom: 2px solid var(--cor-caixa); 
 }
 .ficha-aba-link {
   padding: 10px 20px;
@@ -1109,6 +1069,9 @@ input[type="number"].input-hex {
   background-color: var(--cor-caixa-recurso);
   border: 2px solid var(--cor-caixa);
   color: var(--cor-texto-label);
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 .ficha-aba-link.active {
   background-color: var(--cor-caixa);
@@ -1121,19 +1084,20 @@ input[type="number"].input-hex {
 .ficha-aba-conteudo.active {
   display: block;
 }
-/* Remove a margem do topo da FichaPrincipal quando ela está ativa */
 .ficha-aba-conteudo.active .ficha-container {
   margin-top: 0;
 }
 
-/* --- 24. (NOVO) Card de Item (Inventário & Loja) --- */
+/* --- 24. Card de Item (Inventário & Loja) --- */
 #lista-inventario-pessoal {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
 }
-#lista-inventario-pessoal .item-placeholder {
+#lista-inventario-pessoal .item-placeholder,
+#lista-rituais .item-placeholder,
+#lista-diario .item-placeholder { 
   color: var(--cor-texto-label);
   text-align: center;
   padding: 20px;
@@ -1249,7 +1213,7 @@ input[type="number"].input-hex {
   color: var(--cor-caixa);
 }
 
-/* --- 25. (CORRIGIDO) Card de Ritual --- */
+/* --- 25. Card de Ritual --- */
 .ritual-card .item-header {
   background-color: var(--cor-caixa-recurso);
   border-bottom: 1px solid var(--cor-caixa); 
@@ -1300,10 +1264,13 @@ input[type="number"].input-hex {
   font-style: italic;
 }
 
-/* --- 26. (NOVO) Modal de Seleção de Perícia --- */
+/* --- 26. Modal de Seleção de Perícia --- */
 .modal-conteudo.modal-pequeno {
   max-width: 500px; 
   max-height: 80vh;
+}
+.modal-conteudo.modal-grande {
+  max-width: 1200px;
 }
 #modal-pericia-descricao {
   color: var(--cor-texto-label);
@@ -1341,47 +1308,43 @@ input[type="number"].input-hex {
   color: #111; 
 }
 
-/* --- 27. (ATUALIZADO) Container Fixo de Recursos --- */
+/* --- 27. Container Fixo de Recursos --- */
 .recursos-container-fixo {
   max-width: 1400px; 
   margin: 0 auto;
-  padding: 15px 20px 10px 20px; /* Padding ajustado */
-  background-color: var(--cor-caixa-recurso); /* Fundo escuro da barra */
-  border-bottom: 2px solid var(--cor-borda); /* Borda de destaque */
+  padding: 15px 20px 10px 20px;
+  background-color: var(--cor-caixa-recurso); 
+  border-bottom: 2px solid var(--cor-borda); 
   
   position: sticky;
   top: 0;
   z-index: 900;
-  transition: border-color 0.5s ease; /* Transição para o modo tensão */
+  transition: border-color 0.5s ease; 
 }
-
-/* Ajusta o padding do container de inventário/rituais/etc */
 .ficha-container-inventario {
-  padding-top: 20px; /* <-- MUDANÇA: Devolvido o padding superior */
+  padding-top: 20px; 
   margin-top: 0;
 }
 
 
-/* --- 25. (NOVO) Overlay da Animação Three.js --- */
+/* --- 25. Overlay da Animação Three.js --- */
 #three-transition-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999; /* Garante que fique acima de tudo */
-  pointer-events: none; /* Permite cliques "através" */
-  background-color: var(--cor-trans-sangue); /* Cor de fundo sólida */
+  z-index: 9999; 
+  pointer-events: none; 
+  background-color: var(--cor-trans-sangue); 
 }
-
-/* O canvas gerado pelo Three.js */
 #three-transition-overlay canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* --- (INÍCIO) Estilo dos Trackers de Furtividade/Perseguição --- */
+/* --- Estilo dos Trackers de Furtividade/Perseguição --- */
 #bloco-furtividade {
   align-items: center;
   gap: 5px; 
@@ -1406,8 +1369,6 @@ input[type="number"].input-hex {
   font-size: 1.1em;
   color: var(--cor-texto-label);
 }
-
-/* --- Tracker Visibilidade (Botões +/-) --- */
 .vis-tracker-container {
   display: flex;
   align-items: center;
@@ -1433,7 +1394,6 @@ input[type="number"].input-hex {
   width: 30px;
   text-align: center;
 }
-/* Quando visibilidade = 3 (full) */
 .tracker-linha.visibilidade.full {
   border-color: var(--cor-tensao);
 }
@@ -1445,8 +1405,6 @@ input[type="number"].input-hex {
   border-color: var(--cor-tensao);
   color: var(--cor-tensao);
 }
-
-/* --- Tracker Perseguição (Boxes) --- */
 .perseguicao-container {
   width: 100%;
   margin-top: 10px;
@@ -1457,7 +1415,7 @@ input[type="number"].input-hex {
   gap: 5px;
 }
 .perseguicao-container label {
-  font-size: 1.2em; /* Label "PERSEGUIÇÃO" */
+  font-size: 1.2em;
   margin-bottom: 5px;
 }
 .tracker-linha.sucesso,
@@ -1480,21 +1438,16 @@ input[type="number"].input-hex {
   transition: all 0.2s ease;
   border-radius: 2px;
 }
-
-/* Efeito 1: Box Marcado (Sucesso) */
 .tracker-linha.sucesso .tracker-box.checked {
-  background-color: var(--cor-sucesso); /* Azul/Ordem */
+  background-color: var(--cor-sucesso);
   border-color: var(--cor-sucesso);
   box-shadow: 0 0 8px var(--cor-sucesso);
 }
-/* Efeito 1: Box Marcado (Falha) */
 .tracker-linha.falha .tracker-box.checked {
-  background-color: var(--cor-tensao); /* Vermelho */
+  background-color: var(--cor-tensao);
   border-color: var(--cor-tensao);
   box-shadow: 0 0 8px var(--cor-tensao);
 }
-
-/* Efeito 2: Linha Completa (Animação de Pulso) */
 .tracker-linha.full.sucesso .tracker-box.checked {
   animation: pulse-success 1.2s infinite ease-in-out;
 }
@@ -1517,7 +1470,6 @@ input[type="number"].input-hex {
   color: var(--cor-destaque);
 }
 
-/* Keyframes para a animação dos boxes */
 @keyframes pulse-success {
   0% { box-shadow: 0 0 8px var(--cor-sucesso); transform: scale(1); }
   50% { box-shadow: 0 0 16px 2px var(--cor-sucesso), 0 0 15px var(--cor-sucesso); transform: scale(1.1); }
@@ -1528,13 +1480,8 @@ input[type="number"].input-hex {
   50% { box-shadow: 0 0 16px 2px var(--cor-tensao), 0 0 15px var(--cor-tensao); transform: scale(1.1); }
   100% { box-shadow: 0 0 8px var(--cor-tensao); transform: scale(1); }
 }
-/* --- (FIM) Estilo dos Trackers --- */
 
-
-
-/* --- (INÍCIO) EFEITOS GLOBAIS (Tensão, Sucesso, Morte) --- */
-
-/* Base (Vinheta) */
+/* --- EFEITOS GLOBAIS (Tensão, Sucesso, Morte) --- */
 html.modo-tensao::before,
 html.modo-sucesso::before,
 html.modo-morte::before {
@@ -1546,22 +1493,17 @@ html.modo-morte::before {
   bottom: 0;
   z-index: 998;
   pointer-events: none;
-  opacity: 0; /* Começa invisível, animação controla */
+  opacity: 0; 
   animation-duration: 2.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
 }
-
-/* Parallax (Símbolo de Fundo) */
 .simbolo-parallax {
-  /* Adiciona animação de filtro */
   animation-duration: 2.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  animation-name: none; /* Começa sem animação */
+  animation-name: none; 
 }
-
-/* -- MODO TENSÃO (Visibilidade 3) -- */
 html.modo-tensao::before {
   animation-name: pulse-vignette-failure;
 }
@@ -1574,8 +1516,6 @@ html.modo-tensao .recursos-container-fixo {
 html.modo-tensao .simbolo-parallax {
   animation-name: pulse-symbol-failure;
 }
-
-/* -- MODO SUCESSO (Perseguição 3 Sucessos) -- */
 html.modo-sucesso::before {
   animation-name: pulse-vignette-success;
 }
@@ -1588,8 +1528,6 @@ html.modo-sucesso .recursos-container-fixo {
 html.modo-sucesso .simbolo-parallax {
   animation-name: pulse-symbol-success;
 }
-
-/* -- MODO MORTE (Perseguição 3 Falhas) -- */
 html.modo-morte::before {
   animation-name: pulse-vignette-morte;
 }
@@ -1602,11 +1540,6 @@ html.modo-morte .recursos-container-fixo {
 html.modo-morte .simbolo-parallax {
   animation-name: pulse-symbol-morte;
 }
-
-
-/* --- (NOVOS/CORRIGIDOS) Keyframes para Tensão, Sucesso e Morte --- */
-
-/* Keyframes para a Tensão (Falha) */
 @keyframes pulse-vignette-failure {
   0% {
     box-shadow: inset 0 0 80px 40px rgba(139, 0, 0, 0.5);
@@ -1631,9 +1564,6 @@ html.modo-morte .simbolo-parallax {
   50% { filter: brightness(2) drop-shadow(0 0 20px rgba(255, 0, 0, 0.8)); }
   100% { filter: brightness(1) drop-shadow(0 0 5px rgba(255, 0, 0, 0)); }
 }
-
-
-/* Keyframes para o Sucesso */
 @keyframes pulse-vignette-success {
   0% {
     box-shadow: inset 0 0 80px 40px rgba(0, 145, 255, 0.3);
@@ -1658,8 +1588,6 @@ html.modo-morte .simbolo-parallax {
   50% { filter: brightness(2) drop-shadow(0 0 20px rgba(0, 145, 255, 0.8)); }
   100% { filter: brightness(1) drop-shadow(0 0 5px rgba(0, 145, 255, 0)); }
 }
-
-/* Keyframes para a Morte (Falha Total) */
 @keyframes pulse-vignette-morte {
   0% {
     box-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.7);

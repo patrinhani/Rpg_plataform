@@ -1,29 +1,90 @@
 /* css/responsive.css */
+/* (Layout Móvel Reestruturado para Recursos 2x2 e Hexágono) */
 
-/* --- 1. Telas Médias (Tablets, Laptops Pequenos) --- */
+/* --- 1. Telas Médias (Tablets) --- */
 @media (max-width: 1100px) {
+  
+  /* --- NOVO LAYOUT 2X2 PARA RECURSOS --- */
+  .recursos-container-fixo {
+    padding: 10px;
+  }
+  .box-recursos {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 colunas */
+    grid-template-rows: auto auto; /* 2 linhas */
+    gap: 10px;
+  }
+  .recurso-individual {
+    width: 100%; /* Ocupa a célula do grid */
+    padding: 5px;
+    background-color: var(--cor-caixa);
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+  }
+  .recurso-individual label {
+    font-size: 1.3em;
+  }
+  .recurso-individual .recurso-atual,
+  .recurso-individual .recurso-max,
+  .recurso-individual .recurso-separador {
+    font-size: 1.3em;
+    width: 60px; /* Inputs menores */
+  }
+  .barra-recurso {
+    height: 10px;
+  }
+
+  /* Ajusta a posição das Abas */
+  .ficha-abas {
+    /* (Altura do grid 2x2 + padding) */
+    top: 220px; 
+    padding: 10px;
+  }
+
+  /* --- Layout da Ficha Principal (Tablet) --- */
   .ficha-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "identidade"
-      "controles"
-      "defesa"
-      "atributos"
-      "pericias"
-      "calculo";
+      "identidade identidade"
+      "atributos  defesa"     /* Atributos e Defesa lado a lado */
+      "pericias   pericias"
+      "controles  controles"
+      "calculo    calculo";
   }
 
   .box-atributos {
-    max-width: 500px; 
+    max-width: 100%; /* Hexágono ocupa sua coluna */
   }
 
   input[type="number"].input-hex {
-    font-size: 2.5em;
-    width: 60px;
+    font-size: 2.2em;
+    width: 55px;
+  }
+  
+  /* --- AJUSTE FINO (TABLET) --- */
+  #forca {
+    top: 32%;
+    left: 18%;
+  }
+  #agilidade {
+    top: 14%;
+    left: 45%;
+  }
+  #intelecto {
+    top: 32%;
+    left: 72%;
+  }
+  #presenca {
+    top: 64%;
+    left: 26%;
+  }
+  #vigor {
+    top: 64%;
+    left: 64%;
   }
 }
 
-/* --- 2. Telas Pequenas (Tablets em Retrato, Celulares) --- */
+/* --- 2. Telas Pequenas (Celulares) --- */
 @media (max-width: 768px) {
   body {
     font-size: 95%;
@@ -34,67 +95,104 @@
     padding: 10px;
     gap: 15px;
   }
-
   .box {
     padding: 15px;
   }
   
-  /* --- (ATUALIZADO) Layout Fixo Responsivo --- */
+  /* Layout Fixo Responsivo (Recursos 2x2) */
   .recursos-container-fixo {
-    padding: 10px 10px 0 10px;
+    padding: 10px 10px 5px 10px;
   }
-  /* Empilhar Recursos (REGRA EXISTENTE) */
   .box-recursos {
-    flex-direction: column;
-    gap: 15px;
+    gap: 8px;
   }
   .recurso-individual {
-    width: 100%;
-  }
-  .recurso-header {
-    /* Garante que o input não quebre a linha */
-    flex-wrap: nowrap;
+    padding: 5px;
   }
   .recurso-individual label {
-    font-size: 1.5em;
+    font-size: 1.2em;
+    margin-bottom: 2px;
   }
-  .recurso-numeros {
-    font-size: 1.3em;
+  .barra-recurso {
+    margin-bottom: 5px;
   }
   .recurso-individual .recurso-atual,
   .recurso-individual .recurso-max,
   .recurso-individual .recurso-separador {
-    font-size: 1.1em;
+    font-size: 1.2em;
+    width: 50px;
   }
 
-  /* Abas principais */
+  /* Ajusta a posição das Abas */
   .ficha-abas {
-    padding: 5px 10px; /* Mais compacto */
+    top: 210px; /* Posição ajustada para o grid 2x2 */
+    padding: 5px 10px;
     gap: 5px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    /* Ajusta a altura baseado nos 4 recursos empilhados */
-    top: 360px; /* <-- MUDANÇA: Era 250px */
   }
   .ficha-aba-link {
     font-size: 1em;
     padding: 8px 12px;
     flex-shrink: 0;
   }
-  /* --- FIM DA ATUALIZAÇÃO --- */
 
-
-  /* --- Bloco do Hexágono --- */
-  .box-atributos {
-     max-width: 400px;
+  /* --- Layout da Ficha Principal (Celular) --- */
+  .ficha-container {
+    grid-template-columns: 1fr; /* Coluna única */
+    grid-template-areas:
+      "identidade"
+      "atributos"  /* Hexágono mantido */
+      "defesa"
+      "pericias"   
+      "controles"  
+      "calculo";
   }
 
+  /* Bloco do Hexágono */
+  .box-atributos {
+     max-width: 400px; /* Limita o tamanho do hexágono no centro */
+  }
+  
+  /* Bloco de Defesa (força 2x2) */
+  .box-defesa-status {
+     flex-wrap: wrap;
+  }
+  .box-defesa-status .campo-horizontal {
+     flex-basis: calc(50% - 10px);
+     min-width: 120px;
+  }
+  
   input[type="number"].input-hex {
     font-size: 2.2em;
     width: 55px;
   }
+  
+  /* --- AJUSTE FINO (CELULAR) --- */
+  /* (Valores ajustados para um max-width de 400px) */
+  #forca {
+    top: 31%;
+    left: 16%;
+  }
+  #agilidade {
+    top: 13%;
+    left: 44%;
+  }
+  #intelecto {
+    top: 31%;
+    left: 71%;
+  }
+  #presenca {
+    top: 64%;
+    left: 24%;
+  }
+  #vigor {
+    top: 64%;
+    left: 63%;
+  }
 
-  /* --- AJUSTE CARDS DE PERÍCIA (Telas Pequenas) --- */
+
+  /* Ajuste Cards de Perícia */
   .pericias-grid-container {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 8px;
@@ -130,7 +228,7 @@
     gap: 5px;
   }
   .box-controles button,
-  .box-controles label {
+  .box-controles .btn-importar-label {
     flex-grow: 1;
     text-align: center;
     margin: 2px;
@@ -157,6 +255,9 @@
   .form-custom-grid {
     grid-template-columns: 1fr;
   }
+  .modal-conteudo.modal-grande {
+    max-width: 95vw;
+  }
 
   #parallax-background {
     display: none;
@@ -169,16 +270,45 @@
     font-size: 90%;
   }
   
+  /* Posição das abas (depende do 2x2 grid de recursos) */
   .ficha-abas {
-    top: 360px; /* <-- MUDANÇA: Era 250px */
+    top: 200px; /* Ajuste fino para telas menores */
   }
 
+  /* Hexágono e Inputs */
+  .box-atributos {
+     max-width: 320px; /* Hexágono ainda menor */
+  }
   input[type="number"].input-hex {
     font-size: 1.8em;
     width: 45px;
   }
+  
+  /* --- AJUSTE FINO (CELULAR PEQUENO) --- */
+  /* (Valores ajustados para um max-width de 320px) */
+  #forca {
+    top: 31%;
+    left: 16%;
+  }
+  #agilidade {
+    top: 13%;
+    left: 43%;
+  }
+  #intelecto {
+    top: 31%;
+    left: 71%;
+  }
+  #presenca {
+    top: 64%;
+    left: 24%;
+  }
+  #vigor {
+    top: 64%;
+    left: 63%;
+  }
 
-  /* --- AJUSTE CARDS DE PERÍCIA (Telas Muito Pequenas) --- */
+
+  /* Ajuste Cards de Perícia */
   .pericias-grid-container {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 5px;
@@ -212,5 +342,13 @@
   }
   #lista-selecao-pericia li {
     flex-basis: auto;
+  }
+  
+  /* Recursos (Inputs menores) */
+  .recurso-individual .recurso-atual,
+  .recurso-individual .recurso-max,
+  .recurso-individual .recurso-separador {
+    font-size: 1.1em;
+    width: 45px;
   }
 }
