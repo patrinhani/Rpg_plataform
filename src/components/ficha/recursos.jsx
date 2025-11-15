@@ -1,5 +1,5 @@
 // /src/components/ficha/recursos.jsx
-// (Este arquivo da resposta anterior está CORRETO)
+// (CORRIGIDO: As chamadas para renderBoxes foram ajustadas)
 
 import React from 'react';
 
@@ -17,6 +17,7 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
   /** Clica nos boxes de Sucesso/Falha para adicionar um ponto. */
   const handleTrackerClick = (tipo, valorAtual) => {
     const novoValor = (valorAtual >= 3) ? 0 : valorAtual + 1;
+    // Agora 'tipo' será 'sucessos' ou 'falhas', o que é correto
     onFichaChange('perseguicao', tipo, novoValor);
   };
 
@@ -33,6 +34,7 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
   };
 
   /** Renderiza os 3 boxes (vazios ou cheios) para Perseguição */
+  // Esta definição está correta
   const renderBoxes = (tipo, contagem) => {
     let boxes = [];
     for (let i = 1; i <= 3; i++) {
@@ -173,14 +175,22 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
               className={`tracker-linha sucesso ${dadosPerseguicao.sucessos >= 3 ? 'full' : ''}`}
             >
               <span>Sucessos</span>
-              {renderBoxes('perseguicao', 'sucessos', dadosPerseguicao.sucessos)}
+              {/* --- CORREÇÃO AQUI ---
+                A chamada da função estava errada, passando 3 argumentos.
+                O correto é passar o TIPO ('sucessos') e o VALOR (dadosPerseguicao.sucessos)
+              */}
+              {renderBoxes('sucessos', dadosPerseguicao.sucessos)}
             </div>
 
             <div 
               className={`tracker-linha falha ${dadosPerseguicao.falhas >= 3 ? 'full' : ''}`}
             >
               <span>Falhas</span>
-              {renderBoxes('perseguicao', 'falhas', dadosPerseguicao.falhas)}
+              {/* --- CORREÇÃO AQUI ---
+                A chamada da função estava errada, passando 3 argumentos.
+                O correto é passar o TIPO ('falhas') e o VALOR (dadosPerseguicao.falhas)
+              */}
+              {renderBoxes('falhas', dadosPerseguicao.falhas)}
             </div>
             
             <button className="btn-reset-perseguicao" onClick={handleResetClick}>
