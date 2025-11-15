@@ -1,13 +1,5 @@
 // /src/lib/personagem.js
-
-/**
- * js/personagem.js
- * (ATUALIZADO PARA O PASSO 2 - MODIFICAÇÕES)
- * - 'addItemInventario' e 'updateItemInventario' agora lidam
- * com 'categoriaBase', 'espacosBase' e 'modificacoes'.
- * (ATUALIZADO P/ PERSEGUIÇÃO)
- * - Adicionado 'this.perseguicao'
- */
+// (CORRIGIDO: getDados() agora retorna cópias para forçar o re-render do React)
 
 class Personagem {
   constructor() {
@@ -67,8 +59,8 @@ class Personagem {
       outros: 0,
     };
     
-    // --- NOVO ---
     this.perseguicao = { sucessos: 0, falhas: 0 };
+    this.visibilidade = 0; 
 
     this.inventario = []; 
     this.rituais = []; 
@@ -100,17 +92,25 @@ class Personagem {
     };
   }
   
-  // --- NOVO MÉTODO ---
   setPerseguicao(tipo, valor) {
     if (tipo === 'sucessos' || tipo === 'falhas') {
       let num = parseInt(valor) || 0;
       if (num < 0) num = 0;
-      if (num > 3) num = 3; // Trava em 3
+      if (num > 3) num = 3; 
       this.perseguicao[tipo] = num;
     } else if (tipo === 'reset') {
-      // Um 'reset' zera ambos
       this.perseguicao = { sucessos: 0, falhas: 0 };
+      this.visibilidade = 0; 
     }
+  }
+  
+  setVisibilidade(campo, delta) {
+    let valor = parseInt(delta) || 0;
+    let valorNovo = this.visibilidade + valor;
+    
+    if (valorNovo < 0) valorNovo = 0;
+    if (valorNovo > 3) valorNovo = 3; // Trava em 3
+    this.visibilidade = valorNovo;
   }
   
   // --- Métodos "Set" ---
@@ -177,23 +177,18 @@ class Personagem {
     return this.pericias[pericia] || 0;
   }
 
-  // --- (MODIFICAÇÃO PASSO 2) ---
   addItemInventario(item) {
     const itemComId = {
       ...item,
       inventarioId: Date.now() + Math.random(),
       ignorarCalculos: false,
       
-      // Salva a categoria e espaços originais
       categoriaBase: item.categoriaBase ?? item.categoria,
       espacosBase: item.espacosBase ?? item.espacos,
       
-      // Garante que o array de modificações exista
       modificacoes: item.modificacoes || [], 
     };
     
-    // Remove a 'categoria' e 'espacos' de nível superior
-    // (Eles serão calculados pelos componentes)
     delete itemComId.categoria;
     delete itemComId.espacos;
 
@@ -206,7 +201,6 @@ class Personagem {
     );
   }
 
-  // --- (MODIFICAÇÃO PASSO 2) ---
   updateItemInventario(inventarioId, dadosAtualizados) {
     const index = this.inventario.findIndex(item => item.inventarioId === inventarioId);
     
@@ -214,18 +208,15 @@ class Personagem {
       const itemOriginal = this.inventario[index];
       
       this.inventario[index] = {
-        ...itemOriginal, // Mantém ID e estado do toggle
-        ...dadosAtualizados, // Aplica todas as mudanças do formulário (nome, desc, etc.)
+        ...itemOriginal, 
+        ...dadosAtualizados, 
         
-        // Garante que as modificações sejam salvas
         modificacoes: dadosAtualizados.modificacoes || itemOriginal.modificacoes || [],
         
-        // Salva a categoria base se ela ainda não existir (para itens antigos)
         categoriaBase: dadosAtualizados.categoriaBase ?? itemOriginal.categoriaBase ?? itemOriginal.categoria,
         espacosBase: dadosAtualizados.espacosBase ?? itemOriginal.espacosBase ?? itemOriginal.espacos,
       };
       
-      // Limpa a 'categoria' e 'espacos' de nível superior
       delete this.inventario[index].categoria;
       delete this.inventario[index].espacos;
     }
@@ -263,7 +254,6 @@ class Personagem {
   // --- Funções de Cálculo ---
   
   getBonusDefesaInventario() {
-    // ... (Esta função permanece a mesma por enquanto)
     const inventarioAtivo = this.inventario.filter(
       (item) => !item.ignorarCalculos
     );
@@ -298,7 +288,6 @@ class Personagem {
   }
 
   getBonusPericiaInventario(periciaKey) {
-    // ... (Esta função permanece a mesma por enquanto)
     const inventarioAtivo = this.inventario.filter(
       (item) => !item.ignorarCalculos
     );
@@ -344,20 +333,12 @@ class Personagem {
   }
   
   getPesoTotal() {
-    // --- (MODIFICAÇÃO PASSO 2 - LÓGICA DE CÁLCULO) ---
-    // Agora calculamos o peso com base nos espaços base + mods
     let pesoBase = this.inventario
       .filter((item) => !item.ignorarCalculos)
       .reduce((acc, item) => {
-          // Pega o espaço base (fallback para itens antigos)
           let espacosItem = parseFloat(item.espacosBase ?? item.espacos) || 0;
           
-          // (Esta lógica será movida para o Modal de Edição,
-          // mas deixamos aqui como um fallback)
           if (item.modificacoes && item.modificacoes.length > 0) {
-              // Simplesmente assumimos que o valor em 'item.espacos' 
-              // (se existir) já foi calculado pelo ModalEditarItem.
-              // Se não, usamos o espacosBase.
               espacosItem = parseFloat(item.espacos ?? item.espacosBase) || 0;
           }
           
@@ -368,7 +349,6 @@ class Personagem {
   }
   
   getMaxPeso() {
-    // ... (Esta função permanece a mesma)
     const forca = parseInt(this.atributos.for) || 0;
     let maxPesoBase = forca * 5 || 2;
 
@@ -406,21 +386,25 @@ class Personagem {
   }
 
   // --- Métodos de Salvamento/Carregamento ---
+  
+  // --- MÉTODO CORRIGIDO ---
   getDados() {
     return {
-      atributos: this.atributos,
-      pericias: this.pericias,
-      info: this.info, 
-      recursos: this.recursos,
-      defesa: this.defesa,
-      perseguicao: this.perseguicao, // <-- ADICIONADO
-      inventario: this.inventario,
-      rituais: this.rituais, 
-      bonusManuais: this.bonusManuais,
-      trilhas_personalizadas: this.trilhas_personalizadas, 
-      poderes_aprendidos: this.poderes_aprendidos, 
+      atributos: { ...this.atributos },
+      pericias: { ...this.pericias },
+      info: { ...this.info }, 
+      recursos: { ...this.recursos },
+      defesa: { ...this.defesa },
+      perseguicao: { ...this.perseguicao }, // <-- CORRIGIDO AQUI
+      visibilidade: this.visibilidade, // Primitivo não precisa de cópia
+      inventario: [...this.inventario], 
+      rituais: [...this.rituais], 
+      bonusManuais: { ...this.bonusManuais },
+      trilhas_personalizadas: [...this.trilhas_personalizadas], 
+      poderes_aprendidos: [...this.poderes_aprendidos], 
     };
   }
+  // --- FIM DA CORREÇÃO ---
   
   carregarDados(dados) {
     if (dados) {
@@ -429,7 +413,8 @@ class Personagem {
       this.info = { ...this.info, ...dados.info };
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
-      this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; // <-- ADICIONADO
+      this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; 
+      this.visibilidade = dados.visibilidade || 0; 
       this.inventario = dados.inventario || [];
       this.rituais = dados.rituais || []; 
       this.bonusManuais = dados.bonusManuais || this.bonusManuais;

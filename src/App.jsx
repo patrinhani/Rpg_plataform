@@ -1,5 +1,5 @@
 // src/App.jsx
-// (ATUALIZADO: Lógica de tensão/sucesso)
+// (ATUALIZADO: Lógica de tensão/sucesso/morte)
 
 import React, { useState, useEffect } from 'react';
 // Importações de estilos e bibliotecas de animação
@@ -140,35 +140,45 @@ function App() {
     };
   }, []); 
 
-  // --- (EFEITO ATUALIZADO) ---
-  // Efeito para aplicar a classe de "tensão" ou "sucesso" global
+  // --- (EFEITO ATUALIZADO COM HIERARQUIA) ---
   useEffect(() => {
     const rootElement = document.documentElement; // <html> tag
+    const visibilidade = personagem.visibilidade || 0;
     const falhas = personagem.perseguicao.falhas || 0;
     const sucessos = personagem.perseguicao.sucessos || 0;
 
-    // Tensão (Prioridade Alta)
+    // Prioridade 1: Morte (3 Falhas)
     if (falhas >= 3) {
-      rootElement.classList.add('modo-tensao');
-      rootElement.classList.remove('modo-sucesso'); // Remove sucesso se houver falha
+      rootElement.classList.add('modo-morte');
+      rootElement.classList.remove('modo-tensao');
+      rootElement.classList.remove('modo-sucesso');
     } 
-    // Sucesso (Prioridade Baixa)
+    // Prioridade 2: Sucesso (3 Sucessos)
     else if (sucessos >= 3) {
       rootElement.classList.add('modo-sucesso');
-      rootElement.classList.remove('modo-tensao'); // Garante que tensão não está
+      rootElement.classList.remove('modo-tensao');
+      rootElement.classList.remove('modo-morte');
     } 
-    // Normal (Nenhum dos dois)
+    // Prioridade 3: Tensão (3 Visibilidade)
+    else if (visibilidade >= 3) {
+      rootElement.classList.add('modo-tensao');
+      rootElement.classList.remove('modo-sucesso');
+      rootElement.classList.remove('modo-morte');
+    }
+    // Prioridade 4: Normal
     else {
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
+      rootElement.classList.remove('modo-morte');
     }
     
     // Cleanup function
     return () => {
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
+      rootElement.classList.remove('modo-morte');
     };
-  }, [personagem.perseguicao.falhas, personagem.perseguicao.sucessos]); // Depende de ambos
+  }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
   // --- (FIM DA ATUALIZAÇÃO) ---
 
 
@@ -423,9 +433,10 @@ function App() {
             }
         } else if (secao === 'atributos') { FichaClass.setAtributo(campo, valor); } 
           else if (secao === 'recursos') { FichaClass.setRecurso(campo, valor); } 
-          
-          // --- ADICIONADO ---
           else if (secao === 'perseguicao') { FichaClass.setPerseguicao(campo, valor); } 
+          
+          // --- ATUALIZADO ---
+          else if (secao === 'visibilidade_mudar') { FichaClass.setVisibilidade(campo, valor); } // 'valor' será +1 ou -1
           
           else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
           else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
@@ -538,7 +549,8 @@ function App() {
       <div className="recursos-container-fixo">
         <Recursos 
           dados={personagem.recursos}
-          dadosPerseguicao={personagem.perseguicao} 
+          dadosPerseguicao={personagem.perseguicao}
+          dadosVisibilidade={personagem.visibilidade} 
           onFichaChange={handleFichaChange}
         />
       </div>

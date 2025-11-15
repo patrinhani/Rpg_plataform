@@ -25,11 +25,13 @@
   --cor-trans-energia: #2a002e;
   --cor-destaque-conhecimento: #ffeb3b;
   
-  /* --- (NOVO) Cores de Tensão/Sucesso --- */
+  /* --- Cores de Tensão/Sucesso/Morte --- */
   --cor-tensao: #a10000;
   --cor-tensao-brilho: #ff4444;
   --cor-sucesso: #0091ff;
   --cor-sucesso-brilho: #80caff;
+  --cor-morte: #1a1a1a;
+  --cor-morte-brilho: #555555;
 }
 /* --- Paletas de Cores por Tema --- */
 :root,
@@ -96,7 +98,6 @@ body {
   padding: 20px;
   gap: 20px;
   grid-template-columns: 1fr 1.5fr;
-  /* (CORRIGIDO) "recursos" foi removido do grid */
   grid-template-areas:
     "identidade pericias"
     "controles  pericias"
@@ -117,7 +118,6 @@ body {
 #grid-defesa-status {
   grid-area: defesa;
 }
-/* #grid-recursos não é mais uma área */
 #grid-pericias {
   grid-area: pericias;
 }
@@ -1051,7 +1051,7 @@ input[type="number"].input-hex {
   max-width: 800px;
   transform: translate(-50%, -50%);
   opacity: 0;
-  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out;
+  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out, filter 0.5s ease; /* Adicionado filter */
 }
 :root[data-tema="tema-ordem"] #simbolo-ordem {
   opacity: 0.05; 
@@ -1377,15 +1377,15 @@ input[type="number"].input-hex {
   height: 100%;
 }
 
-/* --- Estilo do Tracker de Perseguição --- */
-#bloco-perseguicao {
+/* --- (INÍCIO) Estilo dos Trackers de Furtividade/Perseguição --- */
+#bloco-furtividade {
   align-items: center;
-  gap: 5px; /* Espaço menor entre os elementos */
+  gap: 5px; 
 }
-#bloco-perseguicao label {
+#bloco-furtividade label {
   margin-bottom: 5px;
 }
-.perseguicao-linha {
+.tracker-linha {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1394,22 +1394,81 @@ input[type="number"].input-hex {
   border-radius: 4px;
   border: 1px solid var(--cor-caixa);
   background-color: var(--cor-fundo);
-  cursor: pointer;
   transition: border-color 0.2s ease;
+  margin-bottom: 5px; 
 }
-.perseguicao-linha:hover {
-  border-color: var(--cor-texto-label);
-}
-.perseguicao-linha span {
+.tracker-linha span {
   font-family: "Special Elite", monospace;
   font-size: 1.1em;
   color: var(--cor-texto-label);
 }
-.perseguicao-boxes {
+
+/* --- Tracker Visibilidade (Botões +/-) --- */
+.vis-tracker-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vis-btn {
+  font-family: "Special Elite", monospace;
+  font-size: 1.5em;
+  line-height: 1;
+  padding: 0 8px;
+  margin: 0;
+  background-color: var(--cor-caixa);
+  border: 1px solid var(--cor-texto-label);
+}
+.vis-btn:hover {
+  border-color: var(--cor-destaque);
+  color: var(--cor-destaque);
+}
+.vis-numero {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em;
+  color: var(--cor-texto-principal);
+  width: 30px;
+  text-align: center;
+}
+/* Quando visibilidade = 3 (full) */
+.tracker-linha.visibilidade.full {
+  border-color: var(--cor-tensao);
+}
+.tracker-linha.visibilidade.full span,
+.tracker-linha.visibilidade.full .vis-numero {
+  color: var(--cor-tensao);
+}
+.tracker-linha.visibilidade.full .vis-btn {
+  border-color: var(--cor-tensao);
+  color: var(--cor-tensao);
+}
+
+/* --- Tracker Perseguição (Boxes) --- */
+.perseguicao-container {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--cor-texto-label);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.perseguicao-container label {
+  font-size: 1.2em; /* Label "PERSEGUIÇÃO" */
+  margin-bottom: 5px;
+}
+.tracker-linha.sucesso,
+.tracker-linha.falha {
+  cursor: pointer;
+}
+.tracker-linha.sucesso:hover,
+.tracker-linha.falha:hover {
+  border-color: var(--cor-texto-label);
+}
+.tracker-boxes {
   display: flex;
   gap: 8px;
 }
-.perseguicao-box {
+.tracker-box {
   width: 22px;
   height: 22px;
   border: 2px solid var(--cor-texto-label);
@@ -1419,23 +1478,23 @@ input[type="number"].input-hex {
 }
 
 /* Efeito 1: Box Marcado (Sucesso) */
-.perseguicao-linha.sucesso .perseguicao-box.checked {
-  background-color: var(--cor-destaque);
-  border-color: var(--cor-destaque);
-  box-shadow: 0 0 8px var(--cor-destaque);
+.tracker-linha.sucesso .tracker-box.checked {
+  background-color: var(--cor-sucesso); /* Azul/Ordem */
+  border-color: var(--cor-sucesso);
+  box-shadow: 0 0 8px var(--cor-sucesso);
 }
 /* Efeito 1: Box Marcado (Falha) */
-.perseguicao-linha.falha .perseguicao-box.checked {
-  background-color: var(--cor-trans-sangue);
-  border-color: var(--cor-trans-sangue);
-  box-shadow: 0 0 8px var(--cor-trans-sangue);
+.tracker-linha.falha .tracker-box.checked {
+  background-color: var(--cor-tensao); /* Vermelho */
+  border-color: var(--cor-tensao);
+  box-shadow: 0 0 8px var(--cor-tensao);
 }
 
 /* Efeito 2: Linha Completa (Animação de Pulso) */
-.perseguicao-linha.full.sucesso .perseguicao-box.checked {
+.tracker-linha.full.sucesso .tracker-box.checked {
   animation: pulse-success 1.2s infinite ease-in-out;
 }
-.perseguicao-linha.full.falha .perseguicao-box.checked {
+.tracker-linha.full.falha .tracker-box.checked {
   animation: pulse-failure 1.2s infinite ease-in-out;
 }
 
@@ -1454,23 +1513,27 @@ input[type="number"].input-hex {
   color: var(--cor-destaque);
 }
 
-/* Keyframes para a animação */
+/* Keyframes para a animação dos boxes */
 @keyframes pulse-success {
-  0% { box-shadow: 0 0 8px var(--cor-destaque); transform: scale(1); }
-  50% { box-shadow: 0 0 16px 2px var(--cor-destaque), 0 0 15px var(--cor-destaque); transform: scale(1.1); }
-  100% { box-shadow: 0 0 8px var(--cor-destaque); transform: scale(1); }
+  0% { box-shadow: 0 0 8px var(--cor-sucesso); transform: scale(1); }
+  50% { box-shadow: 0 0 16px 2px var(--cor-sucesso), 0 0 15px var(--cor-sucesso); transform: scale(1.1); }
+  100% { box-shadow: 0 0 8px var(--cor-sucesso); transform: scale(1); }
 }
 @keyframes pulse-failure {
-  0% { box-shadow: 0 0 8px var(--cor-trans-sangue); transform: scale(1); }
-  50% { box-shadow: 0 0 16px 2px var(--cor-trans-sangue), 0 0 15px var(--cor-trans-sangue); transform: scale(1.1); }
-  100% { box-shadow: 0 0 8px var(--cor-trans-sangue); transform: scale(1); }
+  0% { box-shadow: 0 0 8px var(--cor-tensao); transform: scale(1); }
+  50% { box-shadow: 0 0 16px 2px var(--cor-tensao), 0 0 15px var(--cor-tensao); transform: scale(1.1); }
+  100% { box-shadow: 0 0 8px var(--cor-tensao); transform: scale(1); }
 }
+/* --- (FIM) Estilo dos Trackers --- */
 
 
-/* --- (NOVO/CORRIGIDO) EFEITO DE TENSÃO (3 FALHAS PERSEGUIÇÃO) --- */
 
-/* 1. Vinheta Vermelha Pulsante */
-html.modo-tensao::before {
+/* --- (INÍCIO) EFEITOS GLOBAIS (Tensão, Sucesso, Morte) --- */
+
+/* Base (Vinheta) */
+html.modo-tensao::before,
+html.modo-sucesso::before,
+html.modo-morte::before {
   content: '';
   position: fixed;
   top: 0;
@@ -1479,62 +1542,65 @@ html.modo-tensao::before {
   bottom: 0;
   z-index: 998;
   pointer-events: none;
-  box-shadow: inset 0 0 80px 40px rgba(139, 0, 0, 0.5);
-  opacity: 0.7;
-  animation: pulse-vignette-failure 2.5s infinite ease-in-out;
+  opacity: 0; /* Começa invisível, animação controla */
+  animation-duration: 2.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
 }
 
-/* 2. Sobrescreve a cor da borda (vermelho) */
+/* Parallax (Símbolo de Fundo) */
+.simbolo-parallax {
+  /* Adiciona animação de filtro */
+  animation-duration: 2.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-name: none; /* Começa sem animação */
+}
+
+/* -- MODO TENSÃO (Visibilidade 3) -- */
+html.modo-tensao::before {
+  animation-name: pulse-vignette-failure;
+}
 html.modo-tensao {
   --cor-borda: var(--cor-tensao) !important; 
 }
-
-/* 3. Faz o cabeçalho fixo piscar */
 html.modo-tensao .recursos-container-fixo {
   animation: pulse-border-failure 2.5s infinite ease-in-out;
 }
-
-/* 4. (CORRIGIDO) Faz o SÍMBOLO DO TEMA ATUAL pulsar em vermelho */
 html.modo-tensao .simbolo-parallax {
-  /* Anima o filtro, não a opacidade */
-  animation: pulse-symbol-failure 2.5s infinite ease-in-out;
+  animation-name: pulse-symbol-failure;
 }
 
-
-/* --- (NOVO) EFEITO DE SUCESSO (3 SUCESSOS PERSEGUIÇÃO) --- */
-
-/* 1. Vinheta Azul Pulsante */
+/* -- MODO SUCESSO (Perseguição 3 Sucessos) -- */
 html.modo-sucesso::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 998;
-  pointer-events: none;
-  box-shadow: inset 0 0 80px 40px rgba(0, 145, 255, 0.3);
-  opacity: 0.7;
-  animation: pulse-vignette-success 2.5s infinite ease-in-out;
+  animation-name: pulse-vignette-success;
 }
-
-/* 2. Sobrescreve a cor da borda (azul) */
 html.modo-sucesso {
   --cor-borda: var(--cor-sucesso) !important; 
 }
-
-/* 3. Faz o cabeçalho fixo piscar (azul) */
 html.modo-sucesso .recursos-container-fixo {
   animation: pulse-border-success 2.5s infinite ease-in-out;
 }
-
-/* 4. (CORRIGIDO) Faz o SÍMBOLO DO TEMA ATUAL pulsar em azul */
 html.modo-sucesso .simbolo-parallax {
-  animation: pulse-symbol-success 2.5s infinite ease-in-out;
+  animation-name: pulse-symbol-success;
+}
+
+/* -- MODO MORTE (Perseguição 3 Falhas) -- */
+html.modo-morte::before {
+  animation-name: pulse-vignette-morte;
+}
+html.modo-morte {
+  --cor-borda: var(--cor-morte-brilho) !important; 
+}
+html.modo-morte .recursos-container-fixo {
+  animation: pulse-border-morte 2.5s infinite ease-in-out;
+}
+html.modo-morte .simbolo-parallax {
+  animation-name: pulse-symbol-morte;
 }
 
 
-/* --- (NOVOS/CORRIGIDOS) Keyframes para Tensão e Sucesso --- */
+/* --- (NOVOS/CORRIGIDOS) Keyframes para Tensão, Sucesso e Morte --- */
 
 /* Keyframes para a Tensão (Falha) */
 @keyframes pulse-vignette-failure {
@@ -1587,4 +1653,30 @@ html.modo-sucesso .simbolo-parallax {
   0% { filter: brightness(1) drop-shadow(0 0 5px rgba(0, 145, 255, 0)); }
   50% { filter: brightness(2) drop-shadow(0 0 20px rgba(0, 145, 255, 0.8)); }
   100% { filter: brightness(1) drop-shadow(0 0 5px rgba(0, 145, 255, 0)); }
+}
+
+/* Keyframes para a Morte (Falha Total) */
+@keyframes pulse-vignette-morte {
+  0% {
+    box-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.7);
+    opacity: 0.8;
+  }
+  50% {
+    box-shadow: inset 0 0 150px 80px rgba(0, 0, 0, 1);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.7);
+    opacity: 0.8;
+  }
+}
+@keyframes pulse-border-morte {
+  0% { border-color: var(--cor-morte-brilho); }
+  50% { border-color: var(--cor-morte); }
+  100% { border-color: var(--cor-morte-brilho); }
+}
+@keyframes pulse-symbol-morte {
+  0% { filter: brightness(0.5) opacity(0.5); }
+  50% { filter: brightness(0.2) opacity(0.3); }
+  100% { filter: brightness(0.5) opacity(0.5); }
 }

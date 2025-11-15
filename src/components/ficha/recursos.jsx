@@ -1,11 +1,10 @@
 // /src/components/ficha/recursos.jsx
-// (ATUALIZADO: Nova estrutura HTML com inputs visíveis abaixo da barra)
-// (ATUALIZADO: Adiciona tracker de Perseguição)
+// (Este arquivo da resposta anterior está CORRETO)
 
 import React from 'react';
 
 // 1. Atualizar props
-function Recursos({ dados, dadosPerseguicao, onFichaChange }) {
+function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange }) {
 
   const handleChange = (e) => {
     const campo = e.target.id; // ex: "pv_atual"
@@ -13,63 +12,67 @@ function Recursos({ dados, dadosPerseguicao, onFichaChange }) {
     onFichaChange('recursos', campo, valor);
   };
   
-  // --- (NOVOS HANDLERS PARA PERSEGUIÇÃO) ---
-  /**
-   * Clica em uma linha (sucesso ou falha) para adicionar um ponto.
-   * Cicla de 0 -> 1 -> 2 -> 3 -> 0
-   */
+  // --- (HANDLERS ATUALIZADOS) ---
+  
+  /** Clica nos boxes de Sucesso/Falha para adicionar um ponto. */
   const handleTrackerClick = (tipo, valorAtual) => {
     const novoValor = (valorAtual >= 3) ? 0 : valorAtual + 1;
     onFichaChange('perseguicao', tipo, novoValor);
   };
 
-  /** Reseta ambos os contadores */
+  /** Clica nos botões +/- da Visibilidade */
+  const handleVisibilidadeChange = (delta) => {
+    // A 'seção' é 'visibilidade_mudar' para o App.jsx
+    onFichaChange('visibilidade_mudar', 'visibilidade', delta);
+  };
+
+  /** Reseta a Perseguição (e a Visibilidade, via personagem.js) */
   const handleResetClick = (e) => {
-    e.stopPropagation(); // Impede que o clique no botão ative a linha
+    e.stopPropagation(); 
     onFichaChange('perseguicao', 'reset', 0);
   };
 
-  /** Renderiza os 3 boxes (vazios ou cheios) */
+  /** Renderiza os 3 boxes (vazios ou cheios) para Perseguição */
   const renderBoxes = (tipo, contagem) => {
     let boxes = [];
     for (let i = 1; i <= 3; i++) {
       boxes.push(
         <div 
           key={i} 
-          className={`perseguicao-box ${i <= contagem ? 'checked' : ''}`}
+          className={`tracker-box ${i <= contagem ? 'checked' : ''}`}
         />
       );
     }
     return (
-      <div className="perseguicao-boxes" onClick={() => handleTrackerClick(tipo, contagem)}>
+      <div className="tracker-boxes" onClick={() => handleTrackerClick(tipo, contagem)}>
         {boxes}
       </div>
     );
   };
-  // --- (FIM DOS NOVOS HANDLERS) ---
+  // --- (FIM DOS HANDLERS) ---
 
 
   // Calcula as porcentagens para as barras
   const pvPerc = (dados.pv_atual / (dados.pv_max || 1)) * 100;
   const pePerc = (dados.pe_atual / (dados.pe_max || 1)) * 100;
   const sanPerc = (dados.san_atual / (dados.san_max || 1)) * 100;
+  
+  const visibilidadeAtual = dadosVisibilidade || 0;
 
   return (
     <section className="box box-recursos" id="grid-recursos">
       
       {/* --- PONTOS DE VIDA --- */}
       <div className="recurso-individual" id="bloco-pv">
-        <label htmlFor="pv_atual">PV</label> {/* 1. Label no topo */}
-        
-        <div className="barra-recurso"> {/* 2. Barra no meio */}
+        <label htmlFor="pv_atual">PV</label>
+        <div className="barra-recurso">
           <div 
             className="barra-preenchimento" 
             id="barra-pv"
             style={{ width: `${pvPerc}%` }} 
           ></div>
         </div>
-        
-        <div className="recurso-numeros"> {/* 3. Inputs embaixo */}
+        <div className="recurso-numeros">
           <input 
             type="number" 
             id="pv_atual" 
@@ -83,7 +86,7 @@ function Recursos({ dados, dadosPerseguicao, onFichaChange }) {
             id="pv_max" 
             className="recurso-max"
             value={dados.pv_max} 
-            readOnly // O Máx é calculado, então é apenas leitura
+            readOnly 
           />
         </div>
       </div>
@@ -146,28 +149,46 @@ function Recursos({ dados, dadosPerseguicao, onFichaChange }) {
         </div>
       </div>
       
-      {/* --- (NOVO BLOCO DE PERSEGUIÇÃO) --- */}
-      <div className="recurso-individual" id="bloco-perseguicao">
-        <label>PERSEGUIÇÃO</label>
+      {/* --- (BLOCO ATUALIZADO) --- */}
+      <div className="recurso-individual" id="bloco-furtividade">
+        <label>FURTIVIDADE</label>
         
-        {/* Adiciona a classe 'full' quando chega a 3 */}
+        {/* Tracker de Visibilidade (Sempre visível) */}
         <div 
-          className={`perseguicao-linha sucesso ${dadosPerseguicao.sucessos >= 3 ? 'full' : ''}`}
+          className={`tracker-linha visibilidade ${visibilidadeAtual >= 3 ? 'full' : ''}`}
         >
-          <span>Sucessos</span>
-          {renderBoxes('sucessos', dadosPerseguicao.sucessos)}
+          <span>Visibilidade</span>
+          <div className="vis-tracker-container">
+            <button className="vis-btn" onClick={() => handleVisibilidadeChange(-1)}>-</button>
+            <span className="vis-numero">{visibilidadeAtual}</span>
+            <button className="vis-btn" onClick={() => handleVisibilidadeChange(1)}>+</button>
+          </div>
         </div>
 
-        <div 
-          className={`perseguicao-linha falha ${dadosPerseguicao.falhas >= 3 ? 'full' : ''}`}
-        >
-          <span>Falhas</span>
-          {renderBoxes('falhas', dadosPerseguicao.falhas)}
-        </div>
-        
-        <button className="btn-reset-perseguicao" onClick={handleResetClick}>
-          Resetar
-        </button>
+        {/* Tracker de Perseguição (Condicional) */}
+        {visibilidadeAtual >= 3 && (
+          <div className="perseguicao-container">
+            <label>PERSEGUIÇÃO</label>
+            <div 
+              className={`tracker-linha sucesso ${dadosPerseguicao.sucessos >= 3 ? 'full' : ''}`}
+            >
+              <span>Sucessos</span>
+              {renderBoxes('perseguicao', 'sucessos', dadosPerseguicao.sucessos)}
+            </div>
+
+            <div 
+              className={`tracker-linha falha ${dadosPerseguicao.falhas >= 3 ? 'full' : ''}`}
+            >
+              <span>Falhas</span>
+              {renderBoxes('perseguicao', 'falhas', dadosPerseguicao.falhas)}
+            </div>
+            
+            <button className="btn-reset-perseguicao" onClick={handleResetClick}>
+              Resetar
+            </button>
+          </div>
+        )}
+
       </div>
 
     </section>
