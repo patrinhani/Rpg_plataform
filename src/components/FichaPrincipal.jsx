@@ -1,5 +1,5 @@
 // /src/components/FichaPrincipal.jsx
-// (ATUALIZADO: Removeu o componente <Recursos />)
+// (ATUALIZADO: Adicionada a prop 'patenteInfo' na chamada do Identidade)
 
 import React from 'react';
 
@@ -14,7 +14,7 @@ import CalculoDetalhado from './ficha/calculo-detalhado';
 
 function FichaPrincipal({
   personagem,
-  calculados,
+  calculados, // 'calculados' contém 'calculados.patente'
   fichaInstance,
   handleFichaChange,
   controlesProps,
@@ -31,11 +31,14 @@ function FichaPrincipal({
   return (
     <main className="ficha-container">
       
+      {/* --- CORREÇÃO APLICADA AQUI --- */}
       <Identidade 
         dados={personagem.info} 
         onFichaChange={handleFichaChange} 
-        trilhasPorClasse={trilhasPorClasse} 
+        trilhasPorClasse={trilhasPorClasse}
+        patenteInfo={calculados.patente} // <-- Esta linha foi ADICIONADA
       />
+      {/* --- FIM DA CORREÇÃO --- */}
       
       <Controles {...controlesComNEX} /> 
 
@@ -43,8 +46,6 @@ function FichaPrincipal({
         dados={personagem.atributos} 
         onFichaChange={handleFichaChange} 
       />
-
-      {/* <Recursos ... /> <-- REMOVIDO DAQUI */}
       
       <DefesaStatus
         dadosInfo={personagem.info}

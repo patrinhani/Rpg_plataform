@@ -1,5 +1,6 @@
 // /src/lib/personagem.js
 // (CORRIGIDO: getDados() agora retorna cópias para forçar o re-render do React)
+// (ATUALIZADO: Adicionado 'prestigio' ao this.info)
 
 class Personagem {
   constructor() {
@@ -41,6 +42,7 @@ class Personagem {
       classe: "especialista",
       trilha: "nenhuma",
       nex: "5%",
+      prestigio: 0, // <-- Linha adicionada
       deslocamento: 9,
       monstruoso_elemento: "", 
       possuido_elemento: "",

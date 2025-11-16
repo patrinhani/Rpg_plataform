@@ -94,6 +94,32 @@ const OpcoesOrigem = {
 };
 // --- FIM DAS CONSTANTES DE FICHA ---
 
+const Patentes = [
+  { pp: 0, nome: "Recruta", credito: "Baixo", catI: 2, catII: 0, catIII: 0, catIV: 0 },
+  { pp: 20, nome: "Operador", credito: "Médio", catI: 3, catII: 1, catIII: 0, catIV: 0 },
+  { pp: 50, nome: "Agente Especial", credito: "Médio", catI: 3, catII: 2, catIII: 1, catIV: 0 },
+  { pp: 100, nome: "Oficial de Operações", credito: "Alto", catI: 3, catII: 3, catIII: 2, catIV: 1 },
+  { pp: 200, nome: "Agente de Elite", credito: "Ilimitado", catI: 3, catII: 3, catIII: 3, catIV: 2 }
+];
+
+/**
+ * Retorna os dados da patente com base nos pontos de prestígio.
+* @param {number} pp - Pontos de Prestígio.
+ * @returns {object} - O objeto da patente correspondente.
+ */
+const getPatenteInfo = (pp) => {
+  let patenteAtual = Patentes[0];
+  // Itera de forma decrescente para garantir que a patente mais alta seja pega primeiro
+  for (let i = Patentes.length - 1; i >= 0; i--) {
+    // Garante que pp é um número antes de comparar
+    if (Number(pp) >= Patentes[i].pp) { 
+      patenteAtual = Patentes[i];
+      break;
+    }
+  }
+  return patenteAtual; // <-- ESTA É A CORREÇÃO
+}
+
 const database = {
 
   //
@@ -3229,6 +3255,8 @@ export {
     poderesOcultista,
     poderesGerais,
     poderesParanormais, 
+    Patentes,
+    getPatenteInfo,
     // --- EXPORTA AS MODIFICAÇÕES ---
     modificacoesArmas,
     modificacoesProtecoes,

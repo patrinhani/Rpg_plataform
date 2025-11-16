@@ -1,11 +1,10 @@
 // src/App.jsx
-// (OTIMIZADO: Code Splitting, Performance de Runtime, Assets WebP, Correções de Memo)
+// (ATENÇÃO: A função 'handleFichaChange' foi 100% substituída pela versão que
+// SEMPRE recalcula a patente para corrigir o bug de atualização)
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-// Importações de estilos e bibliotecas de animação
 import './App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js'; 
-// Importa a classe principal do personagem e as listas de poderes/dados
 import { ficha as FichaClass } from './lib/personagem.js'; 
 import { 
     database, 
@@ -15,17 +14,16 @@ import {
     poderesOcultista,
     poderesGerais,
     poderesParanormais,
+    getPatenteInfo, // <-- Importado para calcular a patente
+    Patentes,       // <-- Importado para o valor padrão
 } from './lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
 // --- Carregamento de Componentes ---
-// Componentes principais carregados imediatamente
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
 import Recursos from './components/ficha/recursos.jsx';
-// Otimização: Animação de Sangue só é carregada se o tema for Sangue
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
-// Otimização: Abas e Modais carregados "sob demanda" (lazy)
 const Inventario = lazy(() => import('./components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('./components/PoderesAprendidos.jsx'));
 const Rituais = lazy(() => import('./components/Rituais.jsx'));
@@ -60,9 +58,13 @@ function App() {
   
   // --- ESTADOS PRINCIPAIS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
+  
+  // 'calculados' AGORA INCLUI A PATENTE
   const [calculados, setCalculados] = useState({
-    defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false, 
+    defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false,
+    patente: Patentes[0], // Adiciona a patente padrão (Recruta)
   });
+  
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
@@ -81,17 +83,15 @@ function App() {
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   
 
-  // --- LÓGICA DE ATUALIZAÇÃO E CÁLCULO ---
+  // --- LÓGICA DE ATUALIZAÇÃO E CÁLCULO (UseEffect) ---
   
-  // Carrega e inicializa a ficha (sempre na montagem)
   useEffect(() => {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
     carregarFicha();
-    handleFichaChange(null, null, null); 
+    handleFichaChange(null, null, null); // Força um cálculo inicial no carregamento
   }, []); 
 
-  // Efeito de Progressão de Trilhas (depende de NEX e Trilhas Custom)
   useEffect(() => {
     const customTrilhas = FichaClass.getTrilhasPersonalizadas(); 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
@@ -99,7 +99,6 @@ function App() {
     setTrilhasPorClasse(trilhasAgrupadas);
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
 
-  // Efeito de Animação de Tema (GSAP ou Three.js para Sangue)
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
     if (tema === temaAtual) return; 
@@ -114,12 +113,10 @@ function App() {
     }
   }, [tema]); 
   
-  // Salva o nome da ficha no título da página
   useEffect(() => {
     document.title = `${personagem.info.nome || "Ficha"} - NEX ${personagem.info.nex || "0%"}`;
   }, [personagem.info.nome, personagem.info.nex]); 
 
-  // Efeito Parallax
   useEffect(() => {
     const parallaxContainer = document.getElementById("parallax-background");
     const parallaxSimbolos = parallaxContainer 
@@ -142,46 +139,39 @@ function App() {
     };
   }, []); 
 
-  // Efeito de Status Global (Tensão, Sucesso, Morte)
   useEffect(() => {
-    const rootElement = document.documentElement; // <html> tag
+    const rootElement = document.documentElement; 
     const visibilidade = personagem.visibilidade || 0;
     const falhas = personagem.perseguicao.falhas || 0;
     const sucessos = personagem.perseguicao.sucessos || 0;
 
-    // Prioridade 1: Morte (3 Falhas)
     if (falhas >= 3) {
       rootElement.classList.add('modo-morte');
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
     } 
-    // Prioridade 2: Sucesso (3 Sucessos)
     else if (sucessos >= 3) {
       rootElement.classList.add('modo-sucesso');
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-morte');
     } 
-    // Prioridade 3: Tensão (3 Visibilidade)
     else if (visibilidade >= 3) {
       rootElement.classList.add('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
       rootElement.classList.remove('modo-morte');
     }
-    // Prioridade 4: Normal
     else {
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
       rootElement.classList.remove('modo-morte');
     }
     
-    // Cleanup function
     return () => {
       rootElement.classList.remove('modo-tensao');
       rootElement.classList.remove('modo-sucesso');
       rootElement.classList.remove('modo-morte');
     };
   }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
-  // --- (FIM DA ATUALIZAÇÃO) ---
 
 
   // --- FUNÇÕES DE PERSISTÊNCIA ---
@@ -222,7 +212,7 @@ function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(link.href); // Limpa a referência do objeto
+    URL.revokeObjectURL(link.href); 
   };
   const importarFicha = (arquivo) => {
     if (!arquivo) return;
@@ -297,9 +287,8 @@ function App() {
   const handleAbrirDiarioModal = (nota) => { setNotaParaEditar(nota); setIsDiarioModalOpen(true); };
   const handleFecharDiarioModal = () => { setIsDiarioModalOpen(false); setNotaParaEditar(null); };
   
-  // CORREÇÃO/GARANTIA: Assegura que os métodos do Diário existam na instância da FichaClass
   if (!FichaClass.addNotaDiario) {
-    FichaClass.diario = FichaClass.diario || []; // Garante que a propriedade exista
+    FichaClass.diario = FichaClass.diario || []; 
     FichaClass.addNotaDiario = (dadosNota) => {
       const novaNota = { ...dadosNota, id: `nota_${Date.now()}` };
       FichaClass.diario.push(novaNota);
@@ -314,22 +303,20 @@ function App() {
       FichaClass.diario = FichaClass.diario.filter(n => n.id !== notaId);
     };
   }
-  // --- Fim da correção do Diário ---
 
   const handleSalvarNota = (dadosNota) => {
     if (notaParaEditar) { FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); } 
     else { FichaClass.addNotaDiario(dadosNota); }
-    handleFichaChange(null, null, null); // Força atualização leve para refletir a mudança
-    handleFecharDiarioModal(); // Fecha o modal após salvar
+    handleFichaChange(null, null, null); 
+    handleFecharDiarioModal(); 
   };
   const handleRemoverNota = (notaId) => { 
     if (window.confirm("Tem certeza que deseja apagar esta anotação?")) { 
       FichaClass.removeNotaDiario(notaId); 
-      handleFichaChange(null, null, null); // Força atualização leve
+      handleFichaChange(null, null, null); 
     } 
   };
   
-  // Lógica de Seleção de Poder (PARA "RESISTIR A ELEMENTO")
   const handleAbrirSelecaoPoder = (poder) => {
       if (poder.requiresChoice === 'elemento') {
           setItemPendente({ 
@@ -346,20 +333,16 @@ function App() {
 
   const handleTogglePoder = (poder) => {
       const aprendidos = FichaClass.getPoderesAprendidos();
-      // Encontra qualquer versão do poder (base ou com_elemento)
       const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`));
 
       if (isAprendido) {
-          // Se aprendido, remove todas as versões que começam com a chave base.
           const keysToRemove = aprendidos.filter(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)).map(p => p.key);
           keysToRemove.forEach(key => FichaClass.removePoder(key));
           handleFichaChange(null, null, null);
       } else {
-          // Adicionar: Verifica se precisa de seleção
           if (poder.requiresChoice) {
               handleAbrirSelecaoPoder(poder);
           } else {
-              // Adição simples
               FichaClass.addPoder(poder); 
               handleFichaChange(null, null, null);
           }
@@ -369,7 +352,6 @@ function App() {
   const handleVincularItem = (valorSelecionado) => {
     if (!itemPendente) return;
     
-    // --- LÓGICA DE VINCULAÇÃO DE PODER ---
     if (itemPendente.tipoVinculo === 'poderElemento') { 
         const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey);
         
@@ -391,7 +373,6 @@ function App() {
         return; 
     }
     
-    // --- LÓGICA DE VINCULAÇÃO DE TRILHA/ITEM (Existente) ---
     const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
 
     if (itemPendente.tipoVinculo === 'trilhaElemento') {
@@ -415,25 +396,26 @@ function App() {
 
     FichaClass.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
   };
-  // --- FIM DA LÓGICA DE SELEÇÃO DE PODER ---
 
 
-  // --- FUNÇÃO DE MUDANÇA DE FICHA/CÁLCULO (OTIMIZADA) ---
-
+  // --- (ESTA É A FUNÇÃO CORRIGIDA - SUBSTITUA A SUA ANTIGA) ---
   function handleFichaChange(secao, campo, valor) {
+    
     let skipUpdate = false;
     
-    // --- 1. Lógica Rápida de SET (Aplica a mudança na classe) ---
+    // --- PARTE 1: Atualiza os dados na classe 'FichaClass' ---
     if (secao) {
         if (secao === 'info') {
             const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
+            
             if (campo === 'nex') {
                 let nexValue = String(valor).replace(/[^0-9]/g, '');
                 let nexNumber = parseInt(nexValue) || 0;
                 if (nexNumber > 100) nexNumber = 100;
                 valor = `${nexNumber}%`;
+                FichaClass.setInfo(campo, valor);
             }
-            if (campo === 'trilha') {
+            else if (campo === 'trilha') {
                 const trilhaSelecionada = valor;
                 const dadosTrilha = trilhasUnificadas[trilhaSelecionada]; 
                 if (dadosTrilha && dadosTrilha.requiresChoice === 'elemento' && trilhaSelecionada !== 'nenhuma') {
@@ -452,10 +434,8 @@ function App() {
             } 
             else if (campo === 'classe') {
                 const novaClasse = valor;
-                // Garante que trilhasPorClasse[novaClasse.toLowerCase()] não seja undefined
                 const trilhasDaClasse = trilhasPorClasse[novaClasse.toLowerCase()] || {};
                 const trilhasValidas = Object.values(trilhasDaClasse).map(t => t.key); 
-                
                 const trilhaAtual = FichaClass.getDados().info.trilha; 
                 const trilhaInvalida = trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual);
                 
@@ -465,7 +445,8 @@ function App() {
                 }
                 FichaClass.setInfo(campo, valor);
             }
-            else if (!skipUpdate) {
+            else {
+                // É aqui que 'prestigio' (como número) é atualizado
                 FichaClass.setInfo(campo, valor);
             }
         } 
@@ -480,85 +461,84 @@ function App() {
     
     if (skipUpdate) { return; }
 
-    // --- 2. Lógica de Otimização ---
-    // Verifica se a mudança foi "leve" (só afeta os recursos atuais ou trackers)
-    const isLightUpdate = secao === 'recursos' || secao === 'perseguicao' || secao === 'visibilidade_mudar';
-
-    if (isLightUpdate && secao !== null) { // secao === null força recalcular tudo (usado no load)
-      // ATUALIZAÇÃO LEVE:
-      // Apenas atualiza o estado 'personagem'. Não recalcula 'calculados'.
-      setPersonagem(FichaClass.getDados());
+    // --- PARTE 2: Recalcula TUDO e Atualiza o Estado do React ---
+    // (A otimização 'isLightUpdate' foi removida para corrigir o bug)
     
-    } else {
-      // ATUALIZAÇÃO PESADA: (Mudou atributos, nex, pericias, inventário, etc.)
-      
-      const novosDados = FichaClass.getDados();
-      
-      FichaClass.calcularValoresMaximos();
-      
-      const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
-      FichaClass.setDefesa('equip', bonusDefesaInventario);
+    // Pega uma cópia nova dos dados (incluindo o 'prestigio' atualizado)
+    const novosDados = FichaClass.getDados();
+    
+    FichaClass.calcularValoresMaximos();
+    
+    const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
+    FichaClass.setDefesa('equip', bonusDefesaInventario);
+    const agi = parseInt(novosDados.atributos.agi) || 0;
+    const equip = novosDados.defesa.equip || 0;
+    const outros = parseInt(novosDados.defesa.outros) || 0;
+    let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
+    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
+    
+    const nexString = novosDados.info.nex || '0%';
+    const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
+    const canChangeTheme = nexNumeric >= 50;
 
-      const agi = parseInt(FichaClass.getDados().atributos.agi) || 0;
-      const equip = FichaClass.getDados().defesa.equip || 0;
-      const outros = parseInt(FichaClass.getDados().defesa.outros) || 0;
-      let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
-      const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
-      
-      const nexString = novosDados.info.nex || '0%';
-      const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
-      const canChangeTheme = nexNumeric >= 50;
-
-      const bonusPericiaCalculado = {};
-      Object.keys(novosDados.pericias).forEach(periciaKey => {
-        bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
-      });
-
-      // Cálculo de Perícias Treinadas
-      const int = parseInt(FichaClass.atributos.int) || 0;
-      const classe = FichaClass.info.classe;
-      let bonusClassePericias = 0;
-      switch (classe) {
-        case "combatente": bonusClassePericias = 1 + int; break;
-        case "especialista": bonusClassePericias = 7 + int; break;
-        case "ocultista": bonusClassePericias = 3 + int; break;
-        case "sobrevivente": bonusClassePericias = 0; break; // Sobrevivente não ganha perícia por Int
-        default: bonusClassePericias = 0;
-      }
-      const origem = FichaClass.info.origem;
-      let bonusOrigemPericias = 0;
-      if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
-        const { fixas, escolhas } = database.periciasPorOrigem[origem];
-        bonusOrigemPericias += fixas.length;
-        if (escolhas) {
-          escolhas.forEach((e) => {
-            bonusOrigemPericias += e.quantidade;
-          });
-        }
-      }
-      const periciasTotal = bonusClassePericias + bonusOrigemPericias;
-      let periciasTreinadas = 0;
-      Object.values(FichaClass.pericias).forEach((treino) => {
-        if (parseInt(treino) >= 5) {
-          periciasTreinadas++;
-        }
-      });
-      
-      // Atualiza os dois estados
-      setCalculados(prev => ({
-        ...prev,
-        defesaTotal: defesaTotal,
-        cargaAtual: FichaClass.getPesoTotal(),
-        cargaMax: FichaClass.getMaxPeso(),
-        periciasTreinadas: periciasTreinadas,
-        periciasTotal: periciasTotal,
-        bonusPericia: bonusPericiaCalculado,
-        canChangeTheme: canChangeTheme, 
-      }));
-      
-      setPersonagem({ ...novosDados });
+    const bonusPericiaCalculado = {};
+    Object.keys(novosDados.pericias).forEach(periciaKey => {
+      bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
+    });
+    
+    const int = parseInt(novosDados.atributos.int) || 0;
+    const classe = novosDados.info.classe;
+    let bonusClassePericias = 0;
+    switch (classe) {
+      case "combatente": bonusClassePericias = 1 + int; break;
+      case "especialista": bonusClassePericias = 7 + int; break;
+      case "ocultista": bonusClassePericias = 3 + int; break;
+      case "sobrevivente": bonusClassePericias = 0; break; 
+      default: bonusClassePericias = 0;
     }
+    const origem = novosDados.info.origem;
+    let bonusOrigemPericias = 0;
+    if (database && database.periciasPorOrigem && database.periciasPorOrigem[origem]) {
+      const { fixas, escolhas } = database.periciasPorOrigem[origem];
+      bonusOrigemPericias += fixas.length;
+      if (escolhas) {
+        escolhas.forEach((e) => {
+          bonusOrigemPericias += e.quantidade;
+        });
+      }
+    }
+    const periciasTotal = bonusClassePericias + bonusOrigemPericias;
+    let periciasTreinadas = 0;
+    Object.values(novosDados.pericias).forEach((treino) => {
+      if (parseInt(treino) >= 5) {
+        periciasTreinadas++;
+      }
+    });
+
+    // --- CÁLCULO DA PATENTE ---
+    // Lê o 'prestigio' (que agora é um número) dos 'novosDados'
+    const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0;
+    // Calcula a patente
+    const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
+    
+    // Atualiza o estado 'calculados'
+    // Usando a forma funcional para garantir que o React veja a mudança
+    setCalculados(prevCalculados => ({
+      ...prevCalculados,
+      defesaTotal: defesaTotal,
+      cargaAtual: FichaClass.getPesoTotal(),
+      cargaMax: FichaClass.getMaxPeso(),
+      periciasTreinadas: periciasTreinadas,
+      periciasTotal: periciasTotal,
+      bonusPericia: bonusPericiaCalculado,
+      canChangeTheme: canChangeTheme, 
+      patente: patenteInfo, // Salva o objeto da patente calculado
+    }));
+    
+    // Atualiza o estado 'personagem'
+    setPersonagem(novosDados);
   }
+  // --- FIM DA FUNÇÃO handleFichaChange ---
 
 
   // --- PROPS PARA CONTROLES ---
@@ -593,7 +573,6 @@ function App() {
   return (
     <>
       <div id="parallax-background">
-        {/* OTIMIZAÇÃO: Alterado .png para .webp e adicionado alt="" */}
         <img src="/assets/images/SimboloSemafinidade.webp" id="simbolo-ordem" className="simbolo-parallax" alt=""/>
         <img src="/assets/images/SimboloSangue.webp" id="simbolo-sangue" className="simbolo-parallax" alt=""/>
         <img src="/assets/images/SimboloMorte.webp" id="simbolo-morte" className="simbolo-parallax" alt=""/>
@@ -603,7 +582,6 @@ function App() {
       
       <div id="transition-overlay"></div>
 
-      {/* Bloco da animação de sangue (Three.js) */}
       <Suspense fallback={null}>
         {isSangueAnimVisible && (
             <AnimacaoSangue 
@@ -616,7 +594,6 @@ function App() {
         )}
       </Suspense>
 
-      {/* Container Fixo de Recursos (Carrega Imediatamente) */}
       <div className="recursos-container-fixo">
         <Recursos 
           dados={personagem.recursos}
@@ -635,12 +612,12 @@ function App() {
         <button className={`ficha-aba-link ${abaAtiva === 'diario' ? 'active' : ''}`} onClick={() => setAbaAtiva('diario')}>Diário</button>
       </nav>
       
-      {/* OTIMIZAÇÃO: Suspense envolve todas as abas e modais */}
       <Suspense fallback={<LoadingComponent />}>
         {abaAtiva === 'principal' && (
+          // Passa a patente calculada para FichaPrincipal
           <FichaPrincipal
             personagem={personagem}
-            calculados={calculados} 
+            calculados={calculados} // 'calculados' agora contém a patente
             fichaInstance={FichaClass} 
             handleFichaChange={handleFichaChange}
             controlesProps={controlesProps}
@@ -674,7 +651,6 @@ function App() {
         )}
         
         {abaAtiva === 'progressao' && (
-          // Layout corrigido para centralizar a progressão
           <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
             <button 
               className="btn-add-item" 
@@ -696,7 +672,7 @@ function App() {
 
         {abaAtiva === 'diario' && (
           <Diario
-            diarioData={FichaClass.diario} // CORREÇÃO: Passa a referência estável da classe
+            diarioData={FichaClass.diario} 
             onAbrirModal={handleAbrirDiarioModal}
             onRemoveNota={handleRemoverNota}
           />
@@ -705,8 +681,6 @@ function App() {
         <footer>
           <p></p>
         </footer>
-
-        {/* OTIMIZAÇÃO: Modais só renderizam quando abertos */}
         
         {isLojaOpen && (
           <ModalLoja 

@@ -1,50 +1,46 @@
-// /src/components/Ficha/Identidade.jsx
-// (OTIMIZADO COM React.memo)
+// /src/components/ficha/identidade.jsx
+// (ATUALIZADO: Adicionado fallback '|| {}' para evitar crash na desestruturação)
 
-import React, { memo } from 'react'; // 1. Importar o 'memo'
-// <-- NOVO: Importar a lista de origens do database
-import { OpcoesOrigem } from '../../lib/database.js';
+import React from 'react'; 
+import { OpcoesOrigem } from '../../lib/database.js'; 
 
 /**
  * Componente para a seção de Identidade do Personagem.
  * @param {object} props
- * @param {object} props.dados - Dados de info do personagem.
+ * @param {object} props.dados - Dados de info do personagem (personagem.info)
  * @param {function} props.onFichaChange - Função de callback para mudança.
- * @param {object} props.trilhasPorClasse - O objeto de trilhas agrupadas (padrão + customizadas).
+ * @param {object} props.trilhasPorClasse - O objeto de trilhas agrupadas.
+ * @param {object} props.patenteInfo - O objeto com os dados da patente (calculado no App.jsx)
  */
-// 2. A função do componente permanece idêntica
-function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
+function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
 
   const handleChange = (e) => {
     const campo = e.target.id;     
-    const valor = e.target.value;  
+    let valor = e.target.value;  
     
-    const nomeCampo = campo; 
-    
-    onFichaChange('info', nomeCampo, valor);
+    if (campo === 'prestigio') {
+      valor = parseInt(valor, 10);
+      if (isNaN(valor)) {
+        valor = 0;
+      }
+      if (valor < 0) {
+        valor = 0;
+      }
+    }
+    onFichaChange('info', campo, valor);
   };
 
-  // --- CORREÇÃO DO ERRO: Adicionar fallback para 'dados' e 'dados.classe' ---
-  
-  // 1. Obtém a classe atual com um fallback seguro ('combatente' é o default)
   const classeAtual = (dados && dados.classe) ? dados.classe.toLowerCase() : 'combatente';
-  
-  // 2. Obtém o objeto de trilhas da classe atual, garantindo um fallback
   const trilhasDaClasseObject = trilhasPorClasse[classeAtual] || { nenhuma: { nome: 'Nenhuma', key: 'nenhuma' } };
-
-  // Converte o objeto de trilhas para um array de objetos para mapeamento no JSX
   const listaTrilhas = Object.values(trilhasDaClasseObject);
   
-  // <-- NOVO: Converte o objeto OpcoesOrigem para um array [key, nome]
   const listaOrigens = Object.entries(OpcoesOrigem).map(([key, nome]) => ({
     key: key,
     nome: nome
   }));
 
-  // Lógica para desabilitar o seletor de trilha se não houver classe selecionada
   const isTrilhaDisabled = !classeAtual || classeAtual === 'nenhuma';
   
-  // Opções para o seletor dinâmico de Elemento
   const elementos = [
     { value: 'sangue', label: 'Sangue' },
     { value: 'morte', label: 'Morte' },
@@ -52,16 +48,33 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
     { value: 'energia', label: 'Energia' },
   ];
 
+  // --- CORREÇÃO DE SEGURANÇA APLICADA AQUI ---
+  // Adiciona '|| {}' para garantir que, se 'patenteInfo' for 'undefined',
+  // o código não quebre e use valores padrão (undefined) para as variáveis.
+  const { 
+    nome: patenteNome, 
+    credito: limiteCredito, 
+    catI, 
+    catII, 
+    catIII, 
+    catIV 
+  } = patenteInfo || {}; // <-- Esta linha foi MODIFICADA
+  
+  // Formata a string de limite de itens
+  const limiteItens = `Cat I: ${catI || '—'} | Cat II: ${catII || '—'} | Cat III: ${catIII || '—'} | Cat IV: ${catIV || '—'}`;
+  // --- FIM DA CORREÇÃO ---
+
 
   return (
     <header className="box box-identidade" id="grid-identidade">
       
+      {/* --- Campos de Identidade (Nome, Jogador, Origem, Classe, Trilha) --- */}
       <div className="campo-horizontal">
         <label>PERSONAGEM</label>
         <input 
           type="text" 
           id="nome" 
-          value={dados.nome || ''} // Adiciona fallback para valor
+          value={dados.nome || ''} 
           onChange={handleChange} 
         />
       </div>
@@ -71,12 +84,11 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
         <input 
           type="text" 
           id="jogador"
-          value={dados.jogador || ''} // Adiciona fallback para valor
+          value={dados.jogador || ''} 
           onChange={handleChange}
         />
       </div>
 
-      {/* --- BLOCO CORRIGIDO --- */}
       <div className="campo-horizontal">
         <label>ORIGEM</label>
         <select 
@@ -84,13 +96,11 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           value={dados.origem}
           onChange={handleChange}
         >
-          {/* <-- ALTERADO: Mapeia a lista de origens dinamicamente */}
           {listaOrigens.map(origem => (
             <option key={origem.key} value={origem.key}>
               {origem.nome}
             </option>
           ))}
-          {/* Fim da alteração */}
         </select>
       </div>
 
@@ -114,10 +124,8 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           id="trilha"
           value={dados.trilha}
           onChange={handleChange}
-          disabled={isTrilhaDisabled} // Desabilita se não houver classe
+          disabled={isTrilhaDisabled} 
         >
-          
-          {/* Mapeia e renderiza todas as trilhas da classe, incluindo a opção "Nenhuma" e customizadas */}
           {listaTrilhas.map(trilha => (
               <option key={trilha.key} value={trilha.key}>
                   {trilha.nome}
@@ -127,12 +135,10 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
         </select>
       </div>
       
-      {/* Elemento de Trilha Especial (para Monstruoso/Possuído) */}
       {(dados.trilha === 'monstruoso' || dados.trilha === 'possuido') && (
         <div className="campo-horizontal">
           <label>ELEMENTO TRILHA</label>
           <select 
-            // O ID/Name é dinâmico (monstruoso_elemento ou possuido_elemento)
             id={`${dados.trilha}_elemento`}
             value={dados[`${dados.trilha}_elemento`]}
             onChange={handleChange}
@@ -144,12 +150,42 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse }) {
           </select>
         </div>
       )}
+      {/* --- Fim dos Campos de Identidade --- */}
 
-      {/* Campos de NEX e Deslocamento omitidos aqui, mas devem existir no arquivo completo. */}
+
+      {/* --- CAMPOS DE PRESTÍGIO E PATENTE --- */}
+
+      <div className="campo-horizontal">
+        <label>PRESTÍGIO (PP)</label>
+        <input 
+          type="number"
+          id="prestigio"
+          className="short-input"
+          value={dados.prestigio || 0}
+          onChange={handleChange}
+          min="0"
+        />
+      </div>
+      
+      <div className="campo-horizontal campo-readonly">
+        <label>PATENTE</label>
+        <span className="campo-valor">{patenteNome || 'Recruta'}</span>
+      </div>
+      
+      <div className="campo-horizontal campo-readonly">
+        <label>LIMITE CRÉDITO</label>
+        <span className="campo-valor">{limiteCredito || 'Baixo'}</span>
+      </div>
+
+      <div className="campo-horizontal campo-readonly" style={{ gridColumn: 'span 2' }}>
+        <label>LIMITE ITENS</label>
+        <span className="campo-valor">{limiteItens}</span>
+      </div>
+
+      {/* (Seus campos de NEX e Deslocamento entram aqui) */}
 
     </header>
   );
 }
 
-// 3. Exportar a versão "memorizada"
-export default memo(Identidade);
+export default Identidade;
