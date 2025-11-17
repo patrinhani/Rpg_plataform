@@ -1,5 +1,5 @@
 // /src/components/ficha/recursos.jsx
-// (CORRIGIDO: Caminhos dos símbolos atualizados para "Simbolo...webp")
+// (ATUALIZADO: Adicionadas barras de status compactas)
 
 import React from 'react';
 
@@ -53,9 +53,6 @@ function Recursos({
   // Define o caminho do símbolo do tema com base no tema do dataset (definido em App.jsx)
   const getTemaIcon = () => {
     const tema = document.documentElement.dataset.tema || 'tema-ordem';
-    
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Os caminhos agora apontam para os arquivos "Simbolo...webp"
     switch (tema) {
       case "tema-sangue": return "/assets/images/SimboloSangue.webp";
       case "tema-morte": return "/assets/images/SimboloMorte.webp";
@@ -65,67 +62,103 @@ function Recursos({
       default:
         return "/assets/images/SimboloSemafinidade.webp";
     }
-    // --- FIM DA CORREÇÃO ---
   };
+  
+  // --- (NOVO) CÁLCULO DE PORCENTAGEM PARA AS BARRAS ---
+  const pvPerc = Math.max(0, Math.min(100, (dados.pv_atual / (dados.pv_max || 1)) * 100));
+  const sanPerc = Math.max(0, Math.min(100, (dados.san_atual / (dados.san_max || 1)) * 100));
+  const pePerc = Math.max(0, Math.min(100, (dados.pe_atual / (dados.pe_max || 1)) * 100));
+  // --- FIM DO CÁLCULO ---
 
   return (
-    // O container fixo agora é o próprio componente
     <div className="recursos-container-fixo">
       
       {/* --- HUD Compacta (PV, SAN, PE) --- */}
       <div className="recursos-hud-itens">
+        
         {/* PV */}
         <div className="recurso-hud-item" id="hud-pv">
           <label htmlFor="pv_atual">PV</label>
-          <input 
-            type="number" 
-            id="pv_atual" 
-            className="hud-input-atual" 
-            value={dados.pv_atual}
-            onChange={handleChange}
-          />
-          <span className="hud-separador">/</span>
-          <span className="hud-valor-max">{dados.pv_max}</span>
+          {/* --- BARRA DE PV ADICIONADA --- */}
+          <div className="hud-barra-container">
+            <div 
+              className="hud-barra-preenchimento" 
+              id="barra-pv-hud" 
+              style={{ width: `${pvPerc}%` }}
+            ></div>
+          </div>
+          {/* --- FIM DA BARRA --- */}
+          <div className="hud-numeros-container">
+            <input 
+              type="number" 
+              id="pv_atual" 
+              className="hud-input-atual" 
+              value={dados.pv_atual}
+              onChange={handleChange}
+            />
+            <span className="hud-separador">/</span>
+            <span className="hud-valor-max">{dados.pv_max}</span>
+          </div>
         </div>
         
         {/* SAN */}
         <div className="recurso-hud-item" id="hud-san">
           <label htmlFor="san_atual">SAN</label>
-          <input 
-            type="number" 
-            id="san_atual" 
-            className="hud-input-atual"
-            value={dados.san_atual}
-            onChange={handleChange}
-          />
-          <span className="hud-separador">/</span>
-          <span className="hud-valor-max">{dados.san_max}</span>
+          {/* --- BARRA DE SAN ADICIONADA --- */}
+          <div className="hud-barra-container">
+            <div 
+              className="hud-barra-preenchimento" 
+              id="barra-san-hud" 
+              style={{ width: `${sanPerc}%` }}
+            ></div>
+          </div>
+          {/* --- FIM DA BARRA --- */}
+          <div className="hud-numeros-container">
+            <input 
+              type="number" 
+              id="san_atual" 
+              className="hud-input-atual"
+              value={dados.san_atual}
+              onChange={handleChange}
+            />
+            <span className="hud-separador">/</span>
+            <span className="hud-valor-max">{dados.san_max}</span>
+          </div>
         </div>
         
         {/* PE */}
         <div className="recurso-hud-item" id="hud-pe">
           <label htmlFor="pe_atual">PE</label>
-          <input 
-            type="number" 
-            id="pe_atual" 
-            className="hud-input-atual"
-            value={dados.pe_atual}
-            onChange={handleChange}
-          />
-          <span className="hud-separador">/</span>
-          <span className="hud-valor-max">{dados.pe_max}</span>
+          {/* --- BARRA DE PE ADICIONADA --- */}
+          <div className="hud-barra-container">
+            <div 
+              className="hud-barra-preenchimento" 
+              id="barra-pe-hud" 
+              style={{ width: `${pePerc}%` }}
+            ></div>
+          </div>
+          {/* --- FIM DA BARRA --- */}
+          <div className="hud-numeros-container">
+            <input 
+              type="number" 
+              id="pe_atual" 
+              className="hud-input-atual"
+              value={dados.pe_atual}
+              onChange={handleChange}
+            />
+            <span className="hud-separador">/</span>
+            <span className="hud-valor-max">{dados.pe_max}</span>
+          </div>
         </div>
       </div>
 
       {/* --- Imagem do Personagem --- */}
       <div className="personagem-imagem-container">
-        {/* Fundo Arcano (baseado no tema) */}
         <img 
           src={getTemaIcon()} 
           alt="Símbolo do Tema" 
           className="personagem-imagem-fundo" 
         />
-        {/* Foto (retângulo central) */}
         <div 
           className="personagem-imagem-foto"
           style={{ backgroundImage: info.foto ? `url(${info.foto})` : 'none' }}
@@ -145,7 +178,6 @@ function Recursos({
           </div>
         </div>
         
-        {/* Mostra perseguição se visibilidade for 3+ */}
         {visibilidadeAtual >= 3 && (
           <div className="perseguicao-container">
             <div 

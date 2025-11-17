@@ -1345,30 +1345,82 @@ input[type="number"].input-hex {
   gap: 15px;
 }
 
+/* --- 27. Container Fixo de Recursos (ATUALIZADO COM BARRAS) --- */
+.recursos-container-fixo {
+  max-width: 1400px; 
+  margin: 0 auto;
+  padding: 10px 20px;
+  background-color: var(--cor-caixa-recurso); 
+  border-bottom: 2px solid var(--cor-borda); 
+  
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  transition: border-color 0.5s ease; 
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
 /* Container para os 3 status (PV, SAN, PE) */
 .recursos-hud-itens {
   display: flex;
   gap: 10px;
-  flex-grow: 1; /* Ocupa o espaço à esquerda */
+  flex-grow: 1; 
 }
 
 /* Item individual (PV, SAN ou PE) */
 .recurso-hud-item {
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Empilha Label, Barra, Números */
   background-color: var(--cor-fundo);
   border: 1px solid var(--cor-caixa);
   border-radius: 4px;
-  padding: 5px 10px;
-  gap: 5px;
+  padding: 8px 10px;
+  gap: 5px; /* Espaço entre Label, Barra, Números */
+  flex-basis: 150px; /* Tamanho base */
+  flex-grow: 1; /* Permite esticar */
+  min-width: 120px; /* Largura mínima */
 }
 .recurso-hud-item label {
   font-size: 1.1em;
   color: var(--cor-texto-label);
-  margin-right: 5px;
+  text-align: left;
+  width: 100%;
+}
+
+/* --- (NOVO) Container da Barra --- */
+.hud-barra-container {
+  width: 100%;
+  height: 8px; /* Altura da barra */
+  background-color: var(--cor-caixa-recurso); /* Fundo escuro */
+  border: 1px solid #000;
+  border-radius: 4px;
+  overflow: hidden; /* Garante que o preenchimento fique dentro */
+}
+.hud-barra-preenchimento {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* --- (NOVO) Cores das Barras --- */
+#barra-pv-hud { background-color: #d40000; } /* Vermelho (Sangue) */
+#barra-san-hud { background-color: #0091ff; } /* Azul (Ordem) */
+#barra-pe-hud { background-color: #ffeb3b; } /* Amarelo (Conhecimento) */
+/* --- FIM DAS NOVAS BARRAS --- */
+
+
+/* Container dos Números */
+.hud-numeros-container {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 .hud-input-atual {
-  width: 60px;
+  width: 50px;
   padding: 2px 5px;
   background-color: var(--cor-caixa-recurso);
   border: 1px solid var(--cor-borda);
@@ -1382,8 +1434,7 @@ input[type="number"].input-hex {
 }
 .hud-input-atual::-webkit-outer-spin-button,
 .hud-input-atual::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -webkit-appearance: none; margin: 0;
 }
 .hud-separador {
   font-family: "Special Elite", monospace;
@@ -1394,8 +1445,6 @@ input[type="number"].input-hex {
   font-family: "Special Elite", monospace;
   font-size: 1.3em;
   color: var(--cor-texto-principal);
-  min-width: 30px; /* Garante alinhamento */
-  text-align: left;
 }
 
 /* Container da Imagem do Personagem */
@@ -1420,8 +1469,8 @@ input[type="number"].input-hex {
   height: 100%;
   transform: translate(-50%, -50%);
   object-fit: cover;
-  opacity: 0.1; /* Bem sutil */
-  filter: brightness(0.5); /* Escurece o símbolo */
+  opacity: 0.1; 
+  filter: brightness(0.5); 
 }
 
 /* Foto do Personagem (retângulo central) */
@@ -1430,14 +1479,14 @@ input[type="number"].input-hex {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 85%; /* Retângulo interno (85% do círculo) */
-  height: 85%; /* Retângulo interno (85% do círculo) */
-  background-color: var(--cor-fundo); /* Cor se não houver foto */
+  width: 85%; 
+  height: 85%; 
+  background-color: var(--cor-fundo); 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 4px; /* "um retangulo" */
-  border: 1px solid rgba(0, 0, 0, 0.3); /* Borda interna sutil */
+  border-radius: 4px; 
+  border: 1px solid rgba(0, 0, 0, 0.3); 
 }
 
 /* Container dos Trackers (Furtividade/Perseguição) */
@@ -1448,8 +1497,7 @@ input[type="number"].input-hex {
   flex-basis: 300px; /* Largura fixa para os trackers */
   flex-shrink: 0;
 }
-/* --- FIM DA NOVA SEÇÃO DA HUD --- */
-
+/* --- FIM DA SEÇÃO DA HUD --- */
 /* --- 25. Overlay da Animação Three.js --- */
 #three-transition-overlay {
   position: fixed;
