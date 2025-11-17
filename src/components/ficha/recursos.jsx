@@ -1,10 +1,15 @@
 // /src/components/ficha/recursos.jsx
-// (CORRIGIDO: As chamadas para renderBoxes foram ajustadas)
+// (CORRIGIDO: Caminhos dos símbolos atualizados para "Simbolo...webp")
 
 import React from 'react';
 
-// 1. Atualizar props
-function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange }) {
+function Recursos({ 
+  dados, 
+  dadosPerseguicao, 
+  dadosVisibilidade, 
+  info, // Recebe o 'info' para pegar a foto e o tema
+  onFichaChange 
+}) {
 
   const handleChange = (e) => {
     const campo = e.target.id; // ex: "pv_atual"
@@ -12,29 +17,20 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
     onFichaChange('recursos', campo, valor);
   };
   
-  // --- (HANDLERS ATUALIZADOS) ---
-  
-  /** Clica nos boxes de Sucesso/Falha para adicionar um ponto. */
   const handleTrackerClick = (tipo, valorAtual) => {
     const novoValor = (valorAtual >= 3) ? 0 : valorAtual + 1;
-    // Agora 'tipo' será 'sucessos' ou 'falhas', o que é correto
     onFichaChange('perseguicao', tipo, novoValor);
   };
 
-  /** Clica nos botões +/- da Visibilidade */
   const handleVisibilidadeChange = (delta) => {
-    // A 'seção' é 'visibilidade_mudar' para o App.jsx
     onFichaChange('visibilidade_mudar', 'visibilidade', delta);
   };
 
-  /** Reseta a Perseguição (e a Visibilidade, via personagem.js) */
   const handleResetClick = (e) => {
     e.stopPropagation(); 
     onFichaChange('perseguicao', 'reset', 0);
   };
 
-  /** Renderiza os 3 boxes (vazios ou cheios) para Perseguição */
-  // Esta definição está correta
   const renderBoxes = (tipo, contagem) => {
     let boxes = [];
     for (let i = 1; i <= 3; i++) {
@@ -51,111 +47,93 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
       </div>
     );
   };
-  // --- (FIM DOS HANDLERS) ---
 
-
-  // Calcula as porcentagens para as barras
-  const pvPerc = (dados.pv_atual / (dados.pv_max || 1)) * 100;
-  const pePerc = (dados.pe_atual / (dados.pe_max || 1)) * 100;
-  const sanPerc = (dados.san_atual / (dados.san_max || 1)) * 100;
-  
   const visibilidadeAtual = dadosVisibilidade || 0;
+  
+  // Define o caminho do símbolo do tema com base no tema do dataset (definido em App.jsx)
+  const getTemaIcon = () => {
+    const tema = document.documentElement.dataset.tema || 'tema-ordem';
+    
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Os caminhos agora apontam para os arquivos "Simbolo...webp"
+    switch (tema) {
+      case "tema-sangue": return "/assets/images/SimboloSangue.webp";
+      case "tema-morte": return "/assets/images/SimboloMorte.webp";
+      case "tema-conhecimento": return "/assets/images/SimboloConhecimento.webp";
+      case "tema-energia": return "/assets/images/SimboloEnergia.webp";
+      case "tema-ordem":
+      default:
+        return "/assets/images/SimboloSemafinidade.webp";
+    }
+    // --- FIM DA CORREÇÃO ---
+  };
 
   return (
-    <section className="box box-recursos" id="grid-recursos">
+    // O container fixo agora é o próprio componente
+    <div className="recursos-container-fixo">
       
-      {/* --- PONTOS DE VIDA --- */}
-      <div className="recurso-individual" id="bloco-pv">
-        <label htmlFor="pv_atual">PV</label>
-        <div className="barra-recurso">
-          <div 
-            className="barra-preenchimento" 
-            id="barra-pv"
-            style={{ width: `${pvPerc}%` }} 
-          ></div>
-        </div>
-        <div className="recurso-numeros">
+      {/* --- HUD Compacta (PV, SAN, PE) --- */}
+      <div className="recursos-hud-itens">
+        {/* PV */}
+        <div className="recurso-hud-item" id="hud-pv">
+          <label htmlFor="pv_atual">PV</label>
           <input 
             type="number" 
             id="pv_atual" 
-            className="recurso-atual" 
+            className="hud-input-atual" 
             value={dados.pv_atual}
             onChange={handleChange}
           />
-          <span className="recurso-separador">/</span>
-          <input 
-            type="number" 
-            id="pv_max" 
-            className="recurso-max"
-            value={dados.pv_max} 
-            readOnly 
-          />
+          <span className="hud-separador">/</span>
+          <span className="hud-valor-max">{dados.pv_max}</span>
         </div>
-      </div>
-
-      {/* --- PONTOS DE ESFORÇO --- */}
-      <div className="recurso-individual" id="bloco-pe">
-        <label htmlFor="pe_atual">PE</label>
-        <div className="barra-recurso">
-          <div 
-            className="barra-preenchimento" 
-            id="barra-pe"
-            style={{ width: `${pePerc}%` }}
-          ></div>
-        </div>
-        <div className="recurso-numeros">
-          <input 
-            type="number" 
-            id="pe_atual" 
-            className="recurso-atual"
-            value={dados.pe_atual}
-            onChange={handleChange}
-          />
-          <span className="recurso-separador">/</span>
-          <input 
-            type="number" 
-            id="pe_max" 
-            className="recurso-max"
-            value={dados.pe_max} 
-            readOnly 
-          />
-        </div>
-      </div>
-
-      {/* --- SANIDADE --- */}
-      <div className="recurso-individual" id="bloco-san">
-        <label htmlFor="san_atual">SAN</label>
-        <div className="barra-recurso">
-          <div 
-            className="barra-preenchimento" 
-            id="barra-san"
-            style={{ width: `${sanPerc}%` }}
-          ></div>
-        </div>
-        <div className="recurso-numeros">
+        
+        {/* SAN */}
+        <div className="recurso-hud-item" id="hud-san">
+          <label htmlFor="san_atual">SAN</label>
           <input 
             type="number" 
             id="san_atual" 
-            className="recurso-atual"
+            className="hud-input-atual"
             value={dados.san_atual}
             onChange={handleChange}
           />
-          <span className="recurso-separador">/</span>
+          <span className="hud-separador">/</span>
+          <span className="hud-valor-max">{dados.san_max}</span>
+        </div>
+        
+        {/* PE */}
+        <div className="recurso-hud-item" id="hud-pe">
+          <label htmlFor="pe_atual">PE</label>
           <input 
             type="number" 
-            id="san_max" 
-            className="recurso-max"
-            value={dados.san_max} 
-            readOnly 
+            id="pe_atual" 
+            className="hud-input-atual"
+            value={dados.pe_atual}
+            onChange={handleChange}
           />
+          <span className="hud-separador">/</span>
+          <span className="hud-valor-max">{dados.pe_max}</span>
         </div>
       </div>
+
+      {/* --- Imagem do Personagem --- */}
+      <div className="personagem-imagem-container">
+        {/* Fundo Arcano (baseado no tema) */}
+        <img 
+          src={getTemaIcon()} 
+          alt="Símbolo do Tema" 
+          className="personagem-imagem-fundo" 
+        />
+        {/* Foto (retângulo central) */}
+        <div 
+          className="personagem-imagem-foto"
+          style={{ backgroundImage: info.foto ? `url(${info.foto})` : 'none' }}
+        ></div>
+      </div>
       
-      {/* --- (BLOCO ATUALIZADO) --- */}
-      <div className="recurso-individual" id="bloco-furtividade">
-        <label>FURTIVIDADE</label>
-        
-        {/* Tracker de Visibilidade (Sempre visível) */}
+      {/* --- Trackers de Furtividade / Perseguição --- */}
+      <div className="recursos-hud-trackers">
         <div 
           className={`tracker-linha visibilidade ${visibilidadeAtual >= 3 ? 'full' : ''}`}
         >
@@ -166,42 +144,30 @@ function Recursos({ dados, dadosPerseguicao, dadosVisibilidade, onFichaChange })
             <button className="vis-btn" onClick={() => handleVisibilidadeChange(1)}>+</button>
           </div>
         </div>
-
-        {/* Tracker de Perseguição (Condicional) */}
+        
+        {/* Mostra perseguição se visibilidade for 3+ */}
         {visibilidadeAtual >= 3 && (
           <div className="perseguicao-container">
-            <label>PERSEGUIÇÃO</label>
             <div 
               className={`tracker-linha sucesso ${dadosPerseguicao.sucessos >= 3 ? 'full' : ''}`}
             >
               <span>Sucessos</span>
-              {/* --- CORREÇÃO AQUI ---
-                A chamada da função estava errada, passando 3 argumentos.
-                O correto é passar o TIPO ('sucessos') e o VALOR (dadosPerseguicao.sucessos)
-              */}
               {renderBoxes('sucessos', dadosPerseguicao.sucessos)}
             </div>
-
             <div 
               className={`tracker-linha falha ${dadosPerseguicao.falhas >= 3 ? 'full' : ''}`}
             >
               <span>Falhas</span>
-              {/* --- CORREÇÃO AQUI ---
-                A chamada da função estava errada, passando 3 argumentos.
-                O correto é passar o TIPO ('falhas') e o VALOR (dadosPerseguicao.falhas)
-              */}
               {renderBoxes('falhas', dadosPerseguicao.falhas)}
             </div>
-            
             <button className="btn-reset-perseguicao" onClick={handleResetClick}>
               Resetar
             </button>
           </div>
         )}
-
       </div>
 
-    </section>
+    </div>
   );
 }
 

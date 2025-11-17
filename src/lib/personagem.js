@@ -1,5 +1,5 @@
 // /src/lib/personagem.js
-// (ATUALIZADO: Adicionado 'this.resistencias' e 'setResistencia')
+// (ATUALIZADO: Adicionado 'this.resistencias', 'setResistencia' e 'info.foto')
 
 class Personagem {
   constructor() {
@@ -45,6 +45,7 @@ class Personagem {
       deslocamento: 9,
       monstruoso_elemento: "", 
       possuido_elemento: "",
+      foto: "", // <-- CAMPO ADICIONADO
     };
     this.recursos = {
       pv_atual: 10,
@@ -60,7 +61,6 @@ class Personagem {
       outros: 0,
     };
     
-    // --- NOVO BLOCO DE RESISTÊNCIAS ---
     this.resistencias = {
       mental: 0,
       balistico: 0,
@@ -73,7 +73,6 @@ class Personagem {
       energia: 0,
       medo: 0,
     };
-    // --- FIM DO NOVO BLOCO ---
     
     this.perseguicao = { sucessos: 0, falhas: 0 };
     this.visibilidade = 0; 
@@ -154,14 +153,12 @@ class Personagem {
     this.defesa[campo] = parseInt(valor) || 0;
   }
 
-  // --- NOVO MÉTODO PARA RESISTÊNCIAS ---
   setResistencia(campo, valor) {
     const num = parseInt(valor);
     if (this.resistencias.hasOwnProperty(campo)) {
       this.resistencias[campo] = isNaN(num) ? 0 : num;
     }
   }
-  // --- FIM DO NOVO MÉTODO ---
 
   // --- MÉTODOS PARA TRILHAS ---
   addTrilhaPersonalizada(trilhaData) {
@@ -412,7 +409,6 @@ class Personagem {
 
   // --- Métodos de Salvamento/Carregamento ---
   
-  // --- MÉTODO ATUALIZADO ---
   getDados() {
     return {
       atributos: { ...this.atributos },
@@ -420,7 +416,7 @@ class Personagem {
       info: { ...this.info }, 
       recursos: { ...this.recursos },
       defesa: { ...this.defesa },
-      resistencias: { ...this.resistencias }, // <-- LINHA ADICIONADA
+      resistencias: { ...this.resistencias },
       perseguicao: { ...this.perseguicao },
       visibilidade: this.visibilidade,
       inventario: [...this.inventario], 
@@ -430,9 +426,7 @@ class Personagem {
       poderes_aprendidos: [...this.poderes_aprendidos], 
     };
   }
-  // --- FIM DA ATUALIZAÇÃO ---
   
-  // --- MÉTODO ATUALIZADO ---
   carregarDados(dados) {
     if (dados) {
       this.atributos = dados.atributos || this.atributos;
@@ -440,7 +434,7 @@ class Personagem {
       this.info = { ...this.info, ...dados.info };
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
-      this.resistencias = dados.resistencias || this.resistencias; // <-- LINHA ADICIONADA
+      this.resistencias = dados.resistencias || this.resistencias;
       this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; 
       this.visibilidade = dados.visibilidade || 0; 
       this.inventario = dados.inventario || [];
@@ -450,7 +444,6 @@ class Personagem {
       this.poderes_aprendidos = dados.poderes_aprendidos || []; 
     }
   }
-  // --- FIM DA ATUALIZAÇÃO ---
 
   // --- CÁLCULO DE RECURSOS MÁXIMOS ---
   calcularValoresMaximos() {

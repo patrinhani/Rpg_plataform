@@ -1,52 +1,38 @@
 /* css/responsive.css */
-/* (Layout Móvel Reestruturado - Recursos 3+1 com inputs menores) */
+/* (ATUALIZADO: Layout responsivo para a nova HUD) */
 
 /* --- 1. Telas Médias (Tablets) --- */
 @media (max-width: 1100px) {
   
-  /* --- LAYOUT 2X2 PARA RECURSOS (TABLET) --- */
+  /* --- RECURSOS (TABLET) --- */
   .recursos-container-fixo {
     padding: 10px;
-  }
-  .box-recursos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha */
+    justify-content: center; /* Centraliza no tablet */
     gap: 10px;
   }
-  .recurso-individual {
-    width: 100%; 
-    padding: 5px;
-    background-color: var(--cor-caixa);
-    border: 1px solid var(--cor-borda);
-    border-radius: 4px;
-    min-height: 110px; 
-    display: flex;
-    flex-direction: column;
+  .recursos-hud-itens {
     justify-content: center;
+    width: 100%; /* Ocupa toda a largura */
+    gap: 10px;
+    flex-grow: 0; /* Não cresce mais */
+    order: 1; /* Itens (PV, SAN, PE) vêm primeiro */
+  }
+  .personagem-imagem-container {
+    width: 90px;
+    height: 90px;
+    order: 2; /* Imagem no meio */
+  }
+  .recursos-hud-trackers {
+    width: 100%;
+    max-width: 450px; /* Limita a largura dos trackers */
+    order: 3; /* Trackers por último */
+    flex-basis: auto; /* Reseta a base */
   }
   
-  #bloco-furtividade {
-     height: auto; 
-     justify-content: flex-start;
-  }
-
-  .recurso-individual label {
-    font-size: 1.3em;
-  }
-  .recurso-individual .recurso-atual,
-  .recurso-individual .recurso-max,
-  .recurso-individual .recurso-separador {
-    font-size: 1.3em;
-    width: 60px;
-  }
-  .barra-recurso {
-    height: 10px;
-  }
-
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    top: 240px; 
+    top: 220px; /* Ajusta o 'top' para a nova altura da HUD */
     padding: 10px;
   }
 
@@ -54,11 +40,12 @@
   .ficha-container {
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "identidade identidade"
-      "atributos  defesa"
-      "pericias   pericias"
-      "controles  controles"
-      "calculo    calculo";
+      "identidade   identidade"
+      "atributos    defesa"
+      "acoes-defesa resistencias"
+      "pericias     pericias"
+      "controles    controles"
+      "calculo      calculo";
   }
 
   .box-atributos {
@@ -108,57 +95,54 @@
     padding: 15px;
   }
   
-  /* --- (NOVO) Layout Fixo Responsivo (Recursos 3 + 1) --- */
+  /* --- RECURSOS (CELULAR) --- */
   .recursos-container-fixo {
     padding: 10px 10px 5px 10px;
+    flex-direction: row; /* Lado a lado */
+    flex-wrap: wrap; /* Quebra linha */
+    justify-content: center;
+    gap: 10px;
   }
-  .box-recursos {
-    display: flex;
-    flex-wrap: wrap;
+  .recursos-hud-itens {
+    flex-direction: column; /* Empilha PV, SAN, PE */
+    width: auto;
+    gap: 5px;
+    order: 1; /* Itens à esquerda */
+    flex-grow: 1; /* Ocupa espaço */
+  }
+  .recurso-hud-item {
+    padding: 4px 8px;
     gap: 8px;
   }
-  .recurso-individual {
-    flex-basis: calc(33.33% - 6px);
-    flex-grow: 1;
-    min-width: 90px;
-    
-    padding: 5px 4px; /* Reduz o padding lateral */
-    background-color: var(--cor-caixa);
-    border: 1px solid var(--cor-borda);
-    border-radius: 4px;
-    min-height: 0;
+  .recurso-hud-item label {
+    font-size: 1em;
+    margin-right: auto; /* Empurra o input para a direita */
+  }
+  .hud-input-atual {
+    font-size: 1.1em;
+    width: 45px;
+  }
+  .hud-separador, .hud-valor-max {
+    font-size: 1.1em;
   }
   
-  #bloco-furtividade {
-    flex-basis: 100%;
+  .personagem-imagem-container {
+    width: 100px;
+    height: 100px;
+    order: 2; /* Imagem no meio */
+  }
+  
+  .recursos-hud-trackers {
     width: 100%;
-    min-height: 0;
+    order: 3; /* Trackers embaixo de tudo */
+    flex-basis: 100%;
+    max-width: none;
+    margin-top: 5px;
   }
-
-  .recurso-individual label {
-    font-size: 1.1em; 
-    margin-bottom: 2px;
-  }
-  .barra-recurso {
-    margin-bottom: 5px;
-  }
-
-  /* --- INÍCIO DA CORREÇÃO --- */
-  .recurso-numeros {
-    gap: 2px; /* Reduz o espaço entre os números */
-  }
-  .recurso-individual .recurso-atual,
-  .recurso-individual .recurso-max,
-  .recurso-individual .recurso-separador {
-    font-size: 1.1em; /* Fonte menor */
-    width: 38px;      /* Inputs menores */
-  }
-  /* --- FIM DA CORREÇÃO --- */
-
-
+  
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    top: 175px; 
+    top: 250px; /* Nova altura da HUD (aprox) */
     padding: 5px 10px;
     gap: 5px;
     overflow-x: auto;
@@ -177,6 +161,8 @@
       "identidade"
       "atributos"
       "defesa"
+      "acoes-defesa"
+      "resistencias"
       "pericias"   
       "controles"  
       "calculo";
@@ -184,14 +170,6 @@
 
   .box-atributos {
      max-width: 400px; 
-  }
-  
-  .box-defesa-status {
-     flex-wrap: wrap;
-  }
-  .box-defesa-status .campo-horizontal {
-     flex-basis: calc(50% - 10px);
-     min-width: 120px;
   }
   
   input[type="number"].input-hex {
@@ -294,14 +272,14 @@
   }
 }
 
-/* --- 3. Telas Muito Pequenas (Celulares em Retrato) --- */
+/* --- 3. Telas Pequenas (Celulares em Retrato) --- */
 @media (max-width: 480px) {
   body {
     font-size: 90%;
   }
   
   .ficha-abas {
-    top: 170px; 
+    top: 240px; /* Ajuste fino */
   }
 
   /* Hexágono e Inputs */
@@ -371,18 +349,58 @@
     flex-basis: auto;
   }
   
-  /* --- INÍCIO DA CORREÇÃO --- */
-  .recurso-individual {
-    padding: 5px 2px; /* Padding lateral ainda menor */
+  /* --- RECURSOS (CELULAR PEQUENO) --- */
+  .recursos-container-fixo {
+    gap: 5px;
   }
-  .recurso-numeros {
-    gap: 1px; /* Gap mínimo */
+  .recursos-hud-itens {
+    flex-direction: row; /* Volta a ser linha */
+    flex-wrap: wrap; /* Mas permite quebra */
+    gap: 5px;
   }
-  .recurso-individual .recurso-atual,
-  .recurso-individual .recurso-max,
-  .recurso-individual .recurso-separador {
-    font-size: 1.0em; /* Fonte bem pequena */
-    width: 35px;      /* Inputs bem pequenos */
+  .recurso-hud-item {
+    flex-basis: calc(50% - 3px); /* 2 por linha */
+    flex-grow: 1;
+    padding: 3px 6px;
   }
-  /* --- FIM DA CORREÇÃO --- */
+  .hud-input-atual {
+    font-size: 1em;
+    width: 35px;
+  }
+  .hud-separador, .hud-valor-max {
+    font-size: 1em;
+  }
+  .personagem-imagem-container {
+    width: 80px;
+    height: 80px;
+    order: -1; /* Joga a imagem para o topo */
+    margin: 0 auto 5px auto; /* Centraliza */
+    flex-basis: 100%;
+  }
+  .recursos-hud-trackers {
+    margin-top: 0;
+  }
+  .ficha-abas {
+    top: 255px; /* Altura da HUD (aprox) */
+  }
+  
+  /* --- (NOVO) Ajuste Defesa/Ações/Resistências --- */
+  .box-defesa {
+    grid-template-columns: 1fr; /* Empilha o Total sobre os Detalhes */
+    gap: 15px;
+  }
+  
+  .campos-linha-defesa {
+    gap: 8px;
+  }
+
+  .box-acoes-defesa .acoes-grid {
+    gap: 8px;
+    grid-template-columns: 1fr; /* Empilha Ações de Defesa */
+  }
+  
+  .box-resistencias .resistencias-grid {
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Permite 3 colunas se couber */
+  }
 }

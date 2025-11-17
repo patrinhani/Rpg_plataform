@@ -1,17 +1,9 @@
 // /src/components/ficha/identidade.jsx
-// (ATUALIZADO: Adicionado fallback '|| {}' para evitar crash na desestruturação)
+// (ATUALIZADO: Adicionado campo de URL da Foto)
 
 import React from 'react'; 
 import { OpcoesOrigem } from '../../lib/database.js'; 
 
-/**
- * Componente para a seção de Identidade do Personagem.
- * @param {object} props
- * @param {object} props.dados - Dados de info do personagem (personagem.info)
- * @param {function} props.onFichaChange - Função de callback para mudança.
- * @param {object} props.trilhasPorClasse - O objeto de trilhas agrupadas.
- * @param {object} props.patenteInfo - O objeto com os dados da patente (calculado no App.jsx)
- */
 function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
 
   const handleChange = (e) => {
@@ -28,6 +20,19 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       }
     }
     onFichaChange('info', campo, valor);
+  };
+  
+  // --- NOVO: Handler para o upload da foto ---
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Salva a imagem como uma string Base64
+        onFichaChange('info', 'foto', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const classeAtual = (dados && dados.classe) ? dados.classe.toLowerCase() : 'combatente';
@@ -48,9 +53,6 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
     { value: 'energia', label: 'Energia' },
   ];
 
-  // --- CORREÇÃO DE SEGURANÇA APLICADA AQUI ---
-  // Adiciona '|| {}' para garantir que, se 'patenteInfo' for 'undefined',
-  // o código não quebre e use valores padrão (undefined) para as variáveis.
   const { 
     nome: patenteNome, 
     credito: limiteCredito, 
@@ -58,11 +60,9 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
     catII, 
     catIII, 
     catIV 
-  } = patenteInfo || {}; // <-- Esta linha foi MODIFICADA
+  } = patenteInfo || {}; 
   
-  // Formata a string de limite de itens
   const limiteItens = `Cat I: ${catI || '—'} | Cat II: ${catII || '—'} | Cat III: ${catIII || '—'} | Cat IV: ${catIV || '—'}`;
-  // --- FIM DA CORREÇÃO ---
 
 
   return (
@@ -181,8 +181,24 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
         <label>LIMITE ITENS</label>
         <span className="campo-valor">{limiteItens}</span>
       </div>
-
-      {/* (Seus campos de NEX e Deslocamento entram aqui) */}
+      
+      {/* --- NOVO CAMPO DE FOTO --- */}
+      <div className="campo-horizontal" style={{ gridColumn: 'span 2' }}>
+        <label>FOTO DO PERSONAGEM (Upload)</label>
+        <input 
+          type="file" 
+          id="foto-upload" 
+          accept="image/png, image/jpeg, image/webp"
+          onChange={handlePhotoUpload}
+          style={{ 
+            fontFamily: '"Roboto Condensed", sans-serif',
+            fontSize: '1em',
+            color: 'var(--cor-texto-label)'
+          }}
+        />
+        {/* Este é um input de upload, não um campo de URL. 
+            O 'dados.foto' é um Base64, então não o exibimos aqui. */}
+      </div>
 
     </header>
   );

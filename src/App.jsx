@@ -1,12 +1,9 @@
 // src/App.jsx
-// (ATUALIZADO: Adiciona cálculos de Ações de Defesa e
-//  um 'case' para 'resistencias' no handleFichaChange)
+// (CORRIGIDO: Corrigida a Referência da prop 'controlesProps' na linha 636)
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-// Importações de estilos e bibliotecas de animação
 import './App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js'; 
-// Importa a classe principal do personagem e as listas de poderes/dados
 import { ficha as FichaClass } from './lib/personagem.js'; 
 import { 
     database, 
@@ -22,13 +19,13 @@ import {
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
 // --- Carregamento de Componentes ---
-// Componentes principais carregados imediatamente
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
+// --- ATUALIZAÇÃO: Importa o NOVO componente Recursos ---
 import Recursos from './components/ficha/recursos.jsx';
-// Otimização: Animação de Sangue só é carregada se o tema for Sangue
+// --- FIM DA ATUALIZAÇÃO ---
+
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
-// Otimização: Abas e Modais carregados "sob demanda" (lazy)
 const Inventario = lazy(() => import('./components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('./components/PoderesAprendidos.jsx'));
 const Rituais = lazy(() => import('./components/Rituais.jsx'));
@@ -64,7 +61,6 @@ function App() {
   // --- ESTADOS PRINCIPAIS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
   
-  // --- ATUALIZADO: Estado 'calculados' agora inclui Patente e Ações de Defesa ---
   const [calculados, setCalculados] = useState({
     defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false,
     patente: Patentes[0], // Adiciona a patente padrão
@@ -407,13 +403,11 @@ function App() {
 
 
   // --- FUNÇÃO DE MUDANÇA DE FICHA (ATUALIZADA) ---
-  // Esta função agora recalcula TUDO, incluindo Ações de Defesa e Patente.
   
   function handleFichaChange(secao, campo, valor) {
     
     let skipUpdate = false;
     
-    // --- PARTE 1: Atualiza os dados na classe 'FichaClass' ---
     if (secao) {
         if (secao === 'info') {
             const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
@@ -456,7 +450,6 @@ function App() {
                 FichaClass.setInfo(campo, valor);
             }
             else {
-                // Atualiza 'prestigio' (como número) e outros
                 FichaClass.setInfo(campo, valor);
             }
         } 
@@ -467,7 +460,6 @@ function App() {
         else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
         else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
         else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); }
-        // --- NOVO CASE ADICIONADO ---
         else if (secao === 'resistencias') { FichaClass.setResistencia(campo, valor); }
     }
     
@@ -479,7 +471,6 @@ function App() {
     
     FichaClass.calcularValoresMaximos();
     
-    // Cálculos de Defesa
     const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
     FichaClass.setDefesa('equip', bonusDefesaInventario);
     const agi = parseInt(novosDados.atributos.agi) || 0;
@@ -488,23 +479,17 @@ function App() {
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
     const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
     
-    // --- NOVO CÁLCULO (AÇÕES DE DEFESA) ---
     const vig = parseInt(novosDados.atributos.vig) || 0;
     const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0;
     const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
     const treino_luta = parseInt(novosDados.pericias.luta) || 0;
 
-    // Bônus da perícia = (metade do treino / 5) + atributo
-    // Nota: O bônus de perícia em si é (treino + atributo), mas a regra de defesa usa o bônus de Fortitude/Reflexos, que é (metade do NEX) + atributo.
-    // Assumindo que o treino (5, 10, 15) representa o bônus, e não o NEX.
-    // Se 'treino' for 0, 5, 10, 15...
     const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig;
     const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
 
     const tem_treino_fortitude = treino_fortitude >= 5;
     const tem_treino_reflexos = treino_reflexos >= 5;
     const tem_treino_luta = treino_luta >= 5;
-    // --- FIM DO NOVO CÁLCULO ---
 
     const nexString = novosDados.info.nex || '0%';
     const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
@@ -544,11 +529,9 @@ function App() {
       }
     });
 
-    // Cálculo da Patente
     const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0;
     const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
     
-    // Atualiza o estado 'calculados'
     setCalculados(prevCalculados => ({
       ...prevCalculados,
       defesaTotal: defesaTotal,
@@ -559,16 +542,13 @@ function App() {
       bonusPericia: bonusPericiaCalculado,
       canChangeTheme: canChangeTheme, 
       patente: patenteInfo,
-      // --- NOVOS DADOS DE DEFESA ---
       bloqueio_rd: tem_treino_fortitude ? bonus_fortitude : '—',
       esquiva_bonus: tem_treino_reflexos ? bonus_reflexos : '—',
       tem_contra_ataque: tem_treino_luta,
     }));
     
-    // Atualiza o estado 'personagem' (que agora inclui 'resistencias')
     setPersonagem(novosDados);
   }
-  // --- FIM DA FUNÇÃO handleFichaChange ---
 
 
   // --- PROPS PARA CONTROLES ---
@@ -579,10 +559,9 @@ function App() {
     onExport: exportarFicha,
     onImport: importarFicha,
     onThemeChange: setTema,
-    canChangeTheme: calculados.canChangeTheme
+    canChangeTheme: calculados.canChangeTheme // Passa o valor calculado
   };
   
-  // Componente de Fallback (Carregamento)
   const LoadingComponent = () => (
     <div 
       className="item-placeholder" 
@@ -624,14 +603,14 @@ function App() {
         )}
       </Suspense>
 
-      <div className="recursos-container-fixo">
-        <Recursos 
-          dados={personagem.recursos}
-          dadosPerseguicao={personagem.perseguicao}
-          dadosVisibilidade={personagem.visibilidade} 
-          onFichaChange={handleFichaChange}
-        />
-      </div>
+      {/* O componente 'Recursos' agora é o container fixo no topo */}
+      <Recursos 
+        dados={personagem.recursos}
+        dadosPerseguicao={personagem.perseguicao}
+        dadosVisibilidade={personagem.visibilidade} 
+        info={personagem.info} // Passa info para a foto
+        onFichaChange={handleFichaChange}
+      />
 
       <nav className="ficha-abas">
         <button className={`ficha-aba-link ${abaAtiva === 'principal' ? 'active' : ''}`} onClick={() => setAbaAtiva('principal')}>Principal</button>
@@ -646,10 +625,10 @@ function App() {
         {abaAtiva === 'principal' && (
           <FichaPrincipal
             personagem={personagem}
-            calculados={calculados} // 'calculados' agora contém a patente e ações
+            calculados={calculados} 
             fichaInstance={FichaClass} 
             handleFichaChange={handleFichaChange}
-            controlesProps={controlesProps}
+            controlesProps={controlesProps} // <-- CORREÇÃO AQUI
             trilhasPorClasse={trilhasPorClasse} 
           />
         )}
@@ -701,7 +680,7 @@ function App() {
 
         {abaAtiva === 'diario' && (
           <Diario
-            diarioData={FichaClass.diario} 
+            diarioData={FichaClass.diario || []} // Garante que seja um array
             onAbrirModal={handleAbrirDiarioModal}
             onRemoveNota={handleRemoverNota}
           />

@@ -1,5 +1,5 @@
 /* css/style.css */
-/* (VERSÃO CORRIGIDA - Traz de volta o Posicionamento Absoluto do Hexágono) */
+/* (VERSÃO COMPLETA ATUALIZADA - Com a nova HUD de Recursos e Imagem) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -72,7 +72,8 @@ h1,
 h2,
 label,
 button,
-.pericia-item span:first-child {
+.pericia-item span:first-child,
+.titulo-bloco {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   color: var(--cor-texto-principal);
@@ -100,11 +101,13 @@ body {
   gap: 20px;
   grid-template-columns: 1fr 1.5fr;
   grid-template-areas:
-    "identidade pericias"
-    "controles  pericias"
-    "atributos  pericias"
-    "defesa     pericias"
-    "calculo    calculo";
+    "identidade   pericias"
+    "controles    pericias"
+    "atributos    pericias"
+    "defesa       pericias"
+    "acoes-defesa pericias"
+    "resistencias pericias"
+    "calculo      calculo";
 }
 #grid-identidade {
   grid-area: identidade;
@@ -179,89 +182,9 @@ footer {
 }
 
 /* --- Estilo dos Recursos --- */
-.box-recursos {
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 20px; 
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.recurso-individual {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-  text-align: center;
-  width: 25%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.recurso-individual label {
-  font-size: 1.8em;
-  color: var(--cor-destaque);
-  margin-bottom: 5px;
-}
-.barra-recurso {
-  width: 100%;
-  height: 15px; 
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-texto-label);
-  border-radius: 10px; 
-  margin: 0 0 8px 0;
-  overflow: hidden;
-}
-.barra-preenchimento {
-  height: 100%;
-  background-color: var(--cor-destaque);
-  width: 100%;
-  transition: width 0.3s ease;
-  border-radius: 10px;
-}
-.recurso-numeros {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  width: 100%;
-}
-.recurso-individual .recurso-atual {
-  font-family: "Special Elite", monospace;
-  font-size: 1.8em;
-  color: var(--cor-texto-principal);
-  background-color: var(--cor-caixa);
-  border: 1px solid var(--cor-borda);
-  border-radius: 4px;
-  text-align: center;
-  width: 80px;
-  padding: 2px 5px;
-}
-.recurso-separador {
-  font-family: "Special Elite", monospace;
-  font-size: 1.8em;
-  color: var(--cor-texto-label);
-  padding: 0 5px;
-}
-.recurso-individual .recurso-max {
-  font-family: "Special Elite", monospace;
-  font-size: 1.8em;
-  color: var(--cor-texto-label);
-  background: none;
-  border: none;
-  text-align: center;
-  width: 80px;
-  padding: 2px 5px;
-  cursor: default;
-}
-.recurso-individual input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-.recurso-individual input[type="number"]::-webkit-outer-spin-button,
-.recurso-individual input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+/* (ESTA SEÇÃO FOI COMPLETAMENTE SUBSTITUÍDA PELOS NOVOS ESTILOS DA HUD) */
+/* (Os estilos antigos de .box-recursos, .recurso-individual, .barra-recurso, etc. foram removidos) */
+
 :root[data-tema="tema-morte"] .box-controles button,
 :root[data-tema="tema-morte"]
   .box-controles
@@ -279,57 +202,6 @@ footer {
 }
 :root[data-tema="tema-conhecimento"] .btn-add-item {
   color: var(--cor-caixa-recurso);
-}
-
-.box-defesa-status {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-}
-.box-defesa-status .campo-horizontal {
-  flex: 1;
-  text-align: center;
-  background-color: var(--cor-caixa-recurso);
-  border: 1px solid var(--cor-borda);
-  padding: 10px;
-  border-radius: 4px;
-}
-.box-defesa-status .campo-horizontal:first-child, 
-.box-defesa-status .campo-horizontal:nth-child(2) {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.box-defesa-status .campo-horizontal label {
-  text-align: center;
-  font-size: 1em;
-  margin-bottom: 5px;
-}
-.box-defesa-status .valor-calculado {
-  font-family: "Special Elite", monospace;
-  font-size: 2.5em;
-  text-align: center;
-  color: var(--cor-destaque);
-  display: block;
-  margin: 5px 0;
-}
-.box-defesa-status .campo-horizontal input[type="number"] {
-  width: 100%;
-  text-align: center;
-  background-color: var(--cor-fundo);
-  margin-top: 5px;
-}
-.box-defesa-status input[readonly] {
-  background-color: #111;
-  color: var(--cor-texto-label);
-  border-color: #333;
-  cursor: not-allowed;
-}
-.box-defesa-status .carga-max {
-  font-family: "Special Elite", monospace;
-  font-size: 1.1em;
-  color: var(--cor-texto-label);
 }
 
 /* --- 7. Estilos Gerais de Formulário --- */
@@ -803,6 +675,150 @@ input[type="number"].input-hex {
   grid-column: 1 / -1; 
 }
 
+/* --- 15. ESTILOS DE DEFESA, AÇÕES E RESISTÊNCIAS --- */
+
+/* Associa os novos blocos às áreas do grid */
+#grid-acoes-defesa {
+  grid-area: acoes-defesa;
+}
+#grid-resistencias {
+  grid-area: resistencias;
+}
+
+/* Estilo unificado para os títulos dos blocos */
+.titulo-bloco {
+  font-family: "Special Elite", monospace;
+  text-transform: uppercase;
+  color: var(--cor-destaque);
+  border-bottom: 2px solid var(--cor-borda);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+}
+
+/* Layout corrigido para o Bloco de Defesa Total */
+.box-defesa {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* Coluna 1: Total, Coluna 2: Detalhes */
+  gap: 20px;
+  align-items: center;
+}
+
+.valor-total-bloco {
+  text-align: center;
+  background-color: var(--cor-caixa-recurso);
+  border: 1px solid var(--cor-borda);
+  padding: 15px 10px;
+  border-radius: 4px;
+}
+.valor-total-bloco span {
+  font-family: "Special Elite", monospace;
+  font-size: 1.1em;
+  color: var(--cor-texto-label);
+}
+.valor-total-bloco .valor-grande {
+  font-family: "Special Elite", monospace;
+  font-size: 3.5em;
+  color: var(--cor-destaque);
+  line-height: 1.1;
+}
+
+.campos-linha-defesa {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.campo-valor-simples {
+  flex: 1;
+  text-align: center;
+  background-color: var(--cor-caixa-recurso);
+  border: 1px solid var(--cor-borda);
+  padding: 10px;
+  border-radius: 4px;
+}
+.campo-valor-simples label {
+  font-family: "Special Elite", monospace;
+  font-size: 1em;
+  color: var(--cor-texto-label);
+  display: block;
+  margin-bottom: 5px;
+}
+.campo-valor-simples .valor {
+  font-family: "Special Elite", monospace;
+  font-size: 2em;
+  color: var(--cor-destaque);
+  line-height: 1;
+}
+
+/* Estilo para inputs (como em "Outros" da Defesa) */
+.campo-valor-simples.editavel .valor {
+  width: 100%;
+  text-align: center;
+  background-color: var(--cor-fundo);
+  border: none;
+  padding: 0;
+  font-size: 2em; /* Mantém o tamanho do texto */
+}
+
+
+/* Estilos para o NOVO Bloco de Ações de Defesa */
+.box-acoes-defesa .acoes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.acao-defesa {
+  background-color: var(--cor-caixa-recurso);
+  border: 1px solid var(--cor-borda);
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+}
+.acao-defesa label {
+  font-family: "Special Elite", monospace;
+  font-size: 1.1em;
+  color: var(--cor-texto-label);
+  display: block;
+  margin-bottom: 5px;
+}
+.acao-defesa .valor-acao {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em;
+  color: var(--cor-destaque);
+  font-weight: bold;
+}
+.acao-defesa .valor-acao span {
+  font-size: 0.8em;
+  color: var(--cor-texto-label);
+  margin-right: 4px;
+  font-weight: normal;
+}
+
+
+/* Estilos para o NOVO Bloco de Resistências a Dano */
+.box-resistencias .resistencias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.box-resistencias .campo-valor-simples {
+  padding: 8px;
+}
+.box-resistencias .campo-valor-simples label {
+  font-size: 0.9em;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+.box-resistencias .campo-valor-simples .valor {
+  font-size: 1.6em;
+}
+
+
 /* --- 17. Formulário de Item Personalizado --- */
 .form-custom-item {
   display: flex;
@@ -1058,7 +1074,8 @@ input[type="number"].input-hex {
   gap: 10px;
   
   position: sticky;
-  top: 90px; 
+  /* --- ATUALIZADO: Ajusta o 'top' para a nova altura da HUD --- */
+  top: 110px; 
   background: var(--cor-fundo);
   z-index: 800;
   border-bottom: 2px solid var(--cor-caixa); 
@@ -1308,11 +1325,11 @@ input[type="number"].input-hex {
   color: #111; 
 }
 
-/* --- 27. Container Fixo de Recursos --- */
+/* --- 27. Container Fixo de Recursos (NOVA HUD) --- */
 .recursos-container-fixo {
   max-width: 1400px; 
   margin: 0 auto;
-  padding: 15px 20px 10px 20px;
+  padding: 10px 20px; /* Mais fino que antes */
   background-color: var(--cor-caixa-recurso); 
   border-bottom: 2px solid var(--cor-borda); 
   
@@ -1320,12 +1337,118 @@ input[type="number"].input-hex {
   top: 0;
   z-index: 900;
   transition: border-color 0.5s ease; 
-}
-.ficha-container-inventario {
-  padding-top: 20px; 
-  margin-top: 0;
+
+  /* Layout da HUD */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
 }
 
+/* Container para os 3 status (PV, SAN, PE) */
+.recursos-hud-itens {
+  display: flex;
+  gap: 10px;
+  flex-grow: 1; /* Ocupa o espaço à esquerda */
+}
+
+/* Item individual (PV, SAN ou PE) */
+.recurso-hud-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-caixa);
+  border-radius: 4px;
+  padding: 5px 10px;
+  gap: 5px;
+}
+.recurso-hud-item label {
+  font-size: 1.1em;
+  color: var(--cor-texto-label);
+  margin-right: 5px;
+}
+.hud-input-atual {
+  width: 60px;
+  padding: 2px 5px;
+  background-color: var(--cor-caixa-recurso);
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  font-family: "Special Elite", monospace;
+  font-size: 1.3em;
+  color: var(--cor-destaque);
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.hud-input-atual::-webkit-outer-spin-button,
+.hud-input-atual::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.hud-separador {
+  font-family: "Special Elite", monospace;
+  font-size: 1.3em;
+  color: var(--cor-texto-label);
+}
+.hud-valor-max {
+  font-family: "Special Elite", monospace;
+  font-size: 1.3em;
+  color: var(--cor-texto-principal);
+  min-width: 30px; /* Garante alinhamento */
+  text-align: left;
+}
+
+/* Container da Imagem do Personagem */
+.personagem-imagem-container {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%; /* Círculo perfeito */
+  border: 2px solid var(--cor-destaque);
+  background-color: var(--cor-fundo);
+  flex-shrink: 0; /* Não encolhe */
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* Símbolo Arcano (fundo) */
+.personagem-imagem-fundo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  opacity: 0.1; /* Bem sutil */
+  filter: brightness(0.5); /* Escurece o símbolo */
+}
+
+/* Foto do Personagem (retângulo central) */
+.personagem-imagem-foto {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 85%; /* Retângulo interno (85% do círculo) */
+  height: 85%; /* Retângulo interno (85% do círculo) */
+  background-color: var(--cor-fundo); /* Cor se não houver foto */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 4px; /* "um retangulo" */
+  border: 1px solid rgba(0, 0, 0, 0.3); /* Borda interna sutil */
+}
+
+/* Container dos Trackers (Furtividade/Perseguição) */
+.recursos-hud-trackers {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-basis: 300px; /* Largura fixa para os trackers */
+  flex-shrink: 0;
+}
+/* --- FIM DA NOVA SEÇÃO DA HUD --- */
 
 /* --- 25. Overlay da Animação Three.js --- */
 #three-transition-overlay {
@@ -1344,14 +1467,8 @@ input[type="number"].input-hex {
   height: 100%;
 }
 
-/* --- Estilo dos Trackers de Furtividade/Perseguição --- */
-#bloco-furtividade {
-  align-items: center;
-  gap: 5px; 
-}
-#bloco-furtividade label {
-  margin-bottom: 5px;
-}
+/* --- Estilo dos Trackers de Furtividade/Perseguição (EXISTENTE) --- */
+/* (Agora dentro do .recursos-hud-trackers) */
 .tracker-linha {
   display: flex;
   align-items: center;
@@ -1362,7 +1479,7 @@ input[type="number"].input-hex {
   border: 1px solid var(--cor-caixa);
   background-color: var(--cor-fundo);
   transition: border-color 0.2s ease;
-  margin-bottom: 5px; 
+  margin-bottom: 0; /* Removido margin-bottom */
 }
 .tracker-linha span {
   font-family: "Special Elite", monospace;
@@ -1407,16 +1524,16 @@ input[type="number"].input-hex {
 }
 .perseguicao-container {
   width: 100%;
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 5px; /* Espaço menor */
+  padding-top: 5px; /* Espaço menor */
   border-top: 1px dashed var(--cor-texto-label);
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 .perseguicao-container label {
-  font-size: 1.2em;
-  margin-bottom: 5px;
+  /* (Estilo de label removido, já é tratado pelo tracker-linha) */
+  display: none;
 }
 .tracker-linha.sucesso,
 .tracker-linha.falha {
@@ -1612,4 +1729,3 @@ html.modo-morte .simbolo-parallax {
   50% { filter: brightness(0.2) opacity(0.3); }
   100% { filter: brightness(0.5) opacity(0.5); }
 }
-
