@@ -1,10 +1,12 @@
 // src/App.jsx
-// (ATENÇÃO: A função 'handleFichaChange' foi 100% substituída pela versão que
-// SEMPRE recalcula a patente para corrigir o bug de atualização)
+// (ATUALIZADO: Adiciona cálculos de Ações de Defesa e
+//  um 'case' para 'resistencias' no handleFichaChange)
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+// Importações de estilos e bibliotecas de animação
 import './App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js'; 
+// Importa a classe principal do personagem e as listas de poderes/dados
 import { ficha as FichaClass } from './lib/personagem.js'; 
 import { 
     database, 
@@ -14,16 +16,19 @@ import {
     poderesOcultista,
     poderesGerais,
     poderesParanormais,
-    getPatenteInfo, // <-- Importado para calcular a patente
-    Patentes,       // <-- Importado para o valor padrão
+    getPatenteInfo, // Importa a função de Patente
+    Patentes,       // Importa os dados de Patente
 } from './lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
 // --- Carregamento de Componentes ---
+// Componentes principais carregados imediatamente
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
 import Recursos from './components/ficha/recursos.jsx';
+// Otimização: Animação de Sangue só é carregada se o tema for Sangue
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
+// Otimização: Abas e Modais carregados "sob demanda" (lazy)
 const Inventario = lazy(() => import('./components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('./components/PoderesAprendidos.jsx'));
 const Rituais = lazy(() => import('./components/Rituais.jsx'));
@@ -59,10 +64,13 @@ function App() {
   // --- ESTADOS PRINCIPAIS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
   
-  // 'calculados' AGORA INCLUI A PATENTE
+  // --- ATUALIZADO: Estado 'calculados' agora inclui Patente e Ações de Defesa ---
   const [calculados, setCalculados] = useState({
     defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false,
-    patente: Patentes[0], // Adiciona a patente padrão (Recruta)
+    patente: Patentes[0], // Adiciona a patente padrão
+    bloqueio_rd: '—',      // Adiciona RD Bloqueio
+    esquiva_bonus: '—',    // Adiciona Bônus Esquiva
+    tem_contra_ataque: false, // Adiciona flag Contra-ataque
   });
   
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
@@ -89,7 +97,7 @@ function App() {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
     carregarFicha();
-    handleFichaChange(null, null, null); // Força um cálculo inicial no carregamento
+    handleFichaChange(null, null, null); 
   }, []); 
 
   useEffect(() => {
@@ -398,7 +406,9 @@ function App() {
   };
 
 
-  // --- (ESTA É A FUNÇÃO CORRIGIDA - SUBSTITUA A SUA ANTIGA) ---
+  // --- FUNÇÃO DE MUDANÇA DE FICHA (ATUALIZADA) ---
+  // Esta função agora recalcula TUDO, incluindo Ações de Defesa e Patente.
+  
   function handleFichaChange(secao, campo, valor) {
     
     let skipUpdate = false;
@@ -446,7 +456,7 @@ function App() {
                 FichaClass.setInfo(campo, valor);
             }
             else {
-                // É aqui que 'prestigio' (como número) é atualizado
+                // Atualiza 'prestigio' (como número) e outros
                 FichaClass.setInfo(campo, valor);
             }
         } 
@@ -456,19 +466,20 @@ function App() {
         else if (secao === 'visibilidade_mudar') { FichaClass.setVisibilidade(campo, valor); }
         else if (secao === 'defesa') { FichaClass.setDefesa(campo, valor); } 
         else if (secao === 'pericias') { FichaClass.setTreinoPericia(campo, valor); } 
-        else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); } 
+        else if (secao === 'bonusManuais') { FichaClass.setBonusManual(campo, valor); }
+        // --- NOVO CASE ADICIONADO ---
+        else if (secao === 'resistencias') { FichaClass.setResistencia(campo, valor); }
     }
     
     if (skipUpdate) { return; }
 
     // --- PARTE 2: Recalcula TUDO e Atualiza o Estado do React ---
-    // (A otimização 'isLightUpdate' foi removida para corrigir o bug)
     
-    // Pega uma cópia nova dos dados (incluindo o 'prestigio' atualizado)
     const novosDados = FichaClass.getDados();
     
     FichaClass.calcularValoresMaximos();
     
+    // Cálculos de Defesa
     const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
     FichaClass.setDefesa('equip', bonusDefesaInventario);
     const agi = parseInt(novosDados.atributos.agi) || 0;
@@ -477,6 +488,24 @@ function App() {
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
     const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
     
+    // --- NOVO CÁLCULO (AÇÕES DE DEFESA) ---
+    const vig = parseInt(novosDados.atributos.vig) || 0;
+    const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0;
+    const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
+    const treino_luta = parseInt(novosDados.pericias.luta) || 0;
+
+    // Bônus da perícia = (metade do treino / 5) + atributo
+    // Nota: O bônus de perícia em si é (treino + atributo), mas a regra de defesa usa o bônus de Fortitude/Reflexos, que é (metade do NEX) + atributo.
+    // Assumindo que o treino (5, 10, 15) representa o bônus, e não o NEX.
+    // Se 'treino' for 0, 5, 10, 15...
+    const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig;
+    const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
+
+    const tem_treino_fortitude = treino_fortitude >= 5;
+    const tem_treino_reflexos = treino_reflexos >= 5;
+    const tem_treino_luta = treino_luta >= 5;
+    // --- FIM DO NOVO CÁLCULO ---
+
     const nexString = novosDados.info.nex || '0%';
     const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
     const canChangeTheme = nexNumeric >= 50;
@@ -515,14 +544,11 @@ function App() {
       }
     });
 
-    // --- CÁLCULO DA PATENTE ---
-    // Lê o 'prestigio' (que agora é um número) dos 'novosDados'
+    // Cálculo da Patente
     const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0;
-    // Calcula a patente
     const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
     
     // Atualiza o estado 'calculados'
-    // Usando a forma funcional para garantir que o React veja a mudança
     setCalculados(prevCalculados => ({
       ...prevCalculados,
       defesaTotal: defesaTotal,
@@ -532,10 +558,14 @@ function App() {
       periciasTotal: periciasTotal,
       bonusPericia: bonusPericiaCalculado,
       canChangeTheme: canChangeTheme, 
-      patente: patenteInfo, // Salva o objeto da patente calculado
+      patente: patenteInfo,
+      // --- NOVOS DADOS DE DEFESA ---
+      bloqueio_rd: tem_treino_fortitude ? bonus_fortitude : '—',
+      esquiva_bonus: tem_treino_reflexos ? bonus_reflexos : '—',
+      tem_contra_ataque: tem_treino_luta,
     }));
     
-    // Atualiza o estado 'personagem'
+    // Atualiza o estado 'personagem' (que agora inclui 'resistencias')
     setPersonagem(novosDados);
   }
   // --- FIM DA FUNÇÃO handleFichaChange ---
@@ -614,10 +644,9 @@ function App() {
       
       <Suspense fallback={<LoadingComponent />}>
         {abaAtiva === 'principal' && (
-          // Passa a patente calculada para FichaPrincipal
           <FichaPrincipal
             personagem={personagem}
-            calculados={calculados} // 'calculados' agora contém a patente
+            calculados={calculados} // 'calculados' agora contém a patente e ações
             fichaInstance={FichaClass} 
             handleFichaChange={handleFichaChange}
             controlesProps={controlesProps}

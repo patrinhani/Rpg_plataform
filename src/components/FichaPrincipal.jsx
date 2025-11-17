@@ -1,5 +1,5 @@
 // /src/components/FichaPrincipal.jsx
-// (ATUALIZADO: Adicionada a prop 'patenteInfo' na chamada do Identidade)
+// (ATUALIZADO: Adicionada a prop 'dadosResistencias' na chamada do DefesaStatus)
 
 import React from 'react';
 
@@ -14,7 +14,7 @@ import CalculoDetalhado from './ficha/calculo-detalhado';
 
 function FichaPrincipal({
   personagem,
-  calculados, // 'calculados' contém 'calculados.patente'
+  calculados, // 'calculados' agora contém 'patente' e as ações de defesa
   fichaInstance,
   handleFichaChange,
   controlesProps,
@@ -31,14 +31,12 @@ function FichaPrincipal({
   return (
     <main className="ficha-container">
       
-      {/* --- CORREÇÃO APLICADA AQUI --- */}
       <Identidade 
         dados={personagem.info} 
         onFichaChange={handleFichaChange} 
         trilhasPorClasse={trilhasPorClasse}
-        patenteInfo={calculados.patente} // <-- Esta linha foi ADICIONADA
+        patenteInfo={calculados.patente} // Passa a patente calculada
       />
-      {/* --- FIM DA CORREÇÃO --- */}
       
       <Controles {...controlesComNEX} /> 
 
@@ -46,13 +44,18 @@ function FichaPrincipal({
         dados={personagem.atributos} 
         onFichaChange={handleFichaChange} 
       />
+
+      {/* <Recursos ... /> <-- REMOVIDO DAQUI */}
       
+      {/* --- BLOCO ATUALIZADO --- */}
       <DefesaStatus
         dadosInfo={personagem.info}
         dadosDefesa={personagem.defesa}
-        dadosCalculados={calculados}
+        dadosResistencias={personagem.resistencias} // <-- ESTA LINHA FOI ADICIONADA
+        dadosCalculados={calculados} // Passa TODOS os cálculos (incluindo ações)
         onFichaChange={handleFichaChange}
       />
+      {/* --- FIM DA ATUALIZAÇÃO --- */}
       
       <Pericias
         dadosPericias={personagem.pericias}

@@ -1,6 +1,5 @@
 // /src/lib/personagem.js
-// (CORRIGIDO: getDados() agora retorna cópias para forçar o re-render do React)
-// (ATUALIZADO: Adicionado 'prestigio' ao this.info)
+// (ATUALIZADO: Adicionado 'this.resistencias' e 'setResistencia')
 
 class Personagem {
   constructor() {
@@ -42,7 +41,7 @@ class Personagem {
       classe: "especialista",
       trilha: "nenhuma",
       nex: "5%",
-      prestigio: 0, // <-- Linha adicionada
+      prestigio: 0,
       deslocamento: 9,
       monstruoso_elemento: "", 
       possuido_elemento: "",
@@ -60,6 +59,21 @@ class Personagem {
       equip: 0,
       outros: 0,
     };
+    
+    // --- NOVO BLOCO DE RESISTÊNCIAS ---
+    this.resistencias = {
+      mental: 0,
+      balistico: 0,
+      corte: 0,
+      impacto: 0,
+      perfuracao: 0,
+      sangue: 0,
+      morte: 0,
+      conhecimento: 0,
+      energia: 0,
+      medo: 0,
+    };
+    // --- FIM DO NOVO BLOCO ---
     
     this.perseguicao = { sucessos: 0, falhas: 0 };
     this.visibilidade = 0; 
@@ -139,6 +153,15 @@ class Personagem {
   setDefesa(campo, valor) {
     this.defesa[campo] = parseInt(valor) || 0;
   }
+
+  // --- NOVO MÉTODO PARA RESISTÊNCIAS ---
+  setResistencia(campo, valor) {
+    const num = parseInt(valor);
+    if (this.resistencias.hasOwnProperty(campo)) {
+      this.resistencias[campo] = isNaN(num) ? 0 : num;
+    }
+  }
+  // --- FIM DO NOVO MÉTODO ---
 
   // --- MÉTODOS PARA TRILHAS ---
   addTrilhaPersonalizada(trilhaData) {
@@ -389,7 +412,7 @@ class Personagem {
 
   // --- Métodos de Salvamento/Carregamento ---
   
-  // --- MÉTODO CORRIGIDO ---
+  // --- MÉTODO ATUALIZADO ---
   getDados() {
     return {
       atributos: { ...this.atributos },
@@ -397,8 +420,9 @@ class Personagem {
       info: { ...this.info }, 
       recursos: { ...this.recursos },
       defesa: { ...this.defesa },
-      perseguicao: { ...this.perseguicao }, // <-- CORRIGIDO AQUI
-      visibilidade: this.visibilidade, // Primitivo não precisa de cópia
+      resistencias: { ...this.resistencias }, // <-- LINHA ADICIONADA
+      perseguicao: { ...this.perseguicao },
+      visibilidade: this.visibilidade,
       inventario: [...this.inventario], 
       rituais: [...this.rituais], 
       bonusManuais: { ...this.bonusManuais },
@@ -406,8 +430,9 @@ class Personagem {
       poderes_aprendidos: [...this.poderes_aprendidos], 
     };
   }
-  // --- FIM DA CORREÇÃO ---
+  // --- FIM DA ATUALIZAÇÃO ---
   
+  // --- MÉTODO ATUALIZADO ---
   carregarDados(dados) {
     if (dados) {
       this.atributos = dados.atributos || this.atributos;
@@ -415,6 +440,7 @@ class Personagem {
       this.info = { ...this.info, ...dados.info };
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
+      this.resistencias = dados.resistencias || this.resistencias; // <-- LINHA ADICIONADA
       this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; 
       this.visibilidade = dados.visibilidade || 0; 
       this.inventario = dados.inventario || [];
@@ -424,6 +450,7 @@ class Personagem {
       this.poderes_aprendidos = dados.poderes_aprendidos || []; 
     }
   }
+  // --- FIM DA ATUALIZAÇÃO ---
 
   // --- CÁLCULO DE RECURSOS MÁXIMOS ---
   calcularValoresMaximos() {
