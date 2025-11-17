@@ -1,5 +1,5 @@
 // /src/lib/personagem.js
-// (ATUALIZADO: Adicionado 'this.resistencias', 'setResistencia' e 'info.foto')
+// (ATUALIZADO: Lista 'this.resistencias' no constructor modificada)
 
 class Personagem {
   constructor() {
@@ -45,7 +45,7 @@ class Personagem {
       deslocamento: 9,
       monstruoso_elemento: "", 
       possuido_elemento: "",
-      foto: "", // <-- CAMPO ADICIONADO
+      foto: "", 
     };
     this.recursos = {
       pv_atual: 10,
@@ -61,18 +61,23 @@ class Personagem {
       outros: 0,
     };
     
+    // --- (NOVA LISTA DE RESISTÊNCIAS) ---
     this.resistencias = {
-      mental: 0,
       balistico: 0,
       corte: 0,
       impacto: 0,
       perfuracao: 0,
+      eletricidade: 0,
+      fogo: 0,
+      frio: 0,
+      quimico: 0,
+      mental: 0,
       sangue: 0,
       morte: 0,
       conhecimento: 0,
       energia: 0,
-      medo: 0,
     };
+    // --- FIM DA ATUALIZAÇÃO ---
     
     this.perseguicao = { sucessos: 0, falhas: 0 };
     this.visibilidade = 0; 

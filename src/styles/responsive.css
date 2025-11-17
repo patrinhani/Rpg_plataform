@@ -1,5 +1,5 @@
 /* css/responsive.css */
-/* (ATUALIZADO: Layout responsivo para a nova HUD) */
+/* (Ajustes para as novas barras de status na HUD) */
 
 /* --- 1. Telas Médias (Tablets) --- */
 @media (max-width: 1100px) {
@@ -7,32 +7,32 @@
   /* --- RECURSOS (TABLET) --- */
   .recursos-container-fixo {
     padding: 10px;
-    flex-wrap: wrap; /* Permite que os itens quebrem a linha */
-    justify-content: center; /* Centraliza no tablet */
+    flex-wrap: wrap; 
+    justify-content: center; 
     gap: 10px;
   }
   .recursos-hud-itens {
     justify-content: center;
-    width: 100%; /* Ocupa toda a largura */
+    width: 100%; 
     gap: 10px;
-    flex-grow: 0; /* Não cresce mais */
-    order: 1; /* Itens (PV, SAN, PE) vêm primeiro */
+    flex-grow: 0; 
+    order: 1; 
   }
   .personagem-imagem-container {
     width: 90px;
     height: 90px;
-    order: 2; /* Imagem no meio */
+    order: 2; 
   }
   .recursos-hud-trackers {
     width: 100%;
-    max-width: 450px; /* Limita a largura dos trackers */
-    order: 3; /* Trackers por último */
-    flex-basis: auto; /* Reseta a base */
+    max-width: 450px; 
+    order: 3; 
+    flex-basis: auto; 
   }
   
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    top: 220px; /* Ajusta o 'top' para a nova altura da HUD */
+    top: 250px; /* <-- AJUSTADO (era 220px) */
     padding: 10px;
   }
 
@@ -98,25 +98,25 @@
   /* --- RECURSOS (CELULAR) --- */
   .recursos-container-fixo {
     padding: 10px 10px 5px 10px;
-    flex-direction: row; /* Lado a lado */
-    flex-wrap: wrap; /* Quebra linha */
+    flex-direction: row; 
+    flex-wrap: wrap; 
     justify-content: center;
     gap: 10px;
   }
   .recursos-hud-itens {
     flex-direction: column; /* Empilha PV, SAN, PE */
     width: auto;
-    gap: 5px;
-    order: 1; /* Itens à esquerda */
-    flex-grow: 1; /* Ocupa espaço */
+    gap: 8px; /* <-- AJUSTADO (era 5px) */
+    order: 1; 
+    flex-grow: 1; 
   }
   .recurso-hud-item {
-    padding: 4px 8px;
-    gap: 8px;
+    padding: 8px 10px; /* <-- AJUSTADO (era 4px 8px) */
+    gap: 5px; 
   }
   .recurso-hud-item label {
-    font-size: 1em;
-    margin-right: auto; /* Empurra o input para a direita */
+    font-size: 1.1em; /* <-- AJUSTADO (era 1em) */
+    margin-right: auto; 
   }
   .hud-input-atual {
     font-size: 1.1em;
@@ -129,12 +129,12 @@
   .personagem-imagem-container {
     width: 100px;
     height: 100px;
-    order: 2; /* Imagem no meio */
+    order: 2; 
   }
   
   .recursos-hud-trackers {
     width: 100%;
-    order: 3; /* Trackers embaixo de tudo */
+    order: 3; 
     flex-basis: 100%;
     max-width: none;
     margin-top: 5px;
@@ -142,19 +142,20 @@
   
   /* Ajusta a posição das Abas */
   .ficha-abas {
-    top: 250px; /* Nova altura da HUD (aprox) */
+    top: 275px; /* <-- AJUSTADO (era 250px) */
     padding: 5px 10px;
     gap: 5px;
     overflow-x: auto;
     flex-wrap: nowrap;
   }
+  
+  /* ... (o restante do arquivo .css responsivo permanece o mesmo) ... */
   .ficha-aba-link {
     font-size: 1em;
     padding: 8px 12px;
     flex-shrink: 0;
   }
 
-  /* --- Layout da Ficha Principal (Celular) --- */
   .ficha-container {
     grid-template-columns: 1fr; 
     grid-template-areas:
@@ -177,7 +178,6 @@
     width: 55px;
   }
   
-  /* --- AJUSTE FINO (CELULAR) --- */
   #forca {
     top: 31%;
     left: 16%;
@@ -199,8 +199,6 @@
     left: 63%;
   }
 
-
-  /* Ajuste Cards de Perícia */
   .pericias-grid-container {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 8px;
@@ -231,7 +229,6 @@
     padding: 4px;
   }
 
-  /* Controles */
   .box-controles {
     gap: 5px;
   }
@@ -249,7 +246,6 @@
     width: 100%;
   }
 
-  /* Modais */
   .modal-conteudo {
     width: 95vw;
     max-height: 90vh;
@@ -279,10 +275,9 @@
   }
   
   .ficha-abas {
-    top: 240px; /* Ajuste fino */
+    top: 240px; 
   }
 
-  /* Hexágono e Inputs */
   .box-atributos {
      max-width: 320px; 
   }
@@ -291,7 +286,6 @@
     width: 45px;
   }
   
-  /* --- AJUSTE FINO (CELULAR PEQUENO) --- */
   #forca {
     top: 31%;
     left: 16%;
@@ -313,7 +307,6 @@
     left: 63%;
   }
 
-  /* Ajuste Cards de Perícia */
   .pericias-grid-container {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 5px;
@@ -335,12 +328,10 @@
     font-size: 1.3em;
   }
 
-  /* Força 1 coluna nos cards de item/ritual */
   .loja-lista-itens {
     grid-template-columns: 1fr;
   }
 
-  /* Empilha botões de perícia no modal */
   #lista-selecao-pericia {
     flex-direction: column;
     gap: 8px;
@@ -354,14 +345,15 @@
     gap: 5px;
   }
   .recursos-hud-itens {
-    flex-direction: row; /* Volta a ser linha */
-    flex-wrap: wrap; /* Mas permite quebra */
+    flex-direction: row; 
+    flex-wrap: wrap; 
     gap: 5px;
   }
   .recurso-hud-item {
-    flex-basis: calc(50% - 3px); /* 2 por linha */
+    flex-basis: calc(50% - 3px); 
     flex-grow: 1;
     padding: 3px 6px;
+    min-width: 120px; 
   }
   .hud-input-atual {
     font-size: 1em;
@@ -373,20 +365,19 @@
   .personagem-imagem-container {
     width: 80px;
     height: 80px;
-    order: -1; /* Joga a imagem para o topo */
-    margin: 0 auto 5px auto; /* Centraliza */
+    order: -1; 
+    margin: 0 auto 5px auto; 
     flex-basis: 100%;
   }
   .recursos-hud-trackers {
     margin-top: 0;
   }
   .ficha-abas {
-    top: 255px; /* Altura da HUD (aprox) */
+    top: 255px; 
   }
   
-  /* --- (NOVO) Ajuste Defesa/Ações/Resistências --- */
   .box-defesa {
-    grid-template-columns: 1fr; /* Empilha o Total sobre os Detalhes */
+    grid-template-columns: 1fr; 
     gap: 15px;
   }
   
@@ -396,11 +387,11 @@
 
   .box-acoes-defesa .acoes-grid {
     gap: 8px;
-    grid-template-columns: 1fr; /* Empilha Ações de Defesa */
+    grid-template-columns: 1fr; 
   }
   
   .box-resistencias .resistencias-grid {
     gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Permite 3 colunas se couber */
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
   }
 }

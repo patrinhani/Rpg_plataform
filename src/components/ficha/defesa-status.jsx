@@ -1,16 +1,16 @@
 // /src/components/ficha/defesa-status.jsx
-// (ATUALIZADO: Inclui Ações de Defesa e Resistências)
+// (ATUALIZADO: Adiciona classes de tema às resistências)
 
 import React, { memo } from 'react';
 
-/**
- * @param {object} props
- * @param {object} props.dadosInfo
- * @param {object} props.dadosDefesa
- * @param {object} props.dadosResistencias - (NOVO)
- * @param {object} props.dadosCalculados
- * @param {function} props.onFichaChange
- */
+// (NOVO) Objeto para mapear chaves para classes CSS
+const TEMA_CLASSES = {
+  sangue: 'res-sangue',
+  morte: 'res-morte',
+  conhecimento: 'res-conhecimento',
+  energia: 'res-energia',
+};
+
 function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculados, onFichaChange }) {
   
   // Handler para os inputs de DEFESA (Outros)
@@ -18,7 +18,7 @@ function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculad
     onFichaChange('defesa', e.target.id, e.target.value);
   };
 
-  // NOVO: Handler para os inputs de RESISTÊNCIA
+  // Handler para os inputs de RESISTÊNCIA
   const handleResistenciaChange = (e) => {
     const campo = e.target.id.replace('res_', ''); // Remove o prefixo 'res_'
     onFichaChange('resistencias', campo, e.target.value);
@@ -27,11 +27,9 @@ function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculad
   // Pega os valores de SDA calculados no App.jsx
   const { defesaTotal, bloqueio_rd, esquiva_bonus, tem_contra_ataque } = dadosCalculados;
 
-  // O bônus de Agilidade na Defesa é SÓ o atributo
   const agiBonus = parseInt(dadosCalculados.bonusPericia.agi) || 0;
 
   return (
-    // Usamos React.Fragment (<>) para os 3 blocos serem irmãos no grid
     <>
       {/* Bloco de Defesa (Corrigido) */}
       <div className="box box-defesa" id="grid-defesa">
@@ -48,7 +46,6 @@ function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculad
         <div className="campos-linha-defesa">
           <div className="campo-valor-simples">
             <label>AGILIDADE</label>
-            {/* O bônus de Agilidade na Defesa é só o atributo */}
             <div className="valor">{agiBonus}</div>
           </div>
           <div className="campo-valor-simples">
@@ -68,8 +65,7 @@ function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculad
         </div>
       </div>
 
-      {/* NOVO BLOCO: AÇÕES DE DEFESA */}
-      {/* O 'id' é usado pelo CSS para 'grid-area: acoes' */}
+      {/* BLOCO: AÇÕES DE DEFESA */}
       <div className="box box-acoes-defesa" id="grid-acoes-defesa">
         <div className="titulo-bloco">
           AÇÕES DE DEFESA
@@ -96,27 +92,35 @@ function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculad
         </div>
       </div>
 
-      {/* NOVO BLOCO: RESISTÊNCIAS */}
-      {/* O 'id' é usado pelo CSS para 'grid-area: resistencias' */}
+      {/* BLOCO: RESISTÊNCIAS */}
       <div className="box box-resistencias" id="grid-resistencias">
         <div className="titulo-bloco">
           RESISTÊNCIAS A DANO
         </div>
         <div className="resistencias-grid">
           {/* Garante que dadosResistencias exista antes de mapear */}
-          {dadosResistencias && Object.keys(dadosResistencias).map((key) => (
-            <div className="campo-valor-simples editavel" key={key}>
-              <label htmlFor={`res_${key}`}>{key}</label>
-              <input
-                id={`res_${key}`}
-                type="number"
-                className="valor"
-                value={dadosResistencias[key] || 0}
-                onChange={handleResistenciaChange}
-                min="0"
-              />
-            </div>
-          ))}
+          {dadosResistencias && Object.keys(dadosResistencias).map((key) => {
+            // (NOVO) Pega a classe de tema correspondente
+            const temaClasse = TEMA_CLASSES[key] || '';
+            
+            return (
+              <div 
+                // (NOVO) Adiciona a classe de tema (ex: "res-sangue")
+                className={`campo-valor-simples editavel ${temaClasse}`} 
+                key={key}
+              >
+                <label htmlFor={`res_${key}`}>{key}</label>
+                <input
+                  id={`res_${key}`}
+                  type="number"
+                  className="valor"
+                  value={dadosResistencias[key] || 0}
+                  onChange={handleResistenciaChange}
+                  min="0"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </>

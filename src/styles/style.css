@@ -699,7 +699,7 @@ input[type="number"].input-hex {
 /* Layout corrigido para o Bloco de Defesa Total */
 .box-defesa {
   display: grid;
-  grid-template-columns: 1fr 2fr; /* Coluna 1: Total, Coluna 2: Detalhes */
+  grid-template-columns: 1fr 2fr; 
   gap: 20px;
   align-items: center;
 }
@@ -758,7 +758,7 @@ input[type="number"].input-hex {
   background-color: var(--cor-fundo);
   border: none;
   padding: 0;
-  font-size: 2em; /* Mantém o tamanho do texto */
+  font-size: 2em; 
 }
 
 
@@ -809,16 +809,50 @@ input[type="number"].input-hex {
 .box-resistencias .campo-valor-simples label {
   font-size: 0.9em;
   margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* --- CORREÇÃO DO BUG DE TEXTO CORTADO --- */
+  /* white-space: nowrap; (REMOVIDO) */
+  /* overflow: hidden; (REMOVIDO) */
+  text-overflow: ellipsis; 
   text-transform: capitalize;
+  word-break: break-word; /* Permite que "Conhecimento" quebre a linha se necessário */
+  line-height: 1.2; /* Adiciona espaço caso quebre a linha */
 }
 .box-resistencias .campo-valor-simples .valor {
   font-size: 1.6em;
 }
 
+/* --- (NOVO) Cores das Resistências Paranormais --- */
+.campo-valor-simples.res-sangue {
+  border-color: #d40000;
+}
+.campo-valor-simples.res-sangue label,
+.campo-valor-simples.res-sangue .valor {
+  color: #d40000; /* Cor destaque do tema Sangue */
+}
 
+.campo-valor-simples.res-morte {
+  border-color: #888888; /* Cor borda do tema Morte */
+}
+.campo-valor-simples.res-morte label,
+.campo-valor-simples.res-morte .valor {
+  color: #e0e0e0; /* Cor destaque do tema Morte */
+}
+
+.campo-valor-simples.res-conhecimento {
+  border-color: #ffeb3b;
+}
+.campo-valor-simples.res-conhecimento label,
+.campo-valor-simples.res-conhecimento .valor {
+  color: #ffeb3b; /* Cor destaque do tema Conhecimento */
+}
+
+.campo-valor-simples.res-energia {
+  border-color: #be29ec;
+}
+.campo-valor-simples.res-energia label,
+.campo-valor-simples.res-energia .valor {
+  color: #be29ec; /* Cor destaque do tema Energia */
+}
 /* --- 17. Formulário de Item Personalizado --- */
 .form-custom-item {
   display: flex;
@@ -1326,25 +1360,6 @@ input[type="number"].input-hex {
 }
 
 /* --- 27. Container Fixo de Recursos (NOVA HUD) --- */
-.recursos-container-fixo {
-  max-width: 1400px; 
-  margin: 0 auto;
-  padding: 10px 20px; /* Mais fino que antes */
-  background-color: var(--cor-caixa-recurso); 
-  border-bottom: 2px solid var(--cor-borda); 
-  
-  position: sticky;
-  top: 0;
-  z-index: 900;
-  transition: border-color 0.5s ease; 
-
-  /* Layout da HUD */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-}
-
 /* --- 27. Container Fixo de Recursos (ATUALIZADO COM BARRAS) --- */
 .recursos-container-fixo {
   max-width: 1400px; 
@@ -1473,20 +1488,18 @@ input[type="number"].input-hex {
   filter: brightness(0.5); 
 }
 
-/* Foto do Personagem (retângulo central) */
+/* Foto do Personagem (agora preenchendo o círculo) */
 .personagem-imagem-foto {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 85%; 
-  height: 85%; 
-  background-color: var(--cor-fundo); 
+  top: 0;
+  left: 0;
+  width: 100%; /* Preenche o container */
+  height: 100%; /* Preenche o container */
+  background-color: var(--cor-fundo); /* Cor de fallback */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 4px; 
-  border: 1px solid rgba(0, 0, 0, 0.3); 
+  /* Não precisa de border-radius, o container .personagem-imagem-container já tem overflow:hidden */
 }
 
 /* Container dos Trackers (Furtividade/Perseguição) */

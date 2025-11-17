@@ -1,5 +1,5 @@
 // /src/components/ficha/recursos.jsx
-// (ATUALIZADO: Adicionadas barras de status compactas)
+// (ATUALIZADO: Adicionadas barras de status compactas + caminhos de imagem corrigidos)
 
 import React from 'react';
 
@@ -53,6 +53,9 @@ function Recursos({
   // Define o caminho do símbolo do tema com base no tema do dataset (definido em App.jsx)
   const getTemaIcon = () => {
     const tema = document.documentElement.dataset.tema || 'tema-ordem';
+    
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Os caminhos agora apontam para os arquivos "Simbolo...webp" corretos
     switch (tema) {
       case "tema-sangue": return "/assets/images/SimboloSangue.webp";
       case "tema-morte": return "/assets/images/SimboloMorte.webp";
@@ -62,15 +65,17 @@ function Recursos({
       default:
         return "/assets/images/SimboloSemafinidade.webp";
     }
+    // --- FIM DA CORREÇÃO ---
   };
   
-  // --- (NOVO) CÁLCULO DE PORCENTAGEM PARA AS BARRAS ---
+  // --- CÁLCULO DE PORCENTAGEM PARA AS BARRAS ---
   const pvPerc = Math.max(0, Math.min(100, (dados.pv_atual / (dados.pv_max || 1)) * 100));
   const sanPerc = Math.max(0, Math.min(100, (dados.san_atual / (dados.san_max || 1)) * 100));
   const pePerc = Math.max(0, Math.min(100, (dados.pe_atual / (dados.pe_max || 1)) * 100));
   // --- FIM DO CÁLCULO ---
 
   return (
+    // O container fixo agora é o próprio componente
     <div className="recursos-container-fixo">
       
       {/* --- HUD Compacta (PV, SAN, PE) --- */}
@@ -154,11 +159,13 @@ function Recursos({
 
       {/* --- Imagem do Personagem --- */}
       <div className="personagem-imagem-container">
+        {/* Fundo Arcano (baseado no tema) */}
         <img 
           src={getTemaIcon()} 
           alt="Símbolo do Tema" 
           className="personagem-imagem-fundo" 
         />
+        {/* Foto (retângulo central) */}
         <div 
           className="personagem-imagem-foto"
           style={{ backgroundImage: info.foto ? `url(${info.foto})` : 'none' }}
@@ -178,6 +185,7 @@ function Recursos({
           </div>
         </div>
         
+        {/* Mostra perseguição se visibilidade for 3+ */}
         {visibilidadeAtual >= 3 && (
           <div className="perseguicao-container">
             <div 
