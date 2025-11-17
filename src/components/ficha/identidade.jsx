@@ -1,5 +1,6 @@
 // /src/components/ficha/identidade.jsx
 // (ATUALIZADO: Adicionado campo de URL da Foto)
+// (CORRIGIDO: Adicionado campo de NEX)
 
 import React from 'react'; 
 import { OpcoesOrigem } from '../../lib/database.js'; 
@@ -135,6 +136,18 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
         </select>
       </div>
       
+      {/* --- CAMPO DE NEX ADICIONADO AQUI --- */}
+      <div className="campo-horizontal">
+        <label>NEX</label>
+        <input 
+          type="text" 
+          id="nex"
+          value={dados.nex || '0%'} 
+          onChange={handleChange} 
+        />
+      </div>
+      {/* --- FIM DA ADIÇÃO --- */}
+
       {(dados.trilha === 'monstruoso' || dados.trilha === 'possuido') && (
         <div className="campo-horizontal">
           <label>ELEMENTO TRILHA</label>

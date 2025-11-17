@@ -1,12 +1,12 @@
 // /src/components/FichaPrincipal.jsx
-// (ATUALIZADO: Adicionada a prop 'dadosResistencias' na chamada do DefesaStatus)
+// (CORRIGIDO: Chamada para o componente <Recursos /> foi REMOVIDA)
 
 import React from 'react';
 
-// Caminhos corretos para a pasta ./ficha/ (sem .jsx)
+// Caminhos corretos para a pasta ./ficha/
 import Identidade from './ficha/identidade';
 import Atributos from './ficha/atributos';
-// import Recursos from './ficha/recursos'; // <-- REMOVIDO
+// A linha 'import Recursos' foi removida daqui
 import DefesaStatus from './ficha/defesa-status';
 import Pericias from './ficha/pericias';
 import Controles from './ficha/controles';
@@ -14,7 +14,7 @@ import CalculoDetalhado from './ficha/calculo-detalhado';
 
 function FichaPrincipal({
   personagem,
-  calculados, // 'calculados' agora contém 'patente' e as ações de defesa
+  calculados, 
   fichaInstance,
   handleFichaChange,
   controlesProps,
@@ -23,6 +23,7 @@ function FichaPrincipal({
 }) {
     const { canChangeTheme } = calculados; 
 
+    // Esta variável agora é criada aqui, pois 'controlesProps' vem do App.jsx
     const controlesComNEX = {
         ...controlesProps,
         canChangeTheme: canChangeTheme 
@@ -35,9 +36,12 @@ function FichaPrincipal({
         dados={personagem.info} 
         onFichaChange={handleFichaChange} 
         trilhasPorClasse={trilhasPorClasse}
-        patenteInfo={calculados.patente} // Passa a patente calculada
+        patenteInfo={calculados.patente} 
       />
       
+      {/* A prop 'controlesComNEX' é usada aqui. 
+        O erro 'controlesComNEX is not defined' no App.jsx foi corrigido na resposta anterior.
+      */}
       <Controles {...controlesComNEX} /> 
 
       <Atributos 
@@ -45,17 +49,17 @@ function FichaPrincipal({
         onFichaChange={handleFichaChange} 
       />
 
-      {/* <Recursos ... /> <-- REMOVIDO DAQUI */}
+      {/* O COMPONENTE <Recursos /> FOI REMOVIDO DESTE ARQUIVO.
+        Ele agora vive apenas no App.jsx como a HUD fixa.
+      */}
       
-      {/* --- BLOCO ATUALIZADO --- */}
       <DefesaStatus
         dadosInfo={personagem.info}
         dadosDefesa={personagem.defesa}
-        dadosResistencias={personagem.resistencias} // <-- ESTA LINHA FOI ADICIONADA
-        dadosCalculados={calculados} // Passa TODOS os cálculos (incluindo ações)
+        dadosResistencias={personagem.resistencias}
+        dadosCalculados={calculados} 
         onFichaChange={handleFichaChange}
       />
-      {/* --- FIM DA ATUALIZAÇÃO --- */}
       
       <Pericias
         dadosPericias={personagem.pericias}
