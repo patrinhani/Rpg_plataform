@@ -1790,3 +1790,15 @@ html.modo-morte .simbolo-parallax {
   50% { filter: brightness(0.2) opacity(0.3); }
   100% { filter: brightness(0.5) opacity(0.5); }
 }
+
+
+.pericia-item.pericia-origem {
+  border-color: #ffeb3b; /* Amarelo Conhecimento */
+  box-shadow: 0 0 8px rgba(255, 235, 59, 0.3) inset; /* Brilho interno sutil */
+}
+
+/* Ajuste para quando o tema for Morte (para manter contraste) */
+:root[data-tema="tema-morte"] .pericia-item.pericia-origem {
+    border-color: #fff;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) inset;
+}

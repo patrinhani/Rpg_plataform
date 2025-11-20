@@ -1,0 +1,821 @@
+ Ao escolher uma origem, você recebe duas perícias 
+treinadas e um poder da origem.
+
+Acadêmico
+
+ Você era um pesquisador ou professor universitário. De forma proposital 
+ou não, seus estudos tocaram em assuntos misteriosos e chamaram a 
+atenção da Ordo Realitas.
+
+ Perícias treinadas. Ciências e Investigação. 
+
+Saber é Poder. Quando faz um teste usando Intelecto, você pode gastar 
+2 PE para receber +5 nesse teste.
+
+Agente de Saúde
+ Você era um profissional da saúde como um enfermeiro, farmacêutico, médico, 
+psicólogo ou socorrista, treinado no atendimento e cuidado de pessoas. Você pode 
+ter sido surpreendido por um evento paranormal durante o trabalho ou mesmo 
+cuidado de um agente da Ordem em uma emergência, que ficou surpreso com 
+o quão bem você lidou com a situação.
+
+ 
+ Perícias treinadas. Intuição e Medicina.
+
+ Técnica Medicinal. Sempre que cura um personagem, você adiciona seu 
+Intelecto no total de PV curados.
+
+Amnésico
+
+ Você perdeu a maior parte da memória. Sabe apenas o próprio nome, ou 
+nem isso. Sua amnésia pode ser resultado de um trauma paranormal ou 
+mesmo de um ritual. Talvez você tenha sido vítima de cultistas? Talvez 
+você tenha sido um cultista? Seja como for, hoje a Ordem é a 
+única família que conhece. Quem sabe, cumprindo missões, 
+você descubra algo sobre seu passado.
+
+ Perícias Treinadas. Duas à escolha do mestre.
+
+ Vislumbres do Passado. Uma vez por sessão, você pode fazer 
+um teste de Intelecto (DT 10) para reconhecer pessoas ou lugares 
+familiares, que tenha encontrado antes de perder a memória. Se 
+passar, recebe 1d4 PE temporários e, a critério do mestre, uma 
+informação útil
+
+Artista
+
+ Você era um ator, músico, escritor, dançarino, influenciador... 
+Seu trabalho pode ter sido inspirado por uma experiência 
+paranormal do passado e o que o público acha que é pura 
+criatividade, a Ordem sabe que tem um lado mais sombrio.
+ 
+ Perícias Treinadas. Artes e Enganação. 
+
+Magnum Opus. Você é famoso por uma de suas obras. Uma 
+ vez por missão, pode determinar que um personagem envolvido 
+em uma cena de interação o reconheça. Você recebe +5 em 
+testes de Presença e de perícias baseadas em Presença contra 
+aquele personagem. A critério do mestre, pode receber esses 
+bônus em outras situações nas quais seria reconhecido.
+
+Atleta
+ 
+ Você competia em um esporte individual ou por equipe, como 
+natação ou futebol. Seu alto desempenho pode ser fruto de alguma 
+influência paranormal que nem mesmo você conhecia ou você pode ter 
+se envolvido em algum evento paranormal em uma de suas competições
+
+ Perícias Treinadas. Acrobacia e Atletismo.
+
+ 110%. Quando faz um teste de perícia usando Força ou Agilidade 
+(exceto Luta e Pontaria) você pode gastar 2 PE para receber +5 
+nesse teste.
+
+ Chef
+
+ Você é um cozinheiro amador ou profissional. Talvez trabalhasse em 
+um restaurante, talvez simplesmente gostasse de cozinhar para a 
+família e amigos. Como sua comida fez com que você se en
+volvesse com o paranormal? Ninguém sabe. Mas os outros 
+agentes adoram quando você vai para a missão!
+
+ Perícias Treinadas. Fortitude e Profissão (co
+zinheiro).
+
+ Ingrediente Secreto. Em cenas de interlúdio, 
+você pode fazer a ação alimentar-se para cozinhar 
+um prato especial. Você, e todos os membros do 
+grupo que fizeram a ação alimentar-se, recebem o 
+benefício de dois pratos (caso o mesmo benefício 
+seja escolhido duas vezes, seus efeitos se acumulam).
+
+ Criminoso
+
+ Você vivia uma vida fora da lei, seja como mero batedor de 
+carteiras, seja como membro de uma facção criminosa. Em 
+algum momento, você se envolveu em um assunto da Ordem 
+talvez tenha roubado um item amaldiçoado? A 
+organização, por sua vez, achou melhor recrutar seus 
+talentos do que ter você como um estorvo.
+
+ Perícias Treinadas. Crime e Furtividade.
+
+ O Crime Compensa. No final de uma missão, 
+escolha um item encontrado na missão. Em sua 
+próxima missão, você pode incluir esse item em 
+seu inventário sem que ele conte em seu limite de 
+itens por patente
+
+ Cultista Arrependido
+
+ Você fez parte de um culto paranormal. Talvez fossem 
+ignorantes iludidos, que acreditavam estar contatando 
+entidades benevolentes. Talvez soubessem exatamente 
+o que estavam fazendo. Seja como for, algo abriu seus 
+olhos e agora você luta pelo lado certo — embora 
+carregue para sempre traços de sua vida pregressa. 
+Outros membros da Ordem podem desconfiar de sua 
+conversão e você sabe que precisará se esforçar para 
+conquistar a confiança de todos.
+
+ Perícias Treinadas. Ocultismo e Religião.
+
+ Traços do Outro Lado. Você possui um poder 
+paranormal à sua escolha. Porém, começa o jogo com 
+metade da Sanidade normal para sua classe
+
+Desgarrado
+
+ Você não vivia de acordo com as normas da socieda
+de. Podia ser um eremita, uma pessoa em situação 
+de rua ou simplesmente alguém que descobriu o 
+paranormal e abandonou sua rotina — sabendo o 
+quão frágil era a existência humana, não conseguia 
+simplesmente continuar indo para o trabalho todo 
+o dia. De qualquer forma, a vida sem os confortos 
+modernos o deixou mais forte.
+
+ Perícias Treinadas. Fortitude e Sobrevivência.
+
+Calejado. Você recebe +1 PV para cada 5% de NEX
+
+ Engenheiro
+
+ Enquanto os acadêmicos estão preocupados com 
+teorias, você colocar a mão na massa, seja como en
+genheiro profissional, seja como inventor de garagem. 
+Provavelmente você criou algum dispositivo paranor
+mal que chamou a atenção da Ordem.
+
+ Perícias Treinadas. Profissão e Tecnologia. 
+
+Ferramentas Favoritas. Um item a sua escolha 
+(exceto armas) conta como uma categoria abaixo 
+(por exemplo, um item de categoria II conta como 
+categoria I para você)
+
+ Executivo
+
+ Você possuía um trabalho de escritório em uma 
+grande empresa, banco ou corporação. Era um admi
+nistrador, advogado, contador ou de qualquer outra 
+profissão que lida com papelada e burocracia. Sua 
+vida era bastante normal, até que você descobriu 
+algo que não devia. Talvez o sucesso da empresa 
+residisse em um ritual? Talvez toda a corporação 
+fosse fachada para um culto e o presidente, um líder 
+cultista envolvido com entidades paranormais? Após 
+essa descoberta, você foi recrutado pela Ordem e 
+trocou seu trabalho de escritório por missões de 
+campo — hoje, sua vida é tudo, menos normal.
+ 
+ Perícias Treinadas. Diplomacia e Profissão.
+
+ Processo Otimizado. Sempre que faz um teste 
+de perícia durante um teste estendido, ou uma ação 
+para revisar documentos (físicos ou digitais), pode 
+pagar 2 PE para receber +5 nesse teste
+
+Magnata
+
+ Você possui muito dinheiro ou patrimônio. Pode ser 
+o herdeiro de uma família antiga ligada ao oculto, ter 
+criado e vendido uma empresa e decidido usar sua 
+riqueza para uma causa maior, ou ter ganho uma 
+loteria após inadvertidamente escolher números 
+amaldiçoados que formavam um ritual.
+
+ Perícias treinadas. Diplomacia e Pilotagem.
+
+ Patrocinador da Ordem. Seu limite de crédito 
+é sempre considerado um acima do atual
+
+ Mercenário
+
+ Você é um soldado de aluguel, que trabalha sozinho 
+ou como parte de alguma organização que vende 
+serviços militares. Escoltas e assassinatos fizeram 
+parte de sua rotina por tempo o suficiente para você 
+se envolver em alguma situação com o paranormal.
+
+ Perícias Treinadas. Iniciativa e Intimidação.
+
+Posição de Combate. No primeiro turno de cada 
+cena de ação, você pode gastar 2 PE para receber 
+uma ação de movimento adicional.
+
+ Militar
+
+ Você serviu em uma força militar, como o exército ou 
+a marinha. Passou muito tempo treinando com armas 
+de fogo, até se tornar um perito no uso delas. Acos
+tumado a obedecer ordens e partir em missões, está 
+em casa na Ordo Realitas. O inimigo é diferente, mas 
+um tiro bem dado continua resolvendo o problema.
+ 
+ Perícias Treinadas. Pontaria e Tática.
+
+ Para Bellum. Você recebe +2 em rolagens de dano 
+com armas de fogo.
+
+Operario
+
+Pedreiro, industriário, operador de máquinas em 
+uma fábrica… Você passou uma parte de sua vida 
+em um emprego braçal, desempenhando atividades 
+práticas que lhe deram uma visão pragmática do 
+mundo. Sua rotina mundana, entretanto, foi con
+frontada de alguma forma pelo paranormal, e você 
+não consegue mais esquecer tudo que viu sobre os 
+mistérios do mundo.
+
+Perícias Treinadas. Fortitude e Profissão.
+
+ Ferramenta de Trabalho. Escolha uma arma 
+simples ou tática que, a critério do mestre, poderia ser 
+usada como ferramenta em sua profissão (como uma 
+marreta para um pedreiro). Você sabe usar a arma 
+escolhida e recebe +1 em testes de ataque, rolagens 
+de dano e margem de ameaça com ela
+
+
+Policial
+
+ Você fez parte de uma força de segurança pública, 
+civil ou militar. Em alguma patrulha ou chamado se 
+deparou com um caso paranormal e sobreviveu para 
+contar a história.
+ Perícias Treinadas. Percepção e Pontaria.
+
+ Patrulha. Você recebe +2 em Defesa. 
+
+ REligioso
+
+ Você é devoto ou sacerdote de uma fé. Independen
+temente da religião que pratica, se dedica a auxiliar 
+as pessoas com problemas espirituais. A partir disso, 
+teve contato com o paranormal, o que fez com que 
+fosse convocado pela Ordem.
+
+ Perícias Treinadas. Religião e Vontade.
+
+Acalentar. Você recebe +5 em testes de Religião 
+para acalmar. Além disso, quando acalma uma pes
+soa, ela recebe um número de pontos de Sanidade 
+igual a 1d6 + a sua Presença.
+
+Servidor Público
+
+ Você possuía carreira em um órgão do governo, lidan
+do com burocracia e atendendo pessoas. Sua rotina 
+foi quebrada quando você viu que o prefeito era um 
+cultista ou que a câmara de vereadores se reunia à 
+noite para realizar rituais. Quando os próprios repre
+sentantes do povo estão dispostos a sacrificá-lo para
+ entidades malignas, onde reside nossa esperança? 
+Hoje, você sabe a resposta para essa pergunta: na 
+Ordo Realitas.
+
+ Perícias Treinadas. Intuição e Vontade. 
+
+Espírito Cívico. Sempre que faz um teste para 
+ajudar, você pode gastar 1 PE para aumentar o bônus 
+concedido em +2
+
+Teórico da Conspiração
+
+ A humanidade nunca pisou na lua. Reptilianos ocu
+pam importantes cargos públicos. A Terra é plana... 
+E secretamente governada pelos Illuminati. Você sabe 
+isso tudo, pois investigou a fundo esses importantes 
+assuntos. Quando sua pesquisa esbarrou no para
+normal, você foi recrutado. Na Ordem, sua loucura 
+determinação será usada para um bom propósito.
+
+ Perícias Treinadas. Investigação e Ocultismo. 
+
+Eu Já Sabia. Você não se abala com entidades 
+ou anomalias. Afinal, sempre soube que isso tudo 
+existia. Você recebe resistência a dano mental igual 
+ao seu Intelecto
+
+T.I
+
+Programador, engenheiro de software ou simples
+mente “o cara da T.I.”, você tem treinamento e ex
+periência para lidar com sistemas informatizados. 
+Seu talento (ou curiosidade exagerada) chamou a 
+atenção da Ordem. 
+
+Perícias Treinadas. Investigação e Tecnologia.
+
+ Motor de Busca. A critério do Mestre, sempre 
+que tiver acesso a internet, você pode gastar 2 PE 
+para substituir um teste de perícia qualquer por um 
+teste de Tecnologia
+
+ Trabalhador Rural
+
+ Você trabalhava no campo ou em áreas isoladas, 
+como fazendeiro, pescador, biólogo, veterinário... 
+Você se acostumou com o convívio com a natureza 
+e os animais e talvez tenha ouvido uma ou outra 
+história de fantasmas ao redor da fogueira. Em algum 
+momento da sua vida, porém, descobriu que muitas 
+dessas histórias são verdadeiras.
+
+ Perícias Treinadas. Adestramento e Sobrevivência.
+
+ Desbravador. Quando faz um teste de Adestra
+mento ou Sobrevivência, você pode gastar 2 PE para 
+receber +5 nesse teste. Além disso, você não sofre 
+penalidade em deslocamento por terreno difícil.
+
+Trambiqueiro
+
+ Uma vida digna exige muito trabalho, então é melhor 
+nem tentar. Você vivia de pequenos golpes, jogatina 
+ilegal e falcatruas. Certo dia, enganou a pessoa errada; 
+no dia seguinte, se viu servindo à Ordem. Pelo menos 
+agora tem a chance de usar sua lábia para o bem.
+ 
+ Perícias Treinadas. Crime e Enganação. 
+
+Impostor. Uma vez por cena, você pode gastar 2 
+PE para substituir um teste de perícia qualquer por 
+um teste de Enganação.
+
+Universitário
+
+
+ Você era aluno de uma faculdade. Em sua rotina de 
+estudos, provas e festas, acabou descobrindo algo — 
+talvez um livro amaldiçoado na antiga biblioteca do
+ campus? Por seu achado, foi convocado pela Ordem. 
+Agora, estuda com mais afinco: nesse novo curso, 
+ouviu dizer que as provas podem ser mortais.
+
+ Perícias Treinadas. Atualidades e Investigação. 
+
+Dedicação. Você recebe +1 PE, e mais 1 PE adicio
+nal a cada NEX ímpar (15%, 25%...). Além disso, seu 
+limite de PE por turno aumenta em 1 (em NEX 5% 
+seu limite é 2, em NEX 10% é 3 e assim por diante; 
+isso não afeta a DT de seus efeitos).
+
+
+ Vítima
+
+ Em algum momento de sua vida — infância, juventude 
+ou início da vida adulta — você encontrou o paranor
+mal... E a experiência não foi nada boa. Você viu os 
+espíritos dos mortos, foi atacado por uma entidade 
+ou mesmo foi sequestrado para ser sacrificado em um 
+ritual impedido no último momento. A experiência 
+foi traumática, mas você não se abateu; em vez dis
+so, decidiu lutar para impedir que outros inocentes 
+passem pelo mesmo. E, já tendo sendo vítima do 
+paranormal, se tornou habilidoso em evitar perigos.
+
+ Perícias Treinadas. Reflexos e Vontade.
+
+ Cicatrizes Psicológicas. Você recebe +1 de 
+Sanidade para cada 5% de NEX
+
+ AMIGO DOS ANIMAIS
+
+ Você desenvolveu uma conexão muito forte com 
+outros seres: os animais. Seja por nunca ter se dado 
+muito bem com humanos ou por preferir a companhia 
+de um melhor amigo de quatro patas, você leva sua 
+com a natureza perceptiva deles.
+ vida ao lado de um bichano e até mesmo aprende 
+
+Perícias treinadas. Adestramento e Percepção.
+
+Companheiro Animal. Você consegue entender 
+as intenções e sentimentos de animais, e pode usar 
+Adestramento para mudar a atitude deles. Além 
+disso, você possui um melhor amigo, um animal 
+que cresceu com você e pelo qual tem profundo 
+apego. Ele conta como um aliado que fornece +2 em 
+uma perícia a sua escolha (aprovada pelo mestre). 
+Quando você alcança NEX 35%, ele também passa 
+a fornecer o bônus de um aliado de um tipo a sua 
+escolha (aprovado pelo mestre). Por fim, quando 
+você alcança NEX 70%, ele fornece a habilidade 
+do tipo de aliado escolhido. Perder seu parceiro é 
+muito doloroso. Se ele morrer, você perde 10 pon
+tos de Sanidade permanentemente, além de ficar 
+perturbado até o fim da cena. Como encontrar um 
+novo companheiro fica a critério do mestre, mas 
+geralmente será uma ação entre missões
+
+
+ASTRONAUTA
+ Outrora limitada a membros de algumas agências 
+espaciais estatais, a profissão de explorador espacial 
+se tornou mais acessível conforme mais países, e até 
+mesmo empresas privadas, se envolveram com via
+gens na fronteira final. Como um astronauta, você se 
+acostumou à pressão de ser responsável pela vida de 
+seus colegas e por experimentos de milhões de reais. 
+E foi na escuridão do espaço que você descobriu que 
+não estamos sozinhos.
+
+ Perícias treinadas. Ciências e Fortitude.
+
+ Acostumado ao Extremo. Quando sofre dano 
+de fogo, de frio ou mental, você pode gastar 1 PE 
+para reduzir esse dano em 5. A cada vez que usa esta 
+habilidade novamente na mesma cena, seu custo 
+aumenta em +1 PE.
+
+
+ CHEF DO OUTRO LADO
+
+ Você nunca foi muito bom na culinária convencio
+nal. Depois de sobreviver ao paranormal, entretanto, 
+descobriu um talento que é considerado um grande 
+tabu até mesmo pelos ocultistas mais experientes: co
+zinhar e ingerir entidades do Outro Lado. Acreditando 
+estar realizando algum tipo de arte gastronômica 
+esotérica, ou simplesmente por se render a impulsos 
+incontroláveis, você elabora pratos nunca vistos antes 
+misturando ingredientes comuns da Realidade com 
+aquilo que não deveria existir. Você é a prova viva do 
+ditado popular: “tem gosto pra tudo”. 
+
+Perícias treinadas. Ocultismo 
+e Profissão (cozinheiro).
+
+ Fome do Outro Lado. Você pode usar partes de 
+criaturas do Outro Lado como ingredientes culiná
+rios. No início de cada missão você pode solicitar 
+essas partes como itens de Categoria I que ocupam 
+0,5 espaço, e pode obtê-las de criaturas derrotadas 
+(cada criatura Pequena ou maior fornece 1 ingre
+diente paranormal). Você pode gastar uma ação de 
+interlúdio e 1 ingrediente para preparar um prato 
+especial; faça um teste de Profissão (cozinheiro) com 
+DT 15 + O (o mestre oculta o resultado do teste até 
+alguém comer o prato). Se você passar no teste, o 
+prato fornece RD 10 contra o tipo de dano do ele
+mento da criatura cujo ingrediente foi usado. Caso 
+contrário, o prato causa vulnerabilidade a esse tipo 
+de dano. Os efeitos duram até o fim da próxima cena.
+ Independentemente do resultado, se alimentar do 
+paranormal, por menor que seja a porção, gera con
+sequências brutais e permanentes em seu organismo, 
+sendo uma das formas mais rápidas de destruir sua 
+mente. A cada refeição consumida, você perde 1 ponto 
+permanente de Sanidade. Além disso, se estiver usan
+do a regra opcional Nível de Experiência e Nível de 
+Exposição (p. 98), o NEX do personagem aumenta em 
+3% para cada parte de criatura diferente que ingerir 
+(mesmo que não esteja usando essa regra, use as 
+alterações descritas na regra para personagens que 
+ingerem partes de criaturas dessa forma). A coragem 
+para se beneficiar desses pratos é algo muito mais 
+presente em grupos de cultistas e, por todas essas 
+razões, não é uma ação apoiada pela Ordo Realitas
+
+COLEGIAL
+
+ Você era um aluno do colegial e tinha uma rotina ba
+seada nos estudos, nas amizades e nos dramas típicos 
+de alguém da sua idade, até que um encontro com o 
+paranormal mudou sua vida. Tendo se unido à Ordem 
+com uma mentalidade juvenil e pouca experiência de 
+vida, você descobriu que sua verdadeira força está nos 
+amigos que fizer pelo caminho.
+
+ Perícias treinadas. Atualidades e Tecnologia.
+
+ Poder da Amizade. Escolha um personagem para 
+ser seu melhor amigo. Se estiver em alcance médio 
+dele e vocês puderem, pelo menos, trocar olhares, 
+você recebe +2 em todos os testes de perícia. Entre
+tanto, se ele morrer, seu total de PE é reduzido em –1 
+para cada 5% de NEX até o fim da missão. Se perder 
+seu melhor amigo, você pode escolher outro entre 
+os demais personagens no início da próxima missão.
+
+
+ COSPLAYER
+
+ Você é apaixonado pela arte do cosplay e dedicou 
+sua vida a criar a melhor fantasia possível. Constan
+temente questionado por pessoas que confundem 
+seus gostos e preferências artísticas com acusações 
+ignorantes, você se acostumou a seguir em frente. 
+Confrontado com o paranormal, você colocou sua 
+arte, e sua resiliência, a serviço da Ordem.
+
+ Perícias treinadas. Artes e Vontade.
+
+ Não É Fantasia, É Cosplay! Você pode fazer 
+testes de disfarce usando Artes em vez de Enganação. 
+Além disso, ao fazer um teste de perícia, se estiver 
+usando um cosplay que tem relação com ele, você 
+recebe +2. Por exemplo, se estiver vestido de James 
+Bones, o gato agente secreto do famoso videogame 
+arcade dos anos 90, você recebe +2 em testes para 
+ser furtivo, se equilibrar e outras coisas nas quais 
+um gato seria considerado eficiente
+
+DIPLOMATA
+
+ Você atuava em uma área onde as habilidades sociais 
+e políticas eram ferramentas indispensáveis. Tal
+vez fosse representante comercial de uma empresa, 
+membro de um partido político ou embaixador do 
+governo. Em algum momento, entretanto, você teve 
+uma experiência paranormal que revelou entida
+des com as quais não se é possível negociar. Agora, 
+você usa os contatos que adquiriu para combater o 
+Outro Lado.
+
+ Perícias treinadas. Atualidades e Diplomacia.
+
+ Conexões. Você recebe +2 em Diplomacia. Além 
+disso, se puder contatar um NPC capaz de lhe au
+xiliar, você pode gastar 10 minutos e 2 PE para 
+substituir um teste de uma perícia relacionada ao 
+conhecimento desse NPC, feito até o fim da cena, 
+por um teste de Diplomacia
+
+EXPLORADOR
+
+ Você é uma pessoa que se interessa muito por his
+tória ou geografia, frequentemente embarcando em 
+trilhas e explorações para enriquecer seus estudos. 
+Suas aventuras tornaram seu corpo mais resistente e 
+capaz de se manter firme mesmo nas situações mais 
+adversas. No entanto, um encontro trágico com o 
+paranormal marcou sua jornada.
+
+ Perícias treinadas. Fortitude e Sobrevivência.
+
+ Manual do Sobrevivente. Ao fazer um teste 
+para resistir a armadilhas, clima, doenças, fome, sede, 
+fumaça, sono, sufocamento ou veneno, incluindo 
+de fontes paranormais, você pode gastar 2 PE para 
+receber +5 nesse teste. Além disso, em cenas de in
+terlúdio, você considera condições de sono precárias 
+como normais.
+
+EXPERIMENTO
+ Você foi uma cobaia em um experimento físico. 
+Pode ter sido um voluntário em um procedimento 
+experimental legítimo, ou submetido a experimen
+tos científicos ou paranormais contra sua vontade. 
+Qualquer que seja a natureza desse evento, causou 
+alterações permanentes em seu corpo, como um
+cheiro forte de químicos, cicatrizes ou manchas 
+estranhas, ou outra metamorfose claramente anti
+natural. Elas concedem capacidades extraordinárias, 
+mas trazem um estigma que provoca reações nega
+tivas em outras pessoas.
+
+ Perícias treinadas. Atletismo e Fortitude.
+
+ Mutação. Você recebe resistência a dano 2 e +2 
+em uma perícia à sua escolha que seja originalmente 
+baseada em Força, Agilidade ou Vigor. Entretanto, 
+sofre −O em Diplomacia
+
+FANÁTICO POR CRIATURAS
+
+ Você sempre foi obcecado pelo sobrenatural. Desde que pode se lembrar, a ideia de 
+encontrar uma criatura o fascina tanto quanto o assusta. Essa faísca fez você se tornar 
+um “caçador de monstros”, dedicando-se a localizar as feras citadas em documentários 
+sensacionalistas. Para você, todo rumor e crendice pode esconder um fundo de ver
+dade. Talvez uma de suas pesquisas o tenha levado diretamente a uma criatura 
+paranormal, ou talvez elas tenham encontrado você primeiro. Afinal, você 
+nunca esteve se escondendo.
+
+ Perícias treinadas. Investigação e Ocultismo.
+
+ Conhecimento Oculto. Você pode fazer testes de Ocultismo para 
+identificar criatura a partir de informações como uma imagem, rastros, 
+indícios de sua presença ou outras pistas que o mestre considere 
+suficientes. Se passar, você descobre as características da criatura 
+(conforme descrito na perícia), mas não sua identidade ou tipo 
+específico. Além disso, quando passa em um teste de Ocultismo 
+para identificar criatura, você recebe também +2 em todos 
+os testes contra a criatura até o fim da missão.
+
+FOTÓGRAFO
+ Você é um artista visual que usa câmeras para capturar momentos e 
+transmitir histórias através de imagens estáticas. Costumeiramente movido 
+pela paixão de observar o mundo ao seu redor, buscando ângulos únicos e 
+perspectivas singulares para documentar a vida e a sociedade, você não fazia 
+ideia de que encontraria elementos paranormais através de sua lente.
+
+ Perícias treinadas. Artes e Percepção
+
+ Através da Lente. Quando faz um teste de Investigação ou de Percepção ou 
+para adquirir pistas olhando através de uma câmera ou analisando fotos, você 
+pode gastar 2 PE para receber +5 nesse teste (um personagem que se move olhando 
+através de uma lente anda à metade de seu deslocamento).
+
+ INVENTOR PARANORMAL
+
+ A curiosidade e a criatividade fizeram de você uma pessoa que 
+busca constantemente desafiar limites e criar soluções inova
+doras, sendo mais de uma vez intitulado como um “cientista 
+louco”. Você teve contato com o paranormal por meio de seus 
+experimentos ou foi procurado pela Ordem porque suas pesquisas 
+chamaram atenção demais. De qualquer forma, o Outro Lado inspira 
+você a utilizar o desconhecido em suas invenções.
+
+ Perícias treinadas. Profissão (engenheiro) e Vontade
+
+ Invenção Paranormal. Escolha um ritual de 1º círculo. Você possui um invento 
+paranormal, um item de categoria 0 que ocupa 1 espaço e que permite que você 
+execute o efeito do ritual escolhido. Para ativar o invento, você gasta uma ação 
+padrão (ou a ação necessária para lançar o ritual, o que for maior) e faz um 
+teste de Profissão (engenheiro) com DT 15 +5 para cada ativação na mesma 
+missão. Se passar, o item faz o equivalente a conjurar o ritual em sua forma 
+básica sem pagar seu custo em PE. Se falhar, ele enguiça. Você pode gastar uma 
+ação de interlúdio para fazer a manutenção do seu invento; fazer isso o conserta 
+e redefine sua DT de ativação para 15. Você pode trocar o ritual contido em seu 
+invento no início de cada missão
+
+JOVEM MÍSTICO
+
+ Você possui uma profunda conexão com sua espiritualidade, suas 
+crenças ou o próprio universo. Essa conexão faz com que você veja o 
+
+Perícias treinadas. Ocultismo e Religião.
+
+ A Culpa é das Estrelas. Escolha um número da sorte entre 1 
+e 6. No início de cada cena, você pode gastar 1 PE e rolar 1d6. Se 
+o resultado for seu número da sorte, você recebe +2 em testes de 
+perícia até o fim da cena. Caso contrário, na próxima vez que usar 
+esta habilidade, escolha mais um número como número da sorte. 
+Quando rolar um de seus números da sorte, a quantidade de nú
+meros volta a 1.
+
+ LEGISTA DO  
+TURNO DA NOITE
+
+ Em um trabalho como o seu, é de se esperar que você já 
+tenha visto muita coisa. No entanto, quando o sol se põe, 
+seus colegas vão embora e a luz artificial deixa cantos 
+sombrios do necrotério, talvez você veja mais do que 
+gostaria. Os sons que poderiam ter sido fruto de sua 
+imaginação se revelaram mais do que um truque 
+da sua própria mente, fazendo você descobrir que 
+nem sempre a morte é o fim de tudo.
+
+ Perícias treinadas. Ciências e Medicina.
+
+ Luto Habitual. Você sofre apenas a metade do dano 
+mental por presenciar uma cena que, a critério do mestre, esteja 
+relacionada à rotina de um legista (como presenciar uma morte, 
+ver um cadáver ou encontrar órgãos humanos). Além disso, 
+quando faz um teste de Medicina para primeiros socorros ou 
+necropsia, você pode gastar 2 PE para receber +5 nesse teste
+
+ MATEIRO
+
+ Você conhece áreas rurais e selvagens. Você pode ser 
+um guia florestal, um biólogo de campo ou simples
+mente um entusiasta da vida selvagem. Qualquer que 
+seja sua relação com a natureza, ela foi sua porta para 
+o contato com o Outro Lado.
+
+ Perícias treinadas. Percepção e Sobrevivência.
+
+ Mapa Celeste. Desde que possa ver o céu, você 
+sempre sabe as direções dos pontos cardeais e con
+segue chegar sem se perder em qualquer lugar que já 
+tenha visitado ao menos uma vez. Quando faz um teste 
+de Sobrevivência, você pode gastar 2 PE para rolar 
+o teste novamente e escolher o melhor entre os dois 
+resultados. Além disso, em cenas de interlúdio, você 
+considera condições de sono precárias como normais.
+
+ MERGULHADOR
+ Seja por profissão ou por hobby, você é um aventureiro 
+subaquático que explora os mistérios e maravilhas 
+do mundo submerso. Trajando seu equipamento 
+de mergulho, você consegue se aventurar a grandes 
+profundidades para descobrir um mundo totalmente 
+diferente daquele que conhecemos na superfície. In
+felizmente, no dia em que você olhou para o abismo, 
+ele encarou você de volta.
+
+ Perícias treinadas. Atletismo e Fortitude.
+
+ Fôlego de Nadador. Você recebe +5 PV e pode 
+prender a respiração por um número de rodadas igual 
+ao dobro do seu Vigor. Além disso, quando passa em 
+um teste de Atletismo para natação, você avança seu 
+deslocamento normal (em vez da metade)
+
+MOTORISTA
+
+ Você é um caminhoneiro, motorista de aplicativo, 
+motoboy, piloto de corrida, motorista de ambulância 
+ou qualquer outro tipo de condutor profissional. Você 
+levava a vida transportando cargas ou passageiros, 
+até o dia em que suas viagens cruzaram o caminho 
+do Outro Lado
+.
+ Perícias treinadas. Pilotagem e Reflexos.
+
+ Mãos no Volante. Você não sofre penalidades em 
+testes de ataque por estar em um veículo em movi
+mento e, sempre que estiver pilotando e tiver que fazer 
+um teste de Pilotagem ou resistência, pode gastar 2 
+PE para receber +5 nesse teste
+
+ NERD ENTUSIASTA
+
+ Você dedicou muito do seu tempo aprendendo sobre 
+videogames, RPGs de mesa, ficção científica ou qual
+quer outro assunto considerado “nerd”. Sua obsessão 
+em pesquisar fundo seus assuntos de interesse e sua 
+capacidade em lidar com os mais variados temas 
+chamou a atenção de organizações paranormais.
+
+ Perícias treinadas. Ciências e Tecnologia.
+
+ O Inteligentão. O bônus que você recebe ao utili
+zar a ação de interlúdio ler aumenta em +1 dado (de 
++1d6 para +2d6).
+
+ PSICÓLOGO
+ Luiz Giovane e Matheus Santana
+ Missões Ordem
+ Você se especializou no estudo e tratamento das 
+questões mentais do ser humano. Em sua prática 
+profissional, você teve contato com o paranormal 
+e descobriu que algumas aflições mentais possuem 
+origens sombrias e perigosas. Agora, você emprega 
+seus conhecimentos para enfrentar o Outro Lado.
+
+ Perícias treinadas. Intuição e Profissão (psicólogo).
+
+ Terapia. Você pode usar Profissão (psicólogo) como 
+Diplomacia. Além disso, uma vez por rodada, quando 
+você ou um aliado em alcance curto falha em um 
+teste de resistência contra um efeito que causa dano 
+mental, você pode gastar 2 PE para fazer um teste de 
+Profissão (psicólogo) e usar o resultado desse teste 
+no lugar do teste de resistência falho
+
+PROFETIZADO
+ Como qualquer pessoa, você vai morrer. Entretanto, 
+diferente delas, você sabe como isso vai acontecer. 
+De algum jeito, seja por pesadelos, pensamentos 
+intrusivos ou até visões inesperadas, você tem uma 
+premonição clara — ou misteriosa e enigmática — 
+de como serão seus últimos momentos de vida. O 
+mestre pode determinar essa “cena de morte” em 
+segredo e revelar apenas os detalhes que você já 
+premuniu ou ambos podem determinar as condições 
+para esse inevitável falecimento. A cena pode ser 
+bem detalhada ou conter apenas alguns sinais. Por 
+exemplo: “você se vê pendurado em um gancho de 
+carne, sangrando até desfalecer, no subsolo de um 
+açougue” ou “a única coisa de que se lembra é da 
+visão de um gancho”. Será que você é capaz de mudar 
+seu próprio destino?
+
+ Perícias treinadas. Vontade e mais uma à sua 
+escolha, relacionada a sua premonição.
+
+ Luta ou Fuga. Conhecer os sinais de sua morte o 
+deixa mais confiante, principalmente quando eles não 
+estão presentes. Você recebe +2 em Vontade. Quando 
+surge uma referência a sua premonição (um objeto 
+semelhante a um gancho, por exemplo, para alguém 
+cuja morte está ligada a morrer em um gancho de 
+carne), uma onda de adrenalina toma seu corpo e 
+seus instintos de luta ou fuga se intensificam. Além 
+do bônus em Vontade, você recebe +2 PE temporários 
+que duram até o fim da cena.
+
+
+ REPÓRTER INVESTIGATIVO
+
+ Você está sempre em busca de histórias significa
+tivas, investigando eventos, entrevistando fontes 
+e analisando dados para descobrir a verdade por 
+trás dos acontecimentos. Profissionais do seu ramo 
+costumam ser curiosos, persistentes e, em muitos 
+casos, éticos em sua busca pela verdade. Por outro 
+lado, essa profissão leva pessoas ao encontro do 
+indescritível, e com você não foi diferente.
+
+ Perícias treinadas. Atualidades e Investigação.
+ 
+ Encontrar a Verdade. Você pode usar Inves
+tigação no lugar de Diplomacia ao fazer testes para 
+persuadir e mudar atitude e, quando faz um teste 
+de Investigação, pode gastar 2 PE para receber +5 
+nesse teste

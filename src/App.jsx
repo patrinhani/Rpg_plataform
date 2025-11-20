@@ -1,5 +1,5 @@
 // src/App.jsx
-// (CORRIGIDO: Corrigida a Referência da prop 'controlesProps' na linha 636)
+// (ATUALIZADO: Lógica de Poderes de Origem e Destaque de Perícias)
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css'; 
@@ -10,19 +10,17 @@ import {
     OpcoesClasse, 
     poderesCombatente, 
     poderesEspecialista, 
-    poderesOcultista,
-    poderesGerais,
+    poderesOcultista, 
+    poderesGerais, 
     poderesParanormais,
-    getPatenteInfo, // Importa a função de Patente
-    Patentes,       // Importa os dados de Patente
+    getPatenteInfo, 
+    Patentes,       
 } from './lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/progressao.js'; 
 
 // --- Carregamento de Componentes ---
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
-// --- ATUALIZAÇÃO: Importa o NOVO componente Recursos ---
 import Recursos from './components/ficha/recursos.jsx';
-// --- FIM DA ATUALIZAÇÃO ---
 
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
@@ -63,15 +61,18 @@ function App() {
   
   const [calculados, setCalculados] = useState({
     defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false,
-    patente: Patentes[0], // Adiciona a patente padrão
-    bloqueio_rd: '—',      // Adiciona RD Bloqueio
-    esquiva_bonus: '—',    // Adiciona Bônus Esquiva
-    tem_contra_ataque: false, // Adiciona flag Contra-ataque
+    patente: Patentes[0], 
+    bloqueio_rd: '—',      
+    esquiva_bonus: '—',    
+    tem_contra_ataque: false, 
   });
   
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
+
+  // NOVO: Estado para rastrear quais perícias são da origem atual (para destaque visual)
+  const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
   
   // --- ESTADOS DE MODAL ---
   const [isLojaOpen, setIsLojaOpen] = useState(false);
@@ -102,6 +103,16 @@ function App() {
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
     setTrilhasPorClasse(trilhasAgrupadas);
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
+
+  // NOVO: Atualiza a lista de perícias de origem sempre que a origem muda
+  useEffect(() => {
+      const origemAtual = personagem.info.origem;
+      if (database.periciasPorOrigem && database.periciasPorOrigem[origemAtual]) {
+          setPericiasDeOrigem(database.periciasPorOrigem[origemAtual].fixas || []);
+      } else {
+          setPericiasDeOrigem([]);
+      }
+  }, [personagem.info.origem]);
 
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
@@ -402,7 +413,7 @@ function App() {
   };
 
 
-  // --- FUNÇÃO DE MUDANÇA DE FICHA (ATUALIZADA) ---
+  // --- FUNÇÃO DE MUDANÇA DE FICHA (Lógica Central) ---
   
   function handleFichaChange(secao, campo, valor) {
     
@@ -419,6 +430,54 @@ function App() {
                 valor = `${nexNumber}%`;
                 FichaClass.setInfo(campo, valor);
             }
+            // --- LÓGICA DE MUDANÇA DE ORIGEM (AUTO PERÍCIAS E PODERES) ---
+            else if (campo === 'origem') {
+                const novaOrigem = valor;
+                const origemAntiga = FichaClass.getDados().info.origem;
+
+                // 1. Remove perícias da origem antiga (se valor for exatamente 5)
+                if (origemAntiga && database.periciasPorOrigem?.[origemAntiga]?.fixas) {
+                    database.periciasPorOrigem[origemAntiga].fixas.forEach(p => {
+                        const valorAtual = FichaClass.getBonusTotalPericia(p);
+                        if (valorAtual === 5) {
+                            FichaClass.setTreinoPericia(p, 0);
+                        }
+                    });
+                }
+
+                // 2. Adiciona perícias da nova origem (se estiver destreinado)
+                if (database.periciasPorOrigem?.[novaOrigem]?.fixas) {
+                    database.periciasPorOrigem[novaOrigem].fixas.forEach(p => {
+                        const valorAtual = FichaClass.getBonusTotalPericia(p);
+                        if (valorAtual === 0) {
+                            FichaClass.setTreinoPericia(p, 5);
+                        }
+                    });
+                }
+
+                // 3. Remove o Poder de Origem antigo
+                if (origemAntiga) {
+                    // Remove qualquer poder que tenha a flag isOrigemPower
+                    // (Isso cobre o caso de mudar de uma origem para outra)
+                    FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
+                }
+
+                // 4. Adiciona o Poder da nova Origem
+                const dadosOrigem = database.periciasPorOrigem?.[novaOrigem];
+                if (dadosOrigem && dadosOrigem.poder) {
+                    const novoPoderObj = {
+                        key: `origem_${novaOrigem}`, // Chave única para o sistema
+                        nome: dadosOrigem.poder.nome,
+                        descricao: dadosOrigem.poder.descricao,
+                        tipo: "Origem", // Categoria visual
+                        isOrigemPower: true // Flag para identificar e remover depois
+                    };
+                    FichaClass.addPoder(novoPoderObj);
+                }
+
+                FichaClass.setInfo(campo, valor);
+            }
+            // ------------------------------------------------------------------
             else if (campo === 'trilha') {
                 const trilhaSelecionada = valor;
                 const dadosTrilha = trilhasUnificadas[trilhaSelecionada]; 
@@ -559,7 +618,7 @@ function App() {
     onExport: exportarFicha,
     onImport: importarFicha,
     onThemeChange: setTema,
-    canChangeTheme: calculados.canChangeTheme // Passa o valor calculado
+    canChangeTheme: calculados.canChangeTheme 
   };
   
   const LoadingComponent = () => (
@@ -603,12 +662,11 @@ function App() {
         )}
       </Suspense>
 
-      {/* O componente 'Recursos' agora é o container fixo no topo */}
       <Recursos 
         dados={personagem.recursos}
         dadosPerseguicao={personagem.perseguicao}
         dadosVisibilidade={personagem.visibilidade} 
-        info={personagem.info} // Passa info para a foto
+        info={personagem.info} 
         onFichaChange={handleFichaChange}
       />
 
@@ -628,11 +686,14 @@ function App() {
             calculados={calculados} 
             fichaInstance={FichaClass} 
             handleFichaChange={handleFichaChange}
-            controlesProps={controlesProps} // <-- CORREÇÃO AQUI
-            trilhasPorClasse={trilhasPorClasse} 
+            controlesProps={controlesProps} 
+            trilhasPorClasse={trilhasPorClasse}
+            // Passa a lista de perícias da origem para destaque visual
+            periciasDeOrigem={periciasDeOrigem} 
           />
         )}
         
+        {/* ... (Restante das abas) ... */}
         {abaAtiva === 'inventario' && (
           <Inventario 
             inventario={personagem.inventario} 
@@ -680,7 +741,7 @@ function App() {
 
         {abaAtiva === 'diario' && (
           <Diario
-            diarioData={FichaClass.diario || []} // Garante que seja um array
+            diarioData={FichaClass.diario || []} 
             onAbrirModal={handleAbrirDiarioModal}
             onRemoveNota={handleRemoverNota}
           />
@@ -762,4 +823,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

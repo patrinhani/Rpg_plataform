@@ -1,10 +1,8 @@
-// /src/components/ficha/pericias.jsx
-// (ATUALIZADO com layout de "dado" CSS)
-// (CORRIGIDO: Removido o "(pior)" para caber no layout)
+// src/components/ficha/pericias.jsx
+// (ATUALIZADO: Destaque visual para perícias de origem)
 
 import React from 'react';
 
-// O helper de atributos não muda
 const ATRIBUTO_BASE = {
   acrobacia: { nome: 'Acrobacia', attr: 'agi' },
   crime: { nome: 'Crime', attr: 'agi' },
@@ -38,7 +36,7 @@ const ATRIBUTO_BASE = {
 
 const periciasLista = Object.keys(ATRIBUTO_BASE);
 
-function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChange }) {
+function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChange, periciasDeOrigem }) {
   
   const handleChange = (e) => {
     const campo = e.target.id;
@@ -46,8 +44,6 @@ function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChang
     onFichaChange('pericias', campo, valor);
   };
 
-  // --- LÓGICA DE CÁLCULO ATUALIZADA ---
-  // Agora retorna um objeto com partes separadas
   const calcularBonusSeparado = (periciaKey) => {
     const treino = dadosPericias[periciaKey] || 0;
     const attrChave = ATRIBUTO_BASE[periciaKey].attr;
@@ -56,22 +52,11 @@ function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChang
     
     const bonusTotal = Number(treino) + bonusInventario;
     
-    let diceText = "";
-    if (valorAttr === 0) {
-      diceText = "2d"; // <-- CORREÇÃO AQUI
-    } else {
-      diceText = `${valorAttr}d`; // Apenas o dado, ex: "5d"
-    }
-    
-    // O bônus, ex: "+15" ou "+0"
+    let diceText = valorAttr === 0 ? "2d" : `${valorAttr}d`;
     const bonusText = `${bonusTotal >= 0 ? "+" : ""}${bonusTotal}`;
     
-    return {
-      dice: diceText,
-      bonus: bonusText
-    };
+    return { dice: diceText, bonus: bonusText };
   };
-  // --- FIM DA LÓGICA ATUALIZADA ---
 
   return (
     <section className="box box-pericias" id="grid-pericias">
@@ -97,25 +82,28 @@ function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChang
         {periciasLista.map((periciaKey) => {
           const periciaInfo = ATRIBUTO_BASE[periciaKey];
           const treinoValor = dadosPericias[periciaKey];
-          
-          // Pega o objeto de bônus
           const bonus = calcularBonusSeparado(periciaKey);
+          
+          // Verifica se a perícia atual está na lista de origem
+          const isOrigem = periciasDeOrigem && periciasDeOrigem.includes(periciaKey);
           
           return (
             <li 
               key={periciaKey} 
-              className={`pericia-item treino-${treinoValor}`}
+              className={`pericia-item treino-${treinoValor} ${isOrigem ? 'pericia-origem' : ''}`}
             >
-              <span>{periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})</span>
+              <span>
+                {periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})
+                {/* Ícone de estrela se for de origem */}
+                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px', fontSize: '0.8em'}} title="Perícia de Origem">★</span>}
+              </span>
 
-              {/* --- ESTRUTURA HTML ATUALIZADA --- */}
               <div className="pericia-bonus-container">
                 <div className="pericia-dado-shape">
                   <span className="pericia-dado-texto">{bonus.dice}</span>
                 </div>
                 <span className="pericia-bonus-texto">{bonus.bonus}</span>
               </div>
-              {/* --- FIM DA ESTRUTURA --- */}
 
               <select 
                 id={periciaKey}

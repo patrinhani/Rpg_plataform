@@ -76,21 +76,52 @@ const OpcoesClasse = {
 };
 
 const OpcoesOrigem = {
-    academico: "Acadêmico", agente_saude: "Agente de Saúde", amnesico: "Amnésico",
-    artista: "Artista", atleta: "Atleta", chef: "Chef", criminoso: "Criminoso",
-    cultista_arrependido: "Cultista Arrependido", desgarrado: "Desgarrado",
-    engenheiro: "Engenheiro", executivo: "Executivo", investigador: "Investigador",
-    lutador: "Lutador", magnata: "Magnata", militar: "Militar", policial: "Policial",
-    religioso: "Religioso", servidor_publico: "Servidor Público",
-    teorico_conspiracao: "Teórico da Conspiração", ti: "T.I.", trabalhador_rural: "Trabalhador Rural",
-    universitario: "Universitário", vitima: "Vítima", amigo_animais: "Amigo dos Animais",
-    astronauta: "Astronauta", chef_outro_lado: "Chef do Outro Lado", colegial: "Colegial",
-    cosplayer: "Cosplayer", diplomata: "Diplomata", explorador: "Explorador",
-    experimento: "Experimento", fanatico_criaturas: "Fanático por Criaturas",
-    fotografo: "Fotógrafo", inventor_paranormal: "Inventor Paranormal", jovem_mistico: "Jovem Místico",
-    legista_noturno: "Legista do Turno da Noite", mateiro: "Mateiro", mergulhador: "Mergulhador",
-    motorista: "Motorista", nerd_entusiasta: "Nerd Entusiasta", profetizado: "Profetizado",
-    psicologo: "Psicólogo", reporter_investigativo: "Repórter Investigativo"
+    academico: "Acadêmico",
+    agente_saude: "Agente de Saúde",
+    amnesico: "Amnésico",
+    amigo_animais: "Amigo dos Animais",
+    artista: "Artista",
+    astronauta: "Astronauta",
+    atleta: "Atleta",
+    chef: "Chef",
+    chef_outro_lado: "Chef do Outro Lado",
+    colegial: "Colegial",
+    cosplayer: "Cosplayer",
+    criminoso: "Criminoso",
+    cultista_arrependido: "Cultista Arrependido",
+    desgarrado: "Desgarrado",
+    diplomata: "Diplomata",
+    engenheiro: "Engenheiro",
+    executivo: "Executivo",
+    experimento: "Experimento",
+    explorador: "Explorador",
+    fanatico_criaturas: "Fanático por Criaturas",
+    fotografo: "Fotógrafo",
+    inventor_paranormal: "Inventor Paranormal",
+    investigador: "Investigador", // Nota: Investigador não estava no txt original detalhado, mantido se necessário
+    jovem_mistico: "Jovem Místico",
+    legista_noturno: "Legista do Turno da Noite",
+    lutador: "Lutador", // Nota: Lutador não estava no txt detalhado, mantido como legado ou genérico
+    magnata: "Magnata",
+    mateiro: "Mateiro",
+    mercenario: "Mercenário",
+    mergulhador: "Mergulhador",
+    militar: "Militar",
+    motorista: "Motorista",
+    nerd_entusiasta: "Nerd Entusiasta",
+    operario: "Operário",
+    policial: "Policial",
+    profetizado: "Profetizado",
+    psicologo: "Psicólogo",
+    religioso: "Religioso",
+    reporter_investigativo: "Repórter Investigativo",
+    servidor_publico: "Servidor Público",
+    teorico_conspiracao: "Teórico da Conspiração",
+    ti: "T.I.",
+    trabalhador_rural: "Trabalhador Rural",
+    trambiqueiro: "Trambiqueiro",
+    universitario: "Universitário",
+    vitima: "Vítima",
 };
 // --- FIM DAS CONSTANTES DE FICHA ---
 
@@ -1502,95 +1533,190 @@ const database = {
   ],
 
   // (MANTIDO) 'periciasPorOrigem' é USADO PELO CONTADOR
-   periciasPorOrigem: {
-    academico: { fixas: ["ciencias", "investigacao"], escolhas: [] },
-    agente_saude: { fixas: ["intuicao", "medicina"], escolhas: [] },
+
+
+periciasPorOrigem: {
+    academico: { 
+        fixas: ["ciencias", "investigacao"], 
+        poder: { nome: "Saber é Poder", descricao: "Quando faz um teste usando Intelecto, você pode gastar 2 PE para receber +5 nesse teste." }
+    },
+    agente_saude: { 
+        fixas: ["intuicao", "medicina"], 
+        poder: { nome: "Técnica Medicinal", descricao: "Sempre que cura um personagem, você adiciona seu Intelecto no total de PV curados." }
+    },
     amnesico: {
       fixas: [],
-      escolhas: [
-        {
-          titulo: "Perícias de Origem (Amnésico)",
-          descricao:
-            "Você não se lembra de nada, mas seu corpo sim. Escolha 2 perícias.",
-          grupo: "listaCompletaPericias",
-          quantidade: 2,
-        },
-      ],
+      escolhas: [{ titulo: "Perícias de Origem", descricao: "Escolha 2 perícias a critério do mestre.", grupo: "listaCompletaPericias", quantidade: 2 }],
+      poder: { nome: "Vislumbres do Passado", descricao: "Uma vez por sessão, teste de Intelecto (DT 10) para reconhecer algo familiar. Se passar, recebe 1d4 PE temporários e uma informação útil." }
     },
-    artista: { fixas: ["artes", "enganacao"], escolhas: [] },
-    atleta: { fixas: ["acrobacia", "atletismo"], escolhas: [] },
-    chef: { fixas: ["fortitude", "profissao"], escolhas: [] },
-    criminoso: { fixas: ["crime", "furtividade"], escolhas: [] },
-    cultista_arrependido: { fixas: ["ocultismo", "religiao"], escolhas: [] },
-    desgarrado: {
-      fixas: [],
-      escolhas: [
-        {
-          titulo: "Perícias de Origem (Desgarrado)",
-          descricao: "Você aprendeu a se virar. Escolha 2 perícias.",
-          grupo: "listaCompletaPericias",
-          quantidade: 2,
-        },
-      ],
+    amigo_animais: { 
+        fixas: ["adestramento", "percepcao"], 
+        poder: { nome: "Companheiro Animal", descricao: "Você possui um animal (aliado) que fornece +2 em uma perícia. Em NEX 35%, fornece bônus de aliado de um tipo. Em NEX 70%, fornece a habilidade do tipo." }
     },
-    engenheiro: { fixas: ["profissao", "tecnologia"], escolhas: [] },
-    executivo: { fixas: ["diplomacia", "intimidacao"], escolhas: [] },
-    investigador: { fixas: ["investigacao", "percepcao"], escolhas: [] },
-    lutador: { fixas: ["luta", "reflexos"], escolhas: [] },
-    magnata: { fixas: ["diplomacia", "pilotagem"], escolhas: [] },
-    militar: { fixas: ["pontaria", "tatica"], escolhas: [] },
-    policial: { fixas: ["percepcao", "pontaria"], escolhas: [] },
-    religioso: { fixas: ["religiao", "vontade"], escolhas: [] },
-    servidor_publico: { fixas: ["intuicao", "vontade"], escolhas: [] },
-    teorico_conspiracao: { fixas: ["investigacao", "ocultismo"], escolhas: [] },
-    ti: { fixas: ["investigacao", "tecnologia"], escolhas: [] },
-    trabalhador_rural: {
-      fixas: ["adestramento", "sobrevivencia"],
-      escolhas: [],
+    artista: { 
+        fixas: ["artes", "enganacao"], 
+        poder: { nome: "Magnum Opus", descricao: "Uma vez por missão, pode ser reconhecido para receber +5 em testes de Presença e perícias baseadas em Presença contra quem o reconheceu." }
     },
-    universitario: { fixas: ["atualidades", "investigacao"], escolhas: [] },
-    vitima: { fixas: ["reflexos", "vontade"], escolhas: [] },
-    amigo_animais: { fixas: ["adestramento", "percepcao"], escolhas: [] },
-    astronauta: { fixas: ["ciencias", "fortitude"], escolhas: [] },
-    chef_outro_lado: { fixas: ["ocultismo", "profissao"], escolhas: [] },
-    colegial: { fixas: ["atualidades", "tecnologia"], escolhas: [] },
-    cosplayer: { fixas: ["artes", "vontade"], escolhas: [] },
-    diplomata: { fixas: ["atualidades", "diplomacia"], escolhas: [] },
-    explorador: { fixas: ["fortitude", "sobrevivencia"], escolhas: [] },
-    experimento: { fixas: ["atletismo", "fortitude"], escolhas: [] },
-    fanatico_criaturas: { fixas: ["investigacao", "ocultismo"], escolhas: [] },
-    fotografo: { fixas: ["artes", "percepcao"], escolhas: [] },
-    inventor_paranormal: { fixas: ["profissao", "vontade"], escolhas: [] },
-    jovem_mistico: { fixas: ["ocultismo", "religiao"], escolhas: [] },
-    legista_noturno: { fixas: ["ciencias", "medicina"], escolhas: [] },
-    mateiro: { fixas: ["percepcao", "sobrevivencia"], escolhas: [] },
-    mergulhador: { fixas: ["atletismo", "fortitude"], escolhas: [] },
-    motorista: { fixas: ["pilotagem", "reflexos"], escolhas: [] },
-    nerd_entusiasta: { fixas: ["ciencias", "tecnologia"], escolhas: [] },
+    astronauta: { 
+        fixas: ["ciencias", "fortitude"], 
+        poder: { nome: "Acostumado ao Extremo", descricao: "Gaste 1 PE para reduzir dano de fogo, frio ou mental em 5. Custo aumenta em +1 a cada uso na cena." }
+    },
+    atleta: { 
+        fixas: ["acrobacia", "atletismo"], 
+        poder: { nome: "110%", descricao: "Quando faz um teste de perícia usando Força ou Agilidade (exceto Luta e Pontaria) pode gastar 2 PE para receber +5." }
+    },
+    chef: { 
+        fixas: ["fortitude", "profissao"], 
+        poder: { nome: "Ingrediente Secreto", descricao: "Em interlúdio (alimentar-se), você e o grupo recebem o benefício de dois pratos." }
+    },
+    chef_outro_lado: { 
+        fixas: ["ocultismo", "profissao"], 
+        poder: { nome: "Fome do Outro Lado", descricao: "Pode cozinhar partes de criaturas (Interlúdio, Profissão DT 15+VD). Sucesso: Prato dá RD 10 ao elemento. Falha: Vulnerabilidade. Comer causa perda de 1 SAN permanente." }
+    },
+    colegial: { 
+        fixas: ["atualidades", "tecnologia"], 
+        poder: { nome: "Poder da Amizade", descricao: "Escolha um amigo. Se estiver em alcance médio dele, recebe +2 em testes de perícia. Se ele morrer, perde PE máx." }
+    },
+    cosplayer: { 
+        fixas: ["artes", "vontade"], 
+        poder: { nome: "Não É Fantasia, É Cosplay!", descricao: "Pode usar Artes para disfarce. Se estiver usando cosplay relacionado à perícia, recebe +2 nela." }
+    },
+    criminoso: { 
+        fixas: ["crime", "furtividade"], 
+        poder: { nome: "O Crime Compensa", descricao: "No final da missão, escolha um item encontrado. Na próxima, ele não conta no limite de itens por patente." }
+    },
+    cultista_arrependido: { 
+        fixas: ["ocultismo", "religiao"], 
+        poder: { nome: "Traços do Outro Lado", descricao: "Você possui um poder paranormal à sua escolha. Começa com metade da Sanidade normal." }
+    },
+    desgarrado: { 
+        fixas: ["fortitude", "sobrevivencia"], 
+        poder: { nome: "Calejado", descricao: "Você recebe +1 PV para cada 5% de NEX." }
+    },
+    diplomata: { 
+        fixas: ["atualidades", "diplomacia"], 
+        poder: { nome: "Conexões", descricao: "Recebe +2 em Diplomacia. Pode gastar 2 PE para substituir um teste de conhecimento específico por Diplomacia (10 min)." }
+    },
+    engenheiro: { 
+        fixas: ["profissao", "tecnologia"], 
+        poder: { nome: "Ferramentas Favoritas", descricao: "Um item a sua escolha (exceto armas) conta como uma categoria abaixo." }
+    },
+    executivo: { 
+        fixas: ["diplomacia", "profissao"], 
+        poder: { nome: "Processo Otimizado", descricao: "Em testes estendidos ou revisão de documentos, pode pagar 2 PE para receber +5 no teste." }
+    },
+    experimento: { 
+        fixas: ["atletismo", "fortitude"], 
+        poder: { nome: "Mutação", descricao: "Recebe RD 2 e +2 em uma perícia de FOR, AGI ou VIG. Sofre -1d20 em Diplomacia." }
+    },
+    explorador: { 
+        fixas: ["fortitude", "sobrevivencia"], 
+        poder: { nome: "Manual do Sobrevivente", descricao: "Gaste 2 PE para receber +5 em testes contra armadilhas, clima, doenças, venenos, etc. Sono precário conta como normal." }
+    },
+    fanatico_criaturas: { 
+        fixas: ["investigacao", "ocultismo"], 
+        poder: { nome: "Conhecimento Oculto", descricao: "Pode usar Ocultismo para identificar criaturas por pistas. Se passar, recebe +2 em testes contra ela." }
+    },
+    fotografo: { 
+        fixas: ["artes", "percepcao"], 
+        poder: { nome: "Através da Lente", descricao: "Ao usar uma câmera/foto para Investigação ou Percepção, gaste 2 PE para receber +5 no teste." }
+    },
+    inventor_paranormal: { 
+        fixas: ["profissao", "vontade"], 
+        poder: { nome: "Invenção Paranormal", descricao: "Possui um item (cat 0) com um ritual de 1º círculo. Ativar: Ação padrão, Profissão (DT 15+5/uso). Falha: Enguiça." }
+    },
+    jovem_mistico: { 
+        fixas: ["ocultismo", "religiao"], 
+        poder: { nome: "A Culpa é das Estrelas", descricao: "Escolha nº da sorte (1-6). Início da cena, gaste 1 PE e role 1d6. Se cair seu nº, +2 em perícias na cena. Se não, escolhe mais um nº." }
+    },
+    legista_noturno: { 
+        fixas: ["ciencias", "medicina"], 
+        poder: { nome: "Luto Habitual", descricao: "Sofre metade do dano mental por cenas de morte/cadáveres. Gaste 2 PE para +5 em Medicina (primeiros socorros/necropsia)." }
+    },
+    magnata: { 
+        fixas: ["diplomacia", "pilotagem"], 
+        poder: { nome: "Patrocinador da Ordem", descricao: "Seu limite de crédito é sempre considerado um acima do atual." }
+    },
+    mateiro: { 
+        fixas: ["percepcao", "sobrevivencia"], 
+        poder: { nome: "Mapa Celeste", descricao: "Sabe pontos cardeais e caminhos visitados. Gaste 2 PE para rolar novamente Sobrevivência. Sono precário conta como normal." }
+    },
+    mercenario: { 
+        fixas: ["iniciativa", "intimidacao"], 
+        poder: { nome: "Posição de Combate", descricao: "No primeiro turno de cenas de ação, pode gastar 2 PE para receber uma ação de movimento extra." }
+    },
+    mergulhador: { 
+        fixas: ["atletismo", "fortitude"], 
+        poder: { nome: "Fôlego de Nadador", descricao: "Recebe +5 PV. Prende respiração por 2x Vigor rodadas. Natação usa deslocamento normal." }
+    },
+    militar: { 
+        fixas: ["pontaria", "tatica"], 
+        poder: { nome: "Para Bellum", descricao: "Você recebe +2 em rolagens de dano com armas de fogo." }
+    },
+    motorista: { 
+        fixas: ["pilotagem", "reflexos"], 
+        poder: { nome: "Mãos no Volante", descricao: "Sem penalidade de ataque em veículo em movimento. Pilotando, gaste 2 PE para +5 em Pilotagem ou reflexos." }
+    },
+    nerd_entusiasta: { 
+        fixas: ["ciencias", "tecnologia"], 
+        poder: { nome: "O Inteligentão", descricao: "O bônus da ação de interlúdio 'ler' aumenta em +1 dado (de +1d6 para +2d6)." }
+    },
+    operario: { 
+        fixas: ["fortitude", "profissao"], 
+        poder: { nome: "Ferramenta de Trabalho", descricao: "Escolha uma arma que serve como ferramenta. Recebe +1 no ataque, dano e margem de ameaça com ela." }
+    },
+    policial: { 
+        fixas: ["percepcao", "pontaria"], 
+        poder: { nome: "Patrulha", descricao: "Você recebe +2 em Defesa." }
+    },
     profetizado: {
-      fixas: ["vontade"],
-      escolhas: [
-        {
-          titulo: "Perícia de Origem (Profetizado)",
-          descricao: "Escolha 1 perícia relacionada à sua premonição.",
-          grupo: "listaCompletaPericias",
-          quantidade: 1,
-        },
-      ],
+      fixas: ["vontade"], 
+      escolhas: [{ titulo: "Perícia de Origem", descricao: "Escolha 1 perícia relacionada à sua premonição.", grupo: "listaCompletaPericias", quantidade: 1 }],
+      poder: { nome: "Luta ou Fuga", descricao: "Recebe +2 em Vontade. Quando surge referência à sua morte, recebe +2 PE temporários." }
     },
-    psicologo: { fixas: ["intuicao", "profissao"], escolhas: [] },
-    reporter_investigativo: {
-      fixas: ["atualidades", "investigacao"],
-      escolhas: [],
+    psicologo: { 
+        fixas: ["intuicao", "profissao"], 
+        poder: { nome: "Terapia", descricao: "Usa Profissão (psicólogo) como Diplomacia. Pode gastar 2 PE para usar Profissão no lugar de resistência contra dano mental (você ou aliado curto)." }
+    },
+    religioso: { 
+        fixas: ["religiao", "vontade"], 
+        poder: { nome: "Acalentar", descricao: "Recebe +5 em Religião para acalmar. Acalmar cura 1d6 + Presença de Sanidade." }
+    },
+    reporter_investigativo: { 
+        fixas: ["atualidades", "investigacao"], 
+        poder: { nome: "Encontrar a Verdade", descricao: "Usa Investigação no lugar de Diplomacia (persuadir). Gaste 2 PE para +5 em Investigação." }
+    },
+    servidor_publico: { 
+        fixas: ["intuicao", "vontade"], 
+        poder: { nome: "Espírito Cívico", descricao: "Sempre que faz um teste para ajudar, pode gastar 1 PE para aumentar o bônus em +2." }
+    },
+    teorico_conspiracao: { 
+        fixas: ["investigacao", "ocultismo"], 
+        poder: { nome: "Eu Já Sabia", descricao: "Você recebe resistência a dano mental igual ao seu Intelecto." }
+    },
+    ti: { 
+        fixas: ["investigacao", "tecnologia"], 
+        poder: { nome: "Motor de Busca", descricao: "Se tiver internet, gaste 2 PE para substituir um teste de perícia qualquer por Tecnologia (a critério)." }
+    },
+    trabalhador_rural: { 
+        fixas: ["adestramento", "sobrevivencia"], 
+        poder: { nome: "Desbravador", descricao: "Gaste 2 PE para +5 em Adestramento ou Sobrevivência. Ignora penalidade de terreno difícil." }
+    },
+    trambiqueiro: { 
+        fixas: ["crime", "enganacao"], 
+        poder: { nome: "Impostor", descricao: "Uma vez por cena, gaste 2 PE para substituir um teste de perícia qualquer por Enganação." }
+    },
+    universitario: { 
+        fixas: ["atualidades", "investigacao"], 
+        poder: { nome: "Dedicação", descricao: "Recebe +1 PE, e +1 adicional a cada NEX ímpar. Limite de PE/turno aumenta em 1." }
+    },
+    vitima: { 
+        fixas: ["reflexos", "vontade"], 
+        poder: { nome: "Cicatrizes Psicológicas", descricao: "Você recebe +1 de Sanidade para cada 5% de NEX." }
     },
   },
-  
-  // A lista de rituais permanece a mesma
-  
 
-
-// A EXPORTAÇÃO FINAL DEVE INCLUIR TUDO:
-
+// ...
 
   rituais: [
     // ---------- CÍRCULO 1: SANGUE ----------
@@ -3257,7 +3383,6 @@ export {
     poderesParanormais, 
     Patentes,
     getPatenteInfo,
-    // --- EXPORTA AS MODIFICAÇÕES ---
     modificacoesArmas,
     modificacoesProtecoes,
     modificacoesAcessorios,
