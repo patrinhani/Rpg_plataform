@@ -1,14 +1,15 @@
 // src/components/FichaPrincipal.jsx
-// (ATUALIZADO: Recebe e repassa 'periciasDeOrigem')
+// (ATUALIZADO: Correção de imports com extensão .jsx)
 
 import React from 'react';
 
-import Identidade from './ficha/identidade';
-import Atributos from './ficha/atributos';
-import DefesaStatus from './ficha/defesa-status';
-import Pericias from './ficha/pericias';
-import Controles from './ficha/controles';
-import CalculoDetalhado from './ficha/calculo-detalhado';
+import Identidade from './ficha/identidade.jsx';
+import Atributos from './ficha/atributos.jsx';
+import DefesaStatus from './ficha/defesa-status.jsx';
+import Pericias from './ficha/pericias.jsx';
+import Controles from './ficha/controles.jsx';
+import CalculoDetalhado from './ficha/calculo-detalhado.jsx';
+import Condicoes from './Condicoes.jsx'; // Importa o componente de condições
 
 function FichaPrincipal({
   personagem,
@@ -17,7 +18,8 @@ function FichaPrincipal({
   handleFichaChange,
   controlesProps,
   trilhasPorClasse,
-  periciasDeOrigem // <--- NOVA PROP
+  periciasDeOrigem,
+  onToggleCondicao // <--- Recebe o handler
 }) {
     const { canChangeTheme } = calculados; 
 
@@ -37,6 +39,15 @@ function FichaPrincipal({
       />
       
       <Controles {...controlesComNEX} /> 
+      
+      {/* --- ÁREA DE CONDIÇÕES (NOVO) --- */}
+      {/* Renderiza logo abaixo dos controles para fácil acesso */}
+      <div style={{ gridArea: 'controles', marginTop: '20px' }}>
+        <Condicoes 
+           ativas={personagem.condicoesAtivas || []} 
+           onToggle={onToggleCondicao} 
+        />
+      </div>
 
       <Atributos 
         dados={personagem.atributos} 
@@ -56,7 +67,7 @@ function FichaPrincipal({
         dadosAtributos={personagem.atributos}
         dadosCalculados={calculados}
         onFichaChange={handleFichaChange}
-        periciasDeOrigem={periciasDeOrigem} // <--- PASSA PARA O COMPONENTE
+        periciasDeOrigem={periciasDeOrigem} 
       />
 
       <CalculoDetalhado

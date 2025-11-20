@@ -1,5 +1,5 @@
-// /src/lib/personagem.js
-// (VERSÃO FINAL COMPLETA E CORRIGIDA)
+// src/lib/personagem.js
+import { database } from './database.js';
 
 class Personagem {
   constructor() {
@@ -41,7 +41,6 @@ class Personagem {
       outros: 0,
     };
     
-    // Lista completa de resistências (Dano e Elementais)
     this.resistencias = {
       balistico: 0,
       corte: 0,
@@ -61,11 +60,13 @@ class Personagem {
     this.perseguicao = { sucessos: 0, falhas: 0 };
     this.visibilidade = 0; 
 
+    // --- LISTAS E OBJETOS COMPLEXOS ---
     this.inventario = []; 
     this.rituais = []; 
     this.trilhas_personalizadas = []; 
     this.poderes_aprendidos = []; 
-    this.diario = []; // Inicializa o diário
+    this.diario = []; 
+    this.condicoesAtivas = []; // Armazena os IDs das condições (ex: 'fraco', 'abalado')
 
     this.bonusManuais = {
       pv_nex: 0,
@@ -92,7 +93,7 @@ class Personagem {
     };
   }
   
-  // --- MÉTODOS DE SETTERS ---
+  // --- MÉTODOS DE SETTERS BÁSICOS ---
 
   setPerseguicao(tipo, valor) {
     if (tipo === 'sucessos' || tipo === 'falhas') {
@@ -111,7 +112,7 @@ class Personagem {
     let valorNovo = this.visibilidade + valor;
     
     if (valorNovo < 0) valorNovo = 0;
-    if (valorNovo > 3) valorNovo = 3; // Trava em 3
+    if (valorNovo > 3) valorNovo = 3; 
     this.visibilidade = valorNovo;
   }
   
@@ -151,6 +152,73 @@ class Personagem {
     }
   }
 
+  // --- MÉTODOS DE CONDIÇÕES (LÓGICA DE EVOLUÇÃO) ---
+
+  toggleCondicao(condicaoId) {
+    // 1. Verifica se a condição já existe na lista
+    if (this.condicoesAtivas.includes(condicaoId)) {
+      // Busca dados da condição no banco de dados para ver se ela evolui
+      const dadosCondicao = database.condicoes ? database.condicoes.find(c => c.id === condicaoId) : null;
+      
+      if (dadosCondicao && dadosCondicao.evolucao) {
+        // Se tem evolução (ex: Fraco -> Debilitado), remove a atual e adiciona a evolução
+        this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
+        
+        // Só adiciona a evolução se ela já não estiver ativa (evita duplicatas)
+        if (!this.condicoesAtivas.includes(dadosCondicao.evolucao)) {
+            this.condicoesAtivas.push(dadosCondicao.evolucao);
+        }
+      } else {
+        // Se não tem evolução (ou é o estágio final), apenas remove (desmarca)
+        this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
+      }
+    } else {
+      // 2. Se não tem, adiciona a condição
+      this.condicoesAtivas.push(condicaoId);
+    }
+  }
+  
+  getCondicoes() {
+    return this.condicoesAtivas;
+  }
+
+  // Método para pegar o valor final do atributo aplicando penalidades de condições
+  getAtributoFinal(attrKey) {
+    let valorBase = parseInt(this.atributos[attrKey]) || 0;
+    
+    // Penalidades Físicas (Força, Agilidade, Vigor)
+    if (['for', 'agi', 'vig'].includes(attrKey)) {
+      // Debilitado ou Inconsciente reduzem em 1 dado (mecanicamente -1 no atributo)
+      if (this.condicoesAtivas.includes('debilitado') || this.condicoesAtivas.includes('inconsciente')) {
+         valorBase -= 1;
+      }
+      // Fraco também reduz em 1 dado (-1 no atributo)
+      // Nota: Se tiver ambos, não acumula a penalidade (aplica-se a pior condição, mas o valor é o mesmo)
+      else if (this.condicoesAtivas.includes('fraco')) {
+         valorBase -= 1;
+      }
+      
+      // Outras penalidades específicas podem ser adicionadas aqui (ex: Fatigado afeta perícias físicas, não o atributo base diretamente na rolagem de dano, mas se quiser simplificar pode por aqui)
+    }
+    
+    // Penalidades Mentais (Intelecto, Presença)
+    if (['int', 'pre'].includes(attrKey)) {
+       // Esmorecido ou Inconsciente
+       if (this.condicoesAtivas.includes('esmorecido') || this.condicoesAtivas.includes('inconsciente')) {
+          valorBase -= 1; // Ou -2 dependendo da interpretação, mas o padrão é perder dados gradualmente
+       }
+       // Frustrado
+       else if (this.condicoesAtivas.includes('frustrado')) {
+          valorBase -= 1;
+       }
+    }
+
+    // Garante que o atributo não fique negativo (regra de mínimo 0, que rola 2d20 e pega o pior)
+    if (valorBase < 0) valorBase = 0; 
+
+    return valorBase; 
+  }
+
   // --- MÉTODOS DE TRILHAS ---
   addTrilhaPersonalizada(trilhaData) {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
@@ -175,7 +243,6 @@ class Personagem {
   
   // --- MÉTODOS DE PODERES ---
   addPoder(poder) {
-      // Evita duplicatas exatas
       if (!this.poderes_aprendidos.some(p => p.key === poder.key)) {
           this.poderes_aprendidos.push(poder);
       }
@@ -200,50 +267,37 @@ class Personagem {
       ...item,
       inventarioId: Date.now() + Math.random(),
       ignorarCalculos: false,
-      
       categoriaBase: item.categoriaBase ?? item.categoria,
       espacosBase: item.espacosBase ?? item.espacos,
-      
       modificacoes: item.modificacoes || [], 
     };
-    
     delete itemComId.categoria;
     delete itemComId.espacos;
-
     this.inventario.push(itemComId);
   }
   
   removeItemInventario(inventarioId) {
-    this.inventario = this.inventario.filter(
-      (item) => item.inventarioId !== inventarioId
-    );
+    this.inventario = this.inventario.filter((item) => item.inventarioId !== inventarioId);
   }
 
   updateItemInventario(inventarioId, dadosAtualizados) {
     const index = this.inventario.findIndex(item => item.inventarioId === inventarioId);
-    
     if (index !== -1) {
       const itemOriginal = this.inventario[index];
-      
       this.inventario[index] = {
         ...itemOriginal, 
         ...dadosAtualizados, 
-        
         modificacoes: dadosAtualizados.modificacoes || itemOriginal.modificacoes || [],
-        
         categoriaBase: dadosAtualizados.categoriaBase ?? itemOriginal.categoriaBase ?? itemOriginal.categoria,
         espacosBase: dadosAtualizados.espacosBase ?? itemOriginal.espacosBase ?? itemOriginal.espacos,
       };
-      
       delete this.inventario[index].categoria;
       delete this.inventario[index].espacos;
     }
   }
 
   toggleIgnorarCalculos(inventarioId) {
-    const item = this.inventario.find(
-      (item) => item.inventarioId === inventarioId
-    );
+    const item = this.inventario.find((item) => item.inventarioId === inventarioId);
     if (item) {
       item.ignorarCalculos = !item.ignorarCalculos;
     }
@@ -263,9 +317,7 @@ class Personagem {
   }
   
   removeRitualInventario(inventarioId) {
-    this.rituais = this.rituais.filter(
-      (ritual) => ritual.inventarioId !== inventarioId
-    );
+    this.rituais = this.rituais.filter((ritual) => ritual.inventarioId !== inventarioId);
   }
   
   getGrimorio() {
@@ -292,17 +344,13 @@ class Personagem {
   // --- FUNÇÕES DE CÁLCULO AUXILIARES ---
   
   getBonusDefesaInventario() {
-    const inventarioAtivo = this.inventario.filter(
-      (item) => !item.ignorarCalculos
-    );
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     let bonusProtecao = 0;
     let bonusEscudo = 0;
     
-    // Verifica se há proteções específicas pelo ID
     const protecaoLeve = inventarioAtivo.find((item) => item.id === "protecao_leve");
     const protecaoPesada = inventarioAtivo.find((item) => item.id === "protecao_pesada");
     
-    // Prioriza a proteção pesada se tiver as duas, ou soma se o sistema permitir (aqui usamos a maior)
     if (protecaoPesada) {
       bonusProtecao = protecaoPesada.defesa || 10;
     } else if (protecaoLeve) {
@@ -314,114 +362,69 @@ class Personagem {
       bonusEscudo = escudo.defesa || 2;
     }
     
-    // Soma defesa de outros itens (ex: modificações customizadas, itens mágicos)
     const bonusOutrosItens = inventarioAtivo
-      .filter(item => 
-          item.defesa > 0 && 
-          item.id !== "protecao_leve" && 
-          item.id !== "protecao_pesada" && 
-          item.id !== "escudo"
-      )
+      .filter(item => item.defesa > 0 && item.id !== "protecao_leve" && item.id !== "protecao_pesada" && item.id !== "escudo")
       .reduce((acc, item) => acc + (parseInt(item.defesa) || 0), 0);
 
     return bonusProtecao + bonusEscudo + bonusOutrosItens;
   }
 
   getBonusPericiaInventario(periciaKey) {
-    const inventarioAtivo = this.inventario.filter(
-      (item) => !item.ignorarCalculos
-    );
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     
-    // Regra de vestimentas/utensílios (máx 2 itens somando)
     const bonusVestimentas = inventarioAtivo
-      .filter(
-        (item) =>
-          (item.id === "vestimenta" || item.tipoBonus === "generico") &&
-          item.periciaVinculada === periciaKey
-      )
+      .filter((item) => (item.id === "vestimenta" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0) 
       .sort((a, b) => b - a)
       .slice(0, 2)
       .reduce((a, b) => a + b, 0);
       
     const bonusUtensilios = inventarioAtivo
-      .filter(
-        (item) =>
-          (item.id === "utensilio" || item.tipoBonus === "generico") &&
-          item.periciaVinculada === periciaKey
-      )
+      .filter((item) => (item.id === "utensilio" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0) 
       .sort((a, b) => b - a)
       .slice(0, 2)
       .reduce((a, b) => a + b, 0);
       
     const bonusEspecificos = inventarioAtivo
-      .filter(
-        (item) =>
-          item.tipoBonus === "especifico" &&
-          item.periciaVinculada === periciaKey
-      )
+      .filter((item) => item.tipoBonus === "especifico" && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0) 
       .reduce((a, b) => a + b, 0);
       
     const bonusCustom = inventarioAtivo
-      .filter(
-        (item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey
-      )
+      .filter((item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
       .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); 
       
     return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
   }
   
   getPesoTotal() {
-    let pesoBase = this.inventario
-      .filter((item) => !item.ignorarCalculos)
-      .reduce((acc, item) => {
+    return this.inventario.filter((item) => !item.ignorarCalculos).reduce((acc, item) => {
           let espacosItem = parseFloat(item.espacosBase ?? item.espacos) || 0;
-          
-          // Se tem modificações, usa o valor que pode ter sido alterado (espacos)
           if (item.modificacoes && item.modificacoes.length > 0) {
               espacosItem = parseFloat(item.espacos ?? item.espacosBase) || 0;
           }
-          
           return acc + espacosItem;
       }, 0);
-      
-    return pesoBase;
   }
   
   getMaxPeso() {
-    const forca = parseInt(this.atributos.for) || 0;
-    let maxPesoBase = forca * 5 || 2; // Mínimo 2
+    // Usa o atributo calculado (com penalidades) para definir carga
+    const forca = this.getAtributoFinal('for');
+    let maxPesoBase = forca * 5 || 2; 
 
-    const inventarioAtivo = this.inventario.filter(
-      (item) => !item.ignorarCalculos
-    );
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
+    const temMochilaMilitar = inventarioAtivo.some((item) => item.id === "mochila_militar");
+    const temMochilaTatica = inventarioAtivo.some((item) => item.id === "mochila_tatica");
 
-    const temMochilaMilitar = inventarioAtivo.some(
-      (item) => item.id === "mochila_militar"
-    );
-    const temMochilaTatica = inventarioAtivo.some(
-      (item) => item.id === "mochila_tatica"
-    );
-
-    if (temMochilaMilitar) {
-      maxPesoBase += 2;
-    }
-    if (temMochilaTatica) {
-      maxPesoBase += 5;
-    }
+    if (temMochilaMilitar) { maxPesoBase += 2; }
+    if (temMochilaTatica) { maxPesoBase += 5; }
 
     if (this.info.trilha === "tecnico") {
-      const intelecto = parseInt(this.atributos.int) || 0;
+      const intelecto = this.getAtributoFinal('int');
       maxPesoBase = (forca + intelecto) * 5 || 2; 
-
-      if (temMochilaMilitar) {
-        maxPesoBase += 2;
-      }
-      if (temMochilaTatica) {
-        maxPesoBase += 5;
-      }
+      if (temMochilaMilitar) { maxPesoBase += 2; }
+      if (temMochilaTatica) { maxPesoBase += 5; }
     }
 
     return maxPesoBase;
@@ -445,6 +448,7 @@ class Personagem {
       trilhas_personalizadas: [...this.trilhas_personalizadas], 
       poderes_aprendidos: [...this.poderes_aprendidos], 
       diario: [...this.diario],
+      condicoesAtivas: [...this.condicoesAtivas], // Salva as condições
     };
   }
   
@@ -464,28 +468,24 @@ class Personagem {
       this.trilhas_personalizadas = dados.trilhas_personalizadas || []; 
       this.poderes_aprendidos = dados.poderes_aprendidos || []; 
       this.diario = dados.diario || [];
+      this.condicoesAtivas = dados.condicoesAtivas || [];
     }
   }
 
-  // --- CÁLCULO DE RECURSOS MÁXIMOS (Lógica Revisada) ---
+  // --- CÁLCULO DE RECURSOS MÁXIMOS ---
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
     const nexString = this.info.nex || "5%";
-    // Remove o % e converte para inteiro
     const nex = parseInt(nexString.replace('%', '')) || 5;
 
-    const vigor = parseInt(this.atributos.vig) || 0;
-    const presenca = parseInt(this.atributos.pre) || 0;
+    // Usa os atributos finais (com penalidades) para o cálculo
+    const vigor = this.getAtributoFinal('vig');
+    const presenca = this.getAtributoFinal('pre');
 
-    let pvBase = 0,
-      peBase = 0,
-      sanBase = 0;
-    let pvPorNivel = 0,
-      pePorNivel = 0,
-      sanPorNivel = 0;
+    let pvBase = 0, peBase = 0, sanBase = 0;
+    let pvPorNivel = 0, pePorNivel = 0, sanPorNivel = 0;
 
-    // Define valores base e por nível (começando do 10%) para cada classe
     switch (classe) {
       case "combatente":
         pvBase = 20 + vigor;
@@ -529,61 +529,36 @@ class Personagem {
         break; 
     }
 
-    // Calcula quantos níveis acima do inicial (5%) o personagem tem.
-    // Ex: NEX 5% = 0, NEX 10% = 1, NEX 15% = 2.
     const niveisAcima = Math.floor((nex - 5) / 5);
-    // Garante que não seja negativo
     const nexLevelsCalculated = Math.max(0, niveisAcima);
-
-    // Multiplicador total de "passos de 5%". (NEX 5% = 1 passo, NEX 10% = 2 passos)
-    // Usado para habilidades como "Calejado" que dão bônus "por 5% de NEX".
     const multiplicadorNex = Math.floor(nex / 5);
 
     let bonusOrigemPv = 0;
     let bonusOrigemPe = 0;
     let bonusOrigemSan = 0;
 
-    // Lógica de Bônus de Origem
     switch (origem) {
       case "desgarrado":
-        // Calejado: +1 PV para cada 5% de NEX (incluindo o inicial)
         bonusOrigemPv = 1 * multiplicadorNex;
         break;
-        
       case "universitario":
-        // Dedicação: +1 PE, e mais 1 PE adicional a cada NEX ímpar (15%, 25%...)
-        // 5% = 1
-        // 10% = 1
-        // 15% = 2
-        // 20% = 2
-        // 25% = 3
         bonusOrigemPe = 1 + Math.floor((nex - 5) / 10);
         break;
-        
       case "vitima":
-        // Cicatrizes Psicológicas: +1 Sanidade para cada 5% de NEX
         bonusOrigemSan = 1 * multiplicadorNex;
         break;
-
       case "mergulhador":
-        // Fôlego de Nadador: +5 PV fixo
         bonusOrigemPv = 5; 
         break;
     }
 
-    // Bônus Manuais (Inseridos pelo usuário)
-    // Considera que o usuário quer adicionar X por "nível ganho" (acima de 5%)
-    // Se quiser por "patente/NEX total", a lógica pode variar, mas vamos manter o padrão.
     const bonusManualPvNex = (parseInt(this.bonusManuais.pv_nex) || 0) * nexLevelsCalculated;
     const bonusManualPvOutros = parseInt(this.bonusManuais.pv_outros) || 0;
-    
     const bonusManualPeNex = (parseInt(this.bonusManuais.pe_nex) || 0) * nexLevelsCalculated;
     const bonusManualPeOutros = parseInt(this.bonusManuais.pe_outros) || 0;
-    
     const bonusManualSanNex = (parseInt(this.bonusManuais.san_nex) || 0) * nexLevelsCalculated;
     const bonusManualSanOutros = parseInt(this.bonusManuais.san_outros) || 0;
 
-    // Preenche o objeto de detalhes para exibição no componente de cálculo
     this.calculosDetalhados.pv_base = pvBase;
     this.calculosDetalhados.pv_nivel = nexLevelsCalculated * pvPorNivel;
     this.calculosDetalhados.pv_origem = bonusOrigemPv; 
@@ -596,24 +571,20 @@ class Personagem {
     this.calculosDetalhados.san_nivel = nexLevelsCalculated * sanPorNivel;
     this.calculosDetalhados.san_origem = bonusOrigemSan; 
 
-    // Soma Tudo
     this.recursos.pv_max = pvBase + this.calculosDetalhados.pv_nivel + bonusOrigemPv + bonusManualPvNex + bonusManualPvOutros;
     this.recursos.pe_max = peBase + this.calculosDetalhados.pe_nivel + bonusOrigemPe + bonusManualPeNex + bonusManualPeOutros;
     this.recursos.san_max = sanBase + this.calculosDetalhados.san_nivel + bonusOrigemSan + bonusManualSanNex + bonusManualSanOutros;
 
-    // Regra Especial: Cultista Arrependido (Metade da Sanidade)
     if (origem === "cultista_arrependido") {
       this.recursos.san_max = Math.floor(this.recursos.san_max / 2); 
     }
 
-    // Atualiza os totais no objeto de detalhes
     this.calculosDetalhados.pv_total = this.recursos.pv_max;
     this.calculosDetalhados.pe_total = this.recursos.pe_max;
     this.calculosDetalhados.san_total = this.recursos.san_max;
   }
 }
 
-// Cria e exporta uma instância única para ser usada globalmente
 const ficha = new Personagem();
 
 export { ficha };

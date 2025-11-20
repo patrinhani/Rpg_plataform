@@ -1533,6 +1533,45 @@ const database = {
   ],
 
   // (MANTIDO) 'periciasPorOrigem' é USADO PELO CONTADOR
+condicoes: [
+    { id: "abalado", nome: "Abalado", tipo: "mental", descricao: "–1d20 em testes. Se aplicado de novo, vira Apavorado.", evolucao: "apavorado" },
+    { id: "agarrado", nome: "Agarrado", tipo: "fisica", descricao: "Imóvel, –2 em ataque, –5 em Defesa." },
+    { id: "alquebrado", nome: "Alquebrado", tipo: "mental", descricao: "Custo de PE aumenta em +1." },
+    { id: "apavorado", nome: "Apavorado", tipo: "mental", descricao: "–2d20 em testes. Deve fugir da fonte de medo." }, // Estágio final de Abalado
+    { id: "asfixiado", nome: "Asfixiado", tipo: "fisica", descricao: "Não pode respirar. Se chegar a 0 rodadas, morrendo." },
+    { id: "atordoado", nome: "Atordoado", tipo: "mental", descricao: "Desprevenido, não pode agir." },
+    { id: "caido", nome: "Caído", tipo: "fisica", descricao: "-5 ataque corpo a corpo, -3m deslocamento. -5 Defesa vs corpo a corpo, +5 vs distância." },
+    { id: "cego", nome: "Cego", tipo: "sensorial", descricao: "Desprevenido, lento, –10 Percepção. Camuflagem total contra você." },
+    { id: "confuso", nome: "Confuso", tipo: "mental", descricao: "Comportamento aleatório (1d6)." },
+    { id: "debilitado", nome: "Debilitado", tipo: "fisica", descricao: "–1 em For, Agi e Vig. Se aplicado de novo, vira Inconsciente.", evolucao: "inconsciente" },
+    { id: "desprevenido", nome: "Desprevenido", tipo: "mental", descricao: "–5 na Defesa e Reflexos." },
+    { id: "doente", nome: "Doente", tipo: "fisica", descricao: "Sob efeito de doença." },
+    { id: "em_chamas", nome: "Em Chamas", tipo: "fisica", descricao: "1d6 dano de fogo por rodada." },
+    { id: "enjoado", nome: "Enjoado", tipo: "fisica", descricao: "Só uma ação (padrão ou movimento) por rodada." },
+    { id: "enredado", nome: "Enredado", tipo: "fisica", descricao: "Lento, vulnerável, –2 em ataque." },
+    { id: "envenenado", nome: "Envenenado", tipo: "fisica", descricao: "Efeito de veneno (dano ou condição)." },
+    { id: "esmorecido", nome: "Esmorecido", tipo: "mental", descricao: "–2d20 em testes de Int e Pre." }, // Estágio final de Frustrado
+    { id: "exausto", nome: "Exausto", tipo: "fisica", descricao: "Debilitado, lento, vulnerável. Se aplicado de novo, vira Inconsciente.", evolucao: "inconsciente" },
+    { id: "fascinado", nome: "Fascinado", tipo: "mental", descricao: "–10 Percepção, não pode agir." },
+    { id: "fatigado", nome: "Fatigado", tipo: "fisica", descricao: "Fraco e vulnerável. Se aplicado de novo, vira Exausto.", evolucao: "exausto" },
+    { id: "fraco", nome: "Fraco", tipo: "fisica", descricao: "–1 em For, Agi e Vig. Se aplicado de novo, vira Debilitado.", evolucao: "debilitado" },
+    { id: "frustrado", nome: "Frustrado", tipo: "mental", descricao: "–1d20 em testes de Int e Pre. Se aplicado de novo, vira Esmorecido.", evolucao: "esmorecido" },
+    { id: "imovel", nome: "Imóvel", tipo: "fisica", descricao: "Deslocamento 0." },
+    { id: "inconsciente", nome: "Inconsciente", tipo: "mental", descricao: "Indefeso, não pode agir." }, // Estágio final de vários
+    { id: "indefeso", nome: "Indefeso", tipo: "fisica", descricao: "Desprevenido, -10 Defesa, falha em Reflexos. Sofre critico automático." },
+    { id: "lento", nome: "Lento", tipo: "fisica", descricao: "Deslocamento à metade, não corre." },
+    { id: "machucado", nome: "Machucado", tipo: "fisica", descricao: "Menos da metade dos PV." },
+    { id: "morrendo", nome: "Morrendo", tipo: "fisica", descricao: "0 PV. Inconsciente. 3 rodadas para morrer." },
+    { id: "ofuscado", nome: "Ofuscado", tipo: "sensorial", descricao: "–1d20 em ataque e Percepção." },
+    { id: "paralisado", nome: "Paralisado", tipo: "fisica", descricao: "Imóvel e indefeso." },
+    { id: "pasmo", nome: "Pasmo", tipo: "mental", descricao: "Não pode fazer ações." },
+    { id: "perturbado", nome: "Perturbado", tipo: "mental", descricao: "Menos da metade da Sanidade." },
+    { id: "petrificado", nome: "Petrificado", tipo: "fisica", descricao: "Inconsciente e RD 10." },
+    { id: "sangrando", nome: "Sangrando", tipo: "fisica", descricao: "1d6 dano por rodada (Vig DT 20 para)." },
+    { id: "surdo", nome: "Surdo", tipo: "sensorial", descricao: "–5 Iniciativa, falha em ouvir. Má condição para rituais." },
+    { id: "surpreendido", nome: "Surpreendido", tipo: "mental", descricao: "Desprevenido e não age." },
+    { id: "vulneravel", nome: "Vulnerável", tipo: "fisica", descricao: "–5 na Defesa." },
+  ],
 
 
 periciasPorOrigem: {

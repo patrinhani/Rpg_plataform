@@ -1,5 +1,5 @@
 // src/App.jsx
-// (ATUALIZADO: Lógica de Poderes de Origem e Destaque de Perícias)
+// (ATUALIZADO: Sistema de Condições Integrado e Cálculos com Penalidades)
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css'; 
@@ -21,6 +21,11 @@ import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/
 // --- Carregamento de Componentes ---
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
 import Recursos from './components/ficha/recursos.jsx';
+
+// (Não precisa importar Condicoes aqui se ele for renderizado dentro do FichaPrincipal, 
+// mas importaremos para garantir que o bundle saiba dele, embora a renderização seja no filho)
+// Melhor: Vamos passar a responsabilidade de renderizar para o FichaPrincipal, 
+// então não importamos aqui para evitar duplicidade, apenas passamos o handler.
 
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
@@ -70,8 +75,6 @@ function App() {
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
-
-  // NOVO: Estado para rastrear quais perícias são da origem atual (para destaque visual)
   const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
   
   // --- ESTADOS DE MODAL ---
@@ -104,7 +107,6 @@ function App() {
     setTrilhasPorClasse(trilhasAgrupadas);
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
 
-  // NOVO: Atualiza a lista de perícias de origem sempre que a origem muda
   useEffect(() => {
       const origemAtual = personagem.info.origem;
       if (database.periciasPorOrigem && database.periciasPorOrigem[origemAtual]) {
@@ -188,6 +190,11 @@ function App() {
     };
   }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
 
+  // --- HANDLER PARA TOGGLE DE CONDIÇÕES ---
+  const handleToggleCondicao = (condicaoId) => {
+      FichaClass.toggleCondicao(condicaoId);
+      handleFichaChange(null, null, null); // Recalcula tudo
+  };
 
   // --- FUNÇÕES DE PERSISTÊNCIA ---
   
@@ -413,71 +420,58 @@ function App() {
   };
 
 
-  // --- FUNÇÃO DE MUDANÇA DE FICHA (Lógica Central) ---
+  // --- FUNÇÃO DE MUDANÇA DE FICHA (ATUALIZADA COM ATRIBUTOS FINAIS E PENALIDADES) ---
   
   function handleFichaChange(secao, campo, valor) {
     
     let skipUpdate = false;
     
+    // Parte 1: Setters (Dados Brutos)
     if (secao) {
         if (secao === 'info') {
             const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
             
             if (campo === 'nex') {
-                let nexValue = String(valor).replace(/[^0-9]/g, '');
-                let nexNumber = parseInt(nexValue) || 0;
-                if (nexNumber > 100) nexNumber = 100;
-                valor = `${nexNumber}%`;
-                FichaClass.setInfo(campo, valor);
+                 let nexValue = String(valor).replace(/[^0-9]/g, '');
+                 let nexNumber = parseInt(nexValue) || 0;
+                 if (nexNumber > 100) nexNumber = 100;
+                 valor = `${nexNumber}%`;
+                 FichaClass.setInfo(campo, valor);
             }
-            // --- LÓGICA DE MUDANÇA DE ORIGEM (AUTO PERÍCIAS E PODERES) ---
             else if (campo === 'origem') {
                 const novaOrigem = valor;
                 const origemAntiga = FichaClass.getDados().info.origem;
-
-                // 1. Remove perícias da origem antiga (se valor for exatamente 5)
+                // Remove antigas
                 if (origemAntiga && database.periciasPorOrigem?.[origemAntiga]?.fixas) {
                     database.periciasPorOrigem[origemAntiga].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
-                        if (valorAtual === 5) {
-                            FichaClass.setTreinoPericia(p, 0);
-                        }
+                        if (valorAtual === 5) FichaClass.setTreinoPericia(p, 0);
                     });
                 }
-
-                // 2. Adiciona perícias da nova origem (se estiver destreinado)
+                // Adiciona novas
                 if (database.periciasPorOrigem?.[novaOrigem]?.fixas) {
                     database.periciasPorOrigem[novaOrigem].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
-                        if (valorAtual === 0) {
-                            FichaClass.setTreinoPericia(p, 5);
-                        }
+                        if (valorAtual === 0) FichaClass.setTreinoPericia(p, 5);
                     });
                 }
-
-                // 3. Remove o Poder de Origem antigo
+                // Poderes
                 if (origemAntiga) {
-                    // Remove qualquer poder que tenha a flag isOrigemPower
-                    // (Isso cobre o caso de mudar de uma origem para outra)
                     FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
                 }
-
-                // 4. Adiciona o Poder da nova Origem
                 const dadosOrigem = database.periciasPorOrigem?.[novaOrigem];
                 if (dadosOrigem && dadosOrigem.poder) {
                     const novoPoderObj = {
-                        key: `origem_${novaOrigem}`, // Chave única para o sistema
+                        key: `origem_${novaOrigem}`,
                         nome: dadosOrigem.poder.nome,
                         descricao: dadosOrigem.poder.descricao,
-                        tipo: "Origem", // Categoria visual
-                        isOrigemPower: true // Flag para identificar e remover depois
+                        tipo: "Origem",
+                        isOrigemPower: true
                     };
                     FichaClass.addPoder(novoPoderObj);
                 }
-
                 FichaClass.setInfo(campo, valor);
             }
-            // ------------------------------------------------------------------
             else if (campo === 'trilha') {
                 const trilhaSelecionada = valor;
                 const dadosTrilha = trilhasUnificadas[trilhaSelecionada]; 
@@ -524,25 +518,41 @@ function App() {
     
     if (skipUpdate) { return; }
 
-    // --- PARTE 2: Recalcula TUDO e Atualiza o Estado do React ---
+    // --- PARTE 2: Recalcula TUDO (AGORA COM PENALIDADES) ---
     
     const novosDados = FichaClass.getDados();
     
+    // Recalcula PV/PE/SAN (internamente usa atributos finais)
     FichaClass.calcularValoresMaximos();
     
     const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
     FichaClass.setDefesa('equip', bonusDefesaInventario);
-    const agi = parseInt(novosDados.atributos.agi) || 0;
+
+    // AQUI ESTÁ O PULO DO GATO: Usa os atributos COM penalidades
+    const agi = FichaClass.getAtributoFinal('agi');
+    const vig = FichaClass.getAtributoFinal('vig');
+    const int = FichaClass.getAtributoFinal('int');
+    // const forca = FichaClass.getAtributoFinal('for'); // Usado no peso
+
     const equip = novosDados.defesa.equip || 0;
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
-    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa; 
     
-    const vig = parseInt(novosDados.atributos.vig) || 0;
+    // Penalidades de Defesa por Condições
+    let penalidadeDefesa = 0;
+    if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
+    if (novosDados.condicoesAtivas.includes('desprevenido') || novosDados.condicoesAtivas.includes('atordoado') || novosDados.condicoesAtivas.includes('cego')) penalidadeDefesa -= 5;
+    if (novosDados.condicoesAtivas.includes('indefeso') || novosDados.condicoesAtivas.includes('inconsciente')) penalidadeDefesa -= 10; 
+    if (novosDados.condicoesAtivas.includes('agarrado')) penalidadeDefesa -= 5;
+    if (novosDados.condicoesAtivas.includes('caido')) penalidadeDefesa -= 5; 
+
+    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa; 
+    
     const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0;
     const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
     const treino_luta = parseInt(novosDados.pericias.luta) || 0;
 
+    // Bônus de defesa com atributos finais
     const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig;
     const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
 
@@ -559,7 +569,7 @@ function App() {
       bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
     });
     
-    const int = parseInt(novosDados.atributos.int) || 0;
+    // Limite de Perícias com INT final
     const classe = novosDados.info.classe;
     let bonusClassePericias = 0;
     switch (classe) {
@@ -580,7 +590,8 @@ function App() {
         });
       }
     }
-    const periciasTotal = bonusClassePericias + bonusOrigemPericias;
+    const periciasTotal = Math.max(0, bonusClassePericias + bonusOrigemPericias);
+    
     let periciasTreinadas = 0;
     Object.values(novosDados.pericias).forEach((treino) => {
       if (parseInt(treino) >= 5) {
@@ -591,11 +602,13 @@ function App() {
     const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0;
     const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
     
+    const cargaMax = FichaClass.getMaxPeso(); 
+
     setCalculados(prevCalculados => ({
       ...prevCalculados,
       defesaTotal: defesaTotal,
       cargaAtual: FichaClass.getPesoTotal(),
-      cargaMax: FichaClass.getMaxPeso(),
+      cargaMax: cargaMax,
       periciasTreinadas: periciasTreinadas,
       periciasTotal: periciasTotal,
       bonusPericia: bonusPericiaCalculado,
@@ -688,12 +701,11 @@ function App() {
             handleFichaChange={handleFichaChange}
             controlesProps={controlesProps} 
             trilhasPorClasse={trilhasPorClasse}
-            // Passa a lista de perícias da origem para destaque visual
-            periciasDeOrigem={periciasDeOrigem} 
+            periciasDeOrigem={periciasDeOrigem}
+            onToggleCondicao={handleToggleCondicao} // Handler passado para o filho
           />
         )}
         
-        {/* ... (Restante das abas) ... */}
         {abaAtiva === 'inventario' && (
           <Inventario 
             inventario={personagem.inventario} 
@@ -823,4 +835,4 @@ function App() {
   )
 }
 
-export default App;
+export default App

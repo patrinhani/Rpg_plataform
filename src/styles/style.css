@@ -1802,3 +1802,109 @@ html.modo-morte .simbolo-parallax {
     border-color: #fff;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) inset;
 }
+
+/* src/styles/style.css */
+
+/* ... (seu CSS anterior) ... */
+
+/* --- ESTILOS DE CONDIÇÕES --- */
+.condicoes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.condicoes-grid.recolhido {
+  /* Mostra apenas uma linha de condições (ajuste conforme altura do card) */
+  max-height: 140px; 
+  overflow-y: auto; /* Permite scroll se tiver muitas ativas */
+}
+
+.condicoes-grid.expandido {
+  max-height: 2000px; /* Altura suficiente para mostrar todas */
+}
+
+.condicao-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--cor-borda);
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 50px;
+}
+
+.condicao-card:hover {
+  opacity: 0.9;
+  border-color: var(--cor-destaque);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.condicao-card.ativa {
+  opacity: 1;
+  background-color: rgba(20, 20, 20, 0.8);
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 5px var(--cor-destaque) inset;
+}
+
+.condicao-card.ativa::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 1px solid var(--cor-destaque);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.condicao-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    flex-shrink: 0;
+}
+
+.condicao-icone svg {
+  width: 24px;
+  height: 24px;
+}
+
+.condicao-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.condicao-nome {
+  font-family: "Special Elite", monospace;
+  font-weight: bold;
+  font-size: 0.95em;
+  line-height: 1.1;
+}
+
+.condicao-desc-curta {
+  font-size: 0.7em;
+  color: #aaa;
+  line-height: 1.1;
+  margin-top: 3px;
+}
+
+/* Cores temáticas para ícones */
+.condicao-card.mental .condicao-icone { color: #4fc3f7; } /* Azul Mental */
+.condicao-card.fisica .condicao-icone { color: #e57373; } /* Vermelho Físico */
+.condicao-card.sensorial .condicao-icone { color: #fff176; } /* Amarelo Sensorial */
+.condicao-card.sangue .condicao-icone { color: #b71c1c; } /* Sangue Escuro */
+
+/* Ajuste de responsividade */
+@media (max-width: 768px) {
+    .condicoes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}
