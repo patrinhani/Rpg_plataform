@@ -1,5 +1,5 @@
 // src/components/FichaPrincipal.jsx
-// (ATUALIZADO: Correção de imports com extensão .jsx)
+// (CORRIGIDO: Agrupamento de Controles e Condições para evitar sobreposição)
 
 import React from 'react';
 
@@ -40,15 +40,22 @@ function FichaPrincipal({
         patenteInfo={calculados.patente} 
       />
       
-      {/* Passa o objeto combinado contendo a prop crítica */}
-      <Controles {...controlesComNEX} /> 
-      
-      <div style={{ gridArea: 'controles', marginTop: '20px' }}>
+      {/* --- AGRUPAMENTO PARA EVITAR SOBREPOSIÇÃO --- 
+          Criamos um container flex que ocupa a área 'controles' 
+          e empilha os dois componentes verticalmente. */}
+      <div style={{ gridArea: 'controles', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        
+        {/* Área de Controles (Botões de Salvar, Importar, Tema) */}
+        <Controles {...controlesComNEX} /> 
+        
+        {/* Área de Condições (Fica logo abaixo dos controles) */}
         <Condicoes 
            ativas={personagem.condicoesAtivas || []} 
            onToggle={onToggleCondicao} 
         />
+        
       </div>
+      {/* --- FIM DO AGRUPAMENTO --- */}
 
       <Atributos 
         dados={personagem.atributos} 
