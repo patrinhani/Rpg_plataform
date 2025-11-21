@@ -1,6 +1,3 @@
-// src/App.jsx
-// (ATUALIZADO: Sistema de Condições Integrado e Cálculos com Penalidades)
-
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from './lib/animacoes.js'; 
@@ -21,11 +18,7 @@ import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from './lib/
 // --- Carregamento de Componentes ---
 import FichaPrincipal from './components/FichaPrincipal.jsx'; 
 import Recursos from './components/ficha/recursos.jsx';
-
-// (Não precisa importar Condicoes aqui se ele for renderizado dentro do FichaPrincipal, 
-// mas importaremos para garantir que o bundle saiba dele, embora a renderização seja no filho)
-// Melhor: Vamos passar a responsabilidade de renderizar para o FichaPrincipal, 
-// então não importamos aqui para evitar duplicidade, apenas passamos o handler.
+import ModalInterludio from './components/ModalInterludio.jsx';
 
 const AnimacaoSangue = lazy(() => import('./components/AnimacaoSangue.jsx')); 
 
@@ -89,7 +82,7 @@ function App() {
   const [isDiarioModalOpen, setIsDiarioModalOpen] = useState(false);
   const [notaParaEditar, setNotaParaEditar] = useState(null); 
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
-  
+  const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
   // --- LÓGICA DE ATUALIZAÇÃO E CÁLCULO (UseEffect) ---
   
@@ -190,11 +183,6 @@ function App() {
     };
   }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
 
-  // --- HANDLER PARA TOGGLE DE CONDIÇÕES ---
-  const handleToggleCondicao = (condicaoId) => {
-      FichaClass.toggleCondicao(condicaoId);
-      handleFichaChange(null, null, null); // Recalcula tudo
-  };
 
   // --- FUNÇÕES DE PERSISTÊNCIA ---
   
@@ -250,6 +238,23 @@ function App() {
     leitor.readAsText(arquivo);
   };
 
+  // --- HANDLERS DE AÇÃO (CONDIÇÕES E INTERLÚDIO) ---
+
+  const handleToggleCondicao = (condicaoId) => {
+      FichaClass.toggleCondicao(condicaoId);
+      handleFichaChange(null, null, null); // Recalcula tudo
+  };
+
+  const handleAplicarInterludio = (opcoes) => {
+      const resultado = FichaClass.aplicarInterludio(opcoes);
+      handleFichaChange(null, null, null);
+      
+      let mensagem = `Interlúdio Finalizado!\n\nRecuperado:\n❤️ PV: ${resultado.pv}\n⚡ PE: ${resultado.pe}\n🧠 SAN: ${resultado.san}`;
+      if (resultado.extras && resultado.extras.length > 0) {
+          mensagem += `\n\nEfeitos Adicionais:\n- ${resultado.extras.join('\n- ')}`;
+      }
+      alert(mensagem);
+  };
 
   // --- FUNÇÕES DE MODAL/ITEM ---
 
@@ -419,14 +424,13 @@ function App() {
     FichaClass.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
   };
 
-
-  // --- FUNÇÃO DE MUDANÇA DE FICHA (ATUALIZADA COM ATRIBUTOS FINAIS E PENALIDADES) ---
+  // --- FUNÇÃO DE MUDANÇA DE FICHA (Lógica Central) ---
   
   function handleFichaChange(secao, campo, valor) {
     
     let skipUpdate = false;
     
-    // Parte 1: Setters (Dados Brutos)
+    // PARTE 1: Setters (Dados Brutos)
     if (secao) {
         if (secao === 'info') {
             const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
@@ -441,21 +445,18 @@ function App() {
             else if (campo === 'origem') {
                 const novaOrigem = valor;
                 const origemAntiga = FichaClass.getDados().info.origem;
-                // Remove antigas
                 if (origemAntiga && database.periciasPorOrigem?.[origemAntiga]?.fixas) {
                     database.periciasPorOrigem[origemAntiga].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
-                        if (valorAtual === 5) FichaClass.setTreinoPericia(p, 0);
+                        if (valorAtual === 5) { FichaClass.setTreinoPericia(p, 0); }
                     });
                 }
-                // Adiciona novas
                 if (database.periciasPorOrigem?.[novaOrigem]?.fixas) {
                     database.periciasPorOrigem[novaOrigem].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
-                        if (valorAtual === 0) FichaClass.setTreinoPericia(p, 5);
+                        if (valorAtual === 0) { FichaClass.setTreinoPericia(p, 5); }
                     });
                 }
-                // Poderes
                 if (origemAntiga) {
                     FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
                 }
@@ -495,16 +496,13 @@ function App() {
                 const trilhasValidas = Object.values(trilhasDaClasse).map(t => t.key); 
                 const trilhaAtual = FichaClass.getDados().info.trilha; 
                 const trilhaInvalida = trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual);
-                
                 if (trilhaInvalida) {
                     FichaClass.setInfo('trilha', 'nenhuma');
                     FichaClass.setInfo(`${trilhaAtual}_elemento`, '');
                 }
                 FichaClass.setInfo(campo, valor);
             }
-            else {
-                FichaClass.setInfo(campo, valor);
-            }
+            else { FichaClass.setInfo(campo, valor); }
         } 
         else if (secao === 'atributos') { FichaClass.setAtributo(campo, valor); } 
         else if (secao === 'recursos') { FichaClass.setRecurso(campo, valor); } 
@@ -518,26 +516,24 @@ function App() {
     
     if (skipUpdate) { return; }
 
-    // --- PARTE 2: Recalcula TUDO (AGORA COM PENALIDADES) ---
+    // PARTE 2: Recalcula TUDO (Com Atributos Penalizados e Condições)
     
     const novosDados = FichaClass.getDados();
-    
-    // Recalcula PV/PE/SAN (internamente usa atributos finais)
-    FichaClass.calcularValoresMaximos();
+    FichaClass.calcularValoresMaximos(); // Já considera atributos finais
     
     const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
     FichaClass.setDefesa('equip', bonusDefesaInventario);
 
-    // AQUI ESTÁ O PULO DO GATO: Usa os atributos COM penalidades
+    // Usa os atributos finais (penalizados por condições)
     const agi = FichaClass.getAtributoFinal('agi');
     const vig = FichaClass.getAtributoFinal('vig');
     const int = FichaClass.getAtributoFinal('int');
-    // const forca = FichaClass.getAtributoFinal('for'); // Usado no peso
+    const pre = FichaClass.getAtributoFinal('pre');
 
     const equip = novosDados.defesa.equip || 0;
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
-    
+
     // Penalidades de Defesa por Condições
     let penalidadeDefesa = 0;
     if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
@@ -552,7 +548,6 @@ function App() {
     const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
     const treino_luta = parseInt(novosDados.pericias.luta) || 0;
 
-    // Bônus de defesa com atributos finais
     const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig;
     const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
 
@@ -569,7 +564,6 @@ function App() {
       bonusPericiaCalculado[periciaKey] = FichaClass.getBonusPericiaInventario(periciaKey);
     });
     
-    // Limite de Perícias com INT final
     const classe = novosDados.info.classe;
     let bonusClassePericias = 0;
     switch (classe) {
@@ -622,8 +616,7 @@ function App() {
     setPersonagem(novosDados);
   }
 
-
-  // --- PROPS PARA CONTROLES ---
+  // --- PROPS PARA CONTROLES (Definida AQUI, antes do return) ---
   const controlesProps = {
     temaAtual: tema, 
     onSave: salvarFicha,
@@ -690,6 +683,15 @@ function App() {
         <button className={`ficha-aba-link ${abaAtiva === 'poderes' ? 'active' : ''}`} onClick={() => setAbaAtiva('poderes')}>Poderes</button>
         <button className={`ficha-aba-link ${abaAtiva === 'progressao' ? 'active' : ''}`} onClick={() => setAbaAtiva('progressao')}>Progressão</button>
         <button className={`ficha-aba-link ${abaAtiva === 'diario' ? 'active' : ''}`} onClick={() => setAbaAtiva('diario')}>Diário</button>
+        
+        {/* BOTÃO DE INTERLÚDIO */}
+        <button 
+            className="ficha-aba-link" 
+            style={{ color: 'var(--cor-destaque)', fontWeight: 'bold', marginLeft: 'auto' }}
+            onClick={() => setIsInterludioModalOpen(true)}
+        >
+            💤 Interlúdio
+        </button>
       </nav>
       
       <Suspense fallback={<LoadingComponent />}>
@@ -763,6 +765,7 @@ function App() {
           <p></p>
         </footer>
         
+        {/* MODAIS */}
         {isLojaOpen && (
           <ModalLoja 
             isOpen={isLojaOpen}
@@ -830,9 +833,19 @@ function App() {
             notaAtual={notaParaEditar}
           />
         )}
+
+        {isInterludioModalOpen && (
+          <ModalInterludio
+            isOpen={isInterludioModalOpen}
+            onClose={() => setIsInterludioModalOpen(false)}
+            onAplicar={handleAplicarInterludio}
+            limitePE={FichaClass.calculosDetalhados.limite_pe}
+          />
+        )}
+
       </Suspense> 
     </>
   )
 }
 
-export default App
+export default App;

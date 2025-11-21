@@ -1,0 +1,88 @@
+Alimentar-se
+
+I Prato Favorito. Você come sua refeição preferida, um pequeno conforto em meio ao horror do 
+paranormal. Se realizar a ação relaxar neste interlúdio, recupera 2 pontos de Sanidade adicionais.
+
+I Prato Nutritivo. Uma refeição contendo uma 
+variedade de alimentos saudáveis e nutritivos. Se 
+realizar a ação dormir neste interlúdio, você aumenta sua recuperação de PV em uma vez (recuperação confortável, ou dobrada, por exemplo, se 
+torna triplicada).
+
+I Prato Energético. Alimentos que aumentam a 
+concentração e energia mental. Se realizar a ação 
+dormir neste interlúdio, você aumenta sua recuperação de PE em uma vez (recuperação confortável, 
+ou dobrada, por exemplo, se torna triplicada).
+
+I Prato Rápido. Um alimento de preparo rápido, 
+mas nutritivo, pode economizar tempo valioso de 
+um interlúdio. Se realizar a ação revisar caso neste 
+interlúdio, você recebe +5 em seu teste de perícia
+
+Dormir
+Você dorme por um período curto. Com esta ação, 
+recupera uma quantidade de pontos de vida e pontos 
+de esforço conforme seu limite de PE (veja a Tabela 
+1.2) e sua condição de descanso:
+
+I Normal. Recupera um número de pontos de vida 
+e de pontos de esforço igual ao seu limite de PE 
+por rodada. Assim, um personagem de NEX 35% 
+(limite de PE 7) recupera 7 PV e 7 PE. Dormir em 
+um quarto simples, com uma cama e banheiro 
+funcionais, é o padrão para recuperação normal.
+
+I Precária. Recuperação reduzida pela metade. 
+Dormir dentro do carro ou numa tenda de acampamento são exemplos de descanso precário.
+
+I Confortável. Recuperação dobrada. Descansar 
+em um um hotel ou pousada três estrelas, com 
+amenidades e entretenimento, configura um descanso confortável.
+
+I Luxuosa. Recuperação triplicada. Um hotel de 
+luxo, com tratamento vip, spa e refeições de alto 
+padrão, configura um descanso luxuoso.
+
+Exercitar-se
+Você sai para correr, puxa ferros ou treina seus movimentos de luta. Você recebe um bônus de +1d6 
+em um teste baseado em Agilidade, Força ou Vigor 
+realizado até o fim da missão. Você pode acumular 
+um número máximo de bônus por exercício igual ao 
+seu Vigor, mas só pode usar um bônus em cada teste.
+
+Ler
+Você lê um livro, artigo ou qualquer outro material 
+relevante para suas perícias ou o caso em questão. Não 
+inclui ficar lendo memes na internet. Você recebe um 
+bônus de +1d6 em um teste baseado em Intelecto ou 
+Presença realizado até o fim da missão. Você pode 
+acumular um número máximo de bônus por leitura 
+igual ao seu Intelecto, mas só pode usar um bônus 
+em cada teste.
+
+Manutenção
+Você conserta um item quebrado, recuperando os 
+PV dele ao máximo.
+
+Relaxar
+O personagem realiza uma atividade que considere 
+relaxante ou agradável para descansar sua mente. 
+Relaxamento funciona como a ação dormir, exceto 
+que recupera Sanidade em vez de PV e PE. Para cada 
+personagem que realizar essa ação no mesmo interlúdio, todos os participantes recuperam 1 ponto de 
+Sanidade adicional. Você só pode relaxar uma vez 
+por interlúdio.
+
+Revisar Caso
+O personagem revisa suas anotações e as pistas que 
+coletou até o momento sobre o caso. O jogador escolhe 
+qual cena de investigação quer revisar e, assim como 
+faria em uma cena de investigação normal, narra a 
+maneira como seu personagem estuda o caso e escolhe uma perícia apropriada. Por exemplo, se tirou 
+fotos dos locais investigados, pode fazer um teste de 
+Percepção para encontrar algo incomum que não 
+percebeu antes. A DT do teste é definida conforme 
+descrito anteriormente em Ações de Investigação. Se 
+passar, o personagem recebe uma pista complementar 
+que deixou passar. Se todas as pistas da cena escolhida já tiverem sido encontradas, o mestre confirma 
+que os jogadores encontraram todas as pistas. Um 
+personagem p

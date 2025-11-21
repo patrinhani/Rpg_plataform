@@ -153,6 +153,22 @@ const getPatenteInfo = (pp) => {
 
 const database = {
 
+  interludio: {
+    conforto: [
+      { id: "precario", nome: "Precário (x0.5)", fator: 0.5, descricao: "Dormir no relento, carro ou chão." },
+      { id: "normal", nome: "Normal (x1)", fator: 1, descricao: "Cama simples e banheiro. Recuperação padrão." },
+      { id: "confortavel", nome: "Confortável (x2)", fator: 2, descricao: "Hotel ou pousada. Recupera o dobro." },
+      { id: "luxuoso", nome: "Luxuoso (x3)", fator: 3, descricao: "Hotel 5 estrelas ou spa. Recupera o triplo." }
+    ],
+    pratos: [
+      { id: "favorito", nome: "Prato Favorito", descricao: "+2 Sanidade se Relaxar." },
+      { id: "nutritivo", nome: "Prato Nutritivo", descricao: "Aumenta recuperação de PV em +1x (ex: Normal vira Dobro)." },
+      { id: "energetico", nome: "Prato Energético", descricao: "Aumenta recuperação de PE em +1x." },
+      { id: "rapido", nome: "Prato Rápido", descricao: "+5 em testes de Revisar Caso." },
+      { id: "simples", nome: "Nenhum / Simples", descricao: "Sem bônus especial." }
+    ]
+  },
+
   //
   armasSimples: [
     {

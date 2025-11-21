@@ -1,4 +1,3 @@
-// src/lib/personagem.js
 import { database } from './database.js';
 
 class Personagem {
@@ -66,7 +65,13 @@ class Personagem {
     this.trilhas_personalizadas = []; 
     this.poderes_aprendidos = []; 
     this.diario = []; 
-    this.condicoesAtivas = []; // Armazena os IDs das condições (ex: 'fraco', 'abalado')
+    this.condicoesAtivas = []; // Armazena os IDs das condições ativas
+
+    // Armazena bônus temporários de Interlúdio
+    this.buffsTemporarios = {
+      exercicio: 0, // Quantidade de dados extras (d6) para testes físicos
+      leitura: 0,   // Quantidade de dados extras (d6) para testes mentais
+    };
 
     this.bonusManuais = {
       pv_nex: 0,
@@ -90,6 +95,7 @@ class Personagem {
       san_nivel: 0,
       san_origem: 0,
       san_total: 0,
+      limite_pe: 1, // Calculado com base no NEX
     };
   }
   
@@ -152,7 +158,7 @@ class Personagem {
     }
   }
 
-  // --- MÉTODOS DE CONDIÇÕES (LÓGICA DE EVOLUÇÃO) ---
+  // --- MÉTODOS DE CONDIÇÕES (EVOLUÇÃO E ATRIBUTOS) ---
 
   toggleCondicao(condicaoId) {
     // 1. Verifica se a condição já existe na lista
@@ -188,24 +194,21 @@ class Personagem {
     
     // Penalidades Físicas (Força, Agilidade, Vigor)
     if (['for', 'agi', 'vig'].includes(attrKey)) {
-      // Debilitado ou Inconsciente reduzem em 1 dado (mecanicamente -1 no atributo)
+      // Debilitado ou Inconsciente reduzem em 1 dado (-1 no atributo)
       if (this.condicoesAtivas.includes('debilitado') || this.condicoesAtivas.includes('inconsciente')) {
          valorBase -= 1;
       }
       // Fraco também reduz em 1 dado (-1 no atributo)
-      // Nota: Se tiver ambos, não acumula a penalidade (aplica-se a pior condição, mas o valor é o mesmo)
       else if (this.condicoesAtivas.includes('fraco')) {
          valorBase -= 1;
       }
-      
-      // Outras penalidades específicas podem ser adicionadas aqui (ex: Fatigado afeta perícias físicas, não o atributo base diretamente na rolagem de dano, mas se quiser simplificar pode por aqui)
     }
     
     // Penalidades Mentais (Intelecto, Presença)
     if (['int', 'pre'].includes(attrKey)) {
-       // Esmorecido ou Inconsciente
+       // Esmorecido ou Inconsciente reduzem
        if (this.condicoesAtivas.includes('esmorecido') || this.condicoesAtivas.includes('inconsciente')) {
-          valorBase -= 1; // Ou -2 dependendo da interpretação, mas o padrão é perder dados gradualmente
+          valorBase -= 1; 
        }
        // Frustrado
        else if (this.condicoesAtivas.includes('frustrado')) {
@@ -213,54 +216,122 @@ class Personagem {
        }
     }
 
-    // Garante que o atributo não fique negativo (regra de mínimo 0, que rola 2d20 e pega o pior)
+    // Garante que o atributo não fique negativo
     if (valorBase < 0) valorBase = 0; 
 
     return valorBase; 
   }
 
-  // --- MÉTODOS DE TRILHAS ---
+  // --- SISTEMA DE INTERLÚDIO ---
+  
+  aplicarInterludio(opcoes) {
+    const { acoes, conforto, prato, emGrupo } = opcoes;
+    const limitePE = this.calculosDetalhados.limite_pe || 1;
+    
+    // Fator Base de Conforto
+    let fatorBase = 1;
+    if (conforto === 'precario') fatorBase = 0.5;
+    if (conforto === 'confortavel') fatorBase = 2;
+    if (conforto === 'luxuoso') fatorBase = 3;
+
+    let pvRecuperado = 0;
+    let peRecuperado = 0;
+    let sanRecuperada = 0;
+    let msgExtras = [];
+
+    // Ajustes de Fator por Prato (Ação Alimentar-se)
+    let fatorPV = fatorBase;
+    let fatorPE = fatorBase;
+
+    if (acoes.includes('alimentar')) {
+        if (prato === 'nutritivo') fatorPV += 1;  // Aumenta o multiplicador de PV em +1x
+        if (prato === 'energetico') fatorPE += 1; // Aumenta o multiplicador de PE em +1x
+    }
+
+    // 1. Ação: Dormir
+    if (acoes.includes('dormir')) {
+        pvRecuperado += Math.floor(limitePE * fatorPV);
+        peRecuperado += Math.floor(limitePE * fatorPE);
+    }
+
+    // 2. Ação: Relaxar
+    if (acoes.includes('relaxar')) {
+        // Relaxar recupera Sanidade com base no limite de PE e conforto
+        let sanTotal = Math.floor(limitePE * fatorBase);
+        
+        if (emGrupo) sanTotal += 1;
+        if (acoes.includes('alimentar') && prato === 'favorito') sanTotal += 2;
+        
+        sanRecuperada += sanTotal;
+    }
+
+    // 3. Ação: Exercitar-se
+    if (acoes.includes('exercitar')) {
+        this.buffsTemporarios.exercicio += 1;
+        msgExtras.push("Você recebeu +1d6 em um teste Físico (AGI/FOR/VIG) futuro.");
+    }
+
+    // 4. Ação: Ler
+    if (acoes.includes('ler')) {
+        this.buffsTemporarios.leitura += 1;
+        msgExtras.push("Você recebeu +1d6 em um teste Mental (INT/PRE) futuro.");
+    }
+
+    // 5. Ação: Manutenção
+    if (acoes.includes('manutencao')) {
+        // Como o sistema não rastreia HP de itens individuais, aplicamos efeito narrativo
+        msgExtras.push("Seus itens quebrados foram reparados e munições repostas.");
+    }
+
+    // 6. Ação: Revisar Caso
+    if (acoes.includes('revisar')) {
+        let bonusRevisar = 0;
+        if (acoes.includes('alimentar') && prato === 'rapido') bonusRevisar = 5;
+        const msgBonus = bonusRevisar > 0 ? ` (Bônus +${bonusRevisar} por Prato Rápido)` : "";
+        msgExtras.push(`Faça um teste de Perícia${msgBonus} para encontrar pistas perdidas.`);
+    }
+
+    // Aplica a Recuperação (respeitando os máximos)
+    const pvAntes = this.recursos.pv_atual;
+    const peAntes = this.recursos.pe_atual;
+    const sanAntes = this.recursos.san_atual;
+
+    this.recursos.pv_atual = Math.min(this.recursos.pv_max, this.recursos.pv_atual + pvRecuperado);
+    this.recursos.pe_atual = Math.min(this.recursos.pe_max, this.recursos.pe_atual + peRecuperado);
+    this.recursos.san_atual = Math.min(this.recursos.san_max, this.recursos.san_atual + sanRecuperada);
+
+    // Retorna o resumo do que aconteceu
+    return { 
+        pv: this.recursos.pv_atual - pvAntes, 
+        pe: this.recursos.pe_atual - peAntes, 
+        san: this.recursos.san_atual - sanAntes,
+        extras: msgExtras
+    };
+  }
+
+  // --- MÉTODOS DE TRILHAS E PODERES ---
   addTrilhaPersonalizada(trilhaData) {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
-      const newTrilha = {
-        ...trilhaData,
-        id: `custom_trilha_${Date.now() + Math.random()}`,
-        key: key, 
-        isCustom: true, 
-      };
+      const newTrilha = { ...trilhaData, id: `custom_trilha_${Date.now() + Math.random()}`, key: key, isCustom: true };
       this.trilhas_personalizadas.push(newTrilha);
   }
-  
   removeTrilhaPersonalizada(trilhaKey) {
-      this.trilhas_personalizadas = this.trilhas_personalizadas.filter(
-          (trilha) => trilha.key !== trilhaKey
-      );
+      this.trilhas_personalizadas = this.trilhas_personalizadas.filter((trilha) => trilha.key !== trilhaKey);
   }
+  getTrilhasPersonalizadas() { return this.trilhas_personalizadas; }
   
-  getTrilhasPersonalizadas() {
-      return this.trilhas_personalizadas;
-  }
-  
-  // --- MÉTODOS DE PODERES ---
   addPoder(poder) {
       if (!this.poderes_aprendidos.some(p => p.key === poder.key)) {
           this.poderes_aprendidos.push(poder);
       }
   }
-  
   removePoder(poderKey) {
       this.poderes_aprendidos = this.poderes_aprendidos.filter(p => p.key !== poderKey);
   }
-  
-  getPoderesAprendidos() {
-      return this.poderes_aprendidos;
-  }
+  getPoderesAprendidos() { return this.poderes_aprendidos; }
 
   // --- MÉTODOS DE INVENTÁRIO ---
-  
-  getBonusTotalPericia(pericia, atributoBase) {
-    return this.pericias[pericia] || 0;
-  }
+  getBonusTotalPericia(pericia, atributoBase) { return this.pericias[pericia] || 0; }
 
   addItemInventario(item) {
     const itemComId = {
@@ -298,51 +369,33 @@ class Personagem {
 
   toggleIgnorarCalculos(inventarioId) {
     const item = this.inventario.find((item) => item.inventarioId === inventarioId);
-    if (item) {
-      item.ignorarCalculos = !item.ignorarCalculos;
-    }
+    if (item) { item.ignorarCalculos = !item.ignorarCalculos; }
   }
+  getInventario() { return this.inventario; }
   
-  getInventario() {
-    return this.inventario;
-  }
-  
-  // --- MÉTODOS DE RITUAIS ---
   addRitualInventario(ritual) {
-    const ritualComId = {
-      ...ritual,
-      inventarioId: Date.now() + Math.random(),
-    };
+    const ritualComId = { ...ritual, inventarioId: Date.now() + Math.random() };
     this.rituais.push(ritualComId);
   }
-  
   removeRitualInventario(inventarioId) {
     this.rituais = this.rituais.filter((ritual) => ritual.inventarioId !== inventarioId);
   }
-  
-  getGrimorio() {
-    return this.rituais;
-  }
+  getGrimorio() { return this.rituais; }
 
   // --- MÉTODOS DE DIÁRIO ---
   addNotaDiario(dadosNota) {
     const novaNota = { ...dadosNota, id: `nota_${Date.now()}` };
     this.diario.push(novaNota);
   }
-
   updateNotaDiario(notaId, dadosNota) {
     const index = this.diario.findIndex(n => n.id === notaId);
-    if (index !== -1) {
-      this.diario[index] = { ...this.diario[index], ...dadosNota };
-    }
+    if (index !== -1) { this.diario[index] = { ...this.diario[index], ...dadosNota }; }
   }
-
   removeNotaDiario(notaId) {
     this.diario = this.diario.filter(n => n.id !== notaId);
   }
   
-  // --- FUNÇÕES DE CÁLCULO AUXILIARES ---
-  
+  // --- CÁLCULOS AUXILIARES ---
   getBonusDefesaInventario() {
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     let bonusProtecao = 0;
@@ -351,16 +404,11 @@ class Personagem {
     const protecaoLeve = inventarioAtivo.find((item) => item.id === "protecao_leve");
     const protecaoPesada = inventarioAtivo.find((item) => item.id === "protecao_pesada");
     
-    if (protecaoPesada) {
-      bonusProtecao = protecaoPesada.defesa || 10;
-    } else if (protecaoLeve) {
-      bonusProtecao = protecaoLeve.defesa || 5;
-    }
+    if (protecaoPesada) { bonusProtecao = protecaoPesada.defesa || 10; } 
+    else if (protecaoLeve) { bonusProtecao = protecaoLeve.defesa || 5; }
     
     const escudo = inventarioAtivo.find((item) => item.id === "escudo");
-    if (escudo) {
-      bonusEscudo = escudo.defesa || 2;
-    }
+    if (escudo) { bonusEscudo = escudo.defesa || 2; }
     
     const bonusOutrosItens = inventarioAtivo
       .filter(item => item.defesa > 0 && item.id !== "protecao_leve" && item.id !== "protecao_pesada" && item.id !== "escudo")
@@ -371,30 +419,18 @@ class Personagem {
 
   getBonusPericiaInventario(periciaKey) {
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
-    
     const bonusVestimentas = inventarioAtivo
       .filter((item) => (item.id === "vestimenta" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0) 
-      .sort((a, b) => b - a)
-      .slice(0, 2)
-      .reduce((a, b) => a + b, 0);
-      
+      .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
     const bonusUtensilios = inventarioAtivo
       .filter((item) => (item.id === "utensilio" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0) 
-      .sort((a, b) => b - a)
-      .slice(0, 2)
-      .reduce((a, b) => a + b, 0);
-      
+      .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
     const bonusEspecificos = inventarioAtivo
       .filter((item) => item.tipoBonus === "especifico" && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0) 
-      .reduce((a, b) => a + b, 0);
-      
+      .map((item) => parseInt(item.valorBonus) || 0).reduce((a, b) => a + b, 0);
     const bonusCustom = inventarioAtivo
       .filter((item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
       .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); 
-      
     return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
   }
   
@@ -409,10 +445,8 @@ class Personagem {
   }
   
   getMaxPeso() {
-    // Usa o atributo calculado (com penalidades) para definir carga
-    const forca = this.getAtributoFinal('for');
+    const forca = this.getAtributoFinal('for'); // Usa atributo penalizado
     let maxPesoBase = forca * 5 || 2; 
-
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     const temMochilaMilitar = inventarioAtivo.some((item) => item.id === "mochila_militar");
     const temMochilaTatica = inventarioAtivo.some((item) => item.id === "mochila_tatica");
@@ -421,34 +455,23 @@ class Personagem {
     if (temMochilaTatica) { maxPesoBase += 5; }
 
     if (this.info.trilha === "tecnico") {
-      const intelecto = this.getAtributoFinal('int');
+      const intelecto = this.getAtributoFinal('int'); // Usa atributo penalizado
       maxPesoBase = (forca + intelecto) * 5 || 2; 
       if (temMochilaMilitar) { maxPesoBase += 2; }
       if (temMochilaTatica) { maxPesoBase += 5; }
     }
-
     return maxPesoBase;
   }
 
   // --- PERSISTÊNCIA ---
-  
   getDados() {
     return {
-      atributos: { ...this.atributos },
-      pericias: { ...this.pericias },
-      info: { ...this.info }, 
-      recursos: { ...this.recursos },
-      defesa: { ...this.defesa },
-      resistencias: { ...this.resistencias },
-      perseguicao: { ...this.perseguicao },
-      visibilidade: this.visibilidade,
-      inventario: [...this.inventario], 
-      rituais: [...this.rituais], 
-      bonusManuais: { ...this.bonusManuais },
-      trilhas_personalizadas: [...this.trilhas_personalizadas], 
-      poderes_aprendidos: [...this.poderes_aprendidos], 
-      diario: [...this.diario],
-      condicoesAtivas: [...this.condicoesAtivas], // Salva as condições
+      atributos: { ...this.atributos }, pericias: { ...this.pericias }, info: { ...this.info }, 
+      recursos: { ...this.recursos }, defesa: { ...this.defesa }, resistencias: { ...this.resistencias },
+      perseguicao: { ...this.perseguicao }, visibilidade: this.visibilidade,
+      inventario: [...this.inventario], rituais: [...this.rituais], bonusManuais: { ...this.bonusManuais },
+      trilhas_personalizadas: [...this.trilhas_personalizadas], poderes_aprendidos: [...this.poderes_aprendidos], 
+      diario: [...this.diario], condicoesAtivas: [...this.condicoesAtivas], buffsTemporarios: {...this.buffsTemporarios}
     };
   }
   
@@ -469,6 +492,7 @@ class Personagem {
       this.poderes_aprendidos = dados.poderes_aprendidos || []; 
       this.diario = dados.diario || [];
       this.condicoesAtivas = dados.condicoesAtivas || [];
+      this.buffsTemporarios = dados.buffsTemporarios || { exercicio: 0, leitura: 0 };
     }
   }
 
@@ -479,7 +503,7 @@ class Personagem {
     const nexString = this.info.nex || "5%";
     const nex = parseInt(nexString.replace('%', '')) || 5;
 
-    // Usa os atributos finais (com penalidades) para o cálculo
+    // Usa atributos finais (com penalidades)
     const vigor = this.getAtributoFinal('vig');
     const presenca = this.getAtributoFinal('pre');
 
@@ -488,44 +512,24 @@ class Personagem {
 
     switch (classe) {
       case "combatente":
-        pvBase = 20 + vigor;
-        peBase = 2 + presenca;
-        sanBase = 12;
-        pvPorNivel = 4 + vigor;
-        pePorNivel = 2 + presenca;
-        sanPorNivel = 3;
+        pvBase = 20 + vigor; peBase = 2 + presenca; sanBase = 12;
+        pvPorNivel = 4 + vigor; pePorNivel = 2 + presenca; sanPorNivel = 3;
         break;
       case "especialista":
-        pvBase = 16 + vigor;
-        peBase = 3 + presenca;
-        sanBase = 16;
-        pvPorNivel = 3 + vigor;
-        pePorNivel = 3 + presenca;
-        sanPorNivel = 4;
+        pvBase = 16 + vigor; peBase = 3 + presenca; sanBase = 16;
+        pvPorNivel = 3 + vigor; pePorNivel = 3 + presenca; sanPorNivel = 4;
         break;
       case "ocultista":
-        pvBase = 12 + vigor;
-        peBase = 4 + presenca;
-        sanBase = 20;
-        pvPorNivel = 2 + vigor;
-        pePorNivel = 4 + presenca;
-        sanPorNivel = 5;
+        pvBase = 12 + vigor; peBase = 4 + presenca; sanBase = 20;
+        pvPorNivel = 2 + vigor; pePorNivel = 4 + presenca; sanPorNivel = 5;
         break;
       case "sobrevivente":
-        pvBase = 8 + vigor; 
-        peBase = 2 + presenca; 
-        sanBase = 8; 
-        pvPorNivel = 2 + vigor;
-        pePorNivel = 1 + presenca;
-        sanPorNivel = 2;
+        pvBase = 8 + vigor; peBase = 2 + presenca; sanBase = 8; 
+        pvPorNivel = 2 + vigor; pePorNivel = 1 + presenca; sanPorNivel = 2;
         break;
       default: 
-        pvBase = 16 + vigor;
-        peBase = 3 + presenca;
-        sanBase = 16;
-        pvPorNivel = 3 + vigor;
-        pePorNivel = 3 + presenca;
-        sanPorNivel = 4;
+        pvBase = 16 + vigor; peBase = 3 + presenca; sanBase = 16;
+        pvPorNivel = 3 + vigor; pePorNivel = 3 + presenca; sanPorNivel = 4;
         break; 
     }
 
@@ -538,18 +542,10 @@ class Personagem {
     let bonusOrigemSan = 0;
 
     switch (origem) {
-      case "desgarrado":
-        bonusOrigemPv = 1 * multiplicadorNex;
-        break;
-      case "universitario":
-        bonusOrigemPe = 1 + Math.floor((nex - 5) / 10);
-        break;
-      case "vitima":
-        bonusOrigemSan = 1 * multiplicadorNex;
-        break;
-      case "mergulhador":
-        bonusOrigemPv = 5; 
-        break;
+      case "desgarrado": bonusOrigemPv = 1 * multiplicadorNex; break;
+      case "universitario": bonusOrigemPe = 1 + Math.floor((nex - 5) / 10); break;
+      case "vitima": bonusOrigemSan = 1 * multiplicadorNex; break;
+      case "mergulhador": bonusOrigemPv = 5; break;
     }
 
     const bonusManualPvNex = (parseInt(this.bonusManuais.pv_nex) || 0) * nexLevelsCalculated;
@@ -559,14 +555,19 @@ class Personagem {
     const bonusManualSanNex = (parseInt(this.bonusManuais.san_nex) || 0) * nexLevelsCalculated;
     const bonusManualSanOutros = parseInt(this.bonusManuais.san_outros) || 0;
 
+    // Cálculo do Limite de PE (Corrigido com Tabela 1.2 e exceção de 99%)
+    let limitePE = Math.floor(nex / 5);
+    if (nex >= 99) { limitePE = 20; } // Exceção da tabela
+    if (limitePE < 1) limitePE = 1;
+    if (this.info.origem === 'universitario') { limitePE += 1; }
+    this.calculosDetalhados.limite_pe = limitePE;
+
     this.calculosDetalhados.pv_base = pvBase;
     this.calculosDetalhados.pv_nivel = nexLevelsCalculated * pvPorNivel;
     this.calculosDetalhados.pv_origem = bonusOrigemPv; 
-    
     this.calculosDetalhados.pe_base = peBase;
     this.calculosDetalhados.pe_nivel = nexLevelsCalculated * pePorNivel;
     this.calculosDetalhados.pe_origem = bonusOrigemPe; 
-    
     this.calculosDetalhados.san_base = sanBase;
     this.calculosDetalhados.san_nivel = nexLevelsCalculated * sanPorNivel;
     this.calculosDetalhados.san_origem = bonusOrigemSan; 
