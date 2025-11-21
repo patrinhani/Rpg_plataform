@@ -19,10 +19,12 @@ function FichaPrincipal({
   controlesProps,
   trilhasPorClasse,
   periciasDeOrigem,
-  onToggleCondicao // <--- Recebe o handler
+  onToggleCondicao 
 }) {
+    // Extrai a prop 'canChangeTheme' diretamente do objeto 'calculados'
     const { canChangeTheme } = calculados; 
 
+    // Mescla a propriedade booleana nas props que vão para o componente Controles
     const controlesComNEX = {
         ...controlesProps,
         canChangeTheme: canChangeTheme 
@@ -38,10 +40,9 @@ function FichaPrincipal({
         patenteInfo={calculados.patente} 
       />
       
+      {/* Passa o objeto combinado contendo a prop crítica */}
       <Controles {...controlesComNEX} /> 
       
-      {/* --- ÁREA DE CONDIÇÕES (NOVO) --- */}
-      {/* Renderiza logo abaixo dos controles para fácil acesso */}
       <div style={{ gridArea: 'controles', marginTop: '20px' }}>
         <Condicoes 
            ativas={personagem.condicoesAtivas || []} 

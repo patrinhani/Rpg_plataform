@@ -11,7 +11,7 @@ function Controles({
   onExport, 
   onImport, 
   onThemeChange,
-  canChangeTheme // <--- NOVA PROP: true se NEX >= 50
+  canChangeTheme // <--- Prop recebida
 }) {
 
   // Handler local para o <input type="file">
@@ -48,7 +48,7 @@ function Controles({
       />
 
       {/* LÓGICA DE OCULTAÇÃO: Só renderiza se canChangeTheme for true */}
-      {canChangeTheme && (
+      {canChangeTheme ? (
         <div className="seletor-tema">
           <label htmlFor="tema-elemento">Afinidade:</label>
           <select 
@@ -62,6 +62,12 @@ function Controles({
             <option value="tema-conhecimento">Conhecimento</option>
             <option value="tema-energia">Energia</option>
           </select>
+        </div>
+      ) : (
+        // Opcional: Pode mostrar uma mensagem ou apenas nada
+        <div className="seletor-tema" style={{opacity: 0.5, pointerEvents: 'none', display: 'none'}}>
+            {/* Seletor oculto/desativado para NEX < 50% */}
+             <label>Afinidade: (NEX 50%+)</label>
         </div>
       )}
       

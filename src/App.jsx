@@ -58,7 +58,13 @@ function App() {
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
   
   const [calculados, setCalculados] = useState({
-    defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false,
+    defesaTotal: 10, 
+    cargaAtual: 0, 
+    cargaMax: 2, 
+    periciasTreinadas: 0, 
+    periciasTotal: 0, 
+    bonusPericia: {}, 
+    canChangeTheme: false, // Inicializa como false
     patente: Patentes[0], 
     bloqueio_rd: '—',      
     esquiva_bonus: '—',    
@@ -90,6 +96,7 @@ function App() {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
     carregarFicha();
+    // Força uma atualização inicial para garantir que canChangeTheme seja calculado
     handleFichaChange(null, null, null); 
   }, []); 
 
@@ -238,11 +245,11 @@ function App() {
     leitor.readAsText(arquivo);
   };
 
-  // --- HANDLERS DE AÇÃO (CONDIÇÕES E INTERLÚDIO) ---
+  // --- HANDLERS DE AÇÃO ---
 
   const handleToggleCondicao = (condicaoId) => {
       FichaClass.toggleCondicao(condicaoId);
-      handleFichaChange(null, null, null); // Recalcula tudo
+      handleFichaChange(null, null, null); 
   };
 
   const handleAplicarInterludio = (opcoes) => {
@@ -436,6 +443,7 @@ function App() {
             const trilhasUnificadas = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas());
             
             if (campo === 'nex') {
+                 // Tratamento robusto para NEX: remove tudo que não é número e parseia
                  let nexValue = String(valor).replace(/[^0-9]/g, '');
                  let nexNumber = parseInt(nexValue) || 0;
                  if (nexNumber > 100) nexNumber = 100;
@@ -445,18 +453,21 @@ function App() {
             else if (campo === 'origem') {
                 const novaOrigem = valor;
                 const origemAntiga = FichaClass.getDados().info.origem;
+                
                 if (origemAntiga && database.periciasPorOrigem?.[origemAntiga]?.fixas) {
                     database.periciasPorOrigem[origemAntiga].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
                         if (valorAtual === 5) { FichaClass.setTreinoPericia(p, 0); }
                     });
                 }
+                
                 if (database.periciasPorOrigem?.[novaOrigem]?.fixas) {
                     database.periciasPorOrigem[novaOrigem].fixas.forEach(p => {
                         const valorAtual = FichaClass.getBonusTotalPericia(p);
                         if (valorAtual === 0) { FichaClass.setTreinoPericia(p, 5); }
                     });
                 }
+                
                 if (origemAntiga) {
                     FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
                 }
@@ -516,15 +527,15 @@ function App() {
     
     if (skipUpdate) { return; }
 
-    // PARTE 2: Recalcula TUDO (Com Atributos Penalizados e Condições)
+    // PARTE 2: Recalcula TUDO (ORDEM CORRIGIDA)
     
-    const novosDados = FichaClass.getDados();
-    FichaClass.calcularValoresMaximos(); // Já considera atributos finais
+    FichaClass.calcularValoresMaximos(); 
     
     const bonusDefesaInventario = FichaClass.getBonusDefesaInventario();
     FichaClass.setDefesa('equip', bonusDefesaInventario);
 
-    // Usa os atributos finais (penalizados por condições)
+    const novosDados = FichaClass.getDados(); 
+
     const agi = FichaClass.getAtributoFinal('agi');
     const vig = FichaClass.getAtributoFinal('vig');
     const int = FichaClass.getAtributoFinal('int');
@@ -534,7 +545,6 @@ function App() {
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
 
-    // Penalidades de Defesa por Condições
     let penalidadeDefesa = 0;
     if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('desprevenido') || novosDados.condicoesAtivas.includes('atordoado') || novosDados.condicoesAtivas.includes('cego')) penalidadeDefesa -= 5;
@@ -555,9 +565,13 @@ function App() {
     const tem_treino_reflexos = treino_reflexos >= 5;
     const tem_treino_luta = treino_luta >= 5;
 
+    // --- CÁLCULO ROBUSTO DE NEX PARA TEMA ---
     const nexString = novosDados.info.nex || '0%';
-    const nexNumeric = parseInt(nexString.replace('%', '')) || 0;
-    const canChangeTheme = nexNumeric >= 50;
+    const nexOnlyNumbers = String(nexString).replace(/[^0-9]/g, '');
+    const nexNumeric = parseInt(nexOnlyNumbers, 10) || 0;
+    
+    // Lógica booleana simples: Se NEX >= 50, então TRUE, senão FALSE
+    const canChangeTheme = nexNumeric >= 50; 
 
     const bonusPericiaCalculado = {};
     Object.keys(novosDados.pericias).forEach(periciaKey => {
@@ -606,7 +620,7 @@ function App() {
       periciasTreinadas: periciasTreinadas,
       periciasTotal: periciasTotal,
       bonusPericia: bonusPericiaCalculado,
-      canChangeTheme: canChangeTheme, 
+      canChangeTheme: canChangeTheme, // Armazena no estado corretamente
       patente: patenteInfo,
       bloqueio_rd: tem_treino_fortitude ? bonus_fortitude : '—',
       esquiva_bonus: tem_treino_reflexos ? bonus_reflexos : '—',
@@ -616,7 +630,8 @@ function App() {
     setPersonagem(novosDados);
   }
 
-  // --- PROPS PARA CONTROLES (Definida AQUI, antes do return) ---
+  // --- PROPS DE CONTROLES ---
+  // Assegura que a prop está a ser passada a partir do estado atualizado
   const controlesProps = {
     temaAtual: tema, 
     onSave: salvarFicha,
@@ -624,23 +639,11 @@ function App() {
     onExport: exportarFicha,
     onImport: importarFicha,
     onThemeChange: setTema,
-    canChangeTheme: calculados.canChangeTheme 
+    canChangeTheme: calculados.canChangeTheme // Passagem explícita da prop
   };
   
   const LoadingComponent = () => (
-    <div 
-      className="item-placeholder" 
-      style={{
-        padding: '50px', 
-        maxWidth: '1400px', 
-        margin: '20px auto', 
-        backgroundColor: 'var(--cor-caixa)', 
-        border: '2px solid var(--cor-borda)', 
-        borderRadius: '4px',
-        textAlign: 'center'
-      }}>
-      Carregando...
-    </div>
+    <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando...</div>
   );
 
   // --- RENDERIZAÇÃO ---
@@ -684,7 +687,6 @@ function App() {
         <button className={`ficha-aba-link ${abaAtiva === 'progressao' ? 'active' : ''}`} onClick={() => setAbaAtiva('progressao')}>Progressão</button>
         <button className={`ficha-aba-link ${abaAtiva === 'diario' ? 'active' : ''}`} onClick={() => setAbaAtiva('diario')}>Diário</button>
         
-        {/* BOTÃO DE INTERLÚDIO */}
         <button 
             className="ficha-aba-link" 
             style={{ color: 'var(--cor-destaque)', fontWeight: 'bold', marginLeft: 'auto' }}
@@ -701,10 +703,10 @@ function App() {
             calculados={calculados} 
             fichaInstance={FichaClass} 
             handleFichaChange={handleFichaChange}
-            controlesProps={controlesProps} 
+            controlesProps={controlesProps} // Passa o objeto que contém canChangeTheme
             trilhasPorClasse={trilhasPorClasse}
             periciasDeOrigem={periciasDeOrigem}
-            onToggleCondicao={handleToggleCondicao} // Handler passado para o filho
+            onToggleCondicao={handleToggleCondicao} 
           />
         )}
         
@@ -765,7 +767,6 @@ function App() {
           <p></p>
         </footer>
         
-        {/* MODAIS */}
         {isLojaOpen && (
           <ModalLoja 
             isOpen={isLojaOpen}
