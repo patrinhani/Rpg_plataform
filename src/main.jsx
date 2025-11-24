@@ -7,14 +7,11 @@ import App from './App.jsx'
 import './styles/style.css'
 import './styles/responsive.css'
 
-// Importe o Provedor de Autenticação
 import { AuthProvider } from './contexts/AuthContext';
 
+// ATENÇÃO: StrictMode removido para estabilizar a autenticação
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    {/* Envolvemos o App com o AuthProvider */}
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>,
+  <AuthProvider>
+    <App />
+  </AuthProvider>
 )

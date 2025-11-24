@@ -1,102 +1,268 @@
 /* src/pages/Login/Login.css */
 
-/* --- TELA DE LOGIN --- */
+/* --- 1. CONTAINER E FUNDO --- */
 .login-container {
   height: 100vh;
   width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Utiliza a cor de fundo padrão ou a de ordem se o tema não estiver carregado */
-  background-color: var(--cor-fundo, #050a10); 
+  background-color: #020406; /* Preto Profundo */
+  overflow: hidden;
+  position: relative;
+}
+
+/* O Símbolo de Fundo (Animado e Responsivo) */
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
   
-  /* >>> ALTERAÇÃO AQUI: NOVO FUNDO (Character.webp) <<< */
-  background-image: 
-    radial-gradient(circle at center, rgba(0, 145, 255, 0.1) 0%, transparent 70%),
-    /* O Character.webp é a imagem do Pentagrama da Ordem em azul */
-    url('/assets/images/Character.webp'); 
+  /* vmin: usa a menor dimensão da tela. 
+     Garante que o círculo caiba sempre, sem cortes. */
+  width: 85vmin; 
+  height: 85vmin;
   
+  background-image: url('/assets/images/Character.webp');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 100%; /* Ajustado para 100% para centralizar e focar o pentagrama */
+  background-size: contain; 
+  
+  /* Opacidade ajustada para aparecer no fundo preto */
+  opacity: 0.5; 
+  filter: drop-shadow(0 0 30px rgba(0, 145, 255, 0.3)); 
+  
+  z-index: 0;
+  pointer-events: none;
+
+  /* Animação de Rotação Infinita (60s = rotação lenta e solene) */
+  animation: rotacao-infinita 60s linear infinite;
 }
 
+/* Efeito de Vinheta (Escurece as bordas para focar no centro) */
+.login-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 30%, #020406 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* --- 2. CAIXA DE LOGIN (CARD DE VIDRO) --- */
 .login-box {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  position: relative;
+  z-index: 10; /* Acima do fundo */
+  
+  /* Efeito Glassmorphism */
+  background: rgba(12, 18, 24, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  padding: 40px 30px;
+  border-radius: 6px;
   text-align: center;
-  align-items: center;
-  /* Estilo mais intenso */
-  border: 2px solid var(--cor-destaque); /* Borda mais grossa */
-  box-shadow: 0 0 40px rgba(0, 145, 255, 0.5); /* Sombra mais forte */
-  backdrop-filter: blur(10px); /* Blur reduzido para mais nitidez, mas ainda lá */
-  background-color: rgba(10, 10, 10, 0.95); /* Menos transparente */
-  padding: 30px;
-  border-radius: 8px;
-  z-index: 10;
+  transition: all 0.4s ease;
 }
 
+/* --- 3. MODOS: LOGIN vs REGISTRO --- */
+
+/* MODO LOGIN: Tema Azul (Ordem) */
+.login-box.mode-login {
+  border-top: 4px solid #0091ff;
+  border-bottom: 1px solid rgba(0, 145, 255, 0.2);
+}
+.login-box.mode-login h1 {
+  color: #0091ff;
+  text-shadow: 0 0 15px rgba(0, 145, 255, 0.4);
+}
+
+/* MODO REGISTRO: Tema Branco (Alerta/Novo) */
+.login-box.mode-register {
+  border-top: 4px solid #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(20, 20, 20, 0.9); /* Um pouco mais denso */
+}
+.login-box.mode-register h1 {
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+/* Logo */
 .login-logo {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 0 10px var(--cor-destaque));
-  /* Adiciona uma animação sutil para o efeito paranormal */
-  animation: pulse-glow 3s infinite alternate;
+  width: 90px;
+  height: 90px;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+  transition: transform 0.5s ease;
+}
+.login-box:hover .login-logo {
+  transform: scale(1.05);
 }
 
-/* Adicionando a animação de pulsação para o logo de login */
-@keyframes pulse-glow {
-    0% { filter: drop-shadow(0 0 10px var(--cor-destaque)) brightness(1); }
-    100% { filter: drop-shadow(0 0 20px var(--cor-destaque)) brightness(1.2); }
+/* Tipografia */
+h1 {
+  font-family: "Special Elite", monospace;
+  font-size: 1.8em;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
 }
 
+p.subtitulo {
+  color: #888;
+  font-size: 0.85em;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+}
+
+/* --- 4. CAMPOS DE INPUT (ESTILO TERMINAL) --- */
 .login-actions {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.login-box input[type="email"], 
+.login-box input[type="password"] {
   width: 100%;
-  margin-top: 20px;
-}
-
-.btn-login {
-  padding: 15px;
-  font-size: 1.1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 14px 15px;
+  
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+  border-left: 3px solid #555; /* Indicador lateral neutro */
+  
+  color: #fff;
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 1em;
   transition: all 0.3s ease;
-  font-family: "Special Elite", monospace;
-  text-transform: uppercase;
+  outline: none;
 }
 
+/* Foco: Brilha em Azul */
+.login-box input:focus {
+  background-color: rgba(0, 20, 40, 0.8);
+  border-color: #0091ff;
+  border-left-color: #0091ff;
+  box-shadow: 0 0 15px rgba(0, 145, 255, 0.15);
+}
+
+.login-box input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* --- 5. BOTÕES --- */
+.btn-login {
+  padding: 14px;
+  font-family: "Special Elite", monospace;
+  font-size: 1.2em;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+/* Botão Principal */
+.btn-login.primary {
+  background-color: #0091ff;
+  color: #050a10;
+  box-shadow: 0 0 15px rgba(0, 145, 255, 0.2);
+}
+.btn-login.primary:hover {
+  background-color: #fff;
+  color: #000;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+/* Ajuste para modo Registro */
+.mode-register .btn-login.primary {
+  background-color: #fff;
+  color: #000;
+}
+.mode-register .btn-login.primary:hover {
+  background-color: #ccc;
+}
+
+/* Botão Google */
 .btn-login.google {
   background-color: #fff;
   color: #333;
-  font-family: sans-serif; 
-  font-weight: bold;
+  font-family: sans-serif;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0;
 }
 .btn-login.google:hover {
-  background-color: #f0f0f0;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  background-color: #e6e6e6;
 }
 
+/* Botão Convidado */
 .btn-login.anon {
-  background-color: transparent;
-  border: 1px solid var(--cor-texto-label);
-  color: var(--cor-texto-label);
+  background: transparent;
+  border: 1px dashed #444;
+  color: #666;
+  font-size: 0.85em;
+  padding: 10px;
 }
-.btn-box input[type="email"], 
-.login-box input[type="password"] {
-  width: 100%;
-  box-sizing: border-box; /* Garante que padding e borda não aumentem a largura */
+.btn-login.anon:hover {
+  border-color: #888;
+  color: #aaa;
 }
 
+/* --- 6. LINK DE TROCA (TOGGLE) --- */
+.toggle-link {
+  font-size: 0.85em;
+  color: #888;
+  text-decoration: none;
+  transition: color 0.3s;
+  display: inline-block;
+  margin-top: 5px;
+  padding: 5px;
+  border-bottom: 1px dotted transparent;
+  cursor: pointer;
+}
+.toggle-link:hover {
+  color: #fff;
+  border-bottom-color: #fff;
+}
 
-/* Responsividade Básica */
-@media (max-width: 450px) {
-    .login-box {
-        margin: 20px;
-        padding: 20px;
-    }
+/* --- 7. ANIMAÇÃO DE ROTAÇÃO INFINITA --- */
+@keyframes rotacao-infinita {
+  from {
+    /* Importante: Mantém o translate centralizado enquanto gira */
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* --- 8. RESPONSIVIDADE --- */
+@media (max-width: 480px) {
+  .login-box {
+    max-width: 90%;
+    padding: 30px 20px;
+  }
+  h1 { font-size: 1.5em; }
 }

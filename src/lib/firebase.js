@@ -1,11 +1,8 @@
 // src/lib/firebase.js
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth"; 
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth"; 
 import { getFirestore } from "firebase/firestore"; 
 
-// NOVO: Lê as configurações do ambiente (VITE)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_APP_API_KEY,
   authDomain: import.meta.env.VITE_APP_AUTH_DOMAIN,
@@ -16,11 +13,16 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_APP_MEASUREMENT_ID
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
-// Serviços
-export const auth = getAuth(app); 
-export const googleProvider = new GoogleAuthProvider(); 
-export const db = getFirestore(app);
+// Configura o Auth para salvar a sessão no navegador (LocalStorage)
+const auth = getAuth(app);
+// Isso garante que o login sobreviva ao F5 ou fechar a aba
+setPersistence(auth, browserLocalPersistence).catch(error => {
+  console.error("Erro na persistência:", error);
+});
+
+const googleProvider = new GoogleAuthProvider(); 
+const db = getFirestore(app);
+
+export { auth, googleProvider, db };

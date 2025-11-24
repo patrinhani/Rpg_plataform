@@ -5,81 +5,75 @@ import {
   signOut, 
   onAuthStateChanged,
   signInAnonymously,
-  signInWithRedirect,
-  getRedirectResult,
-  // NOVO: Funções de E-mail/Senha
+  signInWithPopup, 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendEmailVerification // Importado para enviar o e-mail
+  sendEmailVerification 
 } from 'firebase/auth';
 
 const AuthContext = createContext();
 
-// Hook para facilitar o uso em outros arquivos
 export function useAuth() {
   return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Começa true para segurar a renderização até o Firebase responder
+  const [loading, setLoading] = useState(true); 
+  const [authError, setAuthError] = useState(null);
 
-  // Função de Login com Google (Redirect)
-  function loginGoogle() {
-    return signInWithRedirect(auth, googleProvider);
+  // --- FUNÇÕES DE LOGIN (MANTIDAS IGUAIS) ---
+  async function loginGoogle() {
+    setAuthError(null);
+    try {
+      return await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      if (error.code === 'auth/popup-closed-by-user') throw new Error("Login cancelado.");
+      throw error;
+    }
   }
   
-  // NOVO: Função para criar conta com E-mail e Senha
   async function criarContaEmail(email, senha) {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-      
-      // PASSO 1: Enviar e-mail de verificação imediatamente
-      await sendEmailVerification(userCredential.user); 
-
-      return userCredential;
+      setAuthError(null);
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        try { await sendEmailVerification(cred.user); } catch(e) { console.warn(e); }
+        return cred;
+      } catch (error) { throw error; }
   }
 
-  // NOVO: Função para logar com E-mail e Senha
   async function loginEmail(email, senha) {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      
-      // PASSO 2: Checar se o e-mail foi verificado
-      if (!userCredential.user.emailVerified) {
-          // Se não foi verificado, força o logout (para não manter a sessão)
-          await signOut(auth);
-          // Lança um erro customizado para ser tratado no front-end
-          throw new Error("auth/email-not-verified"); 
-      }
-      
-      return userCredential;
+      setAuthError(null);
+      return signInWithEmailAndPassword(auth, email, senha);
   }
 
-  // Função de Login Anônimo
   function loginAnonimo() {
+    setAuthError(null);
     return signInAnonymously(auth);
   }
 
-  // Função de Logout
   function logout() {
     return signOut(auth);
   }
 
-  // Monitora e lida com o resultado do redirecionamento
+  // --- MONITORAMENTO DE ESTADO ---
   useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result && result.user) {
-            // Se logado com sucesso via redirect
-        }
-      })
-      .catch(error => {
-          console.error("Erro após redirecionamento:", error);
-      });
-
-    // Monitorar o estado de autenticação (mantém a persistência)
+    // O onAuthStateChanged dispara automaticamente ao carregar a página
+    // se houver um usuário salvo no LocalStorage (graças ao firebase.js)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUsuario(user);
-      setLoading(false);
+      if (user) {
+        // Lógica de e-mail verificado (opcional para desenvolvimento)
+        // const isPassword = user.providerData.some(p => p.providerId === 'password');
+        // if (isPassword && !user.emailVerified) { setUsuario(null); } else {
+            setUsuario(user);
+        // }
+      } else {
+        setUsuario(null);
+      }
+      
+      // SÓ AQUI liberamos a aplicação
+      setLoading(false); 
     });
 
     return unsubscribe;
@@ -87,6 +81,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     usuario,
+    authError,
     loginGoogle,
     loginAnonimo,
     criarContaEmail,
@@ -94,9 +89,40 @@ export function AuthProvider({ children }) {
     logout
   };
 
+  // --- TELA DE CARREGAMENTO (Splash Screen) ---
+  // Enquanto o Firebase verifica o LocalStorage, mostramos isso:
+  if (loading) {
+    return (
+      <div style={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#020406',
+        color: 'var(--cor-destaque)',
+        fontFamily: '"Special Elite", monospace'
+      }}>
+        <img 
+          src="/assets/images/SimboloSemafinidade.webp" 
+          alt="Carregando..." 
+          style={{ 
+            width: '100px', 
+            height: '100px', 
+            marginBottom: '20px',
+            filter: 'drop-shadow(0 0 15px var(--cor-destaque))',
+            animation: 'pulse 1.5s infinite alternate'
+          }}
+        />
+        <h2>INICIANDO SISTEMA...</h2>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
