@@ -1,5 +1,5 @@
 /* css/style.css */
-/* (VERSÃO COMPLETA ATUALIZADA - Com a nova HUD de Recursos e Imagem) */
+/* (VERSÃO COMPLETA RECONSTRUÍDA - VISUAL GLASSMORPHISM + HIERARQUIA) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -18,8 +18,10 @@
 }
 :root {
   --cor-texto-principal: #f0f0f0;
-  --cor-texto-label: #9e9e9e;
+  --cor-texto-label: #b0b0b0; /* Label mais claro para contraste */
   --cor-caixa-recurso: #0a0a0a;
+  
+  /* Cores de Transição e Efeitos */
   --cor-trans-ordem: #001a2e;
   --cor-trans-sangue: #2a0000;
   --cor-trans-morte: #1e1e1e;
@@ -33,36 +35,41 @@
   --cor-sucesso-brilho: #80caff;
   --cor-morte: #1a1a1a;
   --cor-morte-brilho: #555555;
+
+  /* Sombras e Efeitos Padrão (Novo) */
+  --sombra-vidro: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --borda-vidro: 1px solid rgba(255, 255, 255, 0.18);
 }
-/* --- Paletas de Cores por Tema --- */
+
+/* --- Paletas de Cores por Tema (Ajustadas para Transparência) --- */
 :root,
 :root[data-tema="tema-ordem"] {
-  --cor-fundo: #001a2e;
-  --cor-caixa: #1a2f40;
+  --cor-fundo: #050a10; /* Fundo mais profundo */
+  --cor-caixa: rgba(26, 47, 64, 0.65); /* Transparência para efeito vidro */
   --cor-destaque: #0091ff;
   --cor-borda: #0091ff;
 }
 :root[data-tema="tema-sangue"] {
-  --cor-fundo: #2a0000;
-  --cor-caixa: #3a1a1a;
+  --cor-fundo: #1a0505;
+  --cor-caixa: rgba(58, 26, 26, 0.65);
   --cor-destaque: #d40000;
   --cor-borda: #d40000;
 }
 :root[data-tema="tema-morte"] {
-  --cor-fundo: #1e1e1e;
-  --cor-caixa: #2f2f2f;
+  --cor-fundo: #0a0a0a;
+  --cor-caixa: rgba(47, 47, 47, 0.65);
   --cor-destaque: #e0e0e0;
   --cor-borda: #888888;
 }
 :root[data-tema="tema-conhecimento"] {
-  --cor-fundo: #2b2800;
-  --cor-caixa: #3b371a;
+  --cor-fundo: #141200;
+  --cor-caixa: rgba(59, 55, 26, 0.65);
   --cor-destaque: #ffeb3b;
   --cor-borda: #ffeb3b;
 }
 :root[data-tema="tema-energia"] {
-  --cor-fundo: #2a002e;
-  --cor-caixa: #3a1a3e;
+  --cor-fundo: #100014;
+  --cor-caixa: rgba(58, 26, 62, 0.65);
   --cor-destaque: #be29ec;
   --cor-borda: #be29ec;
 }
@@ -77,6 +84,7 @@ button,
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   color: var(--cor-texto-principal);
+  letter-spacing: 0.5px;
 }
 h2 {
   color: var(--cor-destaque);
@@ -84,14 +92,18 @@ h2 {
   padding-bottom: 10px;
   margin-bottom: 15px;
   font-size: 1.4em;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5); /* Leve brilho */
 }
 
 /* --- 4. Layout Principal com CSS Grid (Desktop) --- */
 body {
   font-family: "Roboto Condensed", sans-serif;
   background-color: var(--cor-fundo);
+  /* Adiciona um gradiente sutil no fundo para realçar o vidro */
+  background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
   color: var(--cor-texto-principal);
   line-height: 1.6;
+  min-height: 100vh;
 }
 .ficha-container {
   display: grid;
@@ -135,22 +147,32 @@ footer {
   text-align: center;
   padding: 20px;
   margin-top: 20px;
-  background-color: var(--cor-caixa);
+  background-color: rgba(0,0,0,0.5);
   border-top: 1px solid var(--cor-borda);
   font-size: 0.9em;
   color: var(--cor-texto-label);
 }
 
-/* --- 5. Estilo Padrão das Caixas --- */
+/* --- 5. Estilo Padrão das Caixas (Com Glassmorphism) --- */
 .box {
   background-color: var(--cor-caixa);
-  border: 2px solid var(--cor-borda);
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil de vidro */
+  border-radius: 8px; /* Cantos mais arredondados */
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  transition: border-color 0.5s ease;
+  transition: all 0.3s ease;
+  
+  /* Efeito de Vidro */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--sombra-vidro);
+}
+
+.box:hover {
+  border-color: var(--cor-destaque); /* Brilha ao passar o mouse */
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
 /* --- 6. Estilos Específicos dos Blocos --- */
@@ -162,6 +184,7 @@ footer {
   font-size: 0.9em;
   color: var(--cor-texto-label);
   margin-bottom: 3px;
+  font-weight: bold;
 }
 .campo-horizontal input[type="text"] {
   width: 100%;
@@ -170,7 +193,7 @@ footer {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  background-color: #333;
+  background-color: rgba(0, 0, 0, 0.6);
   border-color: #555;
 }
 .seletor-tema {
@@ -179,29 +202,21 @@ footer {
 }
 .seletor-tema select {
   font-family: "Special Elite", monospace;
+  background-color: #222;
+  color: var(--cor-destaque);
+  border: 1px solid #444;
 }
 
-/* --- Estilo dos Recursos --- */
-/* (ESTA SEÇÃO FOI COMPLETAMENTE SUBSTITUÍDA PELOS NOVOS ESTILOS DA HUD) */
-/* (Os estilos antigos de .box-recursos, .recurso-individual, .barra-recurso, etc. foram removidos) */
-
+/* Ajustes de cor de texto para botões em temas claros */
 :root[data-tema="tema-morte"] .box-controles button,
-:root[data-tema="tema-morte"]
-  .box-controles
-  input[type="file"]::file-selector-button {
-  color: #121212;
-}
+:root[data-tema="tema-morte"] .box-controles input[type="file"]::file-selector-button,
 :root[data-tema="tema-conhecimento"] .box-controles button,
-:root[data-tema="tema-conhecimento"]
-  .box-controles
-  input[type="file"]::file-selector-button {
+:root[data-tema="tema-conhecimento"] .box-controles input[type="file"]::file-selector-button {
   color: #121212;
 }
-:root[data-tema="tema-morte"] .btn-add-item {
-  color: var(--cor-caixa-recurso); 
-}
+:root[data-tema="tema-morte"] .btn-add-item,
 :root[data-tema="tema-conhecimento"] .btn-add-item {
-  color: var(--cor-caixa-recurso);
+  color: var(--cor-caixa-recurso); 
 }
 
 /* --- 7. Estilos Gerais de Formulário --- */
@@ -211,11 +226,12 @@ input[type="file"]::file-selector-button {
   background-color: var(--cor-destaque);
   color: var(--cor-texto-principal);
   border: none;
-  border-radius: 2px;
+  border-radius: 4px;
   cursor: pointer;
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   margin: 5px;
+  transition: filter 0.2s;
 }
 button:hover {
   filter: brightness(1.2);
@@ -225,15 +241,20 @@ input[type="text"],
 select,
 textarea {
   padding: 8px;
-  border: 1px solid var(--cor-borda);
-  background-color: var(--cor-fundo);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.4);
   color: var(--cor-texto-principal);
-  border-radius: 2px;
+  border-radius: 4px;
   font-family: "Roboto Condensed", sans-serif;
   font-size: 1.1em;
 }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--cor-destaque);
+  background-color: rgba(0, 0, 0, 0.6);
+}
 
-/* --- 9. Estilo do Hexágono de Atributos (DESKTOP) --- */
+/* --- 9. Estilo do Hexágono de Atributos (DESKTOP) - GLOW ADICIONADO --- */
 .box-atributos {
   position: relative;
   background-size: contain;
@@ -246,6 +267,11 @@ textarea {
   padding: 0;
   border: none;
   background-color: transparent;
+  box-shadow: none; /* Remove sombra da caixa padrão */
+  backdrop-filter: none; /* Remove blur da caixa padrão */
+  
+  /* Glow no hexágono */
+  filter: drop-shadow(0 0 15px rgba(var(--cor-destaque), 0.4));
 }
 :root[data-tema="tema-ordem"] .box-atributos {
   background-image: url("/assets/images/hexagono.webp");
@@ -270,12 +296,13 @@ input[type="number"].input-hex {
   color: var(--cor-texto-principal);
   font-family: "Special Elite", monospace;
   font-size: 2.5em; 
-  width: 60px;
+  width: 70px;
   text-align: center;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
-    1px 1px 0 #000;
+    1px 1px 0 #000; /* Contorno forte para legibilidade */
   -moz-appearance: textfield;
   appearance: textfield;
+  z-index: 10;
 }
 .input-hex::-webkit-outer-spin-button,
 .input-hex::-webkit-inner-spin-button {
@@ -305,26 +332,34 @@ input[type="number"].input-hex {
   left: 64%;
 }
 
-/* --- 11. Resumo de Cálculo --- */
+/* --- 11. Resumo de Cálculo (DISCRETO) --- */
+/* Estilizado para ter pouco destaque até o hover */
 .box-calculo {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 20px;
-  border-color: var(--cor-texto-label);
-  background-color: var(--cor-fundo);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.4);
+  opacity: 0.6; /* Pouco destaque inicial */
+  transition: opacity 0.3s ease;
 }
+.box-calculo:hover {
+  opacity: 1; /* Revela ao passar o mouse */
+  border-color: var(--cor-borda);
+}
+
 .calc-bloco {
   flex: 1;
   min-width: 280px;
   padding: 15px;
-  border: 1px solid var(--cor-caixa);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 4px;
-  background-color: var(--cor-caixa);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 .calc-bloco h3 {
   font-family: "Special Elite", monospace;
-  color: var(--cor-destaque);
-  border-bottom: 1px solid var(--cor-destaque);
+  color: var(--cor-texto-label); /* Cor mais apagada para o título */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 10px;
   margin-bottom: 15px;
   font-size: 1.1em;
@@ -335,7 +370,7 @@ input[type="number"].input-hex {
   align-items: center;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px dashed #333;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
 }
 .calc-linha:last-child {
   border-bottom: none;
@@ -352,12 +387,12 @@ input[type="number"].input-hex {
   font-family: "Special Elite", monospace;
   font-size: 1.3em;
   text-align: right;
-  color: var(--cor-texto-principal);
+  color: #ccc; /* Texto cinza */
 }
 .calc-linha input[type="number"] {
   width: 60px;
   padding: 5px;
-  background-color: var(--cor-fundo);
+  background-color: rgba(0, 0, 0, 0.5);
   border: 1px solid #333;
 }
 .calc-linha.total {
@@ -445,8 +480,8 @@ input[type="number"].input-hex {
   color: var(--cor-texto-principal);
   margin-top: 5px;
 }
-/* --- 12. Sobreposição de Transição --- */
 
+/* --- 12. Sobreposição de Transição (MANTER INTACTO) --- */
 #transition-overlay {
   position: fixed;
   top: 0;
@@ -493,53 +528,25 @@ input[type="number"].input-hex {
     0 0 15px rgba(255, 235, 59, 0.4);
 }
 @keyframes anim-fade {
-  0% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }
 #transition-overlay.anim-energia {
   animation: anim-glitch-image 1s ease;
 }
 @keyframes anim-glitch-image {
-  0% {
-    transform: translateX(0px);
-  }
-  10% {
-    transform: translateX(-5px);
-  }
-  20% {
-    transform: translateX(5px);
-  }
-  30% {
-    transform: translateX(-3px);
-  }
-  40% {
-    transform: translateX(3px);
-  }
-  50% {
-    transform: translateX(0px);
-  }
-  60% {
-    transform: translateX(4px);
-  }
-  70% {
-    transform: translateX(-4px);
-  }
-  80% {
-    transform: translateX(2px);
-  }
-  90% {
-    transform: translateX(-2px);
-  }
-  100% {
-    transform: translateX(0px);
-  }
+  0% { transform: translateX(0px); }
+  10% { transform: translateX(-5px); }
+  20% { transform: translateX(5px); }
+  30% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  50% { transform: translateX(0px); }
+  60% { transform: translateX(4px); }
+  70% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-2px); }
+  100% { transform: translateX(0px); }
 }
 
 /* --- 13. Estilos de Carga e Inventário --- */
@@ -587,18 +594,18 @@ input[type="number"].input-hex {
   justify-content: center;
   align-items: center;
   padding: 20px;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(10px); /* Aumentado blur */
 }
 .modal-conteudo {
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
-  background-color: var(--cor-caixa);
-  border: 2px solid var(--cor-borda);
-  border-radius: 4px;
+  background-color: rgba(20, 20, 20, 0.95); /* Mais opaco */
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
 }
 .modal-header {
   display: flex;
@@ -606,6 +613,7 @@ input[type="number"].input-hex {
   align-items: center;
   padding: 15px 20px;
   border-bottom: 2px solid var(--cor-borda);
+  background-color: rgba(0,0,0,0.3);
 }
 .modal-header h3 {
   font-family: "Special Elite", monospace;
@@ -677,7 +685,6 @@ input[type="number"].input-hex {
 
 /* --- 15. ESTILOS DE DEFESA, AÇÕES E RESISTÊNCIAS --- */
 
-/* Associa os novos blocos às áreas do grid */
 #grid-acoes-defesa {
   grid-area: acoes-defesa;
 }
@@ -685,7 +692,6 @@ input[type="number"].input-hex {
   grid-area: resistencias;
 }
 
-/* Estilo unificado para os títulos dos blocos */
 .titulo-bloco {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
@@ -696,7 +702,6 @@ input[type="number"].input-hex {
   font-size: 1.4em;
 }
 
-/* Layout corrigido para o Bloco de Defesa Total */
 .box-defesa {
   display: grid;
   grid-template-columns: 1fr 2fr; 
@@ -706,10 +711,11 @@ input[type="number"].input-hex {
 
 .valor-total-bloco {
   text-align: center;
-  background-color: var(--cor-caixa-recurso);
+  background-color: rgba(0,0,0,0.5);
   border: 1px solid var(--cor-borda);
   padding: 15px 10px;
   border-radius: 4px;
+  box-shadow: 0 0 10px rgba(var(--cor-destaque), 0.2);
 }
 .valor-total-bloco span {
   font-family: "Special Elite", monospace;
@@ -732,7 +738,7 @@ input[type="number"].input-hex {
 .campo-valor-simples {
   flex: 1;
   text-align: center;
-  background-color: var(--cor-caixa-recurso);
+  background-color: rgba(0,0,0,0.4);
   border: 1px solid var(--cor-borda);
   padding: 10px;
   border-radius: 4px;
@@ -751,16 +757,14 @@ input[type="number"].input-hex {
   line-height: 1;
 }
 
-/* Estilo para inputs (como em "Outros" da Defesa) */
 .campo-valor-simples.editavel .valor {
   width: 100%;
   text-align: center;
-  background-color: var(--cor-fundo);
+  background-color: transparent;
   border: none;
   padding: 0;
   font-size: 2em; 
 }
-
 
 /* Estilos para o NOVO Bloco de Ações de Defesa */
 .box-acoes-defesa .acoes-grid {
@@ -769,7 +773,7 @@ input[type="number"].input-hex {
   gap: 15px;
 }
 .acao-defesa {
-  background-color: var(--cor-caixa-recurso);
+  background-color: rgba(0,0,0,0.4);
   border: 1px solid var(--cor-borda);
   padding: 10px;
   border-radius: 4px;
@@ -795,7 +799,6 @@ input[type="number"].input-hex {
   font-weight: normal;
 }
 
-
 /* Estilos para o NOVO Bloco de Resistências a Dano */
 .box-resistencias .resistencias-grid {
   display: grid;
@@ -805,37 +808,40 @@ input[type="number"].input-hex {
 
 .box-resistencias .campo-valor-simples {
   padding: 8px;
+  transition: transform 0.2s;
+}
+.box-resistencias .campo-valor-simples:hover {
+  transform: scale(1.05);
+  background-color: rgba(0,0,0,0.8);
+  z-index: 2;
 }
 .box-resistencias .campo-valor-simples label {
   font-size: 0.9em;
   margin-bottom: 2px;
-  /* --- CORREÇÃO DO BUG DE TEXTO CORTADO --- */
-  /* white-space: nowrap; (REMOVIDO) */
-  /* overflow: hidden; (REMOVIDO) */
   text-overflow: ellipsis; 
   text-transform: capitalize;
-  word-break: break-word; /* Permite que "Conhecimento" quebre a linha se necessário */
-  line-height: 1.2; /* Adiciona espaço caso quebre a linha */
+  word-break: break-word;
+  line-height: 1.2;
 }
 .box-resistencias .campo-valor-simples .valor {
   font-size: 1.6em;
 }
 
-/* --- (NOVO) Cores das Resistências Paranormais --- */
+/* --- Cores das Resistências Paranormais --- */
 .campo-valor-simples.res-sangue {
   border-color: #d40000;
 }
 .campo-valor-simples.res-sangue label,
 .campo-valor-simples.res-sangue .valor {
-  color: #d40000; /* Cor destaque do tema Sangue */
+  color: #d40000;
 }
 
 .campo-valor-simples.res-morte {
-  border-color: #888888; /* Cor borda do tema Morte */
+  border-color: #888888;
 }
 .campo-valor-simples.res-morte label,
 .campo-valor-simples.res-morte .valor {
-  color: #e0e0e0; /* Cor destaque do tema Morte */
+  color: #e0e0e0;
 }
 
 .campo-valor-simples.res-conhecimento {
@@ -843,7 +849,7 @@ input[type="number"].input-hex {
 }
 .campo-valor-simples.res-conhecimento label,
 .campo-valor-simples.res-conhecimento .valor {
-  color: #ffeb3b; /* Cor destaque do tema Conhecimento */
+  color: #ffeb3b;
 }
 
 .campo-valor-simples.res-energia {
@@ -851,8 +857,9 @@ input[type="number"].input-hex {
 }
 .campo-valor-simples.res-energia label,
 .campo-valor-simples.res-energia .valor {
-  color: #be29ec; /* Cor destaque do tema Energia */
+  color: #be29ec;
 }
+
 /* --- 17. Formulário de Item Personalizado --- */
 .form-custom-item {
   display: flex;
@@ -890,53 +897,68 @@ input[type="number"].input-hex {
   margin-top: 15px;
 }
 
-/* --- 18. Estilos de Perícia em Card com "Dado" --- */
+/* --- 18. Estilos de Perícia (DESTAQUE) --- */
+/* Caixa de perícias com destaque extra */
+.box-pericias {
+  border: 2px solid var(--cor-destaque);
+  background-color: rgba(var(--cor-caixa), 0.9); 
+  box-shadow: 0 0 20px rgba(var(--cor-destaque), 0.15);
+}
+
 .pericias-grid-container {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Cards mais largos */
+  gap: 12px;
 }
 .pericia-item {
   display: flex;
   flex-direction: column; 
   justify-content: space-between;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid var(--cor-caixa-recurso);
-  background-color: var(--cor-fundo);
-  min-height: 120px; 
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Gradiente sutil */
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.2) 100%);
+  min-height: 130px; 
   transition: all 0.2s ease-in-out;
 }
+.pericia-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
 .pericia-item span:first-child {
-  font-size: 1.1em;
+  font-size: 1.15em;
   font-weight: bold;
   text-align: center;
   line-height: 1.2;
-  border-bottom: 1px solid var(--cor-caixa);
-  padding-bottom: 5px;
-  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 .pericia-bonus-container {
   display: flex;
   align-items: center;
   justify-content: center;
   margin: auto 0;
-  gap: 8px;
+  gap: 10px;
 }
 .pericia-dado-shape {
   font-family: "Special Elite", monospace;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1.2em;
   background-color: var(--cor-destaque);
   color: var(--cor-caixa-recurso); 
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  width: 50px;
-  height: 55px; 
+  width: 55px;
+  height: 60px; 
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
 }
 .pericia-dado-texto {
   font-size: 0.9em;
@@ -945,25 +967,34 @@ input[type="number"].input-hex {
 }
 .pericia-bonus-texto {
   font-family: "Special Elite", monospace;
-  font-size: 1.8em; 
+  font-size: 2.2em; 
   font-weight: bold;
   color: var(--cor-destaque);
   line-height: 1;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 .pericia-item select {
   width: 100%;
   margin-top: 5px;
   font-size: 0.9em;
   padding: 5px;
+  background-color: rgba(0,0,0,0.5);
+  border: 1px solid #444;
+  cursor: pointer;
+  text-align: center;
 }
 .pericia-item.treino-0 {
-  opacity: 0.7;
-  border-color: var(--cor-caixa);
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+.pericia-item.treino-0:hover {
+  opacity: 1;
+  filter: grayscale(0);
 }
 .pericia-item.treino-0 .pericia-bonus-texto,
 .pericia-item.treino-0 .pericia-dado-shape {
   color: var(--cor-texto-label);
-  background-color: var(--cor-caixa-recurso);
+  background-color: rgba(0,0,0,0.3);
 }
 .pericia-item.treino-0 .pericia-dado-texto {
    color: var(--cor-texto-label);
@@ -971,12 +1002,12 @@ input[type="number"].input-hex {
 .pericia-item.treino-5 {
   opacity: 1;
   border-color: var(--cor-destaque);
-  box-shadow: 0 0 5px var(--cor-destaque);
+  box-shadow: inset 0 0 10px rgba(var(--cor-destaque), 0.1);
 }
 .pericia-item.treino-10 {
   opacity: 1;
-  border-color: var(--cor-destaque);
-  background-color: var(--cor-caixa);
+  border: 1px solid var(--cor-destaque);
+  background: linear-gradient(135deg, rgba(var(--cor-destaque), 0.1) 0%, rgba(0,0,0,0.3) 100%);
   box-shadow: 0 0 8px var(--cor-destaque);
 }
 .pericia-item.treino-10 .pericia-bonus-texto {
@@ -984,21 +1015,22 @@ input[type="number"].input-hex {
 }
 .pericia-item.treino-15 {
   opacity: 1;
-  border-color: var(--cor-destaque);
-  background-color: var(--cor-caixa);
+  border: 2px solid var(--cor-destaque);
+  background: linear-gradient(135deg, rgba(var(--cor-destaque), 0.2) 0%, rgba(0,0,0,0.4) 100%);
   box-shadow: 0 0 15px var(--cor-destaque);
+  transform: scale(1.02);
 }
 .pericia-item.treino-15 .pericia-bonus-texto {
-  font-size: 2em; 
+  font-size: 2.4em; 
   text-shadow: 0 0 8px var(--cor-destaque);
 }
 :root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-texto,
 :root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-texto {
-  color: var(--cor-fundo); 
+  color: #000; 
 }
 :root[data-tema="tema-morte"] .pericia-item:not(.treino-0) .pericia-dado-shape,
 :root[data-tema="tema-conhecimento"] .pericia-item:not(.treino-0) .pericia-dado-shape {
-  color: var(--cor-fundo);
+  color: #000;
 }
 
 /* --- 19. Estilo para Bônus de Origem Automático --- */
@@ -1020,9 +1052,9 @@ input[type="number"].input-hex {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid var(--cor-borda);
+  border-bottom: 2px solid var(--cor-destaque);
   padding-bottom: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 .pericias-header h2 {
   border-bottom: none;
@@ -1101,7 +1133,7 @@ input[type="number"].input-hex {
 
 /* --- 23. Abas Principais --- */
 .ficha-abas {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 10px 20px; 
   display: flex;
@@ -1110,25 +1142,37 @@ input[type="number"].input-hex {
   position: sticky;
   /* --- ATUALIZADO: Ajusta o 'top' para a nova altura da HUD --- */
   top: 110px; 
-  background: var(--cor-fundo);
+  background: rgba(var(--cor-caixa-recurso), 0.9);
+  backdrop-filter: blur(5px);
   z-index: 800;
   border-bottom: 2px solid var(--cor-caixa); 
 }
 .ficha-aba-link {
   padding: 10px 20px;
   font-size: 1.2em;
-  background-color: var(--cor-caixa-recurso);
-  border: 2px solid var(--cor-caixa);
+  background-color: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
   color: var(--cor-texto-label);
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   cursor: pointer;
+  transition: all 0.2s;
+}
+.ficha-aba-link:hover {
+  background-color: rgba(255,255,255,0.1);
 }
 .ficha-aba-link.active {
-  background-color: var(--cor-caixa);
-  border-color: var(--cor-borda);
-  color: var(--cor-destaque);
+  background-color: var(--cor-destaque);
+  border-color: var(--cor-destaque);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(var(--cor-destaque), 0.4);
 }
+/* Ajuste de texto para abas ativas em temas claros */
+:root[data-tema="tema-morte"] .ficha-aba-link.active,
+:root[data-tema="tema-conhecimento"] .ficha-aba-link.active {
+    color: #1a1a1a;
+}
+
 .ficha-aba-conteudo {
   display: none;
 }
@@ -1155,17 +1199,18 @@ input[type="number"].input-hex {
   grid-column: 1 / -1; 
 }
 .item-card {
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-borda);
+  background-color: rgba(30,30,30,0.6);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 .item-header {
   padding: 10px 15px;
-  background-color: var(--cor-caixa-recurso);
-  border-bottom: 1px solid var(--cor-borda);
+  background-color: rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -1216,8 +1261,8 @@ input[type="number"].input-hex {
 .item-footer {
   display: flex;
   padding: 5px;
-  background-color: var(--cor-caixa-recurso);
-  border-top: 1px solid var(--cor-borda);
+  background-color: rgba(0,0,0,0.4);
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 .item-footer .item-inventario-toggle {
   display: flex;
@@ -1359,14 +1404,15 @@ input[type="number"].input-hex {
   color: #111; 
 }
 
-/* --- 27. Container Fixo de Recursos (NOVA HUD) --- */
-/* --- 27. Container Fixo de Recursos (ATUALIZADO COM BARRAS) --- */
+/* --- 27. Container Fixo de Recursos (ATUALIZADO COM BARRAS E GLASS) --- */
 .recursos-container-fixo {
-  max-width: 1400px; 
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 10px 20px;
-  background-color: var(--cor-caixa-recurso); 
-  border-bottom: 2px solid var(--cor-borda); 
+  padding: 12px 25px;
+  background-color: rgba(10, 10, 10, 0.95); 
+  border-bottom: 1px solid var(--cor-borda);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
   
   position: sticky;
   top: 0;
@@ -1376,7 +1422,7 @@ input[type="number"].input-hex {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 /* Container para os 3 status (PV, SAN, PE) */
@@ -1390,14 +1436,18 @@ input[type="number"].input-hex {
 .recurso-hud-item {
   display: flex;
   flex-direction: column; /* Empilha Label, Barra, Números */
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-caixa);
+  background-color: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   padding: 8px 10px;
   gap: 5px; /* Espaço entre Label, Barra, Números */
   flex-basis: 150px; /* Tamanho base */
   flex-grow: 1; /* Permite esticar */
   min-width: 120px; /* Largura mínima */
+  transition: all 0.3s ease;
+}
+.recurso-hud-item:hover {
+  background-color: rgba(255,255,255,0.1);
 }
 .recurso-hud-item label {
   font-size: 1.1em;
@@ -1409,9 +1459,9 @@ input[type="number"].input-hex {
 /* --- (NOVO) Container da Barra --- */
 .hud-barra-container {
   width: 100%;
-  height: 8px; /* Altura da barra */
-  background-color: var(--cor-caixa-recurso); /* Fundo escuro */
-  border: 1px solid #000;
+  height: 10px; /* Altura da barra */
+  background-color: #111; /* Fundo escuro */
+  border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden; /* Garante que o preenchimento fique dentro */
 }
@@ -1422,9 +1472,9 @@ input[type="number"].input-hex {
 }
 
 /* --- (NOVO) Cores das Barras --- */
-#barra-pv-hud { background-color: #d40000; } /* Vermelho (Sangue) */
-#barra-san-hud { background-color: #0091ff; } /* Azul (Ordem) */
-#barra-pe-hud { background-color: #ffeb3b; } /* Amarelo (Conhecimento) */
+#barra-pv-hud { background-color: #d40000; box-shadow: 0 0 5px #d40000; }
+#barra-san-hud { background-color: #0091ff; box-shadow: 0 0 5px #0091ff; }
+#barra-pe-hud { background-color: #ffeb3b; box-shadow: 0 0 5px #ffeb3b; }
 /* --- FIM DAS NOVAS BARRAS --- */
 
 
@@ -1437,7 +1487,7 @@ input[type="number"].input-hex {
 .hud-input-atual {
   width: 50px;
   padding: 2px 5px;
-  background-color: var(--cor-caixa-recurso);
+  background-color: rgba(0,0,0,0.5);
   border: 1px solid var(--cor-borda);
   border-radius: 4px;
   font-family: "Special Elite", monospace;
@@ -1464,15 +1514,15 @@ input[type="number"].input-hex {
 
 /* Container da Imagem do Personagem */
 .personagem-imagem-container {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   position: relative;
   overflow: hidden;
   border-radius: 50%; /* Círculo perfeito */
-  border: 2px solid var(--cor-destaque);
+  border: 3px solid var(--cor-destaque);
   background-color: var(--cor-fundo);
   flex-shrink: 0; /* Não encolhe */
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 15px var(--cor-destaque);
 }
 
 /* Símbolo Arcano (fundo) */
@@ -1794,7 +1844,7 @@ html.modo-morte .simbolo-parallax {
 
 .pericia-item.pericia-origem {
   border-color: #ffeb3b; /* Amarelo Conhecimento */
-  box-shadow: 0 0 8px rgba(255, 235, 59, 0.3) inset; /* Brilho interno sutil */
+  box-shadow: 0 0 8px rgba(255, 235, 59, 0.3) inset, 0 0 5px rgba(255, 235, 59, 0.3); /* Brilho interno sutil */
 }
 
 /* Ajuste para quando o tema for Morte (para manter contraste) */
