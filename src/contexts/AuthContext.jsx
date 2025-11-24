@@ -9,7 +9,8 @@ import {
   getRedirectResult,
   // NOVO: Funções de E-mail/Senha
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendEmailVerification // Importado para enviar o e-mail
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -29,13 +30,28 @@ export function AuthProvider({ children }) {
   }
   
   // NOVO: Função para criar conta com E-mail e Senha
-  function criarContaEmail(email, senha) {
-      return createUserWithEmailAndPassword(auth, email, senha);
+  async function criarContaEmail(email, senha) {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      
+      // PASSO 1: Enviar e-mail de verificação imediatamente
+      await sendEmailVerification(userCredential.user); 
+
+      return userCredential;
   }
 
   // NOVO: Função para logar com E-mail e Senha
-  function loginEmail(email, senha) {
-      return signInWithEmailAndPassword(auth, email, senha);
+  async function loginEmail(email, senha) {
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      
+      // PASSO 2: Checar se o e-mail foi verificado
+      if (!userCredential.user.emailVerified) {
+          // Se não foi verificado, força o logout (para não manter a sessão)
+          await signOut(auth);
+          // Lança um erro customizado para ser tratado no front-end
+          throw new Error("auth/email-not-verified"); 
+      }
+      
+      return userCredential;
   }
 
   // Função de Login Anônimo
@@ -50,18 +66,17 @@ export function AuthProvider({ children }) {
 
   // Monitora e lida com o resultado do redirecionamento
   useEffect(() => {
-    // 1. Tenta obter o resultado do login após um redirecionamento
     getRedirectResult(auth)
       .then((result) => {
         if (result && result.user) {
-            // Logado com sucesso após redirect.
+            // Se logado com sucesso via redirect
         }
       })
       .catch(error => {
           console.error("Erro após redirecionamento:", error);
       });
 
-    // 2. Monitorar o estado de autenticação (mantém a persistência)
+    // Monitorar o estado de autenticação (mantém a persistência)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUsuario(user);
       setLoading(false);
@@ -74,8 +89,8 @@ export function AuthProvider({ children }) {
     usuario,
     loginGoogle,
     loginAnonimo,
-    criarContaEmail, // NOVO: Adicionado ao contexto
-    loginEmail,      // NOVO: Adicionado ao contexto
+    criarContaEmail,
+    loginEmail,
     logout
   };
 

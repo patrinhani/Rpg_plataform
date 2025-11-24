@@ -1,6 +1,5 @@
 // src/pages/Login/index.jsx
 import React, { useState } from 'react';
-// Ajuste o caminho do contexto (sobe 2 níveis: ../../)
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 
@@ -9,14 +8,13 @@ export default function Login() {
   const { 
       loginGoogle, 
       loginAnonimo, 
-      loginEmail,      // NOVO
-      criarContaEmail  // NOVO
+      loginEmail,
+      criarContaEmail
   } = useAuth();
   
-  // NOVOS ESTADOS PARA O FORMULÁRIO
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false); // true = Criar Conta, false = Logar
+  const [isNewUser, setIsNewUser] = useState(false); 
   const [loading, setLoading] = useState(false);
 
 
@@ -24,7 +22,6 @@ export default function Login() {
     try {
       setLoading(true);
       await loginGoogle();
-      // Não precisa de setLoading(false) aqui, pois o redirect acontece
     } catch (error) {
       setLoading(false);
       console.error("Erro ao iniciar o Login Google (Redirect):", error);
@@ -43,7 +40,6 @@ export default function Login() {
     }
   };
   
-  // NOVO: Handler para o formulário de E-mail/Senha
   const handleSubmitEmail = async (e) => {
       e.preventDefault();
       setLoading(true);
@@ -51,16 +47,23 @@ export default function Login() {
       try {
           if (isNewUser) {
               await criarContaEmail(email, senha);
+              // Feedback específico para criação de conta com verificação
+              alert("Conta criada com sucesso! 📧 Verifique seu e-mail (incluindo a pasta Spam) para ativar sua conta.");
           } else {
               await loginEmail(email, senha);
           }
       } catch (error) {
           setLoading(false);
-          const errorCode = error.code;
+          // O erro pode vir como um objeto FirebaseError ou como a string customizada
+          const errorCode = error.code || error.message; 
           let errorMessage = "Ocorreu um erro desconhecido.";
 
+          // Tratamento do erro de E-mail não verificado
+          if (errorCode === 'auth/email-not-verified') { 
+              errorMessage = "Seu e-mail não foi verificado. Verifique sua caixa de entrada e tente novamente.";
+          } 
           // Tratamento de erros comuns de E-mail/Senha
-          if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found') {
+          else if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found') {
               errorMessage = "E-mail ou senha incorretos.";
           } else if (errorCode === 'auth/email-already-in-use') {
               errorMessage = "Este e-mail já está em uso.";
@@ -90,7 +93,7 @@ export default function Login() {
         <h1>SISTEMA DA ORDEM</h1>
         <p>Acesso Restrito a Agentes Autorizados</p>
 
-        {/* --- NOVO: FORMULÁRIO DE E-MAIL/SENHA --- */}
+        {/* --- FORMULÁRIO DE E-MAIL/SENHA --- */}
         <form onSubmit={handleSubmitEmail} className="login-actions">
             
             <input
@@ -114,7 +117,7 @@ export default function Login() {
             
             <a 
                 href="#"
-                onClick={() => setIsNewUser(!isNewUser)}
+                onClick={(e) => { e.preventDefault(); setIsNewUser(!isNewUser); }}
                 style={{
                     fontSize: '0.9em',
                     color: 'var(--cor-texto-label)',
