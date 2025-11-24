@@ -1,29 +1,15 @@
 // src/pages/Ficha/index.jsx
 import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
-
-// Estilos e Libs
 import '../../App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { ficha as FichaClass } from '../../lib/personagem.js'; 
-import { 
-    database, 
-    poderesCombatente, 
-    poderesEspecialista, 
-    poderesOcultista, 
-    poderesGerais, 
-    poderesParanormais,
-    getPatenteInfo, 
-    Patentes,       
-    OpcoesClasse 
-} from '../../lib/database.js';
+import { database, poderesCombatente, poderesEspecialista, poderesOcultista, poderesGerais, poderesParanormais, getPatenteInfo, Patentes, OpcoesClasse } from '../../lib/database.js';
 import { getMergedTrilhas, groupTrilhasByClass, progressaoClasses } from '../../lib/progressao.js'; 
-
-// Contexto e Firebase
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { db } from '../../lib/firebase'; 
 import { doc, setDoc, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore'; 
 
-// Componentes (Lazy Loading)
+// ... (Lazy Imports - Mantenha igual) ...
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
@@ -41,20 +27,11 @@ import FichaPrincipal from '../../components/FichaPrincipal.jsx';
 import Recursos from '../../components/ficha/recursos.jsx';
 import ModalInterludio from '../../components/ModalInterludio.jsx';
 
-// Constantes Auxiliares
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
-const opcoesElemento = [
-    { nome: 'Sangue', valor: 'sangue' },
-    { nome: 'Morte', valor: 'morte' },
-    { nome: 'Conhecimento', valor: 'conhecimento' },
-    { nome: 'Energia', valor: 'energia' },
-];
+const opcoesElemento = [{ nome: 'Sangue', valor: 'sangue' }, { nome: 'Morte', valor: 'morte' }, { nome: 'Conhecimento', valor: 'conhecimento' }, { nome: 'Energia', valor: 'energia' }];
 const listaTodasPericias = Object.keys(FichaClass.getDados().pericias); 
-const opcoesPericia = listaTodasPericias
-  .filter(p => p !== 'luta' && p !== 'pontaria') 
-  .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
+const opcoesPericia = listaTodasPericias.filter(p => p !== 'luta' && p !== 'pontaria').map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
-// Helper para evitar salvamentos excessivos
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
@@ -66,24 +43,17 @@ function debounce(func, delay) {
 export default function Ficha({ fichaId, mesaContexto }) {
   const { usuario } = useAuth(); 
 
-  // --- ESTADOS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
-  const [calculados, setCalculados] = useState({
-    defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, 
-    bonusPericia: {}, canChangeTheme: false, patente: Patentes[0], 
-    bloqueio_rd: '—', esquiva_bonus: '—', tem_contra_ataque: false, 
-  });
+  const [calculados, setCalculados] = useState({ defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, bonusPericia: {}, canChangeTheme: false, patente: Patentes[0], bloqueio_rd: '—', esquiva_bonus: '—', tem_contra_ataque: false });
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
   const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
-  
-  // Controle
   const [loading, setLoading] = useState(true); 
   const docRef = useRef(null); 
   const isInitializing = useRef(true); 
   
-  // Modais
+  // ... (Estados dos Modais - Mantenha igual) ...
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
@@ -97,34 +67,29 @@ export default function Ficha({ fichaId, mesaContexto }) {
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
-  // --- PERSISTÊNCIA ---
   const saveToFirestore = useCallback(async (dadosCompletos) => {
     if (docRef.current) {
-        try {
-            await updateDoc(docRef.current, dadosCompletos); 
-        } catch (e) {
-            console.error("Erro ao salvar no Firestore:", e);
-        }
+        try { await updateDoc(docRef.current, dadosCompletos); } catch (e) { console.error("Erro ao salvar no Firestore:", e); }
     }
   }, []);
-  
   const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
 
-  // --- CONEXÃO COM FIRESTORE ---
+  // --- CONEXÃO COM FIRESTORE + RESET ---
   useEffect(() => {
-    if (!usuario || !usuario.uid) {
-        setLoading(false);
-        return;
-    }
+    if (!usuario || !usuario.uid) { setLoading(false); return; }
     
-    // Lógica de Caminho: Mesa vs Pessoal
+    // 1. RESET ABSOLUTO DA FICHA (Memória)
+    // Isso evita que dados de outra ficha (ex: do próprio Mestre) apareçam aqui
+    FichaClass.reset(); 
+    setPersonagem(FichaClass.getDados()); // Reseta o estado visual também
+
     if (mesaContexto) {
-        docRef.current = doc(db, "mesas", mesaContexto, "personagens", usuario.uid);
-        console.log(`📄 Modo Mesa: ${mesaContexto}`);
+        docRef.current = doc(db, "mesas", mesaContexto, "personagens", fichaId || usuario.uid);
+        console.log(`📄 Mesa: ${mesaContexto}`);
     } else {
         const idAlvo = fichaId || usuario.uid;
         docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
-        console.log(`📄 Modo Pessoal: ${idAlvo}`);
+        console.log(`📄 Pessoal: ${idAlvo}`);
     }
     
     const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
@@ -133,128 +98,63 @@ export default function Ficha({ fichaId, mesaContexto }) {
             FichaClass.carregarDados(dadosFirestore);
             handleFichaChange(null, null, null, true); 
         } else if (isInitializing.current) {
-            // Cria ficha inicial se não existir
-            console.log("Criando ficha inicial...");
-            const novosDados = FichaClass.getDados();
-            novosDados.info.jogador = usuario.displayName || "Agente";
-            novosDados.info.nome = novosDados.info.nome || "Novo Agente";
-            await setDoc(docRef.current, novosDados);
+            // Criação inicial (apenas se for o dono ou ficha pessoal)
+            if (!mesaContexto || fichaId === usuario.uid) {
+                console.log("Criando ficha inicial...");
+                const novosDados = FichaClass.getDados();
+                novosDados.info.jogador = usuario.displayName || "Agente";
+                novosDados.info.nome = "Novo Agente";
+                await setDoc(docRef.current, novosDados);
+            }
         }
-
         if (isInitializing.current) isInitializing.current = false;
         setLoading(false);
-    }, (error) => {
-        console.error("Erro no Firestore:", error);
-        setLoading(false);
-    });
+    }, (error) => { console.error("Erro Firestore:", error); setLoading(false); });
 
     return () => unsubscribe();
   }, [usuario, mesaContexto, fichaId]);
 
-  // --- 2. EFEITO DE PARALLAX (CORRIGIDO) ---
+  // --- SINCRONIA DE TEMA ---
   useEffect(() => {
-    // IMPORTANTE: Só ativa se o loading terminou, garantindo que o elemento #parallax-background existe
-    if (loading) return;
+     // Se o tema no banco mudou, atualiza visualmente
+     if (personagem.info.tema && personagem.info.tema !== tema) {
+         setTema(personagem.info.tema);
+     }
+  }, [personagem.info.tema]);
 
-    const parallaxContainer = document.getElementById("parallax-background");
-    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
-    
-    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
-
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      
-      // Fator de movimento
-      const moveX = (clientX - centerX) * -0.015;
-      const moveY = (clientY - centerY) * -0.015;
-
-      parallaxSimbolos.forEach((simbolo) => {
-        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [loading]); // Dependência 'loading' é crucial aqui
-
-  // --- 3. EFEITO DE TEMA ---
   useEffect(() => {
     const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
     if (tema === temaAtual) return; 
-
-    if (tema === "tema-sangue") {
-      setIsSangueAnimVisible(true);
-    } else {
-      aplicarTemaComAnimacao(tema, temaAtual, () => {
+    if (tema === "tema-sangue") setIsSangueAnimVisible(true);
+    else aplicarTemaComAnimacao(tema, temaAtual, () => {
         document.documentElement.dataset.tema = tema;
         localStorage.setItem("temaFichaOrdem", tema);
-      });
-    }
+    });
   }, [tema]); 
 
-  useEffect(() => {
-    const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
-    aplicarTemaSemAnimacao(temaSalvo);
-  }, []);
+  // --- HANDLER DE TROCA DE TEMA ---
+  const handleThemeChange = (novoTema) => {
+      setTema(novoTema); // Atualiza visualmente
+      handleFichaChange('info', 'tema', novoTema); // Salva no banco
+  };
 
-  // --- OUTROS EFEITOS ---
-  useEffect(() => {
-    const customTrilhas = FichaClass.getTrilhasPersonalizadas(); 
-    const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
-    const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
-    setTrilhasPorClasse(trilhasAgrupadas);
-  }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
+  // ... (Outros useEffects e Handlers - Mantenha o restante do código igual) ...
+  // (Vou repetir o handleFichaChange e o return para garantir que você tenha o arquivo completo)
+  
+  useEffect(() => { const customTrilhas = FichaClass.getTrilhasPersonalizadas(); const trilhasUnificadas = getMergedTrilhas(customTrilhas); const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas); setTrilhasPorClasse(trilhasAgrupadas); }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
+  useEffect(() => { const origemAtual = personagem.info.origem; if (database.periciasPorOrigem && database.periciasPorOrigem[origemAtual]) { setPericiasDeOrigem(database.periciasPorOrigem[origemAtual].fixas || []); } else { setPericiasDeOrigem([]); } }, [personagem.info.origem]);
+  useEffect(() => { const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha"; document.title = title; }, [personagem.info.nome, personagem.info.nex]); 
+  useEffect(() => { if (loading) return; const parallaxContainer = document.getElementById("parallax-background"); const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null; if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return; const handleMouseMove = (e) => { const { clientX, clientY } = e; const centerX = window.innerWidth / 2; const centerY = window.innerHeight / 2; const moveX = (clientX - centerX) * -0.015; const moveY = (clientY - centerY) * -0.015; parallaxSimbolos.forEach((simbolo) => { simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`; }); }; window.addEventListener("mousemove", handleMouseMove); return () => window.removeEventListener("mousemove", handleMouseMove); }, [loading]);
 
-  useEffect(() => {
-      const origemAtual = personagem.info.origem;
-      if (database.periciasPorOrigem && database.periciasPorOrigem[origemAtual]) {
-          setPericiasDeOrigem(database.periciasPorOrigem[origemAtual].fixas || []);
-      } else {
-          setPericiasDeOrigem([]);
-      }
-  }, [personagem.info.origem]);
-
-  useEffect(() => {
-    const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha";
-    document.title = title;
-  }, [personagem.info.nome, personagem.info.nex]); 
-
-  // --- HANDLER CENTRAL ---
   function handleFichaChange(secao, campo, valor, skipSave = false) {
     let skipUpdate = false;
-    
     if (secao) {
         if (secao === 'info') {
-            if (campo === 'nex') {
-                 let nex = parseInt(String(valor).replace(/[^0-9]/g, '')) || 0;
-                 if (nex > 100) nex = 100;
-                 valor = `${nex}%`;
-                 FichaClass.setInfo(campo, valor);
-            } else if (campo === 'origem') {
-                 const nova = valor;
-                 const antiga = FichaClass.getDados().info.origem;
-                 if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) database.periciasPorOrigem[antiga].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 5) FichaClass.setTreinoPericia(p, 0); });
-                 if (database.periciasPorOrigem?.[nova]?.fixas) database.periciasPorOrigem[nova].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 0) FichaClass.setTreinoPericia(p, 5); });
-                 if (antiga) FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
-                 const dadosOrigem = database.periciasPorOrigem?.[nova];
-                 if (dadosOrigem && dadosOrigem.poder) FichaClass.addPoder({ key: `origem_${nova}`, nome: dadosOrigem.poder.nome, descricao: dadosOrigem.poder.descricao, tipo: "Origem", isOrigemPower: true });
-                 FichaClass.setInfo(campo, valor);
-            } else if (campo === 'trilha') {
-                const trilha = valor;
-                const dados = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas())[trilha]; 
-                if (dados && dados.requiresChoice === 'elemento' && trilha !== 'nenhuma') {
-                    setItemPendente({ trilhaValue: trilha, tituloModal: `Elemento da Trilha`, descricaoModal: `Escolha:`, opcoes: opcoesElemento, tipoVinculo: 'trilhaElemento' });
-                    setIsSelecaoOpen(true); skipUpdate = true;
-                } else FichaClass.setInfo(campo, valor);
-            } else if (campo === 'classe') {
-                const novaClasse = valor;
-                const trilhasValidas = Object.values(trilhasPorClasse[novaClasse.toLowerCase()] || {}).map(t => t.key); 
-                const trilhaAtual = FichaClass.getDados().info.trilha; 
-                if (trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual)) { FichaClass.setInfo('trilha', 'nenhuma'); FichaClass.setInfo(`${trilhaAtual}_elemento`, ''); }
-                FichaClass.setInfo(campo, valor);
-            } else FichaClass.setInfo(campo, valor);
+            if (campo === 'nex') { let nex = parseInt(String(valor).replace(/[^0-9]/g, '')) || 0; if (nex > 100) nex = 100; valor = `${nex}%`; FichaClass.setInfo(campo, valor); } 
+            else if (campo === 'origem') { const nova = valor; const antiga = FichaClass.getDados().info.origem; if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) database.periciasPorOrigem[antiga].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 5) FichaClass.setTreinoPericia(p, 0); }); if (database.periciasPorOrigem?.[nova]?.fixas) database.periciasPorOrigem[nova].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 0) FichaClass.setTreinoPericia(p, 5); }); if (antiga) FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower); const dadosOrigem = database.periciasPorOrigem?.[nova]; if (dadosOrigem && dadosOrigem.poder) FichaClass.addPoder({ key: `origem_${nova}`, nome: dadosOrigem.poder.nome, descricao: dadosOrigem.poder.descricao, tipo: "Origem", isOrigemPower: true }); FichaClass.setInfo(campo, valor); } 
+            else if (campo === 'trilha') { const trilha = valor; const dados = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas())[trilha]; if (dados && dados.requiresChoice === 'elemento' && trilha !== 'nenhuma') { setItemPendente({ trilhaValue: trilha, tituloModal: `Elemento da Trilha`, descricaoModal: `Escolha:`, opcoes: opcoesElemento, tipoVinculo: 'trilhaElemento' }); setIsSelecaoOpen(true); skipUpdate = true; } else FichaClass.setInfo(campo, valor); } 
+            else if (campo === 'classe') { const novaClasse = valor; const trilhasValidas = Object.values(trilhasPorClasse[novaClasse.toLowerCase()] || {}).map(t => t.key); const trilhaAtual = FichaClass.getDados().info.trilha; if (trilhaAtual !== 'nenhuma' && !trilhasValidas.includes(trilhaAtual)) { FichaClass.setInfo('trilha', 'nenhuma'); FichaClass.setInfo(`${trilhaAtual}_elemento`, ''); } FichaClass.setInfo(campo, valor); } 
+            else FichaClass.setInfo(campo, valor);
         } 
         else if (secao === 'atributos') FichaClass.setAtributo(campo, valor); 
         else if (secao === 'recursos') FichaClass.setRecurso(campo, valor); 
@@ -265,177 +165,52 @@ export default function Ficha({ fichaId, mesaContexto }) {
         else if (secao === 'bonusManuais') FichaClass.setBonusManual(campo, valor);
         else if (secao === 'resistencias') FichaClass.setResistencia(campo, valor);
     }
-    
     if (skipUpdate) return;
-
     FichaClass.calcularValoresMaximos(); 
     const novosDados = FichaClass.getDados(); 
-    
-    // Cálculos de Defesa
-    const agi = FichaClass.getAtributoFinal('agi');
-    const vig = FichaClass.getAtributoFinal('vig');
-    const int = FichaClass.getAtributoFinal('int');
-    const equip = novosDados.defesa.equip || 0;
-    const outros = parseInt(novosDados.defesa.outros) || 0;
+    const agi = FichaClass.getAtributoFinal('agi'); const vig = FichaClass.getAtributoFinal('vig'); const int = FichaClass.getAtributoFinal('int');
+    const equip = novosDados.defesa.equip || 0; const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
     let penalidadeDefesa = 0;
     if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('desprevenido') || novosDados.condicoesAtivas.includes('atordoado') || novosDados.condicoesAtivas.includes('cego')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('indefeso') || novosDados.condicoesAtivas.includes('inconsciente')) penalidadeDefesa -= 10; 
     if (novosDados.condicoesAtivas.includes('agarrado') || novosDados.condicoesAtivas.includes('caido')) penalidadeDefesa -= 5; 
-
     const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa; 
-    const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0;
-    const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
-    const treino_luta = parseInt(novosDados.pericias.luta) || 0;
-    const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig;
-    const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
-
+    const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0; const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0; const treino_luta = parseInt(novosDados.pericias.luta) || 0;
+    const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig; const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
     const nexNum = parseInt(String(novosDados.info.nex || '0%').replace(/[^0-9]/g, '')) || 0;
     const canChangeTheme = nexNum >= 50; 
-    const bonusPericiaCalculado = {};
-    Object.keys(novosDados.pericias).forEach(key => { bonusPericiaCalculado[key] = FichaClass.getBonusPericiaInventario(key); });
-    
-    let bonusClassePericias = 0;
-    switch (novosDados.info.classe) {
-      case "combatente": bonusClassePericias = 1 + int; break;
-      case "especialista": bonusClassePericias = 7 + int; break;
-      case "ocultista": bonusClassePericias = 3 + int; break;
-      case "sobrevivente": bonusClassePericias = 0; break; 
-    }
-    let bonusOrigemPericias = 0;
-    if (database?.periciasPorOrigem?.[novosDados.info.origem]) {
-      const { fixas, escolhas } = database.periciasPorOrigem[novosDados.info.origem];
-      bonusOrigemPericias += fixas.length + (escolhas ? escolhas.reduce((acc, e) => acc + e.quantidade, 0) : 0);
-    }
-    const periciasTotal = Math.max(0, bonusClassePericias + bonusOrigemPericias);
-    let periciasTreinadas = Object.values(novosDados.pericias).filter(v => parseInt(v) >= 5).length;
-    const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0;
-    const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
-    const cargaMax = FichaClass.getMaxPeso(); 
-
-    setCalculados({
-      defesaTotal, cargaAtual: FichaClass.getPesoTotal(), cargaMax, periciasTreinadas, periciasTotal,
-      bonusPericia: bonusPericiaCalculado, canChangeTheme, patente: patenteInfo,
-      bloqueio_rd: (treino_fortitude >= 5) ? bonus_fortitude : '—',
-      esquiva_bonus: (treino_reflexos >= 5) ? bonus_reflexos : '—',
-      tem_contra_ataque: treino_luta >= 5,
-    });
-    
+    const bonusPericiaCalculado = {}; Object.keys(novosDados.pericias).forEach(key => { bonusPericiaCalculado[key] = FichaClass.getBonusPericiaInventario(key); });
+    let bonusClassePericias = 0; switch (novosDados.info.classe) { case "combatente": bonusClassePericias = 1 + int; break; case "especialista": bonusClassePericias = 7 + int; break; case "ocultista": bonusClassePericias = 3 + int; break; case "sobrevivente": bonusClassePericias = 0; break; }
+    let bonusOrigemPericias = 0; if (database?.periciasPorOrigem?.[novosDados.info.origem]) { const { fixas, escolhas } = database.periciasPorOrigem[novosDados.info.origem]; bonusOrigemPericias += fixas.length + (escolhas ? escolhas.reduce((acc, e) => acc + e.quantidade, 0) : 0); }
+    const periciasTotal = Math.max(0, bonusClassePericias + bonusOrigemPericias); let periciasTreinadas = Object.values(novosDados.pericias).filter(v => parseInt(v) >= 5).length;
+    const ppAtual = parseInt(novosDados.info.prestigio, 10) || 0; const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0]; const cargaMax = FichaClass.getMaxPeso(); 
+    setCalculados({ defesaTotal, cargaAtual: FichaClass.getPesoTotal(), cargaMax, periciasTreinadas, periciasTotal, bonusPericia: bonusPericiaCalculado, canChangeTheme, patente: patenteInfo, bloqueio_rd: (treino_fortitude >= 5) ? bonus_fortitude : '—', esquiva_bonus: (treino_reflexos >= 5) ? bonus_reflexos : '—', tem_contra_ataque: treino_luta >= 5, });
     setPersonagem(novosDados);
-
-    if (!isInitializing.current && !skipSave) {
-         debouncedSave(novosDados);
-    }
+    if (!isInitializing.current && !skipSave) { debouncedSave(novosDados); }
   }
 
-  // --- HANDLERS MODAIS ---
+  // ... (Handlers Modais - Mantidos) ...
   const handleToggleCondicao = (condicaoId) => { FichaClass.toggleCondicao(condicaoId); handleFichaChange(null, null, null); };
-  const handleAplicarInterludio = (opcoes) => {
-      const resultado = FichaClass.aplicarInterludio(opcoes);
-      handleFichaChange(null, null, null);
-      alert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`);
-  };
-
-  const handleAddItem = (itemOriginal) => {
-    if (itemOriginal.tipoBonus === 'generico') {
-      setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' });
-      setIsSelecaoOpen(true); setIsLojaOpen(false); 
-    } else if (itemOriginal.tipoBonus === 'escolhaElemento') {
-      setItemPendente({ ...itemOriginal, tituloModal: `Escolher Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'elemento' });
-      setIsSelecaoOpen(true); setIsLojaOpen(false);
-    } else {
-      FichaClass.addItemInventario(itemOriginal); handleFichaChange(null, null, null); 
-    }
-  };
+  const handleAplicarInterludio = (opcoes) => { const resultado = FichaClass.aplicarInterludio(opcoes); handleFichaChange(null, null, null); alert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`); };
+  const handleAddItem = (itemOriginal) => { if (itemOriginal.tipoBonus === 'generico') { setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' }); setIsSelecaoOpen(true); setIsLojaOpen(false); } else if (itemOriginal.tipoBonus === 'escolhaElemento') { setItemPendente({ ...itemOriginal, tituloModal: `Escolher Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'elemento' }); setIsSelecaoOpen(true); setIsLojaOpen(false); } else { FichaClass.addItemInventario(itemOriginal); handleFichaChange(null, null, null); } };
   const handleRemoveItem = (inventarioId) => { FichaClass.removeItemInventario(inventarioId); handleFichaChange(null, null, null); };
   const handleToggleItem = (inventarioId) => { FichaClass.toggleIgnorarCalculos(inventarioId); handleFichaChange(null, null, null); };
-  const handleSalvarItemEditado = (itemAtualizado) => {
-    if (itemParaEditar) { FichaClass.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); handleFichaChange(null, null, null); }
-  };
-  const handleVincularItem = (valorSelecionado) => {
-    if (!itemPendente) return;
-    if (itemPendente.tipoVinculo === 'poderElemento') { 
-        const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey);
-        if (poderOriginal) {
-            const el = valorSelecionado.toLowerCase();
-            const poderVinculado = { ...poderOriginal, nome: `${poderOriginal.nome} (${valorSelecionado})`, elemento: el, requiresChoice: null, key: `${poderOriginal.key}_${el}` };
-            FichaClass.addPoder(poderVinculado);
-            handleFichaChange(null, null, null); 
-        }
-    } else if (itemPendente.tipoVinculo === 'trilhaElemento') {
-      const trilha = itemPendente.trilhaValue;
-      FichaClass.setInfo('trilha', trilha);
-      FichaClass.setInfo(`${trilha}_elemento`, valorSelecionado); 
-      handleFichaChange(null, null, null); 
-    } else {
-      let itemVinculado = { ...itemPendente };
-      if (itemPendente.tipoVinculo === 'pericia') itemVinculado.periciaVinculada = valorSelecionado; 
-      else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); }
-      itemVinculado.tipoBonus = null; 
-      FichaClass.addItemInventario(itemVinculado); handleFichaChange(null, null, null); 
-    }
-    setIsSelecaoOpen(false); setItemPendente(null);
-  };
-
+  const handleSalvarItemEditado = (itemAtualizado) => { if (itemParaEditar) { FichaClass.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); handleFichaChange(null, null, null); } };
+  const handleVincularItem = (valorSelecionado) => { if (!itemPendente) return; if (itemPendente.tipoVinculo === 'poderElemento') { const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey); if (poderOriginal) { const el = valorSelecionado.toLowerCase(); const poderVinculado = { ...poderOriginal, nome: `${poderOriginal.nome} (${valorSelecionado})`, elemento: el, requiresChoice: null, key: `${poderOriginal.key}_${el}` }; FichaClass.addPoder(poderVinculado); handleFichaChange(null, null, null); } } else if (itemPendente.tipoVinculo === 'trilhaElemento') { const trilha = itemPendente.trilhaValue; FichaClass.setInfo('trilha', trilha); FichaClass.setInfo(`${trilha}_elemento`, valorSelecionado); handleFichaChange(null, null, null); } else { let itemVinculado = { ...itemPendente }; if (itemPendente.tipoVinculo === 'pericia') itemVinculado.periciaVinculada = valorSelecionado; else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); } itemVinculado.tipoBonus = null; FichaClass.addItemInventario(itemVinculado); handleFichaChange(null, null, null); } setIsSelecaoOpen(false); setItemPendente(null); };
   const handleAddRitual = (ritual) => { FichaClass.addRitualInventario(ritual); handleFichaChange(null, null, null); };
   const handleRemoveRitual = (inventarioId) => { FichaClass.removeRitualInventario(inventarioId); handleFichaChange(null, null, null); };
   const handleAddTrilha = (trilhaData) => { FichaClass.addTrilhaPersonalizada(trilhaData); handleFichaChange(null, null, null); setIsTrilhaModalOpen(false); };
-  
-  const getPoderesDisponiveis = (classe) => {
-      switch (classe.toLowerCase()) {
-          case 'combatente': return poderesCombatente;
-          case 'especialista': return poderesEspecialista;
-          case 'ocultista': return poderesOcultista;
-          default: return [];
-      }
-  };
-  const handleTogglePoder = (poder) => {
-      const aprendidos = FichaClass.getPoderesAprendidos();
-      const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`));
-      if (isAprendido) {
-          const keysToRemove = aprendidos.filter(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)).map(p => p.key);
-          keysToRemove.forEach(key => FichaClass.removePoder(key));
-      } else {
-          if (poder.requiresChoice) {
-            setItemPendente({ powerKey: poder.key, nome: poder.nome, tituloModal: `Elemento para ${poder.nome}`, descricaoModal: 'Selecione:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' });
-            setIsSelecaoOpen(true);
-          } else FichaClass.addPoder(poder); 
-      }
-      handleFichaChange(null, null, null);
-  };
-
-  const handleSalvarNota = (dadosNota) => {
-    if (notaParaEditar) FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); else FichaClass.addNotaDiario(dadosNota);
-    handleFichaChange(null, null, null); setIsDiarioModalOpen(false); 
-  };
+  const getPoderesDisponiveis = (classe) => { switch (classe.toLowerCase()) { case 'combatente': return poderesCombatente; case 'especialista': return poderesEspecialista; case 'ocultista': return poderesOcultista; default: return []; } };
+  const handleTogglePoder = (poder) => { const aprendidos = FichaClass.getPoderesAprendidos(); const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)); if (isAprendido) { const keysToRemove = aprendidos.filter(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)).map(p => p.key); keysToRemove.forEach(key => FichaClass.removePoder(key)); } else { if (poder.requiresChoice) { setItemPendente({ powerKey: poder.key, nome: poder.nome, tituloModal: `Elemento para ${poder.nome}`, descricaoModal: 'Selecione:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); } else FichaClass.addPoder(poder); } handleFichaChange(null, null, null); };
+  const handleSalvarNota = (dadosNota) => { if (notaParaEditar) FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); else FichaClass.addNotaDiario(dadosNota); handleFichaChange(null, null, null); setIsDiarioModalOpen(false); };
   const handleRemoverNota = (id) => { if(confirm("Apagar anotação?")) { FichaClass.removeNotaDiario(id); handleFichaChange(null,null,null); }};
   
-  // Funções de Arquivo
   const salvarFicha = () => { debouncedSave(FichaClass.getDados()); alert("Ficha salva!"); };
   const limparFicha = () => { if(window.confirm("Apagar ficha permanentemente?")) { if(docRef.current) deleteDoc(docRef.current); window.location.reload(); } };
-  const exportarFicha = () => {
-      const dados = FichaClass.getDados();
-      const blob = new Blob([JSON.stringify(dados, null, 2)], {type: "application/json"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ficha_${dados.info.nome || "agente"}.json`;
-      a.click();
-  };
-  const importarFicha = (arquivo) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          try {
-              const json = JSON.parse(e.target.result);
-              FichaClass.carregarDados(json);
-              saveToFirestore(FichaClass.getDados());
-              handleFichaChange(null, null, null, true);
-              alert("Ficha importada!");
-          } catch(err) { alert("Erro ao ler arquivo JSON."); }
-      };
-      reader.readAsText(arquivo);
-  };
+  const exportarFicha = () => { const dados = FichaClass.getDados(); const blob = new Blob([JSON.stringify(dados, null, 2)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `ficha_${dados.info.nome || "agente"}.json`; a.click(); };
+  const importarFicha = (arquivo) => { const reader = new FileReader(); reader.onload = (e) => { try { const json = JSON.parse(e.target.result); FichaClass.carregarDados(json); saveToFirestore(FichaClass.getDados()); handleFichaChange(null, null, null, true); alert("Ficha importada!"); } catch(err) { alert("Erro ao ler arquivo JSON."); } }; reader.readAsText(arquivo); };
 
   if (loading) {
       return (
@@ -448,7 +223,8 @@ export default function Ficha({ fichaId, mesaContexto }) {
   
   const controlesProps = {
     temaAtual: tema, onSave: salvarFicha, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
-    onThemeChange: setTema, canChangeTheme: calculados.canChangeTheme
+    onThemeChange: handleThemeChange, // <--- USA A FUNÇÃO QUE SALVA NO BANCO
+    canChangeTheme: calculados.canChangeTheme
   };
 
   const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando Aba...</div>;
@@ -513,13 +289,13 @@ export default function Ficha({ fichaId, mesaContexto }) {
         {/* Modais */}
         {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
         {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
-        {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={handleAddRitual} />}
-        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={handleAddTrilha} classesList={OpcoesClasse} />}
+        {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={(r) => { FichaClass.addRitualInventario(r); handleFichaChange(null,null,null); }} />}
+        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={(t) => { FichaClass.addTrilhaPersonalizada(t); handleFichaChange(null,null,null); setIsTrilhaModalOpen(false); }} classesList={OpcoesClasse} />}
         {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
         {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
         {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludio} limitePE={FichaClass.calculosDetalhados.limite_pe} />}
       </Suspense> 
     </>
-  );
+  )
 }

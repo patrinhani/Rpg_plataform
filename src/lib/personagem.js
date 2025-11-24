@@ -1,7 +1,13 @@
+// src/lib/personagem.js
 import { database } from './database.js';
 
 class Personagem {
   constructor() {
+    this.reset(); // O construtor agora chama o reset para inicializar
+  }
+
+  // Método para zerar a ficha completamente
+  reset() {
     this.atributos = { for: 0, agi: 0, int: 0, pre: 0, vig: 0 };
     
     this.pericias = {
@@ -24,83 +30,50 @@ class Personagem {
       monstruoso_elemento: "", 
       possuido_elemento: "",
       foto: "", 
+      tema: "tema-ordem" // Novo campo para salvar o tema
     };
     
     this.recursos = {
-      pv_atual: 10,
-      pv_max: 10,
-      pe_atual: 10,
-      pe_max: 10,
-      san_atual: 10,
-      san_max: 10,
+      pv_atual: 10, pv_max: 10,
+      pe_atual: 10, pe_max: 10,
+      san_atual: 10, san_max: 10,
     };
 
-    this.defesa = {
-      equip: 0,
-      outros: 0,
-    };
+    this.defesa = { equip: 0, outros: 0 };
     
     this.resistencias = {
-      balistico: 0,
-      corte: 0,
-      impacto: 0,
-      perfuracao: 0,
-      eletricidade: 0,
-      fogo: 0,
-      frio: 0,
-      quimico: 0,
-      mental: 0,
-      sangue: 0,
-      morte: 0,
-      conhecimento: 0,
-      energia: 0,
+      balistico: 0, corte: 0, impacto: 0, perfuracao: 0, eletricidade: 0, fogo: 0, frio: 0, quimico: 0,
+      mental: 0, sangue: 0, morte: 0, conhecimento: 0, energia: 0,
     };
     
     this.perseguicao = { sucessos: 0, falhas: 0 };
     this.visibilidade = 0; 
 
-    // --- LISTAS E OBJETOS COMPLEXOS ---
     this.inventario = []; 
     this.rituais = []; 
     this.trilhas_personalizadas = []; 
     this.poderes_aprendidos = []; 
     this.diario = []; 
-    this.condicoesAtivas = []; // Armazena os IDs das condições ativas
-
-    // Armazena bônus temporários de Interlúdio
-    this.buffsTemporarios = {
-      exercicio: 0, // Quantidade de dados extras (d6) para testes físicos
-      leitura: 0,   // Quantidade de dados extras (d6) para testes mentais
-    };
+    this.condicoesAtivas = [];
+    this.buffsTemporarios = { exercicio: 0, leitura: 0 };
 
     this.bonusManuais = {
-      pv_nex: 0,
-      pv_outros: 0,
-      pe_nex: 0,
-      pe_outros: 0,
-      san_nex: 0,
-      san_outros: 0,
+      pv_nex: 0, pv_outros: 0,
+      pe_nex: 0, pe_outros: 0,
+      san_nex: 0, san_outros: 0,
     };
 
     this.calculosDetalhados = {
-      pv_base: 0,
-      pv_nivel: 0,
-      pv_origem: 0,
-      pv_total: 0,
-      pe_base: 0,
-      pe_nivel: 0,
-      pe_origem: 0,
-      pe_total: 0,
-      san_base: 0,
-      san_nivel: 0,
-      san_origem: 0,
-      san_total: 0,
-      limite_pe: 1, // Calculado com base no NEX
+      pv_base: 0, pv_nivel: 0, pv_origem: 0, pv_total: 0,
+      pe_base: 0, pe_nivel: 0, pe_origem: 0, pe_total: 0,
+      san_base: 0, san_nivel: 0, san_origem: 0, san_total: 0,
+      limite_pe: 1,
     };
   }
   
-  // --- MÉTODOS DE SETTERS BÁSICOS ---
-
+  // ... (MANTENHA TODOS OS OUTROS MÉTODOS ABAIXO: setPerseguicao, setAtributo, etc.) ...
+  // Apenas certifique-se de que o método reset() foi adicionado no topo.
+  
   setPerseguicao(tipo, valor) {
     if (tipo === 'sucessos' || tipo === 'falhas') {
       let num = parseInt(valor) || 0;
@@ -158,28 +131,18 @@ class Personagem {
     }
   }
 
-  // --- MÉTODOS DE CONDIÇÕES (EVOLUÇÃO E ATRIBUTOS) ---
-
   toggleCondicao(condicaoId) {
-    // 1. Verifica se a condição já existe na lista
     if (this.condicoesAtivas.includes(condicaoId)) {
-      // Busca dados da condição no banco de dados para ver se ela evolui
       const dadosCondicao = database.condicoes ? database.condicoes.find(c => c.id === condicaoId) : null;
-      
       if (dadosCondicao && dadosCondicao.evolucao) {
-        // Se tem evolução (ex: Fraco -> Debilitado), remove a atual e adiciona a evolução
         this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
-        
-        // Só adiciona a evolução se ela já não estiver ativa (evita duplicatas)
         if (!this.condicoesAtivas.includes(dadosCondicao.evolucao)) {
             this.condicoesAtivas.push(dadosCondicao.evolucao);
         }
       } else {
-        // Se não tem evolução (ou é o estágio final), apenas remove (desmarca)
         this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
       }
     } else {
-      // 2. Se não tem, adiciona a condição
       this.condicoesAtivas.push(condicaoId);
     }
   }
@@ -188,47 +151,31 @@ class Personagem {
     return this.condicoesAtivas;
   }
 
-  // Método para pegar o valor final do atributo aplicando penalidades de condições
   getAtributoFinal(attrKey) {
     let valorBase = parseInt(this.atributos[attrKey]) || 0;
-    
-    // Penalidades Físicas (Força, Agilidade, Vigor)
     if (['for', 'agi', 'vig'].includes(attrKey)) {
-      // Debilitado ou Inconsciente reduzem em 1 dado (-1 no atributo)
       if (this.condicoesAtivas.includes('debilitado') || this.condicoesAtivas.includes('inconsciente')) {
          valorBase -= 1;
       }
-      // Fraco também reduz em 1 dado (-1 no atributo)
       else if (this.condicoesAtivas.includes('fraco')) {
          valorBase -= 1;
       }
     }
-    
-    // Penalidades Mentais (Intelecto, Presença)
     if (['int', 'pre'].includes(attrKey)) {
-       // Esmorecido ou Inconsciente reduzem
        if (this.condicoesAtivas.includes('esmorecido') || this.condicoesAtivas.includes('inconsciente')) {
           valorBase -= 1; 
        }
-       // Frustrado
        else if (this.condicoesAtivas.includes('frustrado')) {
           valorBase -= 1;
        }
     }
-
-    // Garante que o atributo não fique negativo
     if (valorBase < 0) valorBase = 0; 
-
     return valorBase; 
   }
 
-  // --- SISTEMA DE INTERLÚDIO ---
-  
   aplicarInterludio(opcoes) {
     const { acoes, conforto, prato, emGrupo } = opcoes;
     const limitePE = this.calculosDetalhados.limite_pe || 1;
-    
-    // Fator Base de Conforto
     let fatorBase = 1;
     if (conforto === 'precario') fatorBase = 0.5;
     if (conforto === 'confortavel') fatorBase = 2;
@@ -239,51 +186,40 @@ class Personagem {
     let sanRecuperada = 0;
     let msgExtras = [];
 
-    // Ajustes de Fator por Prato (Ação Alimentar-se)
     let fatorPV = fatorBase;
     let fatorPE = fatorBase;
 
     if (acoes.includes('alimentar')) {
-        if (prato === 'nutritivo') fatorPV += 1;  // Aumenta o multiplicador de PV em +1x
-        if (prato === 'energetico') fatorPE += 1; // Aumenta o multiplicador de PE em +1x
+        if (prato === 'nutritivo') fatorPV += 1; 
+        if (prato === 'energetico') fatorPE += 1; 
     }
 
-    // 1. Ação: Dormir
     if (acoes.includes('dormir')) {
         pvRecuperado += Math.floor(limitePE * fatorPV);
         peRecuperado += Math.floor(limitePE * fatorPE);
     }
 
-    // 2. Ação: Relaxar
     if (acoes.includes('relaxar')) {
-        // Relaxar recupera Sanidade com base no limite de PE e conforto
         let sanTotal = Math.floor(limitePE * fatorBase);
-        
         if (emGrupo) sanTotal += 1;
         if (acoes.includes('alimentar') && prato === 'favorito') sanTotal += 2;
-        
         sanRecuperada += sanTotal;
     }
 
-    // 3. Ação: Exercitar-se
     if (acoes.includes('exercitar')) {
         this.buffsTemporarios.exercicio += 1;
         msgExtras.push("Você recebeu +1d6 em um teste Físico (AGI/FOR/VIG) futuro.");
     }
 
-    // 4. Ação: Ler
     if (acoes.includes('ler')) {
         this.buffsTemporarios.leitura += 1;
         msgExtras.push("Você recebeu +1d6 em um teste Mental (INT/PRE) futuro.");
     }
 
-    // 5. Ação: Manutenção
     if (acoes.includes('manutencao')) {
-        // Como o sistema não rastreia HP de itens individuais, aplicamos efeito narrativo
         msgExtras.push("Seus itens quebrados foram reparados e munições repostas.");
     }
 
-    // 6. Ação: Revisar Caso
     if (acoes.includes('revisar')) {
         let bonusRevisar = 0;
         if (acoes.includes('alimentar') && prato === 'rapido') bonusRevisar = 5;
@@ -291,7 +227,6 @@ class Personagem {
         msgExtras.push(`Faça um teste de Perícia${msgBonus} para encontrar pistas perdidas.`);
     }
 
-    // Aplica a Recuperação (respeitando os máximos)
     const pvAntes = this.recursos.pv_atual;
     const peAntes = this.recursos.pe_atual;
     const sanAntes = this.recursos.san_atual;
@@ -300,7 +235,6 @@ class Personagem {
     this.recursos.pe_atual = Math.min(this.recursos.pe_max, this.recursos.pe_atual + peRecuperado);
     this.recursos.san_atual = Math.min(this.recursos.san_max, this.recursos.san_atual + sanRecuperada);
 
-    // Retorna o resumo do que aconteceu
     return { 
         pv: this.recursos.pv_atual - pvAntes, 
         pe: this.recursos.pe_atual - peAntes, 
@@ -309,7 +243,6 @@ class Personagem {
     };
   }
 
-  // --- MÉTODOS DE TRILHAS E PODERES ---
   addTrilhaPersonalizada(trilhaData) {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
       const newTrilha = { ...trilhaData, id: `custom_trilha_${Date.now() + Math.random()}`, key: key, isCustom: true };
@@ -330,7 +263,6 @@ class Personagem {
   }
   getPoderesAprendidos() { return this.poderes_aprendidos; }
 
-  // --- MÉTODOS DE INVENTÁRIO ---
   getBonusTotalPericia(pericia, atributoBase) { return this.pericias[pericia] || 0; }
 
   addItemInventario(item) {
@@ -382,7 +314,6 @@ class Personagem {
   }
   getGrimorio() { return this.rituais; }
 
-  // --- MÉTODOS DE DIÁRIO ---
   addNotaDiario(dadosNota) {
     const novaNota = { ...dadosNota, id: `nota_${Date.now()}` };
     this.diario.push(novaNota);
@@ -395,7 +326,6 @@ class Personagem {
     this.diario = this.diario.filter(n => n.id !== notaId);
   }
   
-  // --- CÁLCULOS AUXILIARES ---
   getBonusDefesaInventario() {
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     let bonusProtecao = 0;
@@ -445,7 +375,7 @@ class Personagem {
   }
   
   getMaxPeso() {
-    const forca = this.getAtributoFinal('for'); // Usa atributo penalizado
+    const forca = this.getAtributoFinal('for');
     let maxPesoBase = forca * 5 || 2; 
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     const temMochilaMilitar = inventarioAtivo.some((item) => item.id === "mochila_militar");
@@ -455,7 +385,7 @@ class Personagem {
     if (temMochilaTatica) { maxPesoBase += 5; }
 
     if (this.info.trilha === "tecnico") {
-      const intelecto = this.getAtributoFinal('int'); // Usa atributo penalizado
+      const intelecto = this.getAtributoFinal('int');
       maxPesoBase = (forca + intelecto) * 5 || 2; 
       if (temMochilaMilitar) { maxPesoBase += 2; }
       if (temMochilaTatica) { maxPesoBase += 5; }
@@ -463,7 +393,6 @@ class Personagem {
     return maxPesoBase;
   }
 
-  // --- PERSISTÊNCIA ---
   getDados() {
     return {
       atributos: { ...this.atributos }, pericias: { ...this.pericias }, info: { ...this.info }, 
@@ -496,14 +425,12 @@ class Personagem {
     }
   }
 
-  // --- CÁLCULO DE RECURSOS MÁXIMOS ---
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
     const nexString = this.info.nex || "5%";
     const nex = parseInt(nexString.replace('%', '')) || 5;
 
-    // Usa atributos finais (com penalidades)
     const vigor = this.getAtributoFinal('vig');
     const presenca = this.getAtributoFinal('pre');
 
@@ -555,9 +482,8 @@ class Personagem {
     const bonusManualSanNex = (parseInt(this.bonusManuais.san_nex) || 0) * nexLevelsCalculated;
     const bonusManualSanOutros = parseInt(this.bonusManuais.san_outros) || 0;
 
-    // Cálculo do Limite de PE (Corrigido com Tabela 1.2 e exceção de 99%)
     let limitePE = Math.floor(nex / 5);
-    if (nex >= 99) { limitePE = 20; } // Exceção da tabela
+    if (nex >= 99) { limitePE = 20; } 
     if (limitePE < 1) limitePE = 1;
     if (this.info.origem === 'universitario') { limitePE += 1; }
     this.calculosDetalhados.limite_pe = limitePE;

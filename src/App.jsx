@@ -48,6 +48,7 @@ function App() {
     if (view === 'ficha' && mesaAtiva) {
       // Se estava na ficha de uma mesa, volta para a mesa
       setView('mesa'); 
+      // NÃO reseta a mesaAtiva aqui, pois queremos voltar para ela
     } else {
       // Caso contrário, volta para o dashboard
       setView('dashboard'); 
@@ -94,7 +95,11 @@ function App() {
         <Mesa 
             mesaId={mesaAtiva} 
             onVoltar={() => { setView('dashboard'); setMesaAtiva(null); }}
-            onAbrirFichaNaMesa={(mId) => handleSelectFicha(usuario.uid, mId)}
+            
+            // --- CORREÇÃO AQUI ---
+            // Antes: (mId) => handleSelectFicha(usuario.uid, mId) -> ERRO (Invertia os IDs)
+            // Agora: (uidAlvo) => handleSelectFicha(uidAlvo, mesaAtiva) -> CERTO
+            onAbrirFichaNaMesa={(uidAlvo) => handleSelectFicha(uidAlvo, mesaAtiva)}
         />
     );
   }
@@ -108,5 +113,4 @@ function App() {
   );
 }
 
-// AQUI ESTAVA O ERRO: A exportação é obrigatória!
 export default App;
