@@ -9,12 +9,16 @@
   justify-content: center;
   /* Utiliza a cor de fundo padrão ou a de ordem se o tema não estiver carregado */
   background-color: var(--cor-fundo, #050a10); 
+  
+  /* >>> ALTERAÇÃO AQUI: NOVO FUNDO (Character.webp) <<< */
   background-image: 
     radial-gradient(circle at center, rgba(0, 145, 255, 0.1) 0%, transparent 70%),
-    url('/assets/images/SimboloSemafinidade.webp'); 
+    /* O Character.webp é a imagem do Pentagrama da Ordem em azul */
+    url('/assets/images/Character.webp'); 
+  
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 150%; 
+  background-size: 100%; /* Ajustado para 100% para centralizar e focar o pentagrama */
 }
 
 .login-box {
@@ -22,11 +26,11 @@
   max-width: 400px;
   text-align: center;
   align-items: center;
-  /* Reutilizando variáveis do style.css */
-  border: 1px solid var(--cor-destaque); 
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(15px);
-  background-color: rgba(10, 10, 10, 0.85);
+  /* Estilo mais intenso */
+  border: 2px solid var(--cor-destaque); /* Borda mais grossa */
+  box-shadow: 0 0 40px rgba(0, 145, 255, 0.5); /* Sombra mais forte */
+  backdrop-filter: blur(10px); /* Blur reduzido para mais nitidez, mas ainda lá */
+  background-color: rgba(10, 10, 10, 0.95); /* Menos transparente */
   padding: 30px;
   border-radius: 8px;
   z-index: 10;
@@ -37,6 +41,14 @@
   height: 80px;
   margin-bottom: 20px;
   filter: drop-shadow(0 0 10px var(--cor-destaque));
+  /* Adiciona uma animação sutil para o efeito paranormal */
+  animation: pulse-glow 3s infinite alternate;
+}
+
+/* Adicionando a animação de pulsação para o logo de login */
+@keyframes pulse-glow {
+    0% { filter: drop-shadow(0 0 10px var(--cor-destaque)) brightness(1); }
+    100% { filter: drop-shadow(0 0 20px var(--cor-destaque)) brightness(1.2); }
 }
 
 .login-actions {
@@ -74,10 +86,12 @@
   border: 1px solid var(--cor-texto-label);
   color: var(--cor-texto-label);
 }
-.btn-login.anon:hover {
-  border-color: var(--cor-destaque);
-  color: var(--cor-destaque);
+.btn-box input[type="email"], 
+.login-box input[type="password"] {
+  width: 100%;
+  box-sizing: border-box; /* Garante que padding e borda não aumentem a largura */
 }
+
 
 /* Responsividade Básica */
 @media (max-width: 450px) {

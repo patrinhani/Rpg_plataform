@@ -1,4 +1,4 @@
-/* css/style.css */
+/* src/styles/style.css */
 /* (VERSÃO COMPLETA RECONSTRUÍDA - VISUAL GLASSMORPHISM + HIERARQUIA) */
 
 /* --- 1. Importação de Fontes --- */
@@ -219,7 +219,7 @@ footer {
   color: var(--cor-caixa-recurso); 
 }
 
-/* --- 7. Estilos Gerais de Formulário --- */
+/* --- 7. Estilos Gerais de Formulário (Melhorados para Paranormal/Foco) --- */
 button,
 input[type="file"]::file-selector-button {
   padding: 8px 12px;
@@ -236,22 +236,30 @@ input[type="file"]::file-selector-button {
 button:hover {
   filter: brightness(1.2);
 }
+
 input[type="number"],
 input[type="text"],
 select,
-textarea {
-  padding: 8px;
+textarea,
+/* Incluindo estilos para os novos campos de Login */
+.login-box input[type="email"], 
+.login-box input[type="password"] { 
+  padding: 12px; /* Aumenta o padding para melhor toque/visibilidade */
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.5); /* Fundo mais escuro/sólido */
   color: var(--cor-texto-principal);
   border-radius: 4px;
   font-family: "Roboto Condensed", sans-serif;
   font-size: 1.1em;
+  transition: all 0.3s ease; /* Adiciona transição suave */
 }
-input:focus, select:focus, textarea:focus {
+
+input:focus, select:focus, textarea:focus, 
+.login-box input:focus { 
   outline: none;
   border-color: var(--cor-destaque);
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 10px var(--cor-destaque); /* Efeito NEON/Glow */
 }
 
 /* --- 9. Estilo do Hexágono de Atributos (DESKTOP) - GLOW ADICIONADO --- */

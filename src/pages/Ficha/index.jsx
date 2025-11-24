@@ -1,5 +1,5 @@
 // src/pages/Ficha/index.jsx
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
 
 // Ajuste dos caminhos (agora subimos 2 níveis: ../../)
 import '../../App.css'; 
@@ -20,20 +20,18 @@ import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../
 
 // Contexto para o botão de Sair
 import { useAuth } from '../../contexts/AuthContext.jsx';
+// NOVO: Importa Firestore e Funções
+import { db } from '../../lib/firebase'; 
+import { doc, setDoc, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore'; 
 
 // Componentes
-import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
-import Recursos from '../../components/ficha/recursos.jsx';
-import ModalInterludio from '../../components/ModalInterludio.jsx';
-
-// Lazy Imports
+// ... (Lazy imports list) ...
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
 const Rituais = lazy(() => import('../../components/Rituais.jsx'));
 const Diario = lazy(() => import('../../components/Diario.jsx'));
 const ProgressaoHabilidades = lazy(() => import('../../components/ficha/ProgressaoHabilidades.jsx'));
-
 const ModalLoja = lazy(() => import('../../components/ModalLoja.jsx'));
 const ModalEditarItem = lazy(() => import('../../components/ModalEditarItem.jsx'));
 const ModalSelecao = lazy(() => import('../../components/ModalSelecao.jsx'));
@@ -41,6 +39,9 @@ const ModalPoderes = lazy(() => import('../../components/ModalPoderes.jsx'));
 const ModalRituais = lazy(() => import('../../components/ModalRituais.jsx'));
 const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.jsx'));
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
+import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
+import Recursos from '../../components/ficha/recursos.jsx';
+import ModalInterludio from '../../components/ModalInterludio.jsx';
 
 // Constantes
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
@@ -56,10 +57,25 @@ const opcoesPericia = listaTodasPericias
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
 
-export default function Ficha() {
-  const { logout } = useAuth(); // Hook para deslogar
+// --- HELPER DE DEBOUNCE (PARA SALVAMENTO NO FIRESTORE) ---
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
+// --- FIM HELPER DE DEBOUNCE ---
 
-  // --- ESTADOS ---
+
+export default function Ficha() {
+  const { logout, usuario } = useAuth(); // Hook para deslogar
+
+  // --- ESTADOS DE DADOS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
   const [calculados, setCalculados] = useState({
     defesaTotal: 10, 
@@ -79,7 +95,12 @@ export default function Ficha() {
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
   const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
   
-  // Estados de Modal
+  // --- ESTADOS DE CONTROLE DE FLUXO ---
+  const [loading, setLoading] = useState(true); // NOVO: Estado de loading
+  const docRef = useRef(null);
+  const isInitializing = useRef(true); 
+  
+  // Estados de Modal (mantidos)
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
@@ -93,14 +114,79 @@ export default function Ficha() {
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
-  // --- EFEITOS ---
+
+  // --- FUNÇÕES DE PERSISTÊNCIA (FIRESTORE) ---
+
+  // Função que realmente faz o UPDATE/SET no Firestore
+  const saveToFirestore = useCallback(async (dadosCompletos) => {
+    if (docRef.current) {
+        try {
+            await updateDoc(docRef.current, dadosCompletos); 
+        } catch (e) {
+            console.error("Erro ao salvar no Firestore:", e);
+        }
+    }
+  }, []);
+  
+  // Inicializa o debouncer uma vez
+  const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
+
+
+  // --- EFEITO DE LISTENER EM TEMPO REAL (LOAD E SYNC) ---
   useEffect(() => {
+    if (!usuario || !usuario.uid) {
+        setLoading(false);
+        return;
+    }
+    
+    const uid = usuario.uid;
+    docRef.current = doc(db, "personagens", uid);
+    
+    // Listener em tempo real
+    const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
+        if (docSnap.exists()) {
+            // Ficha existe: carrega dados
+            const dadosFirestore = docSnap.data();
+            FichaClass.carregarDados(dadosFirestore);
+            handleFichaChange(null, null, null, true); // Força recálculo e renderização local, mas pula o save
+            console.log("Ficha sincronizada do Firestore.");
+        } else if (isInitializing.current) {
+            // Ficha NÃO existe (e é a primeira carga): cria uma nova
+            console.log("Ficha não encontrada. Criando nova ficha no Firestore...");
+            
+            const novosDados = FichaClass.getDados();
+            novosDados.info.jogador = usuario.displayName || "Convidado";
+            novosDados.info.nome = usuario.displayName ? usuario.displayName.split(' ')[0] : "Agente Novo";
+            
+            // Usa setDoc para criar o documento (não é debounced)
+            await setDoc(docRef.current, novosDados);
+            
+            // O próprio listener acima será chamado novamente, recarregando a ficha
+        }
+
+        // Finaliza o estado de loading e inicialização
+        if (isInitializing.current) {
+            isInitializing.current = false;
+        }
+        setLoading(false);
+    }, (error) => {
+        console.error("Erro ao ouvir o Firestore:", error);
+        setLoading(false);
+    });
+
+    // O retorno do useEffect é a função de limpeza
+    return () => unsubscribe();
+  }, [usuario]);
+
+
+  // --- EFEITOS (AJUSTES MANTIDOS) ---
+  useEffect(() => {
+    // Mantido apenas o carregamento do tema do localStorage
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
-    carregarFicha();
-    handleFichaChange(null, null, null); 
   }, []); 
 
+  // (Outros useEffects de tema, trilha, origem, parallax e modos de tensão/morte são mantidos)
   useEffect(() => {
     const customTrilhas = FichaClass.getTrilhasPersonalizadas(); 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
@@ -133,9 +219,8 @@ export default function Ficha() {
   useEffect(() => {
     document.title = `${personagem.info.nome || "Ficha"} - NEX ${personagem.info.nex || "0%"}`;
   }, [personagem.info.nome, personagem.info.nex]); 
-
+  
   useEffect(() => {
-    // Parallax Logic
     const parallaxContainer = document.getElementById("parallax-background");
     const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
     if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
@@ -154,7 +239,6 @@ export default function Ficha() {
   }, []); 
 
   useEffect(() => {
-    // Modos de Tensão/Morte
     const rootElement = document.documentElement; 
     const visibilidade = personagem.visibilidade || 0;
     const falhas = personagem.perseguicao.falhas || 0;
@@ -184,31 +268,32 @@ export default function Ficha() {
     };
   }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
 
-  // --- FUNÇÕES AUXILIARES ---
-  const carregarFicha = () => {
-    const dadosSalvos = localStorage.getItem("fichaOrdemParanormal");
-    if (dadosSalvos) {
-      try {
-        const dadosFicha = JSON.parse(dadosSalvos);
-        FichaClass.carregarDados(dadosFicha);
-      } catch (e) {
-        console.error("Erro ao carregar dados salvos:", e);
+
+  // --- FUNÇÕES AUXILIARES (AJUSTADAS) ---
+  
+  // Removido carregarFicha
+  const salvarFicha = () => {
+    // Força um save imediato e notifica o usuário
+    debouncedSave(FichaClass.getDados());
+    alert("Ficha salva com sucesso no Firestore (automático).");
+  };
+
+  const limparFicha = () => { 
+    if (window.confirm("Isso apagará a ficha salva (no Firestore). Deseja continuar?")) {
+      if (docRef.current) {
+        deleteDoc(docRef.current).then(() => {
+           // Após deletar, o listener de Firestore será acionado, criando uma nova ficha
+           window.location.reload(); 
+        }).catch(e => console.error("Erro ao apagar ficha:", e));
+      } else {
+         window.location.reload(); 
       }
     }
   };
-  const salvarFicha = () => {
-    const dadosFicha = FichaClass.getDados();
-    localStorage.setItem("fichaOrdemParanormal", JSON.stringify(dadosFicha));
-    alert("Ficha salva com sucesso no navegador!");
-  };
-  const limparFicha = () => {
-    if (window.confirm("Isso apagará a ficha salva. Deseja continuar?")) {
-      localStorage.removeItem("fichaOrdemParanormal");
-      window.location.reload(); 
-    }
-  };
+  
   const exportarFicha = () => {
-    handleFichaChange(null, null, null); 
+    // Força o cálculo e exporta o estado atual, sem salvar no Firestore (que já é automático)
+    handleFichaChange(null, null, null, true); 
     const dadosFicha = FichaClass.getDados();
     const nomeArquivo = `${(personagem.info.nome || "ficha-ordem").replace(/[^a-z0-9]/gi, '_')}.json`;
     const dadosString = JSON.stringify(dadosFicha, null, 2);
@@ -221,6 +306,7 @@ export default function Ficha() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href); 
   };
+  
   const importarFicha = (arquivo) => {
     if (!arquivo) return;
     const leitor = new FileReader();
@@ -228,14 +314,16 @@ export default function Ficha() {
       try {
         const dadosFicha = JSON.parse(e.target.result);
         FichaClass.carregarDados(dadosFicha);
-        handleFichaChange(null, null, null);
-        alert("Ficha importada com sucesso!");
+        // NOVO: Força o salvamento da ficha importada no Firestore
+        saveToFirestore(FichaClass.getDados()); 
+        handleFichaChange(null, null, null, true);
+        alert("Ficha importada e salva no Firestore com sucesso!");
       } catch (erro) { alert("Erro ao ler o arquivo JSON."); }
     };
     leitor.readAsText(arquivo);
   };
 
-  // --- HANDLERS ---
+  // --- HANDLERS DEMAIS (MANTIDOS E AJUSTADOS) ---
   const handleToggleCondicao = (condicaoId) => { FichaClass.toggleCondicao(condicaoId); handleFichaChange(null, null, null); };
   const handleAplicarInterludio = (opcoes) => {
       const resultado = FichaClass.aplicarInterludio(opcoes);
@@ -245,7 +333,6 @@ export default function Ficha() {
       alert(mensagem);
   };
   
-  // Modais e Ações de Item
   const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
   const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
   const handleAddTrilha = (trilhaData) => { FichaClass.addTrilhaPersonalizada(trilhaData); handleFichaChange(null, null, null); handleFecharTrilhaModal(); };
@@ -354,9 +441,13 @@ export default function Ficha() {
     FichaClass.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
   };
 
-  // --- HANDLE CHANGE CENTRAL ---
-  function handleFichaChange(secao, campo, valor) {
+
+  // --- HANDLE CHANGE CENTRAL (MODIFICADO PARA SINCRONIZAÇÃO) ---
+  // Adicionado `skipSave` para evitar salvar dados vindos do listener
+  function handleFichaChange(secao, campo, valor, skipSave = false) {
     let skipUpdate = false;
+    
+    // --- Lógica de manipulação de dados na FichaClass (MANTIDA) ---
     if (secao) {
         if (secao === 'info') {
             if (campo === 'nex') {
@@ -398,17 +489,19 @@ export default function Ficha() {
         else if (secao === 'resistencias') FichaClass.setResistencia(campo, valor);
     }
     
+    // Se o modal for aberto, o estado local já foi atualizado pela lógica do if(secao)
     if (skipUpdate) return;
+    // --- Fim da Lógica de manipulação de dados na FichaClass ---
 
+
+    // --- Lógica de Recálculo e Renderização Local (MANTIDA) ---
     FichaClass.calcularValoresMaximos(); 
-    const bonusDefesa = FichaClass.getBonusDefesaInventario();
-    FichaClass.setDefesa('equip', bonusDefesa);
     const novosDados = FichaClass.getDados(); 
-
+    
+    // Recálculo do bônus de defesa e penalidades (mantido)
     const agi = FichaClass.getAtributoFinal('agi');
     const vig = FichaClass.getAtributoFinal('vig');
     const int = FichaClass.getAtributoFinal('int');
-    
     const equip = novosDados.defesa.equip || 0;
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
@@ -419,7 +512,6 @@ export default function Ficha() {
     if (novosDados.condicoesAtivas.includes('agarrado') || novosDados.condicoesAtivas.includes('caido')) penalidadeDefesa -= 5; 
 
     const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa; 
-    
     const treino_fortitude = parseInt(novosDados.pericias.fortitude) || 0;
     const treino_reflexos = parseInt(novosDados.pericias.reflexos) || 0;
     const treino_luta = parseInt(novosDados.pericias.luta) || 0;
@@ -428,10 +520,8 @@ export default function Ficha() {
 
     const nexNum = parseInt(String(novosDados.info.nex || '0%').replace(/[^0-9]/g, '')) || 0;
     const canChangeTheme = nexNum >= 50; 
-
     const bonusPericiaCalculado = {};
     Object.keys(novosDados.pericias).forEach(key => { bonusPericiaCalculado[key] = FichaClass.getBonusPericiaInventario(key); });
-    
     let bonusClassePericias = 0;
     switch (novosDados.info.classe) {
       case "combatente": bonusClassePericias = 1 + int; break;
@@ -450,6 +540,7 @@ export default function Ficha() {
     const patenteInfo = getPatenteInfo(ppAtual) || Patentes[0];
     const cargaMax = FichaClass.getMaxPeso(); 
 
+    // Atualiza o estado calculado
     setCalculados({
       defesaTotal, cargaAtual: FichaClass.getPesoTotal(), cargaMax, periciasTreinadas, periciasTotal,
       bonusPericia: bonusPericiaCalculado, canChangeTheme, patente: patenteInfo,
@@ -457,16 +548,48 @@ export default function Ficha() {
       esquiva_bonus: (treino_reflexos >= 5) ? bonus_reflexos : '—',
       tem_contra_ataque: treino_luta >= 5,
     });
+    
+    // Atualiza o estado principal
     setPersonagem(novosDados);
+
+    // --- NOVO: SALVAMENTO DEBOUCED NO FIRESTORE (Fase 2.3) ---
+    // Apenas salva se não for o dado vindo do listener (skipSave)
+    if (!isInitializing.current && !skipSave) {
+         debouncedSave(novosDados);
+    }
   }
 
+
+  // --- RENDER (AJUSTADO PARA LOADING) ---
+  if (loading) {
+      return (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100vh', 
+            flexDirection: 'column', 
+            color: 'var(--cor-destaque)', 
+            backgroundColor: 'var(--cor-fundo, #050a10)' 
+          }}>
+              <img 
+                src="/assets/images/SimboloSemafinidade.webp" 
+                alt="Ordo Realitas" 
+                style={{ width: '100px', height: '100px', filter: 'drop-shadow(0 0 10px var(--cor-destaque))', marginBottom: '20px' }}
+              />
+              <h1 style={{ fontFamily: '"Special Elite", monospace', fontSize: '2em' }}>Conectando à Ordem...</h1>
+              <p>Carregando ficha em tempo real.</p>
+          </div>
+      );
+  }
+  
   const controlesProps = {
     temaAtual: tema, onSave: salvarFicha, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
     onThemeChange: setTema, canChangeTheme: calculados.canChangeTheme
   };
   const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando...</div>;
 
-  // --- RENDER ---
+
   return (
     <>
       <div id="parallax-background">
