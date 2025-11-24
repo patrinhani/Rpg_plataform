@@ -1,13 +1,12 @@
 // src/pages/Ficha/index.jsx
 import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
 
-// Ajuste dos caminhos
+// Estilos e Libs
 import '../../App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { ficha as FichaClass } from '../../lib/personagem.js'; 
 import { 
     database, 
-    OpcoesClasse, 
     poderesCombatente, 
     poderesEspecialista, 
     poderesOcultista, 
@@ -15,16 +14,16 @@ import {
     poderesParanormais,
     getPatenteInfo, 
     Patentes,       
+    OpcoesClasse 
 } from '../../lib/database.js';
-import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../lib/progressao.js'; 
+import { getMergedTrilhas, groupTrilhasByClass, progressaoClasses } from '../../lib/progressao.js'; 
 
-// Contexto
+// Contexto e Firebase
 import { useAuth } from '../../contexts/AuthContext.jsx';
-// Firestore
 import { db } from '../../lib/firebase'; 
 import { doc, setDoc, updateDoc, onSnapshot, deleteDoc } from 'firebase/firestore'; 
 
-// Componentes (Lazy)
+// Componentes (Lazy Loading)
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
@@ -42,7 +41,7 @@ import FichaPrincipal from '../../components/FichaPrincipal.jsx';
 import Recursos from '../../components/ficha/recursos.jsx';
 import ModalInterludio from '../../components/ModalInterludio.jsx';
 
-// Constantes
+// Constantes Auxiliares
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
     { nome: 'Sangue', valor: 'sangue' },
@@ -55,49 +54,36 @@ const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
-// --- HELPER DE DEBOUNCE ---
+// Helper para evitar salvamentos excessivos
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-        timeoutId = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
     };
 }
 
-// --- COMPONENTE PRINCIPAL ---
-export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de contexto
-  const { logout, usuario } = useAuth(); 
+export default function Ficha({ fichaId, mesaContexto }) {
+  const { usuario } = useAuth(); 
 
-  // --- ESTADOS DE DADOS ---
+  // --- ESTADOS ---
   const [personagem, setPersonagem] = useState(FichaClass.getDados());
   const [calculados, setCalculados] = useState({
-    defesaTotal: 10, 
-    cargaAtual: 0, 
-    cargaMax: 2, 
-    periciasTreinadas: 0, 
-    periciasTotal: 0, 
-    bonusPericia: {}, 
-    canChangeTheme: false,
-    patente: Patentes[0], 
-    bloqueio_rd: '—',      
-    esquiva_bonus: '—',    
-    tem_contra_ataque: false, 
+    defesaTotal: 10, cargaAtual: 0, cargaMax: 2, periciasTreinadas: 0, periciasTotal: 0, 
+    bonusPericia: {}, canChangeTheme: false, patente: Patentes[0], 
+    bloqueio_rd: '—', esquiva_bonus: '—', tem_contra_ataque: false, 
   });
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
   const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
   
-  // --- ESTADOS DE CONTROLE ---
+  // Controle
   const [loading, setLoading] = useState(true); 
-  const docRef = useRef(null); // Referência ao documento no Firestore
+  const docRef = useRef(null); 
   const isInitializing = useRef(true); 
   
-  // Estados de Modal
+  // Modais
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
@@ -111,8 +97,7 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
-
-  // --- FUNÇÃO DE SALVAR (DEBOUNCED) ---
+  // --- PERSISTÊNCIA ---
   const saveToFirestore = useCallback(async (dadosCompletos) => {
     if (docRef.current) {
         try {
@@ -125,64 +110,94 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
   
   const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
 
-
-  // --- EFEITO DE CONEXÃO COM FIRESTORE (MESA vs SOLO) ---
+  // --- CONEXÃO COM FIRESTORE ---
   useEffect(() => {
     if (!usuario || !usuario.uid) {
         setLoading(false);
         return;
     }
     
-    // 1. Determina o caminho do documento
     if (mesaContexto) {
-        // Modo Mesa: Salva na subcoleção da mesa
         docRef.current = doc(db, "mesas", mesaContexto, "personagens", usuario.uid);
-        console.log(`Conectado à Mesa: ${mesaContexto}`);
+        console.log(`📄 Modo Mesa: ${mesaContexto}`);
     } else {
-        // Modo Pessoal: Salva na coleção raiz
-        // Se fichaId for passado (futuro suporte a múltiplas fichas), usa ele, senão usa UID
         const idAlvo = fichaId || usuario.uid;
-        docRef.current = doc(db, "personagens", idAlvo);
-        console.log("Conectado à Ficha Pessoal");
+        docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
+        console.log(`📄 Modo Pessoal: ${idAlvo}`);
     }
     
-    // 2. Listener em tempo real
     const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
         if (docSnap.exists()) {
-            // Ficha existe: carrega dados
             const dadosFirestore = docSnap.data();
             FichaClass.carregarDados(dadosFirestore);
-            handleFichaChange(null, null, null, true); // Força update local sem salvar de volta
+            handleFichaChange(null, null, null, true); 
         } else if (isInitializing.current) {
-            // Ficha NÃO existe (primeira vez): cria uma nova
-            console.log("Criando nova ficha...");
-            
+            console.log("Criando ficha inicial...");
             const novosDados = FichaClass.getDados();
             novosDados.info.jogador = usuario.displayName || "Agente";
-            // Se estiver numa mesa, o nome pode vir vazio para o jogador preencher
             novosDados.info.nome = novosDados.info.nome || "Novo Agente";
-            
-            // Cria o documento
             await setDoc(docRef.current, novosDados);
         }
 
         if (isInitializing.current) isInitializing.current = false;
         setLoading(false);
     }, (error) => {
-        console.error("Erro de permissão ou conexão:", error);
+        console.error("Erro no Firestore:", error);
         setLoading(false);
     });
 
     return () => unsubscribe();
   }, [usuario, mesaContexto, fichaId]);
 
+  // --- 2. EFEITO DE PARALLAX (CORRIGIDO) ---
+  useEffect(() => {
+    // Só tenta ativar o parallax se o carregamento terminou
+    if (loading) return;
 
-  // --- EFEITOS DE UI ---
+    const parallaxContainer = document.getElementById("parallax-background");
+    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
+    
+    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
+
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      
+      // Ajuste a sensibilidade aqui (0.015 é suave)
+      const moveX = (clientX - centerX) * -0.015;
+      const moveY = (clientY - centerY) * -0.015;
+
+      parallaxSimbolos.forEach((simbolo) => {
+        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [loading]); // <--- ADICIONADO 'loading' AQUI PARA REINICIAR APÓS CARREGAR
+
+  // --- 3. EFEITO DE TEMA ---
+  useEffect(() => {
+    const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
+    if (tema === temaAtual) return; 
+
+    if (tema === "tema-sangue") {
+      setIsSangueAnimVisible(true);
+    } else {
+      aplicarTemaComAnimacao(tema, temaAtual, () => {
+        document.documentElement.dataset.tema = tema;
+        localStorage.setItem("temaFichaOrdem", tema);
+      });
+    }
+  }, [tema]); 
+
   useEffect(() => {
     const temaSalvo = localStorage.getItem("temaFichaOrdem") || "tema-ordem";
     aplicarTemaSemAnimacao(temaSalvo);
-  }, []); 
+  }, []);
 
+  // --- OUTROS EFEITOS ---
   useEffect(() => {
     const customTrilhas = FichaClass.getTrilhasPersonalizadas(); 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
@@ -200,221 +215,11 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
   }, [personagem.info.origem]);
 
   useEffect(() => {
-    const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
-    if (tema === temaAtual) return; 
-    if (tema === "tema-sangue") {
-      setIsSangueAnimVisible(true);
-    } else {
-      aplicarTemaComAnimacao(tema, temaAtual, () => {
-        document.documentElement.dataset.tema = tema;
-        localStorage.setItem("temaFichaOrdem", tema);
-      });
-    }
-  }, [tema]); 
-  
-  useEffect(() => {
-    document.title = `${personagem.info.nome || "Ficha"} - NEX ${personagem.info.nex || "0%"}`;
+    const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha";
+    document.title = title;
   }, [personagem.info.nome, personagem.info.nex]); 
-  
-  useEffect(() => {
-    const parallaxContainer = document.getElementById("parallax-background");
-    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
-    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      const moveX = (clientX - centerX) * -0.01;
-      const moveY = (clientY - centerY) * -0.01;
-      parallaxSimbolos.forEach((simbolo) => {
-        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-      });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []); 
 
-  useEffect(() => {
-    const rootElement = document.documentElement; 
-    const visibilidade = personagem.visibilidade || 0;
-    const falhas = personagem.perseguicao.falhas || 0;
-    const sucessos = personagem.perseguicao.sucessos || 0;
-
-    if (falhas >= 3) {
-      rootElement.classList.add('modo-morte');
-      rootElement.classList.remove('modo-tensao', 'modo-sucesso');
-    } else if (sucessos >= 3) {
-      rootElement.classList.add('modo-sucesso');
-      rootElement.classList.remove('modo-tensao', 'modo-morte');
-    } else if (visibilidade >= 3) {
-      rootElement.classList.add('modo-tensao');
-      rootElement.classList.remove('modo-sucesso', 'modo-morte');
-    } else {
-      rootElement.classList.remove('modo-tensao', 'modo-sucesso', 'modo-morte');
-    }
-    return () => {
-      rootElement.classList.remove('modo-tensao', 'modo-sucesso', 'modo-morte');
-    };
-  }, [personagem.visibilidade, personagem.perseguicao.sucessos, personagem.perseguicao.falhas]); 
-
-
-  // --- FUNÇÕES DE AÇÃO ---
-  
-  const salvarFicha = () => {
-    debouncedSave(FichaClass.getDados());
-    alert("Ficha salva no Firestore.");
-  };
-
-  const limparFicha = () => { 
-    if (window.confirm("Isso apagará a ficha atual permanentemente. Continuar?")) {
-      if (docRef.current) {
-        deleteDoc(docRef.current).then(() => {
-           window.location.reload(); 
-        }).catch(e => console.error("Erro ao apagar:", e));
-      } else {
-         window.location.reload(); 
-      }
-    }
-  };
-  
-  const exportarFicha = () => {
-    handleFichaChange(null, null, null, true); 
-    const dadosFicha = FichaClass.getDados();
-    const nomeArquivo = `${(personagem.info.nome || "ficha").replace(/[^a-z0-9]/gi, '_')}.json`;
-    const blob = new Blob([JSON.stringify(dadosFicha, null, 2)], { type: "application/json" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = nomeArquivo;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  
-  const importarFicha = (arquivo) => {
-    if (!arquivo) return;
-    const leitor = new FileReader();
-    leitor.onload = (e) => {
-      try {
-        const dadosFicha = JSON.parse(e.target.result);
-        FichaClass.carregarDados(dadosFicha);
-        saveToFirestore(FichaClass.getDados()); 
-        handleFichaChange(null, null, null, true);
-        alert("Ficha importada!");
-      } catch (erro) { alert("Erro ao ler JSON."); }
-    };
-    leitor.readAsText(arquivo);
-  };
-
-  const handleToggleCondicao = (condicaoId) => { FichaClass.toggleCondicao(condicaoId); handleFichaChange(null, null, null); };
-  const handleAplicarInterludio = (opcoes) => {
-      const resultado = FichaClass.aplicarInterludio(opcoes);
-      handleFichaChange(null, null, null);
-      let mensagem = `Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`;
-      if (resultado.extras?.length) mensagem += `\nEfeitos: ${resultado.extras.join(', ')}`;
-      alert(mensagem);
-  };
-  
-  // Modais Handlers
-  const handleAbrirTrilhaModal = () => setIsTrilhaModalOpen(true);
-  const handleFecharTrilhaModal = () => setIsTrilhaModalOpen(false);
-  const handleAddTrilha = (trilhaData) => { FichaClass.addTrilhaPersonalizada(trilhaData); handleFichaChange(null, null, null); handleFecharTrilhaModal(); };
-  
-  const handleAbrirPoderesModal = () => setIsPoderesModalOpen(true);
-  const handleFecharPoderesModal = () => setIsPoderesModalOpen(false);
-  const getPoderesDisponiveis = (classe) => {
-      switch (classe.toLowerCase()) {
-          case 'combatente': return poderesCombatente;
-          case 'especialista': return poderesEspecialista;
-          case 'ocultista': return poderesOcultista;
-          default: return [];
-      }
-  };
-
-  const handleAbrirRitualModal = () => setIsRitualModalOpen(true);
-  const handleFecharRitualModal = () => setIsRitualModalOpen(false);
-  const handleAddRitual = (ritual) => { FichaClass.addRitualInventario(ritual); handleFichaChange(null, null, null); };
-  const handleRemoveRitual = (inventarioId) => { FichaClass.removeRitualInventario(inventarioId); handleFichaChange(null, null, null); };
-
-  const handleAbrirLoja = () => setIsLojaOpen(true);
-  const handleFecharLoja = () => setIsLojaOpen(false);
-  const handleFecharSelecao = () => { setIsSelecaoOpen(false); setItemPendente(null); };
-
-  const handleAbrirModalEdicao = (inventarioId) => {
-    const item = personagem.inventario.find(i => i.inventarioId === inventarioId);
-    if (item) { setItemParaEditar(item); setIsModalEditarItemOpen(true); }
-  };
-  const handleFecharModalEdicao = () => { setIsModalEditarItemOpen(false); setItemParaEditar(null); };
-  const handleSalvarItemEditado = (itemAtualizado) => {
-    if (itemParaEditar) { FichaClass.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado); handleFecharModalEdicao(); handleFichaChange(null, null, null); }
-  };
-  const handleAddItem = (itemOriginal) => {
-    if (itemOriginal.tipoBonus === 'generico') {
-      setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' });
-      setIsSelecaoOpen(true); handleFecharLoja(); 
-    } else if (itemOriginal.tipoBonus === 'escolhaElemento') {
-      setItemPendente({ ...itemOriginal, tituloModal: `Escolher Elemento: ${itemOriginal.nome}`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'elemento' });
-      setIsSelecaoOpen(true); handleFecharLoja();
-    } else {
-      FichaClass.addItemInventario(itemOriginal); handleFichaChange(null, null, null); 
-    }
-  };
-  const handleRemoveItem = (inventarioId) => { FichaClass.removeItemInventario(inventarioId); handleFichaChange(null, null, null); };
-  const handleToggleItem = (inventarioId) => { FichaClass.toggleIgnorarCalculos(inventarioId); handleFichaChange(null, null, null); };
-  
-  const handleAbrirDiarioModal = (nota) => { setNotaParaEditar(nota); setIsDiarioModalOpen(true); };
-  const handleFecharDiarioModal = () => { setIsDiarioModalOpen(false); setNotaParaEditar(null); };
-  const handleSalvarNota = (dadosNota) => {
-    if (notaParaEditar) FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); else FichaClass.addNotaDiario(dadosNota);
-    handleFichaChange(null, null, null); handleFecharDiarioModal(); 
-  };
-  const handleRemoverNota = (notaId) => { if (window.confirm("Apagar anotação?")) { FichaClass.removeNotaDiario(notaId); handleFichaChange(null, null, null); } };
-  
-  const handleAbrirSelecaoPoder = (poder) => {
-      if (poder.requiresChoice === 'elemento') {
-          setItemPendente({ powerKey: poder.key, nome: poder.nome, tituloModal: `Elemento para ${poder.nome}`, descricaoModal: 'Selecione:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' });
-          setIsSelecaoOpen(true);
-      }
-  }
-
-  const handleTogglePoder = (poder) => {
-      const aprendidos = FichaClass.getPoderesAprendidos();
-      const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`));
-      if (isAprendido) {
-          const keysToRemove = aprendidos.filter(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)).map(p => p.key);
-          keysToRemove.forEach(key => FichaClass.removePoder(key));
-      } else {
-          if (poder.requiresChoice) handleAbrirSelecaoPoder(poder); else FichaClass.addPoder(poder); 
-      }
-      handleFichaChange(null, null, null);
-  };
-
-  const handleVincularItem = (valorSelecionado) => {
-    if (!itemPendente) return;
-    if (itemPendente.tipoVinculo === 'poderElemento') { 
-        const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey);
-        if (poderOriginal) {
-            const el = valorSelecionado.toLowerCase();
-            const poderVinculado = { ...poderOriginal, nome: `${poderOriginal.nome} (${valorSelecionado})`, elemento: el, requiresChoice: null, key: `${poderOriginal.key}_${el}` };
-            FichaClass.addPoder(poderVinculado);
-            handleFichaChange(null, null, null); 
-        }
-        handleFecharSelecao(); return; 
-    }
-    if (itemPendente.tipoVinculo === 'trilhaElemento') {
-      const trilha = itemPendente.trilhaValue;
-      FichaClass.setInfo('trilha', trilha);
-      FichaClass.setInfo(`${trilha}_elemento`, valorSelecionado); 
-      handleFecharSelecao(); handleFichaChange(null, null, null); return; 
-    }
-    let itemVinculado = { ...itemPendente };
-    if (itemPendente.tipoVinculo === 'pericia') itemVinculado.periciaVinculada = valorSelecionado; 
-    else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); }
-    itemVinculado.tipoBonus = null; 
-    FichaClass.addItemInventario(itemVinculado); handleFecharSelecao(); handleFichaChange(null, null, null); 
-  };
-
-
-  // --- HANDLE CHANGE CENTRAL ---
+  // --- HANDLER CENTRAL ---
   function handleFichaChange(secao, campo, valor, skipSave = false) {
     let skipUpdate = false;
     
@@ -426,14 +231,14 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
                  valor = `${nex}%`;
                  FichaClass.setInfo(campo, valor);
             } else if (campo === 'origem') {
-                const nova = valor;
-                const antiga = FichaClass.getDados().info.origem;
-                if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) database.periciasPorOrigem[antiga].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 5) FichaClass.setTreinoPericia(p, 0); });
-                if (database.periciasPorOrigem?.[nova]?.fixas) database.periciasPorOrigem[nova].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 0) FichaClass.setTreinoPericia(p, 5); });
-                if (antiga) FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
-                const dadosOrigem = database.periciasPorOrigem?.[nova];
-                if (dadosOrigem && dadosOrigem.poder) FichaClass.addPoder({ key: `origem_${nova}`, nome: dadosOrigem.poder.nome, descricao: dadosOrigem.poder.descricao, tipo: "Origem", isOrigemPower: true });
-                FichaClass.setInfo(campo, valor);
+                 const nova = valor;
+                 const antiga = FichaClass.getDados().info.origem;
+                 if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) database.periciasPorOrigem[antiga].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 5) FichaClass.setTreinoPericia(p, 0); });
+                 if (database.periciasPorOrigem?.[nova]?.fixas) database.periciasPorOrigem[nova].fixas.forEach(p => { if (FichaClass.getBonusTotalPericia(p) === 0) FichaClass.setTreinoPericia(p, 5); });
+                 if (antiga) FichaClass.poderes_aprendidos = FichaClass.poderes_aprendidos.filter(p => !p.isOrigemPower);
+                 const dadosOrigem = database.periciasPorOrigem?.[nova];
+                 if (dadosOrigem && dadosOrigem.poder) FichaClass.addPoder({ key: `origem_${nova}`, nome: dadosOrigem.poder.nome, descricao: dadosOrigem.poder.descricao, tipo: "Origem", isOrigemPower: true });
+                 FichaClass.setInfo(campo, valor);
             } else if (campo === 'trilha') {
                 const trilha = valor;
                 const dados = getMergedTrilhas(FichaClass.getTrilhasPersonalizadas())[trilha]; 
@@ -464,7 +269,6 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
     FichaClass.calcularValoresMaximos(); 
     const novosDados = FichaClass.getDados(); 
     
-    // Recálculos
     const agi = FichaClass.getAtributoFinal('agi');
     const vig = FichaClass.getAtributoFinal('vig');
     const int = FichaClass.getAtributoFinal('int');
@@ -472,6 +276,7 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
     let penalidadeDefesa = 0;
+    
     if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('desprevenido') || novosDados.condicoesAtivas.includes('atordoado') || novosDados.condicoesAtivas.includes('cego')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('indefeso') || novosDados.condicoesAtivas.includes('inconsciente')) penalidadeDefesa -= 10; 
@@ -488,6 +293,7 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
     const canChangeTheme = nexNum >= 50; 
     const bonusPericiaCalculado = {};
     Object.keys(novosDados.pericias).forEach(key => { bonusPericiaCalculado[key] = FichaClass.getBonusPericiaInventario(key); });
+    
     let bonusClassePericias = 0;
     switch (novosDados.info.classe) {
       case "combatente": bonusClassePericias = 1 + int; break;
@@ -521,13 +327,118 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
     }
   }
 
+  // --- HANDLERS MODAIS ---
+  const handleToggleCondicao = (condicaoId) => { FichaClass.toggleCondicao(condicaoId); handleFichaChange(null, null, null); };
+  const handleAplicarInterludio = (opcoes) => {
+      const resultado = FichaClass.aplicarInterludio(opcoes);
+      handleFichaChange(null, null, null);
+      alert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`);
+  };
 
-  // --- RENDER ---
+  const handleAddItem = (itemOriginal) => {
+    if (itemOriginal.tipoBonus === 'generico') {
+      setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' });
+      setIsSelecaoOpen(true); setIsLojaOpen(false); 
+    } else if (itemOriginal.tipoBonus === 'escolhaElemento') {
+      setItemPendente({ ...itemOriginal, tituloModal: `Escolher Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'elemento' });
+      setIsSelecaoOpen(true); setIsLojaOpen(false);
+    } else {
+      FichaClass.addItemInventario(itemOriginal); handleFichaChange(null, null, null); 
+    }
+  };
+  const handleRemoveItem = (inventarioId) => { FichaClass.removeItemInventario(inventarioId); handleFichaChange(null, null, null); };
+  const handleToggleItem = (inventarioId) => { FichaClass.toggleIgnorarCalculos(inventarioId); handleFichaChange(null, null, null); };
+  const handleSalvarItemEditado = (itemAtualizado) => {
+    if (itemParaEditar) { FichaClass.updateItemInventario(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); handleFichaChange(null, null, null); }
+  };
+  const handleVincularItem = (valorSelecionado) => {
+    if (!itemPendente) return;
+    if (itemPendente.tipoVinculo === 'poderElemento') { 
+        const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey);
+        if (poderOriginal) {
+            const el = valorSelecionado.toLowerCase();
+            const poderVinculado = { ...poderOriginal, nome: `${poderOriginal.nome} (${valorSelecionado})`, elemento: el, requiresChoice: null, key: `${poderOriginal.key}_${el}` };
+            FichaClass.addPoder(poderVinculado);
+            handleFichaChange(null, null, null); 
+        }
+    } else if (itemPendente.tipoVinculo === 'trilhaElemento') {
+      const trilha = itemPendente.trilhaValue;
+      FichaClass.setInfo('trilha', trilha);
+      FichaClass.setInfo(`${trilha}_elemento`, valorSelecionado); 
+      handleFichaChange(null, null, null); 
+    } else {
+      let itemVinculado = { ...itemPendente };
+      if (itemPendente.tipoVinculo === 'pericia') itemVinculado.periciaVinculada = valorSelecionado; 
+      else if (itemPendente.tipoVinculo === 'elemento') { itemVinculado.elemento = valorSelecionado; itemVinculado.nome = itemPendente.nome.replace("(Elemento)", `(${valorSelecionado})`); }
+      itemVinculado.tipoBonus = null; 
+      FichaClass.addItemInventario(itemVinculado); handleFichaChange(null, null, null); 
+    }
+    setIsSelecaoOpen(false); setItemPendente(null);
+  };
+
+  const handleAddRitual = (ritual) => { FichaClass.addRitualInventario(ritual); handleFichaChange(null, null, null); };
+  const handleRemoveRitual = (inventarioId) => { FichaClass.removeRitualInventario(inventarioId); handleFichaChange(null, null, null); };
+  const handleAddTrilha = (trilhaData) => { FichaClass.addTrilhaPersonalizada(trilhaData); handleFichaChange(null, null, null); setIsTrilhaModalOpen(false); };
+  
+  const getPoderesDisponiveis = (classe) => {
+      switch (classe.toLowerCase()) {
+          case 'combatente': return poderesCombatente;
+          case 'especialista': return poderesEspecialista;
+          case 'ocultista': return poderesOcultista;
+          default: return [];
+      }
+  };
+  const handleTogglePoder = (poder) => {
+      const aprendidos = FichaClass.getPoderesAprendidos();
+      const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`));
+      if (isAprendido) {
+          const keysToRemove = aprendidos.filter(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)).map(p => p.key);
+          keysToRemove.forEach(key => FichaClass.removePoder(key));
+      } else {
+          if (poder.requiresChoice) {
+            setItemPendente({ powerKey: poder.key, nome: poder.nome, tituloModal: `Elemento para ${poder.nome}`, descricaoModal: 'Selecione:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' });
+            setIsSelecaoOpen(true);
+          } else FichaClass.addPoder(poder); 
+      }
+      handleFichaChange(null, null, null);
+  };
+
+  const handleSalvarNota = (dadosNota) => {
+    if (notaParaEditar) FichaClass.updateNotaDiario(notaParaEditar.id, dadosNota); else FichaClass.addNotaDiario(dadosNota);
+    handleFichaChange(null, null, null); setIsDiarioModalOpen(false); 
+  };
+  const handleRemoverNota = (id) => { if(confirm("Apagar anotação?")) { FichaClass.removeNotaDiario(id); handleFichaChange(null,null,null); }};
+  
+  const salvarFicha = () => { debouncedSave(FichaClass.getDados()); alert("Ficha salva!"); };
+  const limparFicha = () => { if(window.confirm("Apagar ficha permanentemente?")) { if(docRef.current) deleteDoc(docRef.current); window.location.reload(); } };
+  const exportarFicha = () => {
+      const dados = FichaClass.getDados();
+      const blob = new Blob([JSON.stringify(dados, null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ficha_${dados.info.nome || "agente"}.json`;
+      a.click();
+  };
+  const importarFicha = (arquivo) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const json = JSON.parse(e.target.result);
+              FichaClass.carregarDados(json);
+              saveToFirestore(FichaClass.getDados());
+              handleFichaChange(null, null, null, true);
+              alert("Ficha importada!");
+          } catch(err) { alert("Erro ao ler arquivo JSON."); }
+      };
+      reader.readAsText(arquivo);
+  };
+
   if (loading) {
       return (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', color: 'var(--cor-destaque)', backgroundColor: 'var(--cor-fundo, #050a10)' }}>
-              <img src="/assets/images/SimboloSemafinidade.webp" alt="Ordo Realitas" style={{ width: '100px', height: '100px', filter: 'drop-shadow(0 0 10px var(--cor-destaque))', marginBottom: '20px' }} />
-              <h1 style={{ fontFamily: '"Special Elite", monospace', fontSize: '2em' }}>Carregando Dados...</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', color: 'var(--cor-destaque)', backgroundColor: '#050a10' }}>
+              <img src="/assets/images/SimboloSemafinidade.webp" style={{ width: '100px', filter: 'drop-shadow(0 0 10px var(--cor-destaque))' }} alt="Carregando" />
+              <h1>Sincronizando Ficha...</h1>
           </div>
       );
   }
@@ -536,7 +447,8 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
     temaAtual: tema, onSave: salvarFicha, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
     onThemeChange: setTema, canChangeTheme: calculados.canChangeTheme
   };
-  const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando...</div>;
+
+  const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando Aba...</div>;
 
   return (
     <>
@@ -549,9 +461,6 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
       </div>
       
       <div id="transition-overlay"></div>
-
-      {/* O Botão de Logout deve ficar no Dashboard, mas mantive aqui para segurança caso acesse direto */}
-      <button onClick={logout} style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.7)', border: '1px solid var(--cor-borda)', padding: '5px 10px' }}>SAIR</button>
 
       <Suspense fallback={null}>
         {isSangueAnimVisible && <AnimacaoSangue isVisible={isSangueAnimVisible} onComplete={() => { setIsSangueAnimVisible(false); aplicarTemaSemAnimacao('tema-sangue'); }} />}
@@ -572,20 +481,23 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
       
       <Suspense fallback={<LoadingComponent />}>
         {abaAtiva === 'principal' && (
-          <FichaPrincipal personagem={personagem} calculados={calculados} fichaInstance={FichaClass} handleFichaChange={handleFichaChange} controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={handleToggleCondicao} />
+          <FichaPrincipal
+            personagem={personagem} calculados={calculados} fichaInstance={FichaClass} handleFichaChange={handleFichaChange}
+            controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={handleToggleCondicao} 
+          />
         )}
         {abaAtiva === 'inventario' && (
-          <Inventario inventario={personagem.inventario} onAbrirLoja={handleAbrirLoja} onRemoveItem={handleRemoveItem} onToggleItem={handleToggleItem} onEditItem={handleAbrirModalEdicao} />
+          <Inventario inventario={personagem.inventario} onAbrirLoja={() => setIsLojaOpen(true)} onRemoveItem={handleRemoveItem} onToggleItem={handleToggleItem} onEditItem={(id) => { setItemParaEditar(personagem.inventario.find(i => i.inventarioId === id)); setIsModalEditarItemOpen(true); }} />
         )}
         {abaAtiva === 'rituais' && (
-          <Rituais rituais={personagem.rituais} onAbrirModal={handleAbrirRitualModal} onRemoveRitual={handleRemoveRitual} />
+          <Rituais rituais={personagem.rituais} onAbrirModal={() => setIsRitualModalOpen(true)} onRemoveRitual={(id) => { FichaClass.removeRitualInventario(id); handleFichaChange(null,null,null); }} />
         )}
         {abaAtiva === 'poderes' && (
-          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} onAbrirModal={handleAbrirPoderesModal} />
+          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} onAbrirModal={() => setIsPoderesModalOpen(true)} />
         )}
         {abaAtiva === 'progressao' && (
           <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
-            <button className="btn-add-item" onClick={handleAbrirTrilhaModal} style={{ float: 'right', margin: '10px 0', padding: '5px 15px', fontSize: '1.2em' }}>+ Criar Trilha</button>
+            <button className="btn-add-item" onClick={() => setIsTrilhaModalOpen(true)} style={{ float: 'right', margin: '10px 0' }}>+ Criar Trilha</button>
             <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} info={personagem.info} />
           </div>
         )}
@@ -595,13 +507,14 @@ export default function Ficha({ fichaId, mesaContexto }) { // Recebe props de co
 
         <footer><p></p></footer>
         
-        {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={handleFecharLoja} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
-        {isSelecaoOpen && !!itemPendente && <ModalSelecao isOpen={isSelecaoOpen && !!itemPendente} onClose={handleFecharSelecao} item={itemPendente} onSelect={handleVincularItem} />}
-        {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={handleFecharRitualModal} onAddRitual={handleAddRitual} />}
-        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={handleFecharTrilhaModal} onAddTrilha={handleAddTrilha} classesList={OpcoesClasse} />}
-        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={handleFecharPoderesModal} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={handleAbrirSelecaoPoder} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
-        {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={handleFecharModalEdicao} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
-        {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={handleFecharDiarioModal} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
+        {/* Modais */}
+        {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
+        {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={handleFecharSelecao} item={itemPendente} onSelect={handleVincularItem} />}
+        {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={handleAddRitual} />}
+        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={handleAddTrilha} classesList={OpcoesClasse} />}
+        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={handleAbrirSelecaoPoder} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
+        {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
+        {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
         {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludio} limitePE={FichaClass.calculosDetalhados.limite_pe} />}
       </Suspense> 
     </>
