@@ -1,14 +1,20 @@
+// src/main.jsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 
-// 1. Importe seus novos arquivos de CSS aqui
+// CSS
 import './styles/style.css'
 import './styles/responsive.css'
 
-// 2. O resto do arquivo permanece como o Vite o criou
+// Importe o Provedor de Autenticação
+import { AuthProvider } from './contexts/AuthContext';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    {/* Envolvemos o App com o AuthProvider */}
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </React.StrictMode>,
 )
