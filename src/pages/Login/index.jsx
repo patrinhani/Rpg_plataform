@@ -61,7 +61,7 @@ export default function Login() {
               // Força logout para exigir que o usuário verifique o e-mail antes de entrar
               await logout(); 
               
-              alert("✅ CONTA CRIADA!\n\nVerifique seu e-mail (" + email + ") para ativar a conta antes de logar.\n(Verifique a pasta SPAM)");
+              alert("✅ AGENTE REGISTRADO!\n\nUm protocolo de verificação foi enviado para " + email + ".\nValide seu acesso antes de conectar ao C.A.O.S.\n(Verifique a pasta SPAM)");
               setIsNewUser(false); // Volta para a tela de login
               setLoading(false);
           } else {
@@ -75,13 +75,13 @@ export default function Login() {
           
           // Tratamento de mensagens de erro para o usuário
           if (error.code === 'auth/email-not-verified' || error.message.includes('email-not-verified')) {
-              setLocalError("⚠️ E-mail não verificado. Cheque sua caixa de entrada.");
+              setLocalError("⚠️ Acesso Negado: E-mail pendente de verificação.");
           } else if (error.code === 'auth/weak-password') {
-              setLocalError("A senha deve ter pelo menos 6 caracteres.");
+              setLocalError("Senha insegura (mínimo 6 caracteres).");
           } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-              setLocalError("E-mail ou senha incorretos.");
+              setLocalError("Credenciais inválidas.");
           } else if (error.code === 'auth/email-already-in-use') {
-               setLocalError("Este e-mail já possui cadastro.");
+               setLocalError("Este agente já consta no banco de dados.");
           } else if (error.code === 'auth/invalid-email') {
                setLocalError("Formato de e-mail inválido.");
           } else {
@@ -101,8 +101,8 @@ export default function Login() {
           className="login-logo"
         />
         
-        {/* Títulos mudam conforme o modo */}
-        <h1>{isNewUser ? 'RECRUTAMENTO' : 'ACESSO AO SISTEMA'}</h1>
+        {/* Títulos Temáticos C.A.O.S. */}
+        <h1>{isNewUser ? 'RECRUTAMENTO' : 'ACESSO AO C.A.O.S.'}</h1>
         <p className="subtitulo">
             {isNewUser 
                 ? 'NOVO AGENTE // CRIAÇÃO DE CREDENCIAL' 
@@ -149,7 +149,7 @@ export default function Login() {
             <button className="btn-login primary" type="submit" disabled={loading}>
                 {loading 
                     ? 'PROCESSANDO...' 
-                    : (isNewUser ? 'REGISTRAR AGENTE' : 'ENTRAR NO SISTEMA')
+                    : (isNewUser ? 'REGISTRAR AGENTE' : 'CONECTAR')
                 }
             </button>
             
@@ -164,7 +164,7 @@ export default function Login() {
                     className="toggle-link"
                 >
                     {isNewUser 
-                        ? 'Já possui credencial? Fazer Login.' 
+                        ? 'Já possui credencial? Conectar.' 
                         : 'Não possui acesso? Iniciar Recrutamento.'}
                 </a>
             </div>
@@ -187,11 +187,14 @@ export default function Login() {
         <div style={{
             marginTop: '30px', 
             opacity: 0.4, 
-            fontSize: '0.7em', 
+            fontSize: '0.65em', 
             fontFamily: 'monospace',
-            color: '#aaa'
+            color: '#aaa',
+            lineHeight: '1.4'
         }}>
-            SISTEMA ORDO REALITAS v2.0 <br/> CONEXÃO SEGURA
+            SISTEMA C.A.O.S. v3.0 <br/> 
+            CENTRAL DE ANÁLISE DE OCORRÊNCIAS SOBRENATURAIS <br/>
+            CONEXÃO SEGURA
         </div>
       </div>
     </div>
