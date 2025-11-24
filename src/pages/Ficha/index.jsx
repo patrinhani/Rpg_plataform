@@ -117,6 +117,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
         return;
     }
     
+    // Lógica de Caminho: Mesa vs Pessoal
     if (mesaContexto) {
         docRef.current = doc(db, "mesas", mesaContexto, "personagens", usuario.uid);
         console.log(`📄 Modo Mesa: ${mesaContexto}`);
@@ -132,6 +133,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
             FichaClass.carregarDados(dadosFirestore);
             handleFichaChange(null, null, null, true); 
         } else if (isInitializing.current) {
+            // Cria ficha inicial se não existir
             console.log("Criando ficha inicial...");
             const novosDados = FichaClass.getDados();
             novosDados.info.jogador = usuario.displayName || "Agente";
@@ -151,7 +153,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
 
   // --- 2. EFEITO DE PARALLAX (CORRIGIDO) ---
   useEffect(() => {
-    // Só tenta ativar o parallax se o carregamento terminou
+    // IMPORTANTE: Só ativa se o loading terminou, garantindo que o elemento #parallax-background existe
     if (loading) return;
 
     const parallaxContainer = document.getElementById("parallax-background");
@@ -164,7 +166,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       
-      // Ajuste a sensibilidade aqui (0.015 é suave)
+      // Fator de movimento
       const moveX = (clientX - centerX) * -0.015;
       const moveY = (clientY - centerY) * -0.015;
 
@@ -175,7 +177,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [loading]); // <--- ADICIONADO 'loading' AQUI PARA REINICIAR APÓS CARREGAR
+  }, [loading]); // Dependência 'loading' é crucial aqui
 
   // --- 3. EFEITO DE TEMA ---
   useEffect(() => {
@@ -269,6 +271,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
     FichaClass.calcularValoresMaximos(); 
     const novosDados = FichaClass.getDados(); 
     
+    // Cálculos de Defesa
     const agi = FichaClass.getAtributoFinal('agi');
     const vig = FichaClass.getAtributoFinal('vig');
     const int = FichaClass.getAtributoFinal('int');
@@ -276,7 +279,6 @@ export default function Ficha({ fichaId, mesaContexto }) {
     const outros = parseInt(novosDados.defesa.outros) || 0;
     let bonusOrigemDefesa = (novosDados.info.origem === "policial") ? 2 : 0;
     let penalidadeDefesa = 0;
-    
     if (novosDados.condicoesAtivas.includes('vulneravel')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('desprevenido') || novosDados.condicoesAtivas.includes('atordoado') || novosDados.condicoesAtivas.includes('cego')) penalidadeDefesa -= 5;
     if (novosDados.condicoesAtivas.includes('indefeso') || novosDados.condicoesAtivas.includes('inconsciente')) penalidadeDefesa -= 10; 
@@ -409,6 +411,7 @@ export default function Ficha({ fichaId, mesaContexto }) {
   };
   const handleRemoverNota = (id) => { if(confirm("Apagar anotação?")) { FichaClass.removeNotaDiario(id); handleFichaChange(null,null,null); }};
   
+  // Funções de Arquivo
   const salvarFicha = () => { debouncedSave(FichaClass.getDados()); alert("Ficha salva!"); };
   const limparFicha = () => { if(window.confirm("Apagar ficha permanentemente?")) { if(docRef.current) deleteDoc(docRef.current); window.location.reload(); } };
   const exportarFicha = () => {
@@ -502,21 +505,21 @@ export default function Ficha({ fichaId, mesaContexto }) {
           </div>
         )}
         {abaAtiva === 'diario' && (
-          <Diario diarioData={FichaClass.diario || []} onAbrirModal={handleAbrirDiarioModal} onRemoveNota={handleRemoverNota} />
+          <Diario diarioData={FichaClass.diario || []} onAbrirModal={(nota) => { setNotaParaEditar(nota); setIsDiarioModalOpen(true); }} onRemoveNota={handleRemoverNota} />
         )}
 
         <footer><p></p></footer>
         
         {/* Modais */}
         {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
-        {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={handleFecharSelecao} item={itemPendente} onSelect={handleVincularItem} />}
+        {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
         {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={handleAddRitual} />}
         {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={handleAddTrilha} classesList={OpcoesClasse} />}
-        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={handleAbrirSelecaoPoder} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
+        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
         {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
         {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludio} limitePE={FichaClass.calculosDetalhados.limite_pe} />}
       </Suspense> 
     </>
-  )
+  );
 }
