@@ -1,5 +1,5 @@
 /* src/styles/style.css */
-/* (VERSÃO COMPLETA RECONSTRUÍDA - VISUAL GLASSMORPHISM + HIERARQUIA) */
+/* (VERSÃO COMPLETA - INCLUI SCROLLBARS, AUTOCOMPLETE FIX E HIERARQUIA) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -16,6 +16,29 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+/* --- ADIÇÃO: Scrollbar Personalizada (Essencial para Dark Mode) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050505; 
+}
+::-webkit-scrollbar-thumb {
+  background: #333; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cor-destaque); 
+}
+
+/* --- ADIÇÃO: Cor de Seleção de Texto --- */
+::selection {
+  background: var(--cor-destaque);
+  color: #000;
+}
+
 :root {
   --cor-texto-principal: #f0f0f0;
   --cor-texto-label: #b0b0b0; /* Label mais claro para contraste */
@@ -36,9 +59,18 @@
   --cor-morte: #1a1a1a;
   --cor-morte-brilho: #555555;
 
-  /* Sombras e Efeitos Padrão (Novo) */
+  /* Sombras e Efeitos Padrão */
   --sombra-vidro: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --borda-vidro: 1px solid rgba(255, 255, 255, 0.18);
+
+  /* --- ADIÇÃO: Hierarquia de Camadas (Z-Index) --- */
+  --z-fundo: -1;
+  --z-conteudo: 1;
+  --z-menu-fixo: 800;
+  --z-hud: 900;
+  --z-tracker-compacto: 1000; /* Garante que fique acima da HUD */
+  --z-modal: 2000; 
+  --z-transicao: 9999;
 }
 
 /* --- Paletas de Cores por Tema (Ajustadas para Transparência) --- */
@@ -262,6 +294,16 @@ input:focus, select:focus, textarea:focus,
   box-shadow: 0 0 10px var(--cor-destaque); /* Efeito NEON/Glow */
 }
 
+/* --- ADIÇÃO: Hack para Autocomplete do Chrome não ficar branco --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #111 inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 /* --- 9. Estilo do Hexágono de Atributos (DESKTOP) - GLOW ADICIONADO --- */
 .box-atributos {
   position: relative;
@@ -311,6 +353,7 @@ input[type="number"].input-hex {
   -moz-appearance: textfield;
   appearance: textfield;
   z-index: 10;
+  box-shadow: none; /* Remove shadow padrão do input focus */
 }
 .input-hex::-webkit-outer-spin-button,
 .input-hex::-webkit-inner-spin-button {
@@ -497,7 +540,7 @@ input[type="number"].input-hex {
   width: 100vw;
   height: 100vh;
   background-color: #000;
-  z-index: 9999;
+  z-index: var(--z-transicao);
   pointer-events: none;
   opacity: 0;
   transform: revert;
@@ -597,7 +640,7 @@ input[type="number"].input-hex {
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
+  z-index: var(--z-modal); /* ATUALIZADO COM VARIÁVEL */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1093,7 +1136,7 @@ input[type="number"].input-hex {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1; 
+  z-index: var(--z-fundo); 
   overflow: hidden; 
   pointer-events: none; 
 }
@@ -1148,11 +1191,10 @@ input[type="number"].input-hex {
   gap: 10px;
   
   position: sticky;
-  /* --- ATUALIZADO: Ajusta o 'top' para a nova altura da HUD --- */
   top: 110px; 
   background: rgba(var(--cor-caixa-recurso), 0.9);
   backdrop-filter: blur(5px);
-  z-index: 800;
+  z-index: var(--z-menu-fixo);
   border-bottom: 2px solid var(--cor-caixa); 
 }
 .ficha-aba-link {
@@ -1424,7 +1466,7 @@ input[type="number"].input-hex {
   
   position: sticky;
   top: 0;
-  z-index: 900;
+  z-index: var(--z-hud);
   transition: border-color 0.5s ease; 
 
   display: flex;
@@ -1576,7 +1618,7 @@ input[type="number"].input-hex {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999; 
+  z-index: var(--z-transicao); 
   pointer-events: none; 
   background-color: var(--cor-trans-sangue); 
 }
@@ -1861,10 +1903,6 @@ html.modo-morte .simbolo-parallax {
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3) inset;
 }
 
-/* src/styles/style.css */
-
-/* ... (seu CSS anterior) ... */
-
 /* --- ESTILOS DE CONDIÇÕES --- */
 .condicoes-grid {
   display: grid;
@@ -1967,8 +2005,6 @@ html.modo-morte .simbolo-parallax {
     }
 }
 
-/* src/styles/style.css - ADIÇÕES AO FINAL */
-
 /* --- DASHBOARD (PAINEL) --- */
 .dashboard-container {
   width: 100%;
@@ -1986,6 +2022,10 @@ html.modo-morte .simbolo-parallax {
   margin-bottom: 30px;
   flex-wrap: wrap;
   gap: 15px;
+}
+
+.dashboard-section {
+    margin-bottom: 40px; /* Espaçamento entre seções */
 }
 
 .dashboard-actions {
@@ -2120,8 +2160,6 @@ html.modo-morte .simbolo-parallax {
   border-radius: 8px;
 }
 
-/* Adicione ao final de style.css */
-
 .btn-criar-trilha {
     float: right;
     margin: 10px 0;
@@ -2245,7 +2283,7 @@ html.modo-morte .simbolo-parallax {
   height: 70px; /* Altura fixa */
   background: #080808;
   border-bottom: 2px solid var(--cor-destaque);
-  z-index: 2000; /* Acima de tudo */
+  z-index: var(--z-tracker-compacto); /* Acima de tudo */
   display: flex;
   align-items: center;
   padding: 0 10px;
