@@ -1,7 +1,7 @@
 /* src/styles/responsive.css */
-/* (VERSÃO "ENCAIXADA" E COMPACTA PARA MOBILE) */
+/* (VERSÃO OTIMIZADA PARA TODAS AS TELAS) */
 
-/* --- 1. Ajustes Gerais para Telas Menores (< 1100px) --- */
+/* --- 1. Tablets e Telas Médias (< 1100px) --- */
 @media (max-width: 1100px) {
   .ficha-container {
     grid-template-columns: 1fr 1fr;
@@ -14,13 +14,15 @@
       "calculo      calculo";
     gap: 15px;
   }
+  
+  .mesa-container {
+    grid-template-columns: 1fr 280px; 
+  }
 
-  /* Hexágono um pouco menor em tablets */
   .box-atributos {
     max-width: 450px;
   }
   
-  /* Reposiciona inputs do hexágono para tablets */
   #forca { top: 32%; left: 17%; }
   #agilidade { top: 14%; left: 44%; }
   #intelecto { top: 32%; left: 71%; }
@@ -28,128 +30,71 @@
   #vigor { top: 64%; left: 64%; }
 }
 
-/* --- 2. OTIMIZAÇÃO AGRESSIVA PARA MOBILE (< 768px) --- */
+/* --- 2. MOBILE (< 768px) --- */
 @media (max-width: 768px) {
   
-  /* Reduz o tamanho base da fonte para caber mais coisa */
-  body {
-    font-size: 85%; 
-  }
+  body { font-size: 90%; }
 
-  /* --- HUD (Status) Compacta --- */
+  /* HUD */
   .recursos-container-fixo {
-    position: relative; /* Rola com a página para não comer tela */
     padding: 10px;
-    gap: 10px;
     flex-direction: column;
-    align-items: stretch;
+    gap: 10px;
   }
-
-  /* Organiza PV, SAN e PE em uma linha horizontal apertada */
   .recursos-hud-itens {
-    flex-direction: row;
-    flex-wrap: nowrap; /* Força ficar na mesma linha */
-    gap: 5px;
+    width: 100%;
     justify-content: space-between;
   }
-
   .recurso-hud-item {
     padding: 5px;
-    min-width: 0; /* Permite encolher */
-    flex-basis: 33%;
+    min-width: 0;
+    flex-basis: 30%;
   }
-  
-  .recurso-hud-item label {
-    font-size: 0.9em; /* Label menor */
-    margin-bottom: 2px;
-  }
-  
-  /* Esconde a barra colorida se estiver muito apertado, ou deixa bem fina */
-  .hud-barra-container {
-    height: 6px;
-    margin-bottom: 2px;
-  }
-
-  .hud-numeros-container {
-    justify-content: center;
-  }
-  
-  .hud-input-atual {
-    font-size: 1.1em;
-    width: 40px;
-    padding: 0;
-    height: auto;
-  }
-  .hud-separador, .hud-valor-max {
-    font-size: 1em;
-  }
-
-  /* Foto do personagem menor */
   .personagem-imagem-container {
     width: 70px;
     height: 70px;
-    margin: 0 auto 5px auto;
-    border-width: 2px;
-    order: -1; /* Foto no topo */
+    order: -1;
   }
 
-  /* --- Abas de Navegação "Grudadas" --- */
-  .ficha-abas {
-    top: 0; /* Gruda no topo da tela */
-    padding: 0;
-    gap: 0;
-    background: rgba(10, 10, 10, 0.98);
-    border-bottom: 2px solid var(--cor-destaque);
-    overflow-x: auto; /* Scroll horizontal */
-    justify-content: flex-start;
-    white-space: nowrap;
-    z-index: 1000;
-    scrollbar-width: none; /* Esconde scrollbar Firefox */
+  /* Layouts Gerais */
+  .dashboard-grid {
+    grid-template-columns: 1fr; 
   }
-  .ficha-abas::-webkit-scrollbar { display: none; } /* Esconde scrollbar Chrome */
-
-  .ficha-aba-link {
-    padding: 12px 15px;
-    font-size: 0.9em;
-    border: none;
-    background: transparent;
-    border-right: 1px solid rgba(255,255,255,0.1);
-    margin: 0;
+  
+  .mesa-container {
+    grid-template-columns: 1fr; 
+    display: flex;
+    flex-direction: column-reverse; 
   }
-  .ficha-aba-link.active {
-    background-color: var(--cor-destaque);
-    color: #fff;
+  
+  .mesa-sidebar {
+    width: 100%;
+    margin-top: 20px;
   }
 
-  /* --- Layout Principal em Coluna Única --- */
+  /* Ficha Layout */
   .ficha-container {
     display: flex;
     flex-direction: column;
     padding: 10px;
-    gap: 15px;
   }
-
-  /* Caixas mais compactas */
-  .box {
-    padding: 12px;
-    gap: 10px;
+  .ficha-abas {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 5px;
   }
   
-  /* Títulos das caixas menores */
-  .titulo-bloco, h2 {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
+  .box-identidade {
+    grid-template-columns: 1fr; 
+  }
+  .box-identidade .campo-horizontal {
+    grid-column: span 1 !important;
   }
 
-  /* --- Hexágono de Atributos (Redimensionado) --- */
   .box-atributos {
-    width: 280px; /* Tamanho fixo menor para mobile */
+    width: 280px;
     height: 280px;
-    margin: 0 auto; /* Centralizado */
   }
-  
-  /* Ajuste fino das posições dos números no Hexágono Pequeno */
   input[type="number"].input-hex {
     font-size: 1.8em;
     width: 45px;
@@ -161,125 +106,56 @@
   #presenca { top: 63%; left: 23%; }
   #vigor { top: 63%; left: 62%; }
 
-  /* --- Identidade (Campos lado a lado quando der) --- */
-  .box-identidade {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Tenta colocar 2 por linha */
-    gap: 10px;
-  }
-  /* Nome e Jogador ocupam linha inteira */
-  .box-identidade .campo-horizontal:nth-child(1),
-  .box-identidade .campo-horizontal:nth-child(2) {
-    grid-column: span 2;
-  }
-
-  /* --- Perícias (Grade Compacta) --- */
-  .pericias-grid-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 Colunas fixas */
-    gap: 8px;
-  }
-  .pericia-item {
-    min-height: 90px; /* Menor altura */
-    padding: 8px;
-  }
-  .pericia-item span:first-child {
-    font-size: 0.8em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .pericia-bonus-texto {
-    font-size: 1.6em;
-  }
-  .pericia-dado-shape {
-    width: 35px;
-    height: 40px;
-  }
-  .pericia-dado-texto {
-    font-size: 0.7em;
-  }
-
-  /* --- Defesa e Status --- */
   .box-defesa {
-    display: flex;
+    grid-template-columns: 1fr; 
+  }
+
+  .pericias-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Modais */
+  .modal-conteudo {
+    width: 95%;
+    max-height: 90vh;
+    margin: 10px;
+  }
+  .form-custom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .login-box {
+    width: 95%;
+    padding: 20px;
+  }
+
+  /* CORREÇÃO DA ABA PROGRESSÃO */
+  .progressao-conteudo {
     flex-direction: column;
   }
-  .valor-total-bloco {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 15px;
-  }
-  .valor-total-bloco .valor-grande {
-    font-size: 2.5em;
-  }
-  .campos-linha-defesa {
-    gap: 5px;
-  }
-  .campo-valor-simples {
-    padding: 5px;
-  }
-  .campo-valor-simples label {
-    font-size: 0.7em;
-  }
-  .campo-valor-simples .valor {
-    font-size: 1.4em;
+
+  .calc-bloco-coluna {
+    min-width: 100%; /* Ocupa largura total */
+    margin-bottom: 20px;
   }
 
-  /* --- Inventário --- */
-  .loja-lista-itens, 
-  #lista-inventario-pessoal {
-    grid-template-columns: 1fr; /* 1 coluna para cards de item */
-  }
-  .item-card {
-    margin-bottom: 5px;
-  }
-  .item-header {
-    padding: 8px 10px;
-  }
-  .item-header h3 {
-    font-size: 1.1em;
-  }
-  
-  /* --- Modais --- */
-  .modal-conteudo {
-    width: 98%;
-    height: auto;
-    max-height: 95vh;
-    padding: 0;
-  }
-  .modal-body {
-    padding: 10px;
-  }
-  /* Ajuste para inputs em modais não ficarem gigantes */
-  .form-custom-grid {
-    grid-template-columns: 1fr 1fr; 
-    gap: 8px;
-  }
-  
-  /* Remove fundo parallax pesado */
-  #parallax-background {
-    display: none;
+  /* Botão Criar Trilha no Mobile */
+  .ficha-aba-conteudo .btn-add-item {
+      float: none !important;
+      width: 100%;
+      margin: 10px 0;
+      font-size: 1em;
+      padding: 10px;
+      display: block;
   }
 }
 
-/* --- 3. Telas "Micro" (iPhone SE, Fold fechado - < 360px) --- */
-@media (max-width: 360px) {
+/* --- 3. TELAS MUITO PEQUENAS (< 400px) --- */
+@media (max-width: 400px) {
   .pericias-grid-container {
-    grid-template-columns: 1fr; /* 1 coluna se for muito pequeno */
+    grid-template-columns: 1fr; 
   }
-  .box-identidade {
-    grid-template-columns: 1fr; /* 1 coluna */
-  }
-  .box-identidade .campo-horizontal {
-    grid-column: span 1 !important;
-  }
-  .box-atributos {
-    width: 240px;
-    height: 240px;
-  }
-  input[type="number"].input-hex {
-    font-size: 1.4em;
-    width: 35px;
+  .recursos-hud-itens {
+    flex-wrap: wrap; 
   }
 }

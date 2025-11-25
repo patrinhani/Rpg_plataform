@@ -39,7 +39,6 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
   const handleCriarMesa = async () => {
     if (!inputNomeMesa) return;
     try {
-      // ENVIA O NOME DO USUÁRIO AGORA
       await criarMesa(inputNomeMesa, usuario.uid, usuario.displayName);
       setInputNomeMesa(''); setShowCriarMesa(false);
       carregarDados();
@@ -49,7 +48,6 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
   const handleEntrarMesa = async () => {
     if (!inputCodigoMesa) return;
     try {
-      // ENVIA O NOME DO USUÁRIO AGORA
       await entrarNaMesa(inputCodigoMesa, usuario.uid, usuario.displayName);
       setInputCodigoMesa(''); setShowEntrarMesa(false);
       carregarDados();
@@ -76,20 +74,25 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
   };
 
   return (
-    <div className="login-container" style={{ alignItems: 'flex-start', paddingTop: '50px', overflowY: 'auto' }}>
-      <div className="box" style={{ maxWidth: '1000px', width: '95%', margin: '0 auto 50px auto' }}>
+    <div className="login-container" style={{ alignItems: 'flex-start', paddingTop: '0', overflowY: 'auto' }}>
+      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.95)', marginTop: '50px' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-          <h1 style={{ margin: 0, fontSize: '1.8em' }}>Painel: {usuario?.displayName || "Agente"}</h1>
-          <button onClick={logout} className="item-inventario-remover">Sair</button>
+        <div className="dashboard-header">
+          <h1 style={{ margin: 0 }}>Painel do Agente: <span style={{color:'var(--cor-destaque)'}}>{usuario?.displayName}</span></h1>
+          <button onClick={logout} className="item-inventario-remover">SAIR DO SISTEMA</button>
         </div>
 
-        {/* MESAS */}
-        <div style={{ marginTop: '30px' }}>
+        {/* --- SEÇÃO DE MESAS --- */}
+        <div className="dashboard-section">
           <h2 style={{ color: 'var(--cor-destaque)', borderBottom: 'none' }}>MISSÕES (MESAS)</h2>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button onClick={() => setShowCriarMesa(!showCriarMesa)} className="btn-login primary" style={{width: 'auto', padding: '10px 20px', fontSize: '0.9em'}}>+ Criar Mesa</button>
-            <button onClick={() => setShowEntrarMesa(!showEntrarMesa)} className="btn-login google" style={{width: 'auto', padding: '10px 20px', fontSize: '0.9em'}}>Entrar com Código</button>
+          
+          <div className="dashboard-actions">
+            <button onClick={() => setShowCriarMesa(!showCriarMesa)} className="btn-login primary" style={{width:'auto', fontSize:'0.9em'}}>
+                + Criar Mesa
+            </button>
+            <button onClick={() => setShowEntrarMesa(!showEntrarMesa)} className="btn-login google" style={{width:'auto', fontSize:'0.9em'}}>
+                Entrar com Código
+            </button>
           </div>
 
           {showCriarMesa && (
@@ -105,37 +108,44 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+          <div className="dashboard-grid">
              {mesas.map(mesa => (
-               <div key={mesa.id} className="item-card" style={{ cursor: 'pointer', height: '100px', justifyContent: 'center', alignItems: 'center', borderLeft: mesa.papel === 'mestre' ? '4px solid gold' : '4px solid var(--cor-destaque)' }} onClick={() => onSelectMesa(mesa.id)}>
-                 <h3 style={{ color: '#fff', fontSize: '1.2em' }}>{mesa.nome}</h3>
-                 <small style={{color: '#aaa'}}>{mesa.papel === 'mestre' ? 'MESTRE' : 'AGENTE'}</small>
+               <div 
+                 key={mesa.id} 
+                 className="dashboard-card"
+                 style={{ borderLeft: mesa.papel === 'mestre' ? '4px solid gold' : '4px solid var(--cor-destaque)' }} 
+                 onClick={() => onSelectMesa(mesa.id)}
+               >
+                 <h3 style={{ color: mesa.papel === 'mestre' ? 'gold' : 'var(--cor-destaque)' }}>{mesa.nome}</h3>
+                 <small>{mesa.papel === 'mestre' ? 'VOCÊ É O MESTRE' : 'AGENTE DE CAMPO'}</small>
                </div>
              ))}
-             {mesas.length === 0 && !loading && <p style={{color: '#666'}}>Nenhuma missão ativa.</p>}
+             {mesas.length === 0 && !loading && <div className="estado-vazio">Nenhuma missão em andamento.</div>}
           </div>
         </div>
 
-        {/* FICHAS PESSOAIS */}
-        <div style={{ marginTop: '50px', borderTop: '1px solid #333', paddingTop: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-             <h2 style={{ color: '#aaa', fontSize: '1.2em', borderBottom: 'none', margin: 0 }}>FICHAS PESSOAIS</h2>
+        {/* --- SEÇÃO DE FICHAS PESSOAIS --- */}
+        <div className="dashboard-section" style={{ borderTop: '1px solid #333', paddingTop: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+             <h2 style={{ color: '#aaa', fontSize: '1.2em', borderBottom: 'none', margin: 0 }}>FICHAS PESSOAIS (OFFLINE)</h2>
              <button onClick={handleCriarFicha} className="btn-add-item" style={{fontSize: '1em'}}>+ Nova Ficha</button>
           </div>
           
-          <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
+          <div className="dashboard-grid">
              {fichasPessoais.map(ficha => (
-                <div key={ficha.id} onClick={() => onSelectFicha(ficha.id)} className="item-card" style={{ cursor: 'pointer', padding: '15px', position: 'relative' }}>
-                   <h4 style={{ color: 'var(--cor-destaque)', margin: '0 0 5px 0' }}>{ficha.nome}</h4>
-                   <p style={{ fontSize: '0.8em', color: '#ccc', margin: 0 }}>{ficha.classe} - {ficha.nex}</p>
+                <div key={ficha.id} onClick={() => onSelectFicha(ficha.id)} className="dashboard-card">
+                   <h4>{ficha.nome}</h4>
+                   <p style={{ fontSize: '0.9em' }}>{ficha.classe} - {ficha.nex}</p>
                    <button 
+                      className="btn-excluir-card"
                       onClick={(e) => handleExcluirFicha(e, ficha.id)}
-                      style={{ position: 'absolute', top: '5px', right: '5px', background: 'transparent', border: 'none', color: '#666', fontSize: '1.2em', padding: 0 }}
+                      title="Excluir Ficha"
                    >
                      &times;
                    </button>
                 </div>
              ))}
+             {fichasPessoais.length === 0 && !loading && <div className="estado-vazio">Nenhuma ficha pessoal criada.</div>}
           </div>
         </div>
 

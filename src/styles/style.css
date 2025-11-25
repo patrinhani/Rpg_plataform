@@ -1966,3 +1966,165 @@ html.modo-morte .simbolo-parallax {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
+
+/* src/styles/style.css - ADIÇÕES AO FINAL */
+
+/* --- DASHBOARD (PAINEL) --- */
+.dashboard-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.dashboard-grid {
+  display: grid;
+  /* Cria colunas automáticas que nunca ficam menores que 250px */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* Card de "Novo" (Tracejado) */
+.card-novo {
+  border: 2px dashed var(--cor-texto-label);
+  border-radius: 8px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--cor-texto-label);
+  transition: all 0.2s ease;
+  background: rgba(0,0,0,0.2);
+}
+.card-novo:hover {
+  border-color: var(--cor-destaque);
+  color: var(--cor-destaque);
+  background: rgba(0, 145, 255, 0.05);
+}
+.card-novo span:first-child {
+  font-size: 3em;
+  line-height: 1;
+}
+
+/* Card de Item/Mesa no Dashboard */
+.dashboard-card {
+  cursor: pointer;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  position: relative;
+}
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+  border-color: var(--cor-destaque);
+}
+.dashboard-card h3 {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  color: #fff;
+}
+.dashboard-card p, .dashboard-card small {
+  color: #aaa;
+}
+.btn-excluir-card {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 1.5em;
+  line-height: 1;
+  padding: 5px;
+  cursor: pointer;
+}
+.btn-excluir-card:hover {
+  color: red;
+}
+
+/* --- TELA DA MESA (LOBBY) --- */
+.mesa-container {
+  display: grid;
+  /* Coluna principal (Ficha) e Lateral (Jogadores) */
+  grid-template-columns: 1fr 320px;
+  gap: 30px;
+  align-items: start;
+}
+
+.mesa-area-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mesa-sidebar {
+  background: rgba(0,0,0,0.4);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.mesa-lista-jogadores {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+}
+.mesa-jogador-item {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+}
+
+/* Estado "Vazio" ou "Carregando" */
+.estado-vazio {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed #333;
+  border-radius: 8px;
+}
+
+/* Adicione ao final de style.css */
+
+.btn-criar-trilha {
+    float: right;
+    margin: 10px 0;
+    padding: 5px 15px;
+    font-size: 1.2em;
+}
