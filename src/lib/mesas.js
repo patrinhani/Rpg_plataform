@@ -5,85 +5,215 @@ import {
 } from 'firebase/firestore';
 import { ficha as FichaClass } from './personagem'; 
 
-// --- MESAS ---
+// --- COMBATE E INICIATIVA ---
 
-// Atualizado: Recebe o nome do mestre também
+export async function alternarCombate(mesaId, status, jogadoresAtuais = []) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const updateData = { 
+        emCombate: status,
+        turnoAtual: 0,
+        rodada: 1
+    };
+
+    if (status === true) {
+        const listaInicial = jogadoresAtuais.map(j => ({
+            uid: j.uid,
+            nome: j.nome,
+            valor: 0,
+            isNPC: false
+        }));
+        updateData.iniciativas = listaInicial;
+    } else {
+        updateData.iniciativas = [];
+    }
+    
+    await updateDoc(mesaRef, updateData);
+}
+
+export async function avancarTurno(mesaId, indiceAtual, totalParticipantes) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if(!snap.exists()) return;
+
+    const dados = snap.data();
+    let novoIndice = indiceAtual + 1;
+    let novaRodada = dados.rodada || 1;
+
+    if (novoIndice >= totalParticipantes) {
+        novoIndice = 0;
+        novaRodada++;
+    }
+
+    await updateDoc(mesaRef, { 
+        turnoAtual: novoIndice,
+        rodada: novaRodada
+    });
+}
+
+export async function atualizarIniciativa(mesaId, uid, nome, valor) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if (!snap.exists()) return;
+
+    const dados = snap.data();
+    let lista = dados.iniciativas || [];
+
+    const index = lista.findIndex(i => i.uid === uid);
+    
+    if (index >= 0) {
+        lista[index].valor = parseInt(valor);
+    } else {
+        lista.push({ uid, nome, valor: parseInt(valor), isNPC: false });
+    }
+
+    lista.sort((a, b) => b.valor - a.valor);
+
+    await updateDoc(mesaRef, { iniciativas: lista });
+}
+
+// Adiciona NPC Genérico
+export async function adicionarNPCIniciativa(mesaId, nomeNPC, valor, pvMax = 10) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if (!snap.exists()) return;
+
+    const dados = snap.data();
+    let lista = dados.iniciativas || [];
+
+    lista.push({ 
+        uid: `npc_${Date.now()}`, 
+        nome: nomeNPC, 
+        valor: parseInt(valor), 
+        isNPC: true,
+        pv_atual: parseInt(pvMax),
+        pv_max: parseInt(pvMax),
+        san_atual: 0,
+        pe_atual: 0
+    });
+
+    lista.sort((a, b) => b.valor - a.valor);
+    await updateDoc(mesaRef, { iniciativas: lista });
+}
+
+// Adiciona Monstro do Bestiário
+export async function adicionarMonstroIniciativa(mesaId, monstroData, iniciativaRolada) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if (!snap.exists()) return;
+
+    const dados = snap.data();
+    let lista = dados.iniciativas || [];
+
+    lista.push({
+        uid: `monster_${Date.now()}`, 
+        nome: monstroData.nome,
+        valor: parseInt(iniciativaRolada) || 0,
+        isNPC: true,
+        isMonster: true,
+        pv_atual: monstroData.pv_max,
+        pv_max: monstroData.pv_max,
+        fichaCompleta: monstroData 
+    });
+
+    lista.sort((a, b) => b.valor - a.valor);
+    await updateDoc(mesaRef, { iniciativas: lista });
+}
+
+export async function atualizarNPCStatus(mesaId, uidNPC, campo, valor) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if (!snap.exists()) return;
+
+    const lista = snap.data().iniciativas.map(i => {
+        if (i.uid === uidNPC && i.isNPC) {
+            return { ...i, [campo]: parseInt(valor) };
+        }
+        return i;
+    });
+
+    await updateDoc(mesaRef, { iniciativas: lista });
+}
+
+export async function removerDaIniciativa(mesaId, uidAlvo) {
+    const mesaRef = doc(db, "mesas", mesaId);
+    const snap = await getDoc(mesaRef);
+    if (!snap.exists()) return;
+
+    const dados = snap.data();
+    const novaLista = (dados.iniciativas || []).filter(i => i.uid !== uidAlvo);
+    
+    await updateDoc(mesaRef, { iniciativas: novaLista });
+}
+
+// --- GERENCIAMENTO DE MESA ---
+
 export async function criarMesa(nomeMesa, mestreUid, mestreNome) {
   const docRef = await addDoc(collection(db, "mesas"), {
     nome: nomeMesa,
     mestre: mestreUid,
-    // O mestre entra automaticamente na lista de jogadores para aparecer na tela
     jogadores: [{ uid: mestreUid, nome: mestreNome || "Mestre" }], 
-    dataCriacao: new Date().toISOString()
+    dataCriacao: new Date().toISOString(),
+    emCombate: false,
+    iniciativas: []
   });
   return docRef.id;
 }
 
-// Buscar Mesas (Lógica ajustada para ler objetos no array)
 export async function buscarMinhasMesas(uid) {
   const mesas = [];
-  
-  // Mesas que mestro
   const qMestre = query(collection(db, "mesas"), where("mestre", "==", uid));
   const snapMestre = await getDocs(qMestre);
   snapMestre.forEach(doc => mesas.push({ id: doc.id, ...doc.data(), papel: 'mestre' }));
 
-  // Mesas que jogo (pesquisa complexa em array de objetos não é direta no Firestore simples, 
-  // então vamos buscar todas e filtrar no cliente por enquanto, ou manter a busca antiga se funcionar.
-  // OBS: Firestore não busca facil dentro de array de objetos. 
-  // TRUQUE: Vamos manter um array auxiliar de UIDs apenas para busca).
-  
-  // ... Para simplificar sem mudar a estrutura do banco drasticamente agora:
-  // Vamos buscar todas as mesas e filtrar no javascript (não ideal para produção massiva, ok para agora)
   const snapTodas = await getDocs(collection(db, "mesas"));
   snapTodas.forEach(doc => {
       const data = doc.data();
-      // Verifica se o UID está dentro de algum objeto do array jogadores
-      const souJogador = data.jogadores.some(j => j.uid === uid);
+      const souJogador = data.jogadores && data.jogadores.some(j => j.uid === uid);
       if (souJogador && data.mestre !== uid) {
           mesas.push({ id: doc.id, ...data, papel: 'jogador' });
       }
   });
-
   return mesas;
 }
 
-// Atualizado: Recebe o nome do jogador
 export async function entrarNaMesa(mesaId, jogadorUid, jogadorNome) {
   const mesaRef = doc(db, "mesas", mesaId);
   const mesaSnap = await getDoc(mesaRef);
-
   if (!mesaSnap.exists()) throw new Error("Mesa não encontrada.");
   
   const dados = mesaSnap.data();
   const jaEsta = dados.jogadores.some(j => j.uid === jogadorUid);
-
   if (!jaEsta) {
       await updateDoc(mesaRef, {
-        jogadores: arrayUnion({ uid: jogadorUid, nome: jogadorNome || "Agente Sem Nome" })
+        jogadores: arrayUnion({ uid: jogadorUid, nome: jogadorNome || "Agente" })
       });
   }
-  
   return dados.nome;
 }
 
-// NOVO: Remover Jogador
 export async function removerJogadorDaMesa(mesaId, jogadorUid) {
     const mesaRef = doc(db, "mesas", mesaId);
     const snap = await getDoc(mesaRef);
     if (!snap.exists()) return;
-    
     const dados = snap.data();
-    // Filtra removendo o jogador alvo
     const novaLista = dados.jogadores.filter(j => j.uid !== jogadorUid);
-    
-    await updateDoc(mesaRef, {
-        jogadores: novaLista
-    });
+    await updateDoc(mesaRef, { jogadores: novaLista });
+}
+
+export async function excluirMesaCompleta(mesaId) {
+    const charsQ = query(collection(db, "mesas", mesaId, "personagens"));
+    const charsSnap = await getDocs(charsQ);
+    const deletePromises = charsSnap.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    await deleteDoc(doc(db, "mesas", mesaId));
+}
+
+export async function atualizarNomeMesa(mesaId, novoNome) {
+    await updateDoc(doc(db, "mesas", mesaId), { nome: novoNome });
 }
 
 // --- PERSONAGENS ---
-// (Mantido igual ao anterior)
+
 export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem) {
   const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
   const dadosFinais = dadosPersonagem || FichaClass.getDados();

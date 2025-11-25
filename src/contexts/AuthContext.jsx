@@ -9,7 +9,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
-  updateProfile // <--- IMPORTANTE
+  updateProfile 
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -23,40 +23,58 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
+  // 1. Login Google
   async function loginGoogle() {
     setAuthError(null);
     try {
       return await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      if (error.code === 'auth/popup-closed-by-user') throw new Error("Login cancelado.");
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error("Login cancelado (janela fechada).");
+      }
       throw error;
     }
   }
   
-  async function criarContaEmail(email, senha) {
+  // 2. Criar Conta Email (ATUALIZADO: Recebe 'nome')
+  async function criarContaEmail(email, senha, nome) {
       setAuthError(null);
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         
-        // --- NOVO: Define um nome padrão (ex: Agente Silva) ---
-        const nomePadrao = "Agente " + email.split('@')[0];
-        await updateProfile(userCredential.user, { displayName: nomePadrao });
-        // ------------------------------------------------------
+        // Define o nome escolhido pelo usuário no perfil do Firebase
+        if (nome) {
+            await updateProfile(userCredential.user, { 
+                displayName: nome 
+            });
+        }
 
+        // Tenta enviar o e-mail
         try {
             await sendEmailVerification(userCredential.user);
-        } catch (err) { console.warn(err); }
+        } catch (emailError) {
+            console.warn("Aviso: E-mail de verificação não enviado:", emailError);
+        }
         
         return userCredential;
       } catch (error) {
-        console.error("Erro crítico:", error);
+        console.error("Erro crítico na criação:", error);
         throw error;
       }
   }
 
+  // 3. Login Email
   async function loginEmail(email, senha) {
       setAuthError(null);
-      return signInWithEmailAndPassword(auth, email, senha);
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      
+      // Trava de segurança (opcional em dev)
+      // if (!userCredential.user.emailVerified) {
+      //    await signOut(auth);
+      //    throw new Error("auth/email-not-verified"); 
+      // }
+      
+      return userCredential;
   }
 
   function loginAnonimo() {
@@ -68,11 +86,13 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
+  // Monitoramento
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUsuario(user);
+      setUsuario(user || null);
       setLoading(false);
     });
+
     return unsubscribe;
   }, []);
 

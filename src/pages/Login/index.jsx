@@ -13,22 +13,20 @@ export default function Login() {
       authError 
   } = useAuth();
   
+  const [nome, setNome] = useState(''); // NOVO ESTADO
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false); // Define se é Login ou Cadastro
+  const [isNewUser, setIsNewUser] = useState(false); 
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
 
-  // Unifica erros globais (ex: Google) com erros locais (ex: Senha fraca)
   const errorMessage = authError || localError;
 
-  // --- Handler do Login Google ---
   const handleGoogle = async () => {
     setLoading(true);
     setLocalError('');
     try {
       await loginGoogle();
-      // O redirecionamento/popup é gerenciado pelo AuthContext
     } catch (error) {
       console.error("Erro Google:", error);
       setLoading(false);
@@ -36,7 +34,6 @@ export default function Login() {
     }
   };
 
-  // --- Handler do Login Anônimo ---
   const handleAnonimo = async () => {
     setLoading(true);
     try {
@@ -47,7 +44,6 @@ export default function Login() {
     }
   };
   
-  // --- Handler do Formulário de E-mail/Senha ---
   const handleSubmitEmail = async (e) => {
       e.preventDefault();
       setLoading(true);
@@ -55,26 +51,30 @@ export default function Login() {
 
       try {
           if (isNewUser) {
-              // MODO REGISTRO
-              await criarContaEmail(email, senha);
+              // Validação do Nome
+              if (!nome.trim()) {
+                  throw new Error("Por favor, digite seu Nome de Agente.");
+              }
+
+              // Passa o nome para a função de criação
+              await criarContaEmail(email, senha, nome);
               
-              // Força logout para exigir que o usuário verifique o e-mail antes de entrar
               await logout(); 
               
-              alert("✅ AGENTE REGISTRADO!\n\nUm protocolo de verificação foi enviado para " + email + ".\nValide seu acesso antes de conectar ao C.A.O.S.\n(Verifique a pasta SPAM)");
-              setIsNewUser(false); // Volta para a tela de login
+              alert(`✅ AGENTE ${nome.toUpperCase()} REGISTRADO!\n\nVerifique seu e-mail (${email}) para validar o acesso.\n(Verifique a pasta SPAM)`);
+              setIsNewUser(false);
               setLoading(false);
           } else {
-              // MODO LOGIN
               await loginEmail(email, senha);
-              // Se der certo, o App.jsx redireciona automaticamente
           }
       } catch (error) {
           setLoading(false);
           console.error("Erro Auth:", error);
           
-          // Tratamento de mensagens de erro para o usuário
-          if (error.code === 'auth/email-not-verified' || error.message.includes('email-not-verified')) {
+          // Tratamento de erros (mantido igual)
+          if (error.message === "Por favor, digite seu Nome de Agente.") {
+              setLocalError(error.message);
+          } else if (error.code === 'auth/email-not-verified' || error.message.includes('email-not-verified')) {
               setLocalError("⚠️ Acesso Negado: E-mail pendente de verificação.");
           } else if (error.code === 'auth/weak-password') {
               setLocalError("Senha insegura (mínimo 6 caracteres).");
@@ -92,7 +92,6 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      {/* Classes dinâmicas para mudar a cor da borda/título */}
       <div className={`box login-box ${isNewUser ? 'mode-register' : 'mode-login'}`}>
         
         <img 
@@ -101,7 +100,6 @@ export default function Login() {
           className="login-logo"
         />
         
-        {/* Títulos Temáticos C.A.O.S. */}
         <h1>{isNewUser ? 'RECRUTAMENTO' : 'ACESSO AO C.A.O.S.'}</h1>
         <p className="subtitulo">
             {isNewUser 
@@ -109,7 +107,6 @@ export default function Login() {
                 : 'IDENTIFICAÇÃO REQUERIDA'}
         </p>
 
-        {/* Área de Erro */}
         {errorMessage && (
             <div style={{
                 backgroundColor: 'rgba(255, 50, 50, 0.15)', 
@@ -126,6 +123,21 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmitEmail} className="login-actions">
+            
+            {/* CAMPO DE NOME (Só aparece no Registro) */}
+            {isNewUser && (
+                <div className="input-group">
+                    <input
+                        type="text"
+                        placeholder="Nome de Agente"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        required
+                        autoFocus
+                    />
+                </div>
+            )}
+
             <div className="input-group">
                 <input
                     type="email"
@@ -160,6 +172,7 @@ export default function Login() {
                         e.preventDefault(); 
                         setIsNewUser(!isNewUser); 
                         setLocalError(''); 
+                        if (!isNewUser) setNome(''); // Limpa nome se mudar de modo
                     }}
                     className="toggle-link"
                 >
