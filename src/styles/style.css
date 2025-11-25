@@ -2128,3 +2128,163 @@ html.modo-morte .simbolo-parallax {
     padding: 5px 15px;
     font-size: 1.2em;
 }
+
+.btn-voltar-flutuante {
+    position: fixed; 
+    top: 15px; 
+    left: 15px; 
+    z-index: 2000; 
+    font-size: 0.8em; 
+    padding: 5px 10px; 
+    background: #000; 
+    border: 1px solid var(--cor-borda); 
+    color: #fff; 
+    cursor: pointer;
+}
+
+.tracker-container {
+  transition: all 0.3s ease;
+}
+.card-iniciativa {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #333;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s;
+}
+.card-iniciativa.ativo {
+  border-color: gold;
+  background: rgba(255, 215, 0, 0.15);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  z-index: 2;
+}
+.ini-valor {
+  font-size: 1.2em; 
+  font-weight: bold; 
+  color: #666; 
+  padding: 0 10px;
+  min-width: 40px;
+  text-align: center;
+}
+.card-iniciativa.ativo .ini-valor { color: gold; }
+.ini-info {
+  flex-grow: 1;
+  padding: 5px 10px 5px 0;
+}
+.ini-nome-row {
+  display: flex; 
+  align-items: center; 
+  gap: 5px; 
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+.barra-vida-container {
+  margin-top: 3px; 
+  height: 4px; 
+  width: 100%; 
+  background: #111; 
+  border-radius: 2px; 
+  overflow: hidden;
+}
+.input-dano-rapido input {
+  width: 100%; 
+  background: transparent; 
+  border: none; 
+  color: #fff; 
+  font-size: 0.8em; 
+  text-align: center; 
+  padding: 0;
+}
+.btn-remover-ini {
+  background: transparent; 
+  border: none; 
+  color: #555; 
+  cursor: pointer; 
+  font-size: 1.2em; 
+  padding: 0 8px;
+}
+.btn-remover-ini:hover { color: red; }
+.btn-mini-ficha {
+  font-size: 0.7em;
+  padding: 1px 4px;
+  background: #222;
+  border: 1px solid #444;
+  cursor: pointer;
+}
+
+/* --- MODO NORMAL (Vertical - Lobby) --- */
+.tracker-container.normal {
+  background: rgba(10,10,10,0.9);
+  border: 2px solid var(--cor-destaque);
+}
+.tracker-container.normal .header-combate {
+  padding: 15px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+}
+.tracker-container.normal .lista-iniciativa {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* --- MODO COMPACTO (Horizontal - Ficha Aberta) --- */
+.tracker-container.compacto {
+  position: fixed; /* Fixa no topo da tela */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 70px; /* Altura fixa */
+  background: #080808;
+  border-bottom: 2px solid var(--cor-destaque);
+  z-index: 2000; /* Acima de tudo */
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+}
+
+.tracker-container.compacto .header-combate {
+  flex-shrink: 0;
+  border-right: 1px solid #333;
+  padding-right: 10px;
+  margin-right: 5px;
+  text-align: center;
+}
+
+.tracker-container.compacto .lista-iniciativa {
+  display: flex;
+  flex-direction: row; /* Horizontal */
+  gap: 10px;
+  overflow-x: auto; /* Scroll lateral */
+  height: 100%;
+  align-items: center;
+  padding-right: 20px;
+  /* Esconde scrollbar mas permite rolar */
+  scrollbar-width: none; 
+}
+.tracker-container.compacto .lista-iniciativa::-webkit-scrollbar {
+  display: none;
+}
+
+.tracker-container.compacto .card-iniciativa {
+  min-width: 140px;
+  max-width: 160px;
+  height: 50px; /* Altura fixa */
+  padding: 0;
+  flex-shrink: 0;
+  border-left: 3px solid transparent; /* Borda lateral para vez */
+}
+.tracker-container.compacto .card-iniciativa.ativo {
+  border-left: 3px solid gold;
+  border-color: gold;
+}

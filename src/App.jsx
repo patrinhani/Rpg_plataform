@@ -3,10 +3,7 @@ import React, { useState } from 'react';
 import './App.css'; 
 import './styles/style.css';
 import './styles/responsive.css';
-
 import { useAuth } from './contexts/AuthContext';
-
-// Importação das Páginas
 import Login from './pages/Login/index.jsx'; 
 import Verificacao from './pages/Verificacao/index.jsx';
 import Dashboard from './pages/Dashboard/index.jsx';
@@ -16,101 +13,37 @@ import Mesa from './pages/Mesa/index.jsx';
 function App() {
   const { usuario } = useAuth();
   
-  // Estado de Navegação
-  const [view, setView] = useState('dashboard'); // 'dashboard', 'mesa', 'ficha'
+  const [view, setView] = useState('dashboard'); 
   const [mesaAtiva, setMesaAtiva] = useState(null);
-  const [fichaAtivaId, setFichaAtivaId] = useState(null); 
+  const [fichaPessoalId, setFichaPessoalId] = useState(null); 
 
-  // 1. Se não tem usuário, exibe LOGIN
-  if (!usuario) {
-    return <Login />;
+  if (!usuario) return <Login />;
+  if (!usuario.isAnonymous && !usuario.emailVerified) return <Verificacao />;
+
+  // Navegação
+  const irParaMesa = (id) => { setMesaAtiva(id); setView('mesa'); };
+  const irParaFichaPessoal = (id) => { setFichaPessoalId(id); setView('ficha_pessoal'); };
+  const voltarDashboard = () => { setView('dashboard'); setMesaAtiva(null); setFichaPessoalId(null); };
+
+  // RENDERIZAÇÃO
+
+  // 1. MESA (Agora ela gerencia suas próprias fichas internamente)
+  if (view === 'mesa' && mesaAtiva) {
+    return <Mesa mesaId={mesaAtiva} onVoltar={voltarDashboard} />;
   }
 
-  // 2. Se tem usuário mas não verificou e-mail (e não é anônimo), exibe VERIFICAÇÃO
-  if (!usuario.isAnonymous && !usuario.emailVerified) {
-    return <Verificacao />;
-  }
-
-  // --- FUNÇÕES DE NAVEGAÇÃO ---
-
-  const handleSelectMesa = (idMesa) => {
-    setMesaAtiva(idMesa);
-    setView('mesa');
-  };
-
-  const handleSelectFicha = (uidFicha, idMesaContexto = null) => {
-    setFichaAtivaId(uidFicha);
-    setMesaAtiva(idMesaContexto);
-    setView('ficha');
-  };
-
-  const handleVoltar = () => {
-    if (view === 'ficha' && mesaAtiva) {
-      // Se estava na ficha de uma mesa, volta para a mesa
-      setView('mesa'); 
-      // NÃO reseta a mesaAtiva aqui, pois queremos voltar para ela
-    } else {
-      // Caso contrário, volta para o dashboard
-      setView('dashboard'); 
-      setMesaAtiva(null);
-      setFichaAtivaId(null);
-    }
-  };
-
-  // --- RENDERIZAÇÃO DAS TELAS ---
-
-  // CASO 1: FICHA (Editando Personagem)
-  if (view === 'ficha') {
+  // 2. FICHA PESSOAL (Offline)
+  if (view === 'ficha_pessoal') {
     return (
       <div>
-        <button 
-          onClick={handleVoltar}
-          style={{
-              position: 'fixed', 
-              top: '15px', 
-              left: '15px', 
-              zIndex: 2000,
-              fontSize: '0.8em',
-              padding: '5px 10px',
-              background: '#000',
-              border: '1px solid var(--cor-borda)',
-              color: '#fff',
-              cursor: 'pointer'
-          }}
-        >
-          ← Voltar
-        </button>
-        
-        <Ficha 
-            fichaId={fichaAtivaId} 
-            mesaContexto={mesaAtiva} 
-        />
+        <button onClick={voltarDashboard} className="btn-voltar-flutuante">← Voltar</button>
+        <Ficha fichaId={fichaPessoalId} />
       </div>
     );
   }
 
-  // CASO 2: MESA (Lobby da Mesa)
-  if (view === 'mesa' && mesaAtiva) {
-    return (
-        <Mesa 
-            mesaId={mesaAtiva} 
-            onVoltar={() => { setView('dashboard'); setMesaAtiva(null); }}
-            
-            // --- CORREÇÃO AQUI ---
-            // Antes: (mId) => handleSelectFicha(usuario.uid, mId) -> ERRO (Invertia os IDs)
-            // Agora: (uidAlvo) => handleSelectFicha(uidAlvo, mesaAtiva) -> CERTO
-            onAbrirFichaNaMesa={(uidAlvo) => handleSelectFicha(uidAlvo, mesaAtiva)}
-        />
-    );
-  }
-
-  // CASO 3: DASHBOARD (Padrão)
-  return (
-    <Dashboard 
-        onSelectFicha={(uid) => handleSelectFicha(uid, null)} 
-        onSelectMesa={handleSelectMesa} 
-    />
-  );
+  // 3. DASHBOARD
+  return <Dashboard onSelectFicha={irParaFichaPessoal} onSelectMesa={irParaMesa} />;
 }
 
 export default App;
