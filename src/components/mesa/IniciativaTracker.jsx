@@ -4,7 +4,7 @@ import { avancarTurno, removerDaIniciativa, atualizarNPCStatus } from '../../lib
 
 export default function IniciativaTracker({ 
     mesaId, iniciativas, turnoAtual, rodada, souMestre, fichasDaMesa, usuarioUid, onVerFichaCriatura,
-    compact = false // <--- NOVA PROP: Define o modo de visualização
+    compact = false 
 }) {
 
     const scrollRef = useRef(null);
@@ -64,6 +64,16 @@ export default function IniciativaTracker({
                     const isTurno = index === turnoAtual;
                     const fichaReal = !ini.isNPC ? fichasDaMesa.find(f => f.uid === ini.uid) : null;
                     
+                    // LÓGICA DA FOTO:
+                    // 1. Se for Monstro e tiver foto no bestiário.
+                    // 2. Se for Jogador e tiver foto na ficha (base64 ou url).
+                    let imagemAvatar = null;
+                    if (ini.isMonster && ini.fichaCompleta?.foto) {
+                        imagemAvatar = ini.fichaCompleta.foto;
+                    } else if (fichaReal && fichaReal.info?.foto) {
+                        imagemAvatar = fichaReal.info.foto;
+                    }
+                    
                     let pvAtual = fichaReal ? fichaReal.recursos.pv_atual : (ini.pv_atual || 0);
                     let pvMax = fichaReal ? fichaReal.recursos.pv_max : (ini.pv_max || 10);
                     
@@ -82,13 +92,33 @@ export default function IniciativaTracker({
                                 {ini.valor}
                             </div>
 
+                            {/* FOTO / AVATAR (NOVO) */}
+                            {imagemAvatar && (
+                                <div className="ini-avatar-container" style={{
+                                    width: compact ? '35px' : '50px',
+                                    height: compact ? '35px' : '50px',
+                                    borderRadius: '50%',
+                                    overflow: 'hidden',
+                                    border: isTurno ? '2px solid gold' : '2px solid #444',
+                                    marginRight: '10px',
+                                    flexShrink: 0,
+                                    backgroundColor: '#000'
+                                }}>
+                                    <img 
+                                        src={imagemAvatar} 
+                                        alt="Avatar" 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    />
+                                </div>
+                            )}
+
                             {/* Info Central */}
                             <div className="ini-info">
                                 <div className="ini-nome-row">
                                     <strong>{ini.nome}</strong>
                                     {/* Botão Ficha Monstro (Só Mestre) */}
                                     {!compact && ini.isMonster && souMestre && (
-                                        <button onClick={() => onVerFichaCriatura(ini.fichaCompleta)} className="btn-mini-ficha">📄</button>
+                                        <button onClick={() => onVerFichaCriatura(ini.fichaCompleta)} className="btn-mini-ficha" title="Ver Ficha">📄</button>
                                     )}
                                 </div>
 

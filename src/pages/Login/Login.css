@@ -6,26 +6,13 @@
   width: 100vw;
   margin: 0;
   padding: 0;
-  
   display: flex;
   justify-content: center;
   align-items: center;
-  
   background-color: #020406;
   overflow: hidden;
   position: relative;
-
-  /* Textura de Scanline (Mantida) */
-  background-image: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.25) 50%
-  ),
-  linear-gradient(
-    90deg,
-    rgba(255, 0, 0, 0.06),
-    rgba(0, 255, 0, 0.02),
-    rgba(0, 0, 255, 0.06)
-  );
+  background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   background-size: 100% 4px, 6px 100%;
 }
 
@@ -36,26 +23,20 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  
   width: 150vmax; 
   height: 150vmax;
-  
   background-image: url('/assets/images/Character.webp');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain; 
-  
-  /* Aumentei um pouco a opacidade para destacar mais */
   opacity: 0.5; 
   filter: drop-shadow(0 0 50px rgba(0, 145, 255, 0.2)); 
-  
   z-index: 0;
   pointer-events: none;
-
   animation: rotacao-infinita 120s linear infinite;
 }
 
-/* --- 3. VINHETA (CORRIGIDA) --- */
+/* --- 3. VINHETA --- */
 .login-container::after {
   content: "";
   position: absolute;
@@ -63,13 +44,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  
-  /* AQUI ESTÁ A MUDANÇA: 
-     - transparent 60%: O centro fica limpo em 60% da tela.
-     - #020406 100%: O preto total só chega nas bordas extremas.
-  */
   background: radial-gradient(circle at center, transparent 60%, #020406 100%);
-  
   z-index: 1;
   pointer-events: none;
 }
@@ -79,24 +54,19 @@
   width: 90%;
   max-width: 400px;
   margin: auto; 
-  
   position: relative;
-  z-index: 10; /* Garante que a caixa fique ACIMA da vinheta */
-  
+  z-index: 10;
   background: rgba(12, 18, 24, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
-  
   padding: 40px 30px;
   border-radius: 6px;
   text-align: center;
   transition: all 0.4s ease;
 }
 
-/* RESPONSIVIDADE */
 @media (max-width: 480px) {
   .login-box {
     max-width: 90%;
@@ -106,8 +76,6 @@
 }
 
 /* --- 5. MODOS (CORES) --- */
-
-/* Login */
 .login-box.mode-login {
   border-top: 4px solid #0091ff;
   box-shadow: 0 -5px 20px rgba(0, 145, 255, 0.15), 0 0 60px rgba(0, 0, 0, 0.9);
@@ -117,7 +85,6 @@
   text-shadow: 0 0 15px rgba(0, 145, 255, 0.4);
 }
 
-/* Registro */
 .login-box.mode-register {
   border-top: 4px solid #ffffff;
   background: rgba(25, 25, 25, 0.9);
@@ -156,7 +123,7 @@ p.subtitulo {
   padding-bottom: 15px;
 }
 
-/* --- 6. INPUTS --- */
+/* --- 6. INPUTS (CORRIGIDO: Inclui text) --- */
 .login-actions {
   display: flex;
   flex-direction: column;
@@ -167,6 +134,7 @@ p.subtitulo {
   position: relative;
 }
 
+.login-box input[type="text"], 
 .login-box input[type="email"], 
 .login-box input[type="password"] {
   width: 100%;
@@ -241,19 +209,6 @@ p.subtitulo {
   background-color: #f0f0f0;
 }
 
-.btn-login.anon {
-  background: transparent;
-  border: 1px dashed #444;
-  color: #666;
-  font-size: 0.8em;
-  padding: 10px;
-}
-.btn-login.anon:hover {
-  border-color: #888;
-  color: #aaa;
-}
-
-/* --- 8. LINKS E RODAPÉ --- */
 .toggle-link {
   font-size: 0.85em;
   color: #888;
@@ -270,7 +225,6 @@ p.subtitulo {
   border-bottom-color: #fff;
 }
 
-/* --- 9. ANIMAÇÃO --- */
 @keyframes rotacao-infinita {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }

@@ -32,6 +32,25 @@ export default function FichaCriatura({ dados, onClose }) {
 
         <div className="modal-body" style={{ padding: '20px', maxHeight: '80vh', overflowY: 'auto', background: '#111' }}>
             
+            {/* --- ÁREA DA FOTO (NOVO) --- */}
+            {dados.foto && (
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                    <img 
+                        src={dados.foto} 
+                        alt={dados.nome} 
+                        style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '300px', 
+                            objectFit: 'contain', 
+                            border: `1px solid ${corTema}`,
+                            borderRadius: '4px',
+                            boxShadow: `0 0 15px ${corTema}40`, // Brilho suave com a cor do elemento
+                            backgroundColor: '#000'
+                        }}
+                    />
+                </div>
+            )}
+
             {/* Tipo e Presença */}
             <div style={{ marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
                 <p style={{ color: '#aaa', fontStyle: 'italic' }}>{dados.tipo}</p>
@@ -93,7 +112,7 @@ export default function FichaCriatura({ dados, onClose }) {
 
         </div>
 
-        <button className="btn-fechar-modal" onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', color: '#000', fontSize: '1.5em' }}>
+        <button className="btn-fechar-modal" onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', color: '#000', fontSize: '1.5em', background: 'none', border: 'none', cursor: 'pointer' }}>
             &times;
         </button>
       </div>

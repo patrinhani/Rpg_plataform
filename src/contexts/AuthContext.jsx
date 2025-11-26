@@ -1,16 +1,16 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { auth, googleProvider } from '../lib/firebase';
+import { auth, googleProvider, db } from '../lib/firebase';
 import { 
   signOut, 
   onAuthStateChanged,
-  signInAnonymously,
   signInWithPopup, 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
   updateProfile 
 } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -36,24 +36,28 @@ export function AuthProvider({ children }) {
     }
   }
   
-  // 2. Criar Conta Email (ATUALIZADO: Recebe 'nome')
+  // 2. Criar Conta Email
   async function criarContaEmail(email, senha, nome) {
       setAuthError(null);
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         
-        // Define o nome escolhido pelo usuário no perfil do Firebase
         if (nome) {
-            await updateProfile(userCredential.user, { 
-                displayName: nome 
-            });
+            // Atualiza o Perfil
+            await updateProfile(userCredential.user, { displayName: nome });
+            // Marca no Banco
+            await setDoc(doc(db, "users", userCredential.user.uid), { 
+                nomeDefinido: true 
+            }, { merge: true });
         }
 
         // Tenta enviar o e-mail
         try {
             await sendEmailVerification(userCredential.user);
         } catch (emailError) {
-            console.warn("Aviso: E-mail de verificação não enviado:", emailError);
+            console.error("Erro ao enviar e-mail inicial:", emailError);
+            // Não lançamos o erro aqui para não impedir o cadastro, 
+            // o usuário pode reenviar depois na tela de verificação.
         }
         
         return userCredential;
@@ -66,43 +70,52 @@ export function AuthProvider({ children }) {
   // 3. Login Email
   async function loginEmail(email, senha) {
       setAuthError(null);
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      
-      // Trava de segurança (opcional em dev)
-      // if (!userCredential.user.emailVerified) {
-      //    await signOut(auth);
-      //    throw new Error("auth/email-not-verified"); 
-      // }
-      
-      return userCredential;
+      return await signInWithEmailAndPassword(auth, email, senha);
   }
 
-  function loginAnonimo() {
-    setAuthError(null);
-    return signInAnonymously(auth);
+  // 4. Reenviar E-mail (NOVO)
+  async function resendEmail() {
+      if (auth.currentUser) {
+          return await sendEmailVerification(auth.currentUser);
+      }
+  }
+
+  // 5. Checar Verificação Manualmente (NOVO)
+  async function checkVerification() {
+      if (auth.currentUser) {
+          // Força o Firebase a atualizar os dados do usuário
+          await auth.currentUser.reload();
+          
+          // Atualiza o estado local para refletir a mudança na UI imediatamente
+          const userAtualizado = auth.currentUser;
+          setUsuario({ ...userAtualizado });
+          
+          return userAtualizado.emailVerified;
+      }
+      return false;
   }
 
   function logout() {
     return signOut(auth);
   }
 
-  // Monitoramento
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUsuario(user || null);
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
+  // EXPORTAR AS NOVAS FUNÇÕES AQUI
   const value = {
     usuario,
     authError,
     loginGoogle,
-    loginAnonimo,
     criarContaEmail,
     loginEmail,
+    resendEmail,       // Adicionado
+    checkVerification, // Adicionado
     logout
   };
 

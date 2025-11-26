@@ -9,13 +9,14 @@ export const bestiario = [
     tipo: "Criatura - Grande",
     presenca: "Perturbadora (DT 15 • 3d6 mental • NEX 30%+ é imune)",
     
-    // CORREÇÃO: Notação de dados clara (d20)
-    sentidos: "Percepção 1d20+5, Percepção às cegas", // Ajustado conforme seu pedido
-    iniciativa: "1d20", // Baseado em Agi 1 (se seguir o padrão da Percepção)
+    // --- CAMINHO DA FOTO (Coloque o arquivo em: public/assets/bestiario/) ---
+    foto: "/assets/bestiario/aberracao.webp", 
+    
+    sentidos: "Percepção 1d20+5, Percepção às cegas",
+    iniciativa: "1d20", 
     
     defesa: 19,
     
-    // Resistências com a notação correta (3d20, 2d20)
     fortitude: "3d20+10",
     reflexos: "1d20",
     vontade: "1d20",
