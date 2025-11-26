@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom'; // [NOVO]
+
 import { 
     importarPersonagemParaMesa, 
     listarPersonagensPessoais, 
@@ -21,8 +23,12 @@ import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
 import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
 import Ficha from '../Ficha/index.jsx';
 
-export default function Mesa({ mesaId, onVoltar }) {
+export default function Mesa() {
+  // [NOVO] Pega ID da URL e Hook de navegação
+  const { mesaId } = useParams();
+  const navigate = useNavigate();
   const { usuario } = useAuth();
+  
   const [mesaData, setMesaData] = useState(null);
   const [fichasDaMesa, setFichasDaMesa] = useState([]);
   
@@ -41,6 +47,9 @@ export default function Mesa({ mesaId, onVoltar }) {
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
 
+  // Função de Voltar
+  const sairDaMesa = () => navigate('/');
+
   // 1. Monitorar Dados da Mesa
   useEffect(() => {
     if (!mesaId) return;
@@ -50,14 +59,18 @@ export default function Mesa({ mesaId, onVoltar }) {
         // Verifica se o usuário ainda está na lista de jogadores
         if (data.jogadores && !data.jogadores.some(j => j.uid === usuario.uid)) {
            alert("Você foi removido desta mesa.");
-           onVoltar();
+           sairDaMesa();
            return;
         }
         setMesaData(data);
       } else {
-          alert("Esta mesa foi excluída.");
-          onVoltar();
+          alert("Esta mesa foi excluída ou não existe.");
+          sairDaMesa();
       }
+    }, (error) => {
+       console.error("Erro ao carregar mesa:", error);
+       alert("Erro de permissão ou conexão.");
+       sairDaMesa();
     });
     return () => unsub();
   }, [mesaId, usuario.uid]);
@@ -66,7 +79,7 @@ export default function Mesa({ mesaId, onVoltar }) {
   const emCombate = mesaData?.emCombate || false;
   const isFichaOpen = !!fichaAbertaId;
 
-  // 2. Monitorar Todas as Fichas (para exibir nomes e status no Lobby/Tracker)
+  // 2. Monitorar Todas as Fichas
   useEffect(() => {
     if (!mesaId) return;
     const unsub = onSnapshot(collection(db, "mesas", mesaId, "personagens"), (snapshot) => {
@@ -142,8 +155,7 @@ export default function Mesa({ mesaId, onVoltar }) {
   if (!mesaData) return <div className="item-placeholder">Carregando Mesa...</div>;
   
   const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
-  const tenhoFicha = !!meuPersonagem;
-
+  
   // ==================================================================================
   // RENDERIZAÇÃO: MODO FICHA (JOGO)
   // ==================================================================================
@@ -172,15 +184,16 @@ export default function Mesa({ mesaId, onVoltar }) {
                 <button 
                     onClick={() => setFichaAbertaId(null)} 
                     className="btn-voltar-flutuante"
-                    style={{ top: emCombate ? '85px' : '15px' }} // Ajusta se tiver barra
+                    style={{ top: emCombate ? '85px' : '15px' }} 
                 >
                     ← VOLTAR PARA A MESA
                 </button>
                 
+                {/* Renderiza a Ficha passando o ID e o Contexto */}
                 <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} />
             </div>
 
-            {/* Modais Globais (podem ser chamados de dentro da ficha futuramente ou pelo tracker) */}
+            {/* Modais Globais */}
             {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
         </div>
       );
@@ -223,7 +236,7 @@ export default function Mesa({ mesaId, onVoltar }) {
                         {emCombate ? 'ENCERRAR COMBATE' : '⚔️ INICIAR COMBATE'}
                     </button>
                 )}
-                <button onClick={onVoltar} className="item-inventario-remover">Sair</button>
+                <button onClick={sairDaMesa} className="item-inventario-remover">Sair</button>
              </div>
         </div>
 
@@ -242,7 +255,7 @@ export default function Mesa({ mesaId, onVoltar }) {
                     compact={false}
                 />
                 
-                {/* Controles de Inserção (Abaixo do Tracker) */}
+                {/* Controles de Inserção */}
                 <div style={{ display:'flex', gap:'15px', justifyContent:'center', marginTop: '10px', flexWrap: 'wrap', background: 'rgba(0,0,0,0.6)', padding:'15px', borderRadius:'0 0 8px 8px' }}>
                     {souMestre ? (
                         <>
@@ -271,7 +284,7 @@ export default function Mesa({ mesaId, onVoltar }) {
         <div className="mesa-container">
             <div className="mesa-area-principal">
                 
-                {/* SEÇÃO: MEU PERSONAGEM (Apenas Jogador) */}
+                {/* SEÇÃO: MEU PERSONAGEM */}
                 {!souMestre && (
                     <div style={{marginBottom: '30px'}}>
                         <h2 style={{color:'var(--cor-destaque)'}}>MEU PERSONAGEM</h2>
@@ -299,7 +312,6 @@ export default function Mesa({ mesaId, onVoltar }) {
                     {mesaData.jogadores.filter(j => j.uid !== mesaData.mestre).map(jogador => {
                         const ficha = fichasDaMesa.find(f => f.uid === jogador.uid);
                         const isMe = jogador.uid === usuario.uid;
-                        // Permissão: Mestre vê todos, jogador só vê a si mesmo
                         const podeAbrir = souMestre || isMe;
 
                         return (
@@ -357,7 +369,7 @@ export default function Mesa({ mesaId, onVoltar }) {
 
       </div>
 
-      {/* --- MODAIS GERAIS DO LOBBY --- */}
+      {/* --- MODAIS GERAIS --- */}
       
       {/* Modal Bestiário */}
       {showBestiarioModal && (
@@ -381,7 +393,7 @@ export default function Mesa({ mesaId, onVoltar }) {
         </div>
       )}
 
-      {/* Modal Ver Criatura (No Lobby) */}
+      {/* Modal Ver Criatura */}
       {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
       
       {/* Modal Importar Ficha */}

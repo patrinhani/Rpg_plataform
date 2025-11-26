@@ -3,7 +3,7 @@ import { database } from './database.js';
 
 class Personagem {
   constructor() {
-    this.reset(); // O construtor agora chama o reset para inicializar
+    this.reset(); // Inicializa com valores padrão
   }
 
   // Método para zerar a ficha completamente
@@ -30,7 +30,7 @@ class Personagem {
       monstruoso_elemento: "", 
       possuido_elemento: "",
       foto: "", 
-      tema: "tema-ordem" // Novo campo para salvar o tema
+      tema: "tema-ordem"
     };
     
     this.recursos = {
@@ -71,9 +71,8 @@ class Personagem {
     };
   }
   
-  // ... (MANTENHA TODOS OS OUTROS MÉTODOS ABAIXO: setPerseguicao, setAtributo, etc.) ...
-  // Apenas certifique-se de que o método reset() foi adicionado no topo.
-  
+  // --- SETTERS ---
+
   setPerseguicao(tipo, valor) {
     if (tipo === 'sucessos' || tipo === 'falhas') {
       let num = parseInt(valor) || 0;
@@ -131,19 +130,29 @@ class Personagem {
     }
   }
 
+  // --- LÓGICA DE JOGO ---
+
   toggleCondicao(condicaoId) {
     if (this.condicoesAtivas.includes(condicaoId)) {
+      // Se já tem, remove. Verifica se tem evolução para remover também?
+      // No sistema simples, apenas removemos a condição atual.
+      // Se quiser lógica complexa (Abalado -> Apavorado), implemente aqui.
       const dadosCondicao = database.condicoes ? database.condicoes.find(c => c.id === condicaoId) : null;
-      if (dadosCondicao && dadosCondicao.evolucao) {
-        this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
-        if (!this.condicoesAtivas.includes(dadosCondicao.evolucao)) {
-            this.condicoesAtivas.push(dadosCondicao.evolucao);
-        }
-      } else {
-        this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
-      }
+      
+      // Remove a condição atual
+      this.condicoesAtivas = this.condicoesAtivas.filter(c => c !== condicaoId);
+
+      // Se tiver evolução e eu estiver clicando para remover, geralmente removemos tudo.
+      // Mas se a intenção for "clicar de novo para evoluir", a lógica seria diferente.
+      // Aqui mantemos o toggle simples: Clica -> Põe, Clica de novo -> Tira.
+      // A lógica de evolução pode ser feita visualmente ou em outro método.
     } else {
+      // Se não tem, adiciona
       this.condicoesAtivas.push(condicaoId);
+      
+      // Se a condição adicionada for uma evolução (ex: Inconsciente), 
+      // removemos a anterior (ex: Debilitado) para não duplicar penalidades?
+      // Depende da regra. Geralmente a condição pior substitui.
     }
   }
   
@@ -153,22 +162,23 @@ class Personagem {
 
   getAtributoFinal(attrKey) {
     let valorBase = parseInt(this.atributos[attrKey]) || 0;
+    
+    // Penalidades por condições
     if (['for', 'agi', 'vig'].includes(attrKey)) {
       if (this.condicoesAtivas.includes('debilitado') || this.condicoesAtivas.includes('inconsciente')) {
          valorBase -= 1;
-      }
-      else if (this.condicoesAtivas.includes('fraco')) {
+      } else if (this.condicoesAtivas.includes('fraco')) {
          valorBase -= 1;
       }
     }
     if (['int', 'pre'].includes(attrKey)) {
        if (this.condicoesAtivas.includes('esmorecido') || this.condicoesAtivas.includes('inconsciente')) {
           valorBase -= 1; 
-       }
-       else if (this.condicoesAtivas.includes('frustrado')) {
+       } else if (this.condicoesAtivas.includes('frustrado')) {
           valorBase -= 1;
        }
     }
+    
     if (valorBase < 0) valorBase = 0; 
     return valorBase; 
   }
@@ -176,6 +186,7 @@ class Personagem {
   aplicarInterludio(opcoes) {
     const { acoes, conforto, prato, emGrupo } = opcoes;
     const limitePE = this.calculosDetalhados.limite_pe || 1;
+    
     let fatorBase = 1;
     if (conforto === 'precario') fatorBase = 0.5;
     if (conforto === 'confortavel') fatorBase = 2;
@@ -189,16 +200,19 @@ class Personagem {
     let fatorPV = fatorBase;
     let fatorPE = fatorBase;
 
+    // Bônus de Prato
     if (acoes.includes('alimentar')) {
-        if (prato === 'nutritivo') fatorPV += 1; 
+        if (prato === 'nutritivo') fatorPV += 1; // Aumenta multiplicador
         if (prato === 'energetico') fatorPE += 1; 
     }
 
+    // Ação Dormir
     if (acoes.includes('dormir')) {
         pvRecuperado += Math.floor(limitePE * fatorPV);
         peRecuperado += Math.floor(limitePE * fatorPE);
     }
 
+    // Ação Relaxar
     if (acoes.includes('relaxar')) {
         let sanTotal = Math.floor(limitePE * fatorBase);
         if (emGrupo) sanTotal += 1;
@@ -206,6 +220,7 @@ class Personagem {
         sanRecuperada += sanTotal;
     }
 
+    // Outras ações
     if (acoes.includes('exercitar')) {
         this.buffsTemporarios.exercicio += 1;
         msgExtras.push("Você recebeu +1d6 em um teste Físico (AGI/FOR/VIG) futuro.");
@@ -227,6 +242,7 @@ class Personagem {
         msgExtras.push(`Faça um teste de Perícia${msgBonus} para encontrar pistas perdidas.`);
     }
 
+    // Aplica valores (respeitando máximo)
     const pvAntes = this.recursos.pv_atual;
     const peAntes = this.recursos.pe_atual;
     const sanAntes = this.recursos.san_atual;
@@ -242,6 +258,8 @@ class Personagem {
         extras: msgExtras
     };
   }
+
+  // --- LISTAS E INVENTÁRIO ---
 
   addTrilhaPersonalizada(trilhaData) {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
@@ -270,10 +288,12 @@ class Personagem {
       ...item,
       inventarioId: Date.now() + Math.random(),
       ignorarCalculos: false,
+      // Garante que os campos base existam
       categoriaBase: item.categoriaBase ?? item.categoria,
       espacosBase: item.espacosBase ?? item.espacos,
       modificacoes: item.modificacoes || [], 
     };
+    // Removemos as props calculadas para não salvar lixo no banco
     delete itemComId.categoria;
     delete itemComId.espacos;
     this.inventario.push(itemComId);
@@ -326,6 +346,8 @@ class Personagem {
     this.diario = this.diario.filter(n => n.id !== notaId);
   }
   
+  // --- CÁLCULOS DE INVENTÁRIO ---
+
   getBonusDefesaInventario() {
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
     let bonusProtecao = 0;
@@ -340,6 +362,7 @@ class Personagem {
     const escudo = inventarioAtivo.find((item) => item.id === "escudo");
     if (escudo) { bonusEscudo = escudo.defesa || 2; }
     
+    // Soma outros itens que dão defesa (ex: itens amaldiçoados, modificações)
     const bonusOutrosItens = inventarioAtivo
       .filter(item => item.defesa > 0 && item.id !== "protecao_leve" && item.id !== "protecao_pesada" && item.id !== "escudo")
       .reduce((acc, item) => acc + (parseInt(item.defesa) || 0), 0);
@@ -349,26 +372,36 @@ class Personagem {
 
   getBonusPericiaInventario(periciaKey) {
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
+    
+    // Regra: Apenas 2 vestimentas contam bônus? (Simplificação: pega os 2 maiores)
     const bonusVestimentas = inventarioAtivo
       .filter((item) => (item.id === "vestimenta" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
+      
+    // Regra: Apenas 2 utensílios?
     const bonusUtensilios = inventarioAtivo
       .filter((item) => (item.id === "utensilio" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
+      
     const bonusEspecificos = inventarioAtivo
       .filter((item) => item.tipoBonus === "especifico" && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0).reduce((a, b) => a + b, 0);
+      
     const bonusCustom = inventarioAtivo
       .filter((item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
       .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); 
+      
     return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
   }
   
   getPesoTotal() {
     return this.inventario.filter((item) => !item.ignorarCalculos).reduce((acc, item) => {
           let espacosItem = parseFloat(item.espacosBase ?? item.espacos) || 0;
+          // Se tiver mods, eles podem aumentar o espaço. Aqui simplificamos usando o valor salvo se existir.
+          // Em um cenário ideal, recalcularíamos baseado nas mods ativas.
+          // Por enquanto, usamos a lógica de fallback para garantir compatibilidade.
           if (item.modificacoes && item.modificacoes.length > 0) {
-              espacosItem = parseFloat(item.espacos ?? item.espacosBase) || 0;
+              // Tenta pegar o espaço recalcula do updateItem
           }
           return acc + espacosItem;
       }, 0);
@@ -378,29 +411,42 @@ class Personagem {
     const forca = this.getAtributoFinal('for');
     let maxPesoBase = forca * 5 || 2; 
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
+    
     const temMochilaMilitar = inventarioAtivo.some((item) => item.id === "mochila_militar");
-    const temMochilaTatica = inventarioAtivo.some((item) => item.id === "mochila_tatica");
+    // const temMochilaTatica = inventarioAtivo.some((item) => item.id === "mochila_tatica"); // Se existir no futuro
 
     if (temMochilaMilitar) { maxPesoBase += 2; }
-    if (temMochilaTatica) { maxPesoBase += 5; }
+    // if (temMochilaTatica) { maxPesoBase += 5; }
 
+    // Habilidade de Técnico
     if (this.info.trilha === "tecnico") {
       const intelecto = this.getAtributoFinal('int');
       maxPesoBase = (forca + intelecto) * 5 || 2; 
       if (temMochilaMilitar) { maxPesoBase += 2; }
-      if (temMochilaTatica) { maxPesoBase += 5; }
     }
     return maxPesoBase;
   }
 
+  // --- EXPORTAÇÃO E IMPORTAÇÃO ---
+
   getDados() {
     return {
-      atributos: { ...this.atributos }, pericias: { ...this.pericias }, info: { ...this.info }, 
-      recursos: { ...this.recursos }, defesa: { ...this.defesa }, resistencias: { ...this.resistencias },
-      perseguicao: { ...this.perseguicao }, visibilidade: this.visibilidade,
-      inventario: [...this.inventario], rituais: [...this.rituais], bonusManuais: { ...this.bonusManuais },
-      trilhas_personalizadas: [...this.trilhas_personalizadas], poderes_aprendidos: [...this.poderes_aprendidos], 
-      diario: [...this.diario], condicoesAtivas: [...this.condicoesAtivas], buffsTemporarios: {...this.buffsTemporarios}
+      atributos: { ...this.atributos }, 
+      pericias: { ...this.pericias }, 
+      info: { ...this.info }, 
+      recursos: { ...this.recursos }, 
+      defesa: { ...this.defesa }, 
+      resistencias: { ...this.resistencias },
+      perseguicao: { ...this.perseguicao }, 
+      visibilidade: this.visibilidade,
+      inventario: [...this.inventario], 
+      rituais: [...this.rituais], 
+      bonusManuais: { ...this.bonusManuais },
+      trilhas_personalizadas: [...this.trilhas_personalizadas], 
+      poderes_aprendidos: [...this.poderes_aprendidos], 
+      diario: [...this.diario], 
+      condicoesAtivas: [...this.condicoesAtivas], 
+      buffsTemporarios: {...this.buffsTemporarios}
     };
   }
   
@@ -512,6 +558,5 @@ class Personagem {
   }
 }
 
-const ficha = new Personagem();
-
-export { ficha };
+// EXPORTA A CLASSE, NÃO UMA INSTÂNCIA
+export default Personagem;

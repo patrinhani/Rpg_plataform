@@ -1,10 +1,13 @@
 // src/pages/Dashboard/index.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom'; // Importar Hook de Navegação
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
 
-export default function Dashboard({ onSelectFicha, onSelectMesa }) {
+// Removemos as props antigas (onSelectFicha, onSelectMesa)
+export default function Dashboard() {
   const { usuario, logout } = useAuth();
+  const navigate = useNavigate(); // Hook para navegar
   
   const [mesas, setMesas] = useState([]);
   const [fichasPessoais, setFichasPessoais] = useState([]);
@@ -16,11 +19,10 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
   const [inputCodigoMesa, setInputCodigoMesa] = useState('');
 
   useEffect(() => {
-    carregarDados();
+    if (usuario) carregarDados();
   }, [usuario]);
 
   async function carregarDados() {
-    if(!usuario) return;
     setLoading(true);
     try {
       const [listaMesas, listaFichas] = await Promise.all([
@@ -39,9 +41,10 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
   const handleCriarMesa = async () => {
     if (!inputNomeMesa) return;
     try {
-      await criarMesa(inputNomeMesa, usuario.uid, usuario.displayName);
+      const novoId = await criarMesa(inputNomeMesa, usuario.uid, usuario.displayName);
       setInputNomeMesa(''); setShowCriarMesa(false);
-      carregarDados();
+      // Navega direto para a mesa criada
+      navigate(`/mesa/${novoId}`);
     } catch (e) { alert("Erro ao criar mesa"); }
   };
 
@@ -49,8 +52,8 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
     if (!inputCodigoMesa) return;
     try {
       await entrarNaMesa(inputCodigoMesa, usuario.uid, usuario.displayName);
-      setInputCodigoMesa(''); setShowEntrarMesa(false);
-      carregarDados();
+      // Navega direto para a mesa
+      navigate(`/mesa/${inputCodigoMesa}`);
     } catch (e) { alert(e.message); }
   };
 
@@ -58,7 +61,8 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
     setLoading(true);
     try {
       const novoId = await criarFichaPessoal(usuario.uid);
-      onSelectFicha(novoId); 
+      // Navega direto para a ficha
+      navigate(`/ficha/${novoId}`);
     } catch (error) {
       console.error(error);
       setLoading(false);
@@ -82,17 +86,13 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
           <button onClick={logout} className="item-inventario-remover">SAIR DO SISTEMA</button>
         </div>
 
-        {/* --- SEÇÃO DE MESAS --- */}
+        {/* SEÇÃO DE MESAS */}
         <div className="dashboard-section">
           <h2 style={{ color: 'var(--cor-destaque)', borderBottom: 'none' }}>MISSÕES (MESAS)</h2>
           
           <div className="dashboard-actions">
-            <button onClick={() => setShowCriarMesa(!showCriarMesa)} className="btn-login primary" style={{width:'auto', fontSize:'0.9em'}}>
-                + Criar Mesa
-            </button>
-            <button onClick={() => setShowEntrarMesa(!showEntrarMesa)} className="btn-login google" style={{width:'auto', fontSize:'0.9em'}}>
-                Entrar com Código
-            </button>
+            <button onClick={() => setShowCriarMesa(!showCriarMesa)} className="btn-login primary" style={{width:'auto', fontSize:'0.9em'}}>+ Criar Mesa</button>
+            <button onClick={() => setShowEntrarMesa(!showEntrarMesa)} className="btn-login google" style={{width:'auto', fontSize:'0.9em'}}>Entrar com Código</button>
           </div>
 
           {showCriarMesa && (
@@ -102,7 +102,7 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
             </div>
           )}
           {showEntrarMesa && (
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                <input type="text" placeholder="ID da Mesa" value={inputCodigoMesa} onChange={e => setInputCodigoMesa(e.target.value)} style={{flex:1}} />
                <button onClick={handleEntrarMesa}>Entrar</button>
             </div>
@@ -114,7 +114,7 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
                  key={mesa.id} 
                  className="dashboard-card"
                  style={{ borderLeft: mesa.papel === 'mestre' ? '4px solid gold' : '4px solid var(--cor-destaque)' }} 
-                 onClick={() => onSelectMesa(mesa.id)}
+                 onClick={() => navigate(`/mesa/${mesa.id}`)} /* NAVEGAÇÃO ATUALIZADA */
                >
                  <h3 style={{ color: mesa.papel === 'mestre' ? 'gold' : 'var(--cor-destaque)' }}>{mesa.nome}</h3>
                  <small>{mesa.papel === 'mestre' ? 'VOCÊ É O MESTRE' : 'AGENTE DE CAMPO'}</small>
@@ -124,7 +124,7 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
           </div>
         </div>
 
-        {/* --- SEÇÃO DE FICHAS PESSOAIS --- */}
+        {/* SEÇÃO DE FICHAS PESSOAIS */}
         <div className="dashboard-section" style={{ borderTop: '1px solid #333', paddingTop: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
              <h2 style={{ color: '#aaa', fontSize: '1.2em', borderBottom: 'none', margin: 0 }}>FICHAS PESSOAIS (OFFLINE)</h2>
@@ -133,16 +133,10 @@ export default function Dashboard({ onSelectFicha, onSelectMesa }) {
           
           <div className="dashboard-grid">
              {fichasPessoais.map(ficha => (
-                <div key={ficha.id} onClick={() => onSelectFicha(ficha.id)} className="dashboard-card">
+                <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card"> {/* NAVEGAÇÃO ATUALIZADA */}
                    <h4>{ficha.nome}</h4>
                    <p style={{ fontSize: '0.9em' }}>{ficha.classe} - {ficha.nex}</p>
-                   <button 
-                      className="btn-excluir-card"
-                      onClick={(e) => handleExcluirFicha(e, ficha.id)}
-                      title="Excluir Ficha"
-                   >
-                     &times;
-                   </button>
+                   <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>
                 </div>
              ))}
              {fichasPessoais.length === 0 && !loading && <div className="estado-vazio">Nenhuma ficha pessoal criada.</div>}

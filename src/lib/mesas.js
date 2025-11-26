@@ -3,10 +3,60 @@ import { db } from './firebase';
 import { 
   collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc 
 } from 'firebase/firestore';
-import { ficha as FichaClass } from './personagem'; 
 
-// --- COMBATE E INICIATIVA ---
+// CORREÇÃO AQUI: Importa a classe default, não a instância nomeada
+import Personagem from './personagem'; 
 
+// ... (Funções de Combate permanecem iguais: alternarCombate, avancarTurno, etc.) ...
+// ... (Funções de Iniciativa permanecem iguais) ...
+
+// ...
+
+// --- PERSONAGENS ---
+
+export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem) {
+  const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
+  
+  // CORREÇÃO AQUI: Se não vier dados, cria uma nova instância da classe
+  const dadosFinais = dadosPersonagem || new Personagem().getDados();
+  
+  dadosFinais.info.jogador = jogadorUid; 
+  await setDoc(charRef, dadosFinais);
+}
+
+export async function listarPersonagensPessoais(uid) {
+  const lista = [];
+  const q = query(collection(db, "users", uid, "personagens"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    lista.push({
+      id: doc.id,
+      nome: data.info?.nome || "Sem Nome",
+      classe: data.info?.classe || "Desconhecido",
+      nex: data.info?.nex || "0%",
+      dadosCompletos: data
+    });
+  });
+  return lista;
+}
+
+export async function criarFichaPessoal(uid, dadosIniciais = null) {
+  // CORREÇÃO AQUI: Cria nova instância se não houver dados iniciais
+  const dados = dadosIniciais || new Personagem().getDados();
+  
+  const docRef = await addDoc(collection(db, "users", uid, "personagens"), dados);
+  return docRef.id;
+}
+
+export async function excluirFichaPessoal(uid, fichaId) {
+  await deleteDoc(doc(db, "users", uid, "personagens", fichaId));
+}
+
+// ... (Restante das funções de Gerenciamento de Mesa: criarMesa, buscarMinhasMesas, etc. permanecem iguais) ...
+// Vou incluir o arquivo completo abaixo para garantir que não falte nada.
+
+// --- COMBATE E INICIATIVA (Mantidos para contexto) ---
 export async function alternarCombate(mesaId, status, jogadoresAtuais = []) {
     const mesaRef = doc(db, "mesas", mesaId);
     const updateData = { 
@@ -71,7 +121,6 @@ export async function atualizarIniciativa(mesaId, uid, nome, valor) {
     await updateDoc(mesaRef, { iniciativas: lista });
 }
 
-// Adiciona NPC Genérico
 export async function adicionarNPCIniciativa(mesaId, nomeNPC, valor, pvMax = 10) {
     const mesaRef = doc(db, "mesas", mesaId);
     const snap = await getDoc(mesaRef);
@@ -95,7 +144,6 @@ export async function adicionarNPCIniciativa(mesaId, nomeNPC, valor, pvMax = 10)
     await updateDoc(mesaRef, { iniciativas: lista });
 }
 
-// Adiciona Monstro do Bestiário
 export async function adicionarMonstroIniciativa(mesaId, monstroData, iniciativaRolada) {
     const mesaRef = doc(db, "mesas", mesaId);
     const snap = await getDoc(mesaRef);
@@ -210,40 +258,4 @@ export async function excluirMesaCompleta(mesaId) {
 
 export async function atualizarNomeMesa(mesaId, novoNome) {
     await updateDoc(doc(db, "mesas", mesaId), { nome: novoNome });
-}
-
-// --- PERSONAGENS ---
-
-export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem) {
-  const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
-  const dadosFinais = dadosPersonagem || FichaClass.getDados();
-  dadosFinais.info.jogador = jogadorUid; 
-  await setDoc(charRef, dadosFinais);
-}
-
-export async function listarPersonagensPessoais(uid) {
-  const lista = [];
-  const q = query(collection(db, "users", uid, "personagens"));
-  const snapshot = await getDocs(q);
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    lista.push({
-      id: doc.id,
-      nome: data.info?.nome || "Sem Nome",
-      classe: data.info?.classe || "Desconhecido",
-      nex: data.info?.nex || "0%",
-      dadosCompletos: data
-    });
-  });
-  return lista;
-}
-
-export async function criarFichaPessoal(uid, dadosIniciais = null) {
-  const dados = dadosIniciais || FichaClass.getDados();
-  const docRef = await addDoc(collection(db, "users", uid, "personagens"), dados);
-  return docRef.id;
-}
-
-export async function excluirFichaPessoal(uid, fichaId) {
-  await deleteDoc(doc(db, "users", uid, "personagens", fichaId));
 }
