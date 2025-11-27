@@ -3,9 +3,15 @@ import React, { useState, useEffect } from 'react';
 import './App.css'; 
 import './styles/style.css';
 import './styles/responsive.css';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'; // Importar Rotas e Hooks
-import { useAuth } from './contexts/AuthContext';
-import { FichaProvider } from './contexts/FichaContext'; // [NOVO] Import do Provider
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext.jsx'; // Adicionado .jsx
+
+// Contextos
+import { FichaProvider } from './contexts/FichaContext.jsx'; // Adicionado .jsx
+import { DialogProvider } from './contexts/DialogContext.jsx'; // Adicionado .jsx
+
+// Componentes Globais
+import SystemDialog from './components/SystemDialog.jsx';     // Adicionado .jsx
 
 // Páginas
 import Login from './pages/Login/index.jsx'; 
@@ -15,7 +21,7 @@ import Ficha from './pages/Ficha/index.jsx';
 import Mesa from './pages/Mesa/index.jsx';
 
 // Firebase e Firestore
-import { db } from './lib/firebase';
+import { db } from './lib/firebase.js'; // Adicionado .js
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 
@@ -76,7 +82,6 @@ function App() {
           await updateProfile(usuario, { displayName: novoNomeInput.trim() });
           
           // 2. Salva a flag no Firestore para liberar o acesso futuro
-          // Usamos setDoc com merge: true para criar ou atualizar o documento
           await setDoc(doc(db, "users", usuario.uid), { 
               nomeDefinido: true,
               nome: novoNomeInput.trim(), // Salva o nome no banco também por garantia
@@ -149,26 +154,32 @@ function App() {
 
   // --- SISTEMA DE ROTAS (APP LIBERADO) ---
   return (
-    <Routes>
-      {/* Rota Principal: Dashboard */}
-      <Route path="/" element={<Dashboard />} />
+    <DialogProvider> {/* [NOVO] Envolve tudo com o sistema de diálogos */}
       
-      {/* Rota da Mesa (com ID dinâmico) */}
-      <Route path="/mesa/:mesaId" element={<Mesa />} />
-      
-      {/* Rota da Ficha Pessoal (com ID dinâmico) */}
-      {/* Envolvemos em uma div wrapper para aplicar estilos globais se necessário */}
-      <Route path="/ficha/:fichaId" element={
-         <FichaProvider>
-            <div className='ficha-wrapper'>
-                <Ficha />
-            </div>
-         </FichaProvider>
-      } />
-      
-      {/* Redireciona qualquer rota desconhecida para o Dashboard */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <SystemDialog /> {/* [NOVO] Renderiza o componente visual dos diálogos */}
+
+      <Routes>
+        {/* Rota Principal: Dashboard */}
+        <Route path="/" element={<Dashboard />} />
+        
+        {/* Rota da Mesa (com ID dinâmico) */}
+        <Route path="/mesa/:mesaId" element={<Mesa />} />
+        
+        {/* Rota da Ficha Pessoal (com ID dinâmico) */}
+        {/* Envolvemos em uma div wrapper e no FichaProvider para funcionar isolado */}
+        <Route path="/ficha/:fichaId" element={
+           <FichaProvider>
+              <div className='ficha-wrapper'>
+                  <Ficha />
+              </div>
+           </FichaProvider>
+        } />
+        
+        {/* Redireciona qualquer rota desconhecida para o Dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+    </DialogProvider>
   );
 }
 
