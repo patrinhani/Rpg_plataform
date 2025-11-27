@@ -5,6 +5,7 @@ import './styles/style.css';
 import './styles/responsive.css';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'; // Importar Rotas e Hooks
 import { useAuth } from './contexts/AuthContext';
+import { FichaProvider } from './contexts/FichaContext'; // [NOVO] Import do Provider
 
 // Páginas
 import Login from './pages/Login/index.jsx'; 
@@ -158,9 +159,11 @@ function App() {
       {/* Rota da Ficha Pessoal (com ID dinâmico) */}
       {/* Envolvemos em uma div wrapper para aplicar estilos globais se necessário */}
       <Route path="/ficha/:fichaId" element={
-         <div className='ficha-wrapper'>
-            <Ficha />
-         </div>
+         <FichaProvider>
+            <div className='ficha-wrapper'>
+                <Ficha />
+            </div>
+         </FichaProvider>
       } />
       
       {/* Redireciona qualquer rota desconhecida para o Dashboard */}

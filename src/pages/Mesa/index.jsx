@@ -14,9 +14,12 @@ import {
     atualizarIniciativa, 
     adicionarNPCIniciativa, 
     adicionarMonstroIniciativa, 
-    removerDaIniciativa 
-} from '../../lib/mesas';
+    removerDaIniciativa,
+    atualizarNPCStatus,
+    avancarTurno
+} from '../../lib/mesas'; // Update import list based on usage
 import { bestiario } from '../../lib/bestiario';
+import { FichaProvider } from '../../contexts/FichaContext.jsx'; // [NOVO] Importar Provider
 
 // --- IMPORTAÇÕES DE COMPONENTES ---
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
@@ -161,41 +164,43 @@ export default function Mesa() {
   // ==================================================================================
   if (isFichaOpen) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cor-fundo)' }}>
-            
-            {/* Tracker Compacto (HUD) no topo */}
-            {emCombate && (
-                <IniciativaTracker 
-                    mesaId={mesaId}
-                    iniciativas={mesaData.iniciativas || []}
-                    turnoAtual={mesaData.turnoAtual || 0}
-                    rodada={mesaData.rodada || 1}
-                    souMestre={souMestre}
-                    fichasDaMesa={fichasDaMesa}
-                    usuarioUid={usuario.uid}
-                    onVerFichaCriatura={setCriaturaSelecionada}
-                    compact={true} 
-                />
-            )}
-
-            {/* Área da Ficha */}
-            <div style={{ position: 'relative', flexGrow: 1, marginTop: emCombate ? '70px' : '0' }}>
-                {/* Botão Voltar Flutuante */}
-                <button 
-                    onClick={() => setFichaAbertaId(null)} 
-                    className="btn-voltar-flutuante"
-                    style={{ top: emCombate ? '85px' : '15px' }} 
-                >
-                    ← VOLTAR PARA A MESA
-                </button>
+        <FichaProvider>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cor-fundo)' }}>
                 
-                {/* Renderiza a Ficha passando o ID e o Contexto */}
-                <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} />
-            </div>
+                {/* Tracker Compacto (HUD) no topo */}
+                {emCombate && (
+                    <IniciativaTracker 
+                        mesaId={mesaId}
+                        iniciativas={mesaData.iniciativas || []}
+                        turnoAtual={mesaData.turnoAtual || 0}
+                        rodada={mesaData.rodada || 1}
+                        souMestre={souMestre}
+                        fichasDaMesa={fichasDaMesa}
+                        usuarioUid={usuario.uid}
+                        onVerFichaCriatura={setCriaturaSelecionada}
+                        compact={true} 
+                    />
+                )}
 
-            {/* Modais Globais */}
-            {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
-        </div>
+                {/* Área da Ficha */}
+                <div style={{ position: 'relative', flexGrow: 1, marginTop: emCombate ? '70px' : '0' }}>
+                    {/* Botão Voltar Flutuante */}
+                    <button 
+                        onClick={() => setFichaAbertaId(null)} 
+                        className="btn-voltar-flutuante"
+                        style={{ top: emCombate ? '85px' : '15px' }} 
+                    >
+                        ← VOLTAR PARA A MESA
+                    </button>
+                    
+                    {/* Renderiza a Ficha passando o ID e o Contexto */}
+                    <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} />
+                </div>
+
+                {/* Modais Globais */}
+                {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
+            </div>
+        </FichaProvider>
       );
   }
 
