@@ -43,21 +43,16 @@ export function AuthProvider({ children }) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         
         if (nome) {
-            // Atualiza o Perfil
             await updateProfile(userCredential.user, { displayName: nome });
-            // Marca no Banco
             await setDoc(doc(db, "users", userCredential.user.uid), { 
                 nomeDefinido: true 
             }, { merge: true });
         }
 
-        // Tenta enviar o e-mail
         try {
             await sendEmailVerification(userCredential.user);
         } catch (emailError) {
             console.error("Erro ao enviar e-mail inicial:", emailError);
-            // Não lançamos o erro aqui para não impedir o cadastro, 
-            // o usuário pode reenviar depois na tela de verificação.
         }
         
         return userCredential;
@@ -73,23 +68,19 @@ export function AuthProvider({ children }) {
       return await signInWithEmailAndPassword(auth, email, senha);
   }
 
-  // 4. Reenviar E-mail (NOVO)
+  // 4. Reenviar E-mail
   async function resendEmail() {
       if (auth.currentUser) {
           return await sendEmailVerification(auth.currentUser);
       }
   }
 
-  // 5. Checar Verificação Manualmente (NOVO)
+  // 5. Checar Verificação Manualmente
   async function checkVerification() {
       if (auth.currentUser) {
-          // Força o Firebase a atualizar os dados do usuário
           await auth.currentUser.reload();
-          
-          // Atualiza o estado local para refletir a mudança na UI imediatamente
           const userAtualizado = auth.currentUser;
           setUsuario({ ...userAtualizado });
-          
           return userAtualizado.emailVerified;
       }
       return false;
@@ -107,21 +98,21 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // EXPORTAR AS NOVAS FUNÇÕES AQUI
   const value = {
     usuario,
+    loading, // <--- CORREÇÃO 1: Exportando o loading
     authError,
     loginGoogle,
     criarContaEmail,
     loginEmail,
-    resendEmail,       // Adicionado
-    checkVerification, // Adicionado
+    resendEmail,
+    checkVerification,
     logout
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children} {/* <--- CORREÇÃO 2: Renderiza sempre, permitindo o App mostrar a tela de "Carregando" */}
     </AuthContext.Provider>
   );
 }

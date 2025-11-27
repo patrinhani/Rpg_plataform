@@ -13,7 +13,19 @@ export default function FichaCriatura({ dados, onClose }) {
     Medo: '#fff'
   };
   
+  // Caminhos dos símbolos (baseados nos seus arquivos)
+  const simbolos = {
+    Sangue: '/assets/images/SimboloSangue.webp',
+    Morte: '/assets/images/SimboloMorte.webp',
+    Conhecimento: '/assets/images/SimboloConhecimento.webp',
+    Energia: '/assets/images/SimboloEnergia.webp',
+    Medo: '/assets/images/SimboloSemafinidade.webp',
+    // Fallback para monstros sem elemento definido
+    undefined: '/assets/images/SimboloSemafinidade.webp'
+  };
+  
   const corTema = cores[dados.elemento] || '#fff';
+  const simboloFundo = simbolos[dados.elemento] || simbolos.Medo;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -32,20 +44,54 @@ export default function FichaCriatura({ dados, onClose }) {
 
         <div className="modal-body" style={{ padding: '20px', maxHeight: '80vh', overflowY: 'auto', background: '#111' }}>
             
-            {/* --- ÁREA DA FOTO (NOVO) --- */}
+            {/* --- ÁREA DA FOTO (ESTILIZADA COM SÍMBOLO) --- */}
             {dados.foto && (
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                <div style={{ 
+                    width: '100%', 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    marginBottom: '20px',
+                    position: 'relative',       // Para posicionar o fundo absoluto
+                    overflow: 'hidden',         // Corta o que passar da borda
+                    borderRadius: '6px',
+                    border: `1px solid ${corTema}`,
+                    boxShadow: `0 0 20px ${corTema}30`, // Glow suave da cor do elemento
+                    backgroundColor: '#080808', // Fundo bem escuro
+                    minHeight: '250px'          // Garante altura mesmo se a imagem for pequena
+                }}>
+                    
+                    {/* 1. Símbolo de Fundo (Marca d'água) */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '-10%', left: '-10%', width: '120%', height: '120%', // Um pouco maior para cobrir bem
+                        backgroundImage: `url(${simboloFundo})`,
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: 'contain',
+                        opacity: 0.15,          // Bem sutil
+                        filter: 'grayscale(0.4)', // Levemente desaturado para não brigar com a foto
+                        zIndex: 0
+                    }}></div>
+
+                    {/* 2. Vinheta (Sombra nas bordas para dar foco no centro) */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'radial-gradient(circle, transparent 40%, #111 100%)',
+                        zIndex: 1
+                    }}></div>
+
+                    {/* 3. A Foto da Criatura */}
                     <img 
                         src={dados.foto} 
                         alt={dados.nome} 
                         style={{ 
                             maxWidth: '100%', 
-                            maxHeight: '300px', 
+                            maxHeight: '400px', 
                             objectFit: 'contain', 
-                            border: `1px solid ${corTema}`,
-                            borderRadius: '4px',
-                            boxShadow: `0 0 15px ${corTema}40`, // Brilho suave com a cor do elemento
-                            backgroundColor: '#000'
+                            zIndex: 2,             // Fica acima dos efeitos
+                            position: 'relative',
+                            filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.8))' // Sombra na própria criatura para destacar do fundo
                         }}
                     />
                 </div>

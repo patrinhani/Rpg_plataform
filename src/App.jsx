@@ -153,11 +153,9 @@ function App() {
   }
 
   // --- SISTEMA DE ROTAS (APP LIBERADO) ---
+// --- SISTEMA DE ROTAS (APP LIBERADO) ---
+  // (O DialogProvider e SystemDialog agora estão no main.jsx)
   return (
-    <DialogProvider> {/* [NOVO] Envolve tudo com o sistema de diálogos */}
-      
-      <SystemDialog /> {/* [NOVO] Renderiza o componente visual dos diálogos */}
-
       <Routes>
         {/* Rota Principal: Dashboard */}
         <Route path="/" element={<Dashboard />} />
@@ -166,7 +164,6 @@ function App() {
         <Route path="/mesa/:mesaId" element={<Mesa />} />
         
         {/* Rota da Ficha Pessoal (com ID dinâmico) */}
-        {/* Envolvemos em uma div wrapper e no FichaProvider para funcionar isolado */}
         <Route path="/ficha/:fichaId" element={
            <FichaProvider>
               <div className='ficha-wrapper'>
@@ -178,8 +175,6 @@ function App() {
         {/* Redireciona qualquer rota desconhecida para o Dashboard */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
-    </DialogProvider>
   );
 }
 
