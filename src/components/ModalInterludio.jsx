@@ -1,12 +1,15 @@
 // src/components/ModalInterludio.jsx
 import React, { useState } from 'react';
 import { database } from '../lib/database.js';
+import { useDialog } from '../contexts/DialogContext'; // [NOVO]
 
 function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
   const [acoesSelecionadas, setAcoesSelecionadas] = useState([]);
   const [conforto, setConforto] = useState('normal');
   const [prato, setPrato] = useState('simples');
   const [emGrupo, setEmGrupo] = useState(false);
+  
+  const { showAlert } = useDialog(); // [NOVO]
 
   if (!isOpen) return null;
 
@@ -17,7 +20,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
       if (acoesSelecionadas.length < 2) {
         setAcoesSelecionadas([...acoesSelecionadas, acao]);
       } else {
-        alert("Você só pode realizar até 2 ações por Interlúdio.");
+        // [ATUALIZADO]
+        showAlert("Você só pode realizar até 2 ações por Interlúdio.", "Limite Atingido");
       }
     }
   };
@@ -32,7 +36,6 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
     onClose();
   };
 
-  // Lista completa de ações baseada no seu arquivo interludio.txt
   const listaAcoes = [
       { id: 'dormir', icone: '💤', nome: 'Dormir', desc: 'Recupera PV e PE (baseado no conforto).' },
       { id: 'relaxar', icone: '🧘', nome: 'Relaxar', desc: 'Recupera Sanidade (como Dormir).' },
@@ -80,12 +83,10 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                 ))}
             </div>
 
-            {/* ÁREA DE CONFIGURAÇÃO DAS AÇÕES ESCOLHIDAS */}
             {(acoesSelecionadas.length > 0) && (
                 <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid var(--cor-borda)' }}>
                     <h4 style={{marginTop: 0, marginBottom: '10px', color: 'var(--cor-destaque)'}}>Detalhes das Ações</h4>
                     
-                    {/* Opções de Conforto (Aparece se Dormir ou Relaxar estiverem selecionados) */}
                     {(acoesSelecionadas.includes('dormir') || acoesSelecionadas.includes('relaxar')) && (
                         <div style={{ marginBottom: '15px' }}>
                             <label style={{display: 'block', marginBottom: '5px'}}>Nível de Conforto:</label>
@@ -100,7 +101,6 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                         </div>
                     )}
 
-                    {/* Opção de Grupo (Aparece se Relaxar estiver selecionado) */}
                     {acoesSelecionadas.includes('relaxar') && (
                         <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <input type="checkbox" id="chkGrupo" checked={emGrupo} onChange={(e) => setEmGrupo(e.target.checked)} style={{width: '20px', height: '20px'}} />
@@ -108,7 +108,6 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                         </div>
                     )}
 
-                    {/* Opção de Prato (Aparece se Alimentar-se estiver selecionado) */}
                     {acoesSelecionadas.includes('alimentar') && (
                         <div style={{ marginBottom: '15px' }}>
                             <label style={{display: 'block', marginBottom: '5px'}}>Prato Escolhido:</label>
@@ -123,7 +122,6 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                         </div>
                     )}
 
-                    {/* Mensagens Informativas para outras ações */}
                     {acoesSelecionadas.includes('exercitar') && (
                         <p style={{fontSize: '0.9em', color: '#aaa'}}>💪 <strong>Exercitar-se:</strong> Anote que você tem +1d6 para um teste de AGI, FOR ou VIG.</p>
                     )}

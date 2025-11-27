@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import { useParams, useNavigate } from 'react-router-dom'; // [NOVO]
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDialog } from '../../contexts/DialogContext'; // [NOVO] Import do Dialog
 
 import { 
     importarPersonagemParaMesa, 
@@ -17,9 +18,9 @@ import {
     removerDaIniciativa,
     atualizarNPCStatus,
     avancarTurno
-} from '../../lib/mesas'; // Update import list based on usage
+} from '../../lib/mesas';
 import { bestiario } from '../../lib/bestiario';
-import { FichaProvider } from '../../contexts/FichaContext.jsx'; // [NOVO] Importar Provider
+import { FichaProvider } from '../../contexts/FichaContext.jsx';
 
 // --- IMPORTAÇÕES DE COMPONENTES ---
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
@@ -27,30 +28,27 @@ import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
 import Ficha from '../Ficha/index.jsx';
 
 export default function Mesa() {
-  // [NOVO] Pega ID da URL e Hook de navegação
   const { mesaId } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
+  // [NOVO] Hook do Dialog
+  const { showAlert, showConfirm, showPrompt } = useDialog();
+  
   const [mesaData, setMesaData] = useState(null);
   const [fichasDaMesa, setFichasDaMesa] = useState([]);
-  
-  // Navegação Interna (null = Lobby, ID = Ficha Aberta)
   const [fichaAbertaId, setFichaAbertaId] = useState(null);
 
-  // Modais e Estados Locais
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
   const [criaturaSelecionada, setCriaturaSelecionada] = useState(null);
   const [minhasFichas, setMinhasFichas] = useState([]);
 
-  // Inputs de Combate
   const [iniValor, setIniValor] = useState('');
   const [npcNome, setNpcNome] = useState('');
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
 
-  // Função de Voltar
   const sairDaMesa = () => navigate('/');
 
   // 1. Monitorar Dados da Mesa
@@ -59,20 +57,22 @@ export default function Mesa() {
     const unsub = onSnapshot(doc(db, "mesas", mesaId), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Verifica se o usuário ainda está na lista de jogadores
         if (data.jogadores && !data.jogadores.some(j => j.uid === usuario.uid)) {
-           alert("Você foi removido desta mesa.");
+           // [ATUALIZADO] Alerta via Dialog (sem await pois é dentro de useEffect, apenas dispara)
+           showAlert("Você foi removido desta mesa.", "Aviso");
            sairDaMesa();
            return;
         }
         setMesaData(data);
       } else {
-          alert("Esta mesa foi excluída ou não existe.");
+          // [ATUALIZADO]
+          showAlert("Esta mesa foi excluída ou não existe.", "Erro");
           sairDaMesa();
       }
     }, (error) => {
        console.error("Erro ao carregar mesa:", error);
-       alert("Erro de permissão ou conexão.");
+       // [ATUALIZADO]
+       showAlert("Erro de permissão ou conexão.", "Erro");
        sairDaMesa();
     });
     return () => unsub();
@@ -94,16 +94,23 @@ export default function Mesa() {
   }, [mesaId]);
 
   // --- AÇÕES GERAIS ---
-  const handleCopiarCodigo = () => { navigator.clipboard.writeText(mesaId); alert("Código copiado!"); };
+  const handleCopiarCodigo = () => { 
+      navigator.clipboard.writeText(mesaId); 
+      // [ATUALIZADO]
+      showAlert("Código copiado para a área de transferência!", "Sucesso"); 
+  };
   
   const handleEditarNome = async () => {
       if (!souMestre) return;
-      const novo = prompt("Novo nome da mesa:", mesaData.nome);
+      // [ATUALIZADO] Prompt via Dialog
+      const novo = await showPrompt("Novo nome da mesa:", "Editar Mesa", "Nome da Mesa", mesaData.nome);
       if (novo && novo.trim()) await atualizarNomeMesa(mesaId, novo);
   };
 
   const handleExpulsar = async (uid) => {
-      if (confirm("Tem certeza que deseja remover este jogador?")) {
+      // [ATUALIZADO] Confirm via Dialog
+      const confirmado = await showConfirm("Tem certeza que deseja remover este jogador da mesa?", "Expulsar Jogador");
+      if (confirmado) {
           await removerJogadorDaMesa(mesaId, uid);
       }
   };
@@ -128,9 +135,10 @@ export default function Mesa() {
   };
 
   const adicionarMonstro = async (monstro) => {
-      const ini = prompt(`Iniciativa para ${monstro.nome} (Bônus: ${monstro.iniciativa}):`, "0");
-      if (ini) {
-          await adicionarMonstroIniciativa(mesaId, monstro, ini);
+      // [ATUALIZADO] Prompt via Dialog
+      const ini = await showPrompt(`Iniciativa para ${monstro.nome} (Bônus: ${monstro.iniciativa}):`, "Adicionar Monstro", "0", "0");
+      if (ini !== null) { // Verifica se não cancelou (pode ser string vazia se o usuário apagar, mas geralmente retorna valor)
+          await adicionarMonstroIniciativa(mesaId, monstro, ini || "0");
           setShowBestiarioModal(false);
       }
   };
@@ -143,14 +151,18 @@ export default function Mesa() {
   };
   
   const confirmarImportacao = async (dadosFicha) => {
-      if (confirm(`Importar "${dadosFicha.info.nome}" para esta mesa?`)) {
+      // [ATUALIZADO] Confirm via Dialog
+      const confirmado = await showConfirm(`Importar "${dadosFicha.info.nome}" para esta mesa?`, "Importar Personagem");
+      if (confirmado) {
           await importarPersonagemParaMesa(mesaId, usuario.uid, dadosFicha);
           setShowImportModal(false);
       }
   };
 
   const criarNova = async () => {
-      if (confirm("Criar uma ficha do zero nesta mesa?")) {
+      // [ATUALIZADO] Confirm via Dialog
+      const confirmado = await showConfirm("Criar uma ficha do zero nesta mesa?", "Nova Ficha");
+      if (confirmado) {
           await importarPersonagemParaMesa(mesaId, usuario.uid, null);
       }
   };
@@ -159,15 +171,11 @@ export default function Mesa() {
   
   const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
   
-  // ==================================================================================
-  // RENDERIZAÇÃO: MODO FICHA (JOGO)
-  // ==================================================================================
+  // RENDERIZAÇÃO: MODO FICHA
   if (isFichaOpen) {
       return (
         <FichaProvider>
             <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cor-fundo)' }}>
-                
-                {/* Tracker Compacto (HUD) no topo */}
                 {emCombate && (
                     <IniciativaTracker 
                         mesaId={mesaId}
@@ -181,10 +189,7 @@ export default function Mesa() {
                         compact={true} 
                     />
                 )}
-
-                {/* Área da Ficha */}
                 <div style={{ position: 'relative', flexGrow: 1, marginTop: emCombate ? '70px' : '0' }}>
-                    {/* Botão Voltar Flutuante */}
                     <button 
                         onClick={() => setFichaAbertaId(null)} 
                         className="btn-voltar-flutuante"
@@ -192,26 +197,19 @@ export default function Mesa() {
                     >
                         ← VOLTAR PARA A MESA
                     </button>
-                    
-                    {/* Renderiza a Ficha passando o ID e o Contexto */}
                     <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} />
                 </div>
-
-                {/* Modais Globais */}
                 {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
             </div>
         </FichaProvider>
       );
   }
 
-  // ==================================================================================
-  // RENDERIZAÇÃO: MODO LOBBY (MESA)
-  // ==================================================================================
+  // RENDERIZAÇÃO: MODO LOBBY
   return (
     <div className="login-container" style={{ flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '0', overflowY: 'auto' }}>
       <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.95)', marginTop: '30px', minHeight: '90vh', borderColor: emCombate ? 'var(--cor-destaque)' : '#333' }}>
         
-        {/* HEADER DA MESA */}
         <div className="dashboard-header">
              <div>
                  <h1 
@@ -259,13 +257,10 @@ export default function Mesa() {
                     onVerFichaCriatura={setCriaturaSelecionada}
                     compact={false}
                 />
-                
-                {/* Controles de Inserção */}
                 <div style={{ display:'flex', gap:'15px', justifyContent:'center', marginTop: '10px', flexWrap: 'wrap', background: 'rgba(0,0,0,0.6)', padding:'15px', borderRadius:'0 0 8px 8px' }}>
                     {souMestre ? (
                         <>
                             <button onClick={() => setShowBestiarioModal(true)} className="btn-login google" style={{width:'auto', padding:'5px 20px'}}>+ BESTIÁRIO</button>
-                            
                             <div style={{display:'flex', gap:'5px', alignItems:'center', borderLeft:'1px solid #555', paddingLeft:'15px'}}>
                                 <span style={{color:'gold', fontSize:'0.9em'}}>NPC Rápido:</span>
                                 <input type="text" placeholder="Nome" value={npcNome} onChange={e=>setNpcNome(e.target.value)} style={{width:'100px'}} />
@@ -285,11 +280,8 @@ export default function Mesa() {
             </div>
         )}
 
-        {/* ÁREA PRINCIPAL (GRID DE JOGADORES) */}
         <div className="mesa-container">
             <div className="mesa-area-principal">
-                
-                {/* SEÇÃO: MEU PERSONAGEM */}
                 {!souMestre && (
                     <div style={{marginBottom: '30px'}}>
                         <h2 style={{color:'var(--cor-destaque)'}}>MEU PERSONAGEM</h2>
@@ -311,32 +303,24 @@ export default function Mesa() {
                     </div>
                 )}
 
-                {/* SEÇÃO: TODOS OS AGENTES */}
                 <h2 style={{color: souMestre ? 'gold' : '#aaa'}}>TODOS OS AGENTES</h2>
                 <div className="dashboard-grid">
                     {mesaData.jogadores.filter(j => j.uid !== mesaData.mestre).map(jogador => {
                         const ficha = fichasDaMesa.find(f => f.uid === jogador.uid);
                         const isMe = jogador.uid === usuario.uid;
                         const podeAbrir = souMestre || isMe;
-
                         return (
                             <div key={jogador.uid} className="dashboard-card" style={{ borderColor: isMe ? 'var(--cor-destaque)' : '#333', opacity: ficha ? 1 : 0.7 }}>
                                 <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
                                     <strong>{jogador.nome}</strong>
                                     {souMestre && <button onClick={()=>handleExpulsar(jogador.uid)} style={{color:'red', background:'none', border:'none', fontSize:'1.2em', cursor:'pointer'}} title="Expulsar">×</button>}
                                 </div>
-                                
                                 {ficha ? (
                                     <div style={{marginTop:'10px'}}>
                                         <h4 style={{color:'var(--cor-destaque)', margin:'5px 0'}}>{ficha.info.nome}</h4>
                                         <p style={{fontSize:'0.8em', color:'#aaa'}}>{ficha.info.classe} {ficha.info.nex}</p>
-                                        
                                         {podeAbrir ? (
-                                            <button 
-                                                onClick={() => setFichaAbertaId(jogador.uid)} 
-                                                className={isMe ? "btn-login primary" : "btn-login google"} 
-                                                style={{width:'100%', fontSize:'0.8em', marginTop:'5px'}}
-                                            >
+                                            <button onClick={() => setFichaAbertaId(jogador.uid)} className={isMe ? "btn-login primary" : "btn-login google"} style={{width:'100%', fontSize:'0.8em', marginTop:'5px'}}>
                                                 {isMe ? 'Abrir Minha Ficha' : 'Ver Ficha (Mestre)'}
                                             </button>
                                         ) : (
@@ -351,10 +335,8 @@ export default function Mesa() {
                     })}
                     {mesaData.jogadores.length <= 1 && <div className="estado-vazio" style={{gridColumn:'1/-1'}}>Nenhum jogador conectado.</div>}
                 </div>
-
             </div>
 
-            {/* SIDEBAR */}
             <div className="mesa-sidebar">
                  <h3 style={{color:'#aaa', borderBottom:'1px solid #444', margin:'0 0 10px 0', paddingBottom:'5px'}}>
                     Conectados ({mesaData.jogadores.length})
@@ -371,12 +353,8 @@ export default function Mesa() {
                  </ul>
             </div>
         </div>
-
       </div>
 
-      {/* --- MODAIS GERAIS --- */}
-      
-      {/* Modal Bestiário */}
       {showBestiarioModal && (
         <div className="modal-overlay">
             <div className="modal-conteudo" style={{maxWidth:'800px'}}>
@@ -398,10 +376,8 @@ export default function Mesa() {
         </div>
       )}
 
-      {/* Modal Ver Criatura */}
       {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
       
-      {/* Modal Importar Ficha */}
       {showImportModal && (
         <div className="modal-overlay">
             <div className="modal-conteudo">
@@ -421,7 +397,6 @@ export default function Mesa() {
             </div>
         </div>
       )}
-
     </div>
   );
 }

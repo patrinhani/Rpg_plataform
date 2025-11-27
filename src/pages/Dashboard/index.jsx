@@ -1,13 +1,14 @@
 // src/pages/Dashboard/index.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom'; // Importar Hook de Navegação
+import { useNavigate } from 'react-router-dom'; 
+import { useDialog } from '../../contexts/DialogContext'; // [NOVO]
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
 
-// Removemos as props antigas (onSelectFicha, onSelectMesa)
 export default function Dashboard() {
   const { usuario, logout } = useAuth();
-  const navigate = useNavigate(); // Hook para navegar
+  const navigate = useNavigate();
+  const { showConfirm, showAlert } = useDialog(); // [NOVO]
   
   const [mesas, setMesas] = useState([]);
   const [fichasPessoais, setFichasPessoais] = useState([]);
@@ -43,25 +44,28 @@ export default function Dashboard() {
     try {
       const novoId = await criarMesa(inputNomeMesa, usuario.uid, usuario.displayName);
       setInputNomeMesa(''); setShowCriarMesa(false);
-      // Navega direto para a mesa criada
       navigate(`/mesa/${novoId}`);
-    } catch (e) { alert("Erro ao criar mesa"); }
+    } catch (e) { 
+        // [ATUALIZADO]
+        showAlert("Erro ao criar mesa: " + e.message, "Erro"); 
+    }
   };
 
   const handleEntrarMesa = async () => {
     if (!inputCodigoMesa) return;
     try {
       await entrarNaMesa(inputCodigoMesa, usuario.uid, usuario.displayName);
-      // Navega direto para a mesa
       navigate(`/mesa/${inputCodigoMesa}`);
-    } catch (e) { alert(e.message); }
+    } catch (e) { 
+        // [ATUALIZADO]
+        showAlert(e.message, "Erro"); 
+    }
   };
 
   const handleCriarFicha = async () => {
     setLoading(true);
     try {
       const novoId = await criarFichaPessoal(usuario.uid);
-      // Navega direto para a ficha
       navigate(`/ficha/${novoId}`);
     } catch (error) {
       console.error(error);
@@ -71,7 +75,9 @@ export default function Dashboard() {
 
   const handleExcluirFicha = async (e, id) => {
     e.stopPropagation();
-    if(window.confirm("Excluir ficha permanentemente?")) {
+    // [ATUALIZADO] Confirm via Dialog
+    const confirmado = await showConfirm("Excluir esta ficha permanentemente? Essa ação não pode ser desfeita.", "Excluir Ficha");
+    if(confirmado) {
         await excluirFichaPessoal(usuario.uid, id);
         carregarDados();
     }
@@ -114,7 +120,7 @@ export default function Dashboard() {
                  key={mesa.id} 
                  className="dashboard-card"
                  style={{ borderLeft: mesa.papel === 'mestre' ? '4px solid gold' : '4px solid var(--cor-destaque)' }} 
-                 onClick={() => navigate(`/mesa/${mesa.id}`)} /* NAVEGAÇÃO ATUALIZADA */
+                 onClick={() => navigate(`/mesa/${mesa.id}`)} 
                >
                  <h3 style={{ color: mesa.papel === 'mestre' ? 'gold' : 'var(--cor-destaque)' }}>{mesa.nome}</h3>
                  <small>{mesa.papel === 'mestre' ? 'VOCÊ É O MESTRE' : 'AGENTE DE CAMPO'}</small>
@@ -133,7 +139,7 @@ export default function Dashboard() {
           
           <div className="dashboard-grid">
              {fichasPessoais.map(ficha => (
-                <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card"> {/* NAVEGAÇÃO ATUALIZADA */}
+                <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card">
                    <h4>{ficha.nome}</h4>
                    <p style={{ fontSize: '0.9em' }}>{ficha.classe} - {ficha.nex}</p>
                    <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>

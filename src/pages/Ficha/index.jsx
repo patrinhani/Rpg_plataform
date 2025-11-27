@@ -2,7 +2,6 @@
 import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-// Estilos e Libs
 import '../../App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { 
@@ -16,13 +15,12 @@ import {
 } from '../../lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../lib/progressao.js'; 
 
-// Contexto e Firebase
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { useFicha } from '../../contexts/FichaContext.jsx'; // [NOVO] Importa o Hook
+import { useFicha } from '../../contexts/FichaContext.jsx';
+import { useDialog } from '../../contexts/DialogContext.jsx'; // [NOVO]
 import { db } from '../../lib/firebase'; 
 import { doc, updateDoc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore'; 
 
-// Componentes (Lazy Loading)
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
@@ -40,7 +38,6 @@ import FichaPrincipal from '../../components/FichaPrincipal.jsx';
 import Recursos from '../../components/ficha/recursos.jsx';
 import ModalInterludio from '../../components/ModalInterludio.jsx';
 
-// Constantes Auxiliares
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
     { nome: 'Sangue', valor: 'sangue' },
@@ -53,7 +50,6 @@ const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
-// Helper Debounce
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
@@ -66,8 +62,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const { fichaId: paramFichaId } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth(); 
+  const { showAlert, showConfirm } = useDialog(); // [NOVO]
   
-  // [NOVO] Consome tudo do Contexto
   const { 
       personagem, calculados, carregarFicha, atualizarFicha, fichaInstance,
       addItem, removeItem, updateItem, toggleItem,
@@ -81,7 +77,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const idAlvo = propFichaId || paramFichaId || usuario?.uid;
   const isModoMesa = !!mesaContexto;
 
-  // --- ESTADOS LOCAIS (Apenas UI) ---
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
@@ -91,7 +86,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const docRef = useRef(null); 
   const isInitializing = useRef(true); 
   
-  // Modais (Estados)
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
@@ -105,7 +99,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
-  // --- PERSISTÊNCIA ---
   const saveToFirestore = useCallback(async (dadosCompletos) => {
     if (docRef.current) {
         try {
@@ -118,7 +111,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
 
-  // --- CONEXÃO COM FIRESTORE ---
   useEffect(() => {
     if (!usuario || !idAlvo) {
         setLoading(false);
@@ -134,18 +126,11 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
         if (docSnap.exists()) {
             const dadosFirestore = docSnap.data();
-            carregarFicha(dadosFirestore); // [NOVO] Usa função do Contexto
+            carregarFicha(dadosFirestore); 
         } else if (isInitializing.current) {
-             // Só cria se for ficha pessoal ou se o usuário for o dono na mesa
-             // (Lógica simplificada: se não existe, cria um template)
-             // Em um sistema real, você pode querer restringir quem cria fichas na mesa.
              if (!isModoMesa || propFichaId === usuario.uid) {
                 console.log("Criando ficha inicial...");
-                // Aqui precisamos pegar o template limpo. Como 'personagem' já vem do contexto inicializado,
-                // podemos usar ele, mas cuidado com recursão. O ideal é ter um método estático ou helper.
-                // Por simplicidade, vamos deixar o contexto inicializar e salvar isso.
-                // Como o Contexto inicia com dados vazios, podemos salvar o estado atual do contexto no banco.
-                await setDoc(docRef.current, personagem); // Salva o estado inicial do contexto
+                await setDoc(docRef.current, personagem); 
              }
         }
         if (isInitializing.current) isInitializing.current = false;
@@ -155,16 +140,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     return () => unsubscribe();
   }, [usuario, mesaContexto, idAlvo]);
 
-  // --- SALVAMENTO AUTOMÁTICO ---
-  // Sempre que 'personagem' mudar (via Contexto), salvamos no banco.
   useEffect(() => {
       if (!loading && !isInitializing.current) {
           debouncedSave(personagem);
       }
   }, [personagem]);
 
-
-  // --- EFEITOS VISUAIS E TRILHAS ---
   useEffect(() => {
      if (personagem.info.tema && personagem.info.tema !== tema) {
          setTema(personagem.info.tema);
@@ -183,7 +164,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   const handleThemeChange = (novoTema) => {
       setTema(novoTema); 
-      atualizarFicha('info', 'tema', novoTema); // [NOVO]
+      atualizarFicha('info', 'tema', novoTema); 
   };
 
   useEffect(() => {
@@ -214,7 +195,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   useEffect(() => {
       const origemAtual = personagem.info.origem;
-      // (Aqui usamos a lógica de exibição apenas, a lógica de dados está no Contexto)
+      // Lógica de UI (dados no contexto)
   }, [personagem.info.origem]);
 
   useEffect(() => {
@@ -222,11 +203,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     document.title = title;
   }, [personagem.info.nome, personagem.info.nex]); 
 
-
-  // --- HANDLERS DE INTERFACE (Adaptados para usar Contexto) ---
-  // Wrapper para o handleFichaChange original, agora chamando atualizarFicha do contexto
   const handleFichaChange = (secao, campo, valor) => {
-       // Intercepta lógica de UI que precisa de Modais (Ex: Trilha com Elemento)
        if (secao === 'info' && campo === 'trilha') {
            const trilha = valor;
            const customTrilhas = personagem.trilhas_personalizadas || [];
@@ -234,7 +211,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
            if (dados && dados.requiresChoice === 'elemento' && trilha !== 'nenhuma') {
                 setItemPendente({ trilhaValue: trilha, tituloModal: `Elemento da Trilha`, descricaoModal: `Escolha:`, opcoes: opcoesElemento, tipoVinculo: 'trilhaElemento' });
                 setIsSelecaoOpen(true);
-                return; // Não atualiza ainda
+                return; 
            }
        }
        atualizarFicha(secao, campo, valor);
@@ -261,8 +238,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           } 
       } else if (itemPendente.tipoVinculo === 'trilhaElemento') { 
           const trilha = itemPendente.trilhaValue; 
-          atualizarFicha('info', 'trilha', trilha); // Atualiza trilha
-          atualizarFicha('info', `${trilha}_elemento`, valorSelecionado); // Atualiza elemento
+          atualizarFicha('info', 'trilha', trilha); 
+          atualizarFicha('info', `${trilha}_elemento`, valorSelecionado); 
       } else { 
           let itemVinculado = { ...itemPendente }; 
           if (itemPendente.tipoVinculo === 'pericia') itemVinculado.periciaVinculada = valorSelecionado; 
@@ -290,14 +267,47 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const handleSalvarItemEditado = (itemAtualizado) => { if (itemParaEditar) { updateItem(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); } };
   const handleSalvarNota = (dadosNota) => { if (notaParaEditar) updateNota(notaParaEditar.id, dadosNota); else addNota(dadosNota); setIsDiarioModalOpen(false); };
-  const handleAplicarInterludioHandler = (opcoes) => { const resultado = aplicarInterludio(opcoes); alert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`); };
+  
+  const handleAplicarInterludioHandler = (opcoes) => { 
+      const resultado = aplicarInterludio(opcoes); 
+      // [ATUALIZADO]
+      showAlert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`, "Interlúdio"); 
+  };
 
-  const salvarFichaLocal = () => { debouncedSave(personagem); alert("Ficha salva!"); };
-  const limparFicha = () => { if(window.confirm("Apagar ficha permanentemente?")) { if(docRef.current) deleteDoc(docRef.current); navigate('/'); } };
+  const salvarFichaLocal = () => { 
+      debouncedSave(personagem); 
+      // [ATUALIZADO]
+      showAlert("Ficha sincronizada com sucesso.", "Salvo"); 
+  };
+  
+  const limparFicha = async () => { 
+      // [ATUALIZADO]
+      const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
+      if(confirmado) { 
+          if(docRef.current) deleteDoc(docRef.current); 
+          navigate('/'); 
+      } 
+  };
+  
   const exportarFicha = () => { const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `ficha_${personagem.info.nome || "agente"}.json`; a.click(); };
-  const importarFicha = (arquivo) => { const reader = new FileReader(); reader.onload = (e) => { try { const json = JSON.parse(e.target.result); carregarFicha(json); alert("Ficha importada!"); } catch(err) { alert("Erro ao ler arquivo JSON."); } }; reader.readAsText(arquivo); };
+  
+  const importarFicha = (arquivo) => { 
+      const reader = new FileReader(); 
+      reader.onload = (e) => { 
+          try { 
+              const json = JSON.parse(e.target.result); 
+              carregarFicha(json); 
+              // [ATUALIZADO]
+              showAlert("Ficha importada com sucesso!", "Sucesso"); 
+          } catch(err) { 
+              // [ATUALIZADO]
+              showAlert("Erro ao ler arquivo JSON.", "Erro"); 
+          } 
+      }; 
+      reader.readAsText(arquivo); 
+  };
+  
   const VoltarBtn = !isModoMesa ? <button onClick={() => navigate('/')} className="btn-voltar-flutuante" style={{ top: '15px' }}>← DASHBOARD</button> : null;
-
 
   if (loading) {
       return (
@@ -372,7 +382,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
         <footer><p></p></footer>
         
-        {/* Modais */}
         {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
         {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
         {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={addRitual} />}

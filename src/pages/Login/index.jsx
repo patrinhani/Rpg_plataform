@@ -1,6 +1,7 @@
 // src/pages/Login/index.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useDialog } from '../../contexts/DialogContext'; // [NOVO]
 import './Login.css';
 
 export default function Login() {
@@ -10,6 +11,8 @@ export default function Login() {
       criarContaEmail,
       authError 
   } = useAuth();
+  
+  const { showAlert } = useDialog(); // [NOVO]
   
   const [nome, setNome] = useState(''); 
   const [email, setEmail] = useState('');
@@ -43,8 +46,8 @@ export default function Login() {
                   throw new Error("Por favor, escolha um Nome de Usuário.");
               }
               await criarContaEmail(email, senha, nome);
-              // Não fazemos logout aqui para o fluxo seguir para a verificação
-              alert(`✅ CONTA CRIADA!\nBem-vindo(a), ${nome}.\nVerifique seu e-mail para liberar o acesso.`);
+              // [ATUALIZADO]
+              await showAlert(`Bem-vindo(a), ${nome}.\nVerifique seu e-mail para liberar o acesso.`, "Conta Criada!");
               setIsNewUser(false);
               setLoading(false);
           } else {
@@ -78,7 +81,6 @@ export default function Login() {
 
         <form onSubmit={handleSubmitEmail} className="login-actions">
             
-            {/* CAMPO DE NOME DE USUÁRIO */}
             {isNewUser && (
                 <div className="input-group">
                     <input
