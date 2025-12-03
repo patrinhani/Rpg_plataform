@@ -1,5 +1,5 @@
 // /src/components/ModalRituais.jsx
-// (ATUALIZADO: Adicionada Aba de Ritual Personalizado)
+// (ATUALIZADO: Com Filtro por Círculo)
 
 import React, { useState } from 'react';
 import { database } from '../lib/database.js';
@@ -15,17 +15,13 @@ const rituaisPorElemento = {
   medo: todosOsRituais.filter(r => r.elemento === 'Medo'),
 };
 
-/**
- * Props esperadas do App.jsx:
- * - isOpen: (boolean) Se o modal deve estar visível.
- * - onClose: (função) O que fazer quando o modal for fechado.
- * - onAddRitual: (função) O que fazer quando o usuário clica em "Aprender" ou "Criar".
- */
 function ModalRituais({ isOpen, onClose, onAddRitual }) {
   
   const [abaAtiva, setAbaAtiva] = useState('sangue');
+  // [NOVO] Estado para o filtro de círculo
+  const [filtroCirculo, setFiltroCirculo] = useState('todos'); // 'todos', 1, 2, 3, 4
 
-  // --- Estados do Formulário Customizado (NOVOS) ---
+  // --- Estados do Formulário Customizado ---
   const [customNome, setCustomNome] = useState('');
   const [customCirculo, setCustomCirculo] = useState(1);
   const [customElemento, setCustomElemento] = useState('Sangue');
@@ -35,26 +31,21 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
   const [customDuracao, setCustomDuracao] = useState('Cena');
   const [customDescricao, setCustomDescricao] = useState('');
 
-  // --- Handler do Formulário Customizado (NOVO) ---
   const handleSubmitCustomRitual = (e) => {
     e.preventDefault();
-
     const ritualCustom = {
-      id: `custom_${Date.now()}`, // ID único
+      id: `custom_${Date.now()}`,
       nome: customNome || "Ritual Personalizado",
       circulo: parseInt(customCirculo) || 1,
       elemento: customElemento,
       execucao: customExecucao,
       alcance: customAlcance,
-      alvo: customAlvoArea, // Reutiliza a propriedade 'alvo'
+      alvo: customAlvoArea,
       duracao: customDuracao,
       descricao: customDescricao || "Ritual criado pelo jogador.",
-      // Não incluímos discente/verdadeiro aqui para simplificar o formulário
     };
-
-    onAddRitual(ritualCustom); // Envia o ritual criado para o App.jsx
-
-    // Limpa o formulário e fecha o modal
+    onAddRitual(ritualCustom);
+    
     setCustomNome('');
     setCustomCirculo(1);
     setCustomElemento('Sangue');
@@ -66,34 +57,72 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
     onClose();
   };
 
-  // Handler para fechar o modal clicando no fundo
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
-  // Helper (função interna) para renderizar a lista de cards
-  const renderListaRituais = (elemento) => (
-    <ul className="loja-lista-itens">
-      {rituaisPorElemento[elemento].length > 0 ? (
-         rituaisPorElemento[elemento].map(ritual => (
-          <RitualCard 
-            key={ritual.id} 
-            ritual={ritual} 
-            tipo="loja"      
-            onAdd={onAddRitual} 
-          />
-        ))
-      ) : (
-        <li className="item-placeholder">Nenhum ritual deste elemento.</li>
-      )}
-    </ul>
-  );
+  // [ATUALIZADO] Helper de renderização com filtro
+  const renderListaRituais = (elemento) => {
+    const listaBase = rituaisPorElemento[elemento];
+    
+    // Aplica o filtro de círculo
+    const listaFiltrada = listaBase.filter(r => 
+        filtroCirculo === 'todos' ? true : r.circulo === parseInt(filtroCirculo)
+    );
+
+    return (
+        <>
+            {/* Botões de Filtro de Círculo */}
+            <div className="filtros-circulo" style={{display:'flex', gap:'10px', marginBottom:'15px', flexWrap: 'wrap'}}>
+                <button 
+                    onClick={() => setFiltroCirculo('todos')} 
+                    className={`btn-filtro ${filtroCirculo === 'todos' ? 'ativo' : ''}`}
+                    style={{
+                        background: filtroCirculo === 'todos' ? 'var(--cor-destaque)' : 'transparent',
+                        border: '1px solid var(--cor-destaque)',
+                        color: filtroCirculo === 'todos' ? '#000' : 'var(--cor-destaque)',
+                        padding: '5px 10px',
+                        fontSize: '0.8em'
+                    }}
+                >
+                    Todos
+                </button>
+                {[1, 2, 3, 4].map(c => (
+                    <button 
+                        key={c} 
+                        onClick={() => setFiltroCirculo(c)}
+                        style={{
+                            background: filtroCirculo === c ? 'var(--cor-destaque)' : 'transparent',
+                            border: '1px solid var(--cor-destaque)',
+                            color: filtroCirculo === c ? '#000' : 'var(--cor-destaque)',
+                            padding: '5px 10px',
+                            fontSize: '0.8em'
+                        }}
+                    >
+                        {c}º Círculo
+                    </button>
+                ))}
+            </div>
+
+            <ul className="loja-lista-itens">
+            {listaFiltrada.length > 0 ? (
+                listaFiltrada.map(ritual => (
+                <RitualCard 
+                    key={ritual.id} 
+                    ritual={ritual} 
+                    tipo="loja"      
+                    onAdd={onAddRitual} 
+                />
+                ))
+            ) : (
+                <li className="item-placeholder">Nenhum ritual encontrado para este filtro.</li>
+            )}
+            </ul>
+        </>
+    );
+  };
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -101,40 +130,25 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
         
         <div className="modal-header">
           <h3>Biblioteca de Rituais</h3>
-          <button className="btn-fechar-modal" onClick={onClose}>
-            X
-          </button>
+          <button className="btn-fechar-modal" onClick={onClose}>X</button>
         </div>
 
         <div className="modal-body">
-          {/* --- Abas de Elemento (Adicionando a aba "Personalizado") --- */}
           <div className="modal-abas">
             <button className={`aba-link ${abaAtiva === 'sangue' ? 'active' : ''}`} onClick={() => setAbaAtiva('sangue')}>Sangue</button>
             <button className={`aba-link ${abaAtiva === 'morte' ? 'active' : ''}`} onClick={() => setAbaAtiva('morte')}>Morte</button>
             <button className={`aba-link ${abaAtiva === 'conhecimento' ? 'active' : ''}`} onClick={() => setAbaAtiva('conhecimento')}>Conhecimento</button>
             <button className={`aba-link ${abaAtiva === 'energia' ? 'active' : ''}`} onClick={() => setAbaAtiva('energia')}>Energia</button>
             <button className={`aba-link ${abaAtiva === 'medo' ? 'active' : ''}`} onClick={() => setAbaAtiva('medo')}>Medo</button>
-            <button className={`aba-link ${abaAtiva === 'personalizado' ? 'active' : ''}`} onClick={() => setAbaAtiva('personalizado')}>Personalizado</button> {/* <--- NOVA ABA */}
+            <button className={`aba-link ${abaAtiva === 'personalizado' ? 'active' : ''}`} onClick={() => setAbaAtiva('personalizado')}>Personalizado</button>
           </div>
 
-          {/* --- Conteúdo das Abas --- */}
-          <div className={`aba-conteudo ${abaAtiva === 'sangue' ? 'active' : ''}`}>
-            {renderListaRituais('sangue')}
-          </div>
-          <div className={`aba-conteudo ${abaAtiva === 'morte' ? 'active' : ''}`}>
-            {renderListaRituais('morte')}
-          </div>
-          <div className={`aba-conteudo ${abaAtiva === 'conhecimento' ? 'active' : ''}`}>
-            {renderListaRituais('conhecimento')}
-          </div>
-          <div className={`aba-conteudo ${abaAtiva === 'energia' ? 'active' : ''}`}>
-            {renderListaRituais('energia')}
-          </div>
-          <div className={`aba-conteudo ${abaAtiva === 'medo' ? 'active' : ''}`}>
-            {renderListaRituais('medo')}
-          </div>
+          <div className={`aba-conteudo ${abaAtiva === 'sangue' ? 'active' : ''}`}>{renderListaRituais('sangue')}</div>
+          <div className={`aba-conteudo ${abaAtiva === 'morte' ? 'active' : ''}`}>{renderListaRituais('morte')}</div>
+          <div className={`aba-conteudo ${abaAtiva === 'conhecimento' ? 'active' : ''}`}>{renderListaRituais('conhecimento')}</div>
+          <div className={`aba-conteudo ${abaAtiva === 'energia' ? 'active' : ''}`}>{renderListaRituais('energia')}</div>
+          <div className={`aba-conteudo ${abaAtiva === 'medo' ? 'active' : ''}`}>{renderListaRituais('medo')}</div>
 
-          {/* --- Conteúdo da Aba Personalizado (NOVO) --- */}
           <div className={`aba-conteudo ${abaAtiva === 'personalizado' ? 'active' : ''}`}>
              <form className="form-custom-item" onSubmit={handleSubmitCustomRitual}>
               <h3>Criar Ritual Personalizado</h3>
@@ -182,9 +196,7 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
                 <textarea rows="4" value={customDescricao} onChange={(e) => setCustomDescricao(e.target.value)}></textarea>
               </div>
               
-              <button type="submit">
-                Adicionar Ritual Personalizado
-              </button>
+              <button type="submit">Adicionar Ritual Personalizado</button>
             </form>
           </div>
 

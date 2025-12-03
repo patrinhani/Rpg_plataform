@@ -70,13 +70,14 @@ function FichaPrincipal({
         onFichaChange={handleFichaChange}
       />
       
-      <Pericias
-        dadosPericias={personagem.pericias}
-        dadosAtributos={personagem.atributos}
-        dadosCalculados={calculados}
-        onFichaChange={handleFichaChange}
-        periciasDeOrigem={periciasDeOrigem} 
-      />
+   <Pericias
+  dadosPericias={personagem.pericias}
+  dadosAtributos={personagem.atributos}
+  dadosCalculados={calculados}
+  onFichaChange={handleFichaChange}
+  periciasDeOrigem={periciasDeOrigem}
+  nex={personagem.info.nex} // <--- ADICIONE ESTA LINHA
+/>
 
       <CalculoDetalhado
         dados={personagem.bonusManuais}

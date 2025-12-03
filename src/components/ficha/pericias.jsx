@@ -35,9 +35,11 @@ const ATRIBUTO_BASE = {
 
 const periciasLista = Object.keys(ATRIBUTO_BASE);
 
-function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOrigem }) {
-  // [NOVO] Acessa a instância da ficha para cálculos avançados de dados
+function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOrigem, nex }) { // Recebe nex
   const { fichaInstance } = useFicha();
+
+  // Converte "10%" para 10
+  const nexAtual = parseInt((nex || "0").replace('%','')) || 0;
 
   const handleChange = (e) => {
     const campo = e.target.id;
@@ -47,21 +49,15 @@ function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOri
 
   return (
     <section className="box box-pericias" id="grid-pericias">
+      {/* ... (Header igual) ... */}
       <div className="pericias-header">
         <h2>PERÍCIAS</h2>
         <div className="pericias-contador">
           Treinadas: 
-          <span 
-            id="pericias-escolhidas"
-            style={{ 
-              color: dadosCalculados.periciasTreinadas > dadosCalculados.periciasTotal ? 
-                     'var(--cor-trans-sangue)' : 
-                     'var(--cor-destaque)'
-            }}
-          >
+          <span style={{ color: dadosCalculados.periciasTreinadas > dadosCalculados.periciasTotal ? 'var(--cor-trans-sangue)' : 'var(--cor-destaque)'}}>
             {dadosCalculados.periciasTreinadas}
           </span> / 
-          <span id="pericias-total">{dadosCalculados.periciasTotal}</span>
+          <span>{dadosCalculados.periciasTotal}</span>
         </div>
       </div>
 
@@ -70,16 +66,7 @@ function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOri
           const periciaInfo = ATRIBUTO_BASE[periciaKey];
           const treinoValor = dadosPericias[periciaKey];
           const bonusInventario = dadosCalculados.bonusPericia[periciaKey] || 0;
-          
-          // [NOVO] Usa o método da classe para calcular dados finais + penalidades (Cego, Debilitado)
-          const infoDados = fichaInstance.getDadosPericia(
-              periciaKey, 
-              periciaInfo.attr, 
-              bonusInventario
-          );
-          
-          const diceText = `${infoDados.dados}d`; // Ex: "3d", "0d", "-2d"
-          const bonusText = `${infoDados.bonus >= 0 ? "+" : ""}${infoDados.bonus}`;
+          const infoDados = fichaInstance.getDadosPericia(periciaKey, periciaInfo.attr, bonusInventario);
           
           const isOrigem = periciasDeOrigem && periciasDeOrigem.includes(periciaKey);
           
@@ -87,26 +74,24 @@ function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOri
             <li 
               key={periciaKey} 
               className={`pericia-item treino-${treinoValor} ${isOrigem ? 'pericia-origem' : ''}`}
-              title={infoDados.msgCondicao || ""} // Tooltip explica a penalidade
+              title={infoDados.msgCondicao || ""}
             >
               <span>
                 {periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})
-                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px', fontSize: '0.8em'}}>★</span>}
+                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px'}}>★</span>}
               </span>
 
               <div className="pericia-bonus-container">
                 <div 
                     className="pericia-dado-shape"
                     style={{ 
-                        // Muda cor se tiver penalidade ativa (Cego, Debilitado, etc)
                         backgroundColor: infoDados.temPenalidade ? '#d40000' : 'var(--cor-destaque)',
-                        // Se os dados forem <= 0, fica cinza/apagado
                         filter: infoDados.dados <= 0 ? 'grayscale(1)' : 'none'
                     }}
                 >
-                  <span className="pericia-dado-texto">{diceText}</span>
+                  <span className="pericia-dado-texto">{infoDados.dados}d</span>
                 </div>
-                <span className="pericia-bonus-texto">{bonusText}</span>
+                <span className="pericia-bonus-texto">{infoDados.bonus >= 0 ? "+" : ""}{infoDados.bonus}</span>
               </div>
 
               <select 
@@ -117,8 +102,13 @@ function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOri
               >
                 <option value="0">+0 (Destreinado)</option>
                 <option value="5">+5 (Treinado)</option>
-                <option value="10">+10 (Veterano)</option>
-                <option value="15">+15 (Expert)</option>
+                {/* [NOVO] Opções desabilitadas se NEX for baixo */}
+                <option value="10" disabled={nexAtual < 35}>
+                    +10 (Vet){nexAtual < 35 ? ' (NEX 35%)' : ''}
+                </option>
+                <option value="15" disabled={nexAtual < 70}>
+                    +15 (Exp){nexAtual < 70 ? ' (NEX 70%)' : ''}
+                </option>
               </select>
             </li>
           );

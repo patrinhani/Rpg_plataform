@@ -1,16 +1,18 @@
 // /src/components/ItemCard.jsx
-// (ATUALIZADO PARA O PASSO 4 - COM DESCRIÇÃO NO TITLE)
+// (ATUALIZADO: Com Calculadora de Dano Dinâmica e Tooltips de Mods)
 // (OTIMIZADO COM React.memo)
 
-import React, { memo } from 'react'; // 1. Importar o 'memo'
-// 1. Importar as listas de modificações (do Passo 1)
+import React, { memo } from 'react';
 import { 
   modificacoesArmas, 
   modificacoesProtecoes, 
   modificacoesAcessorios 
-} from '../lib/database.js'; //
+} from '../lib/database.js';
 
-// 2. Criar o objeto de mapeamento (igual ao ModalEditarItem)
+// Importa a função de cálculo de dano (Certifique-se de ter criado este arquivo)
+import { calcularDanoArma } from '../lib/calculosCombate.js';
+
+// Cria o objeto de mapeamento para acesso rápido às descrições das mods
 const todasModificacoes = {
   ...modificacoesArmas.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
   ...modificacoesProtecoes.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
@@ -19,11 +21,13 @@ const todasModificacoes = {
 
 /**
  * Props:
- * - item, tipo, onAdd, onRemove, onToggle, onEdit
+ * - item: Objeto do item (com nome, categoria, modificacoes[], etc.)
+ * - tipo: 'loja' (botão adicionar) ou 'inventario' (botões editar/remover)
+ * - onAdd, onRemove, onToggle, onEdit: Funções de callback
  */
 function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
 
-  // --- Lógica do Footer (Botões) ---
+  // --- 1. Lógica de Exibição do Footer ---
   let footerComponent;
   
   if (tipo === 'loja') {
@@ -40,7 +44,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
 
     footerComponent = (
       <> 
-        <div className="item-inventario-toggle">
+        <div className="item-inventario-toggle" title="Se marcado, o peso e penalidades contam na ficha">
           <input 
             type="checkbox" 
             className="toggle-item-calculo" 
@@ -65,49 +69,52 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
     );
   }
 
-  // --- Lógica das Classes de Estilo ---
+  // --- 2. Classes de Estilo (ex: cor da borda para itens paranormais) ---
   let cardClasses = "item-card";
   if (item.elemento) {
     cardClasses += ` ritual-card ${item.elemento.toLowerCase()}`;
   }
 
-  // --- 3. LÓGICA DE CÁLCULO DAS MODIFICAÇÕES ---
+  // --- 3. Cálculos de Stats (Categoria e Espaços) ---
   const modsAplicadas = item.modificacoes || [];
   
-  // Pega a Categoria Base (com fallback para itens antigos)
-  // Usando a sintaxe corrigida (parênteses)
-  const catBase = (item.categoriaBase ?? item.categoria) ?? 0; //
-  
-  // Pega os Espaços Base (com fallback para itens antigos)
-  const espacosBase = (item.espacosBase ?? item.espacos) ?? 0; //
+  // Fallback seguro para categoria e espaços (usa a base se existir, senão o valor direto)
+  const catBase = (item.categoriaBase ?? item.categoria) ?? 0;
+  const espacosBase = (item.espacosBase ?? item.espacos) ?? 0;
 
-  // Calcula os valores finais
-  let categoriaFinal = (parseInt(catBase) || 0) + modsAplicadas.length; //
+  // Calcula valores finais somando as modificações
+  let categoriaFinal = (parseInt(catBase) || 0);
   let espacosFinal = parseFloat(espacosBase) || 0;
   
-  // 4. Gera a lista de nomes E descrições
+  // Gera lista detalhada para o tooltip
   const listaModsDetalhada = modsAplicadas.map(key => {
       const modData = todasModificacoes[key];
+      
+      // Soma aos totais
+      if (modData) {
+          categoriaFinal += (modData.cat || 1); // Maioria sobe +1 Categoria
+          espacosFinal += (modData.espacos || 0);
+      } else {
+          // Se for mod customizada sem dados no banco, assume +1 Cat
+          categoriaFinal += 1;
+      }
+
       return {
         nome: modData?.nome || key,
-        descricao: modData?.descricao || "Modificação personalizada." //
+        descricao: modData?.descricao || "Modificação personalizada."
       };
   });
   
-  // Calcula os espaços finais
-  modsAplicadas.forEach(modKey => {
-      const modData = todasModificacoes[modKey];
-      if (modData) {
-        espacosFinal += (modData.espacos || 0); //
-      }
-  });
+  // Garante que espaço não seja negativo
   espacosFinal = Math.max(0, espacosFinal);
 
-  // Cria a string de nomes (ex: "Certeira, Perigosa")
+  // Strings para exibição
   const nomesModsString = listaModsDetalhada.map(mod => mod.nome).join(', ');
-  // Cria a string de descrições (ex: "Certeira: +2 nos ataques. | Perigosa: +2 na ameaça.")
-  const descricoesModsString = listaModsDetalhada.map(mod => `${mod.nome}: ${mod.descricao}`).join(' | ');
+  const descricoesModsString = listaModsDetalhada.map(mod => `${mod.nome}: ${mod.descricao}`).join('\n');
 
+  // --- 4. Cálculo de Dano Dinâmico ---
+  // Se o item tem dano, calcula o valor real considerando as mods
+  const danoExibido = item.dano ? calcularDanoArma(item) : null;
 
   return (
     <li className={cardClasses}>
@@ -116,18 +123,37 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
         <h3>{item.nome}</h3>
         <div className="item-header-info">
           <div><strong>CAT:</strong> {categoriaFinal}</div>
-          <div><strong>ESP:</strong> {espacosFinal.toFixed(2)}</div>
+          <div><strong>ESP:</strong> {Number.isInteger(espacosFinal) ? espacosFinal : espacosFinal.toFixed(1)}</div>
         </div>
       </div>
 
       <div className="item-body">
         
-        {/* ... (Renderização dos detalhes de dano, defesa, etc. - Sem alteração) ... */}
-        {item.dano && <div className="item-detalhe"><strong>Dano:</strong> {item.dano}</div>}
+        {/* Exibição Dinâmica de Dano */}
+        {item.dano && (
+            <div className="item-detalhe">
+                <strong>Dano:</strong> 
+                {danoExibido !== item.dano ? (
+                    <span>
+                        <span style={{textDecoration: 'line-through', opacity: 0.6, marginRight: '6px', fontSize: '0.9em'}}>
+                            {item.dano}
+                        </span>
+                        <span style={{color: 'var(--cor-destaque)', fontWeight: 'bold'}}>
+                            {danoExibido}
+                        </span>
+                    </span>
+                ) : (
+                    item.dano
+                )}
+            </div>
+        )}
+
         {item.defesa > 0 && <div className="item-detalhe"><strong>Defesa:</strong> +{item.defesa}</div>}
         {item.critico && <div className="item-detalhe"><strong>Crítico:</strong> {item.critico}</div>}
         {item.alcance && <div className="item-detalhe"><strong>Alcance:</strong> {item.alcance}</div>}
         {item.tipo && <div className="item-detalhe"><strong>Tipo:</strong> {item.tipo}</div>}
+        
+        {/* Bônus de Perícia */}
         {item.periciaVinculada && (
           <div className="item-detalhe bonus">
             <strong>Bônus:</strong> +{item.valorBonus} em {item.periciaVinculada}
@@ -143,15 +169,21 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             (Escolher Elemento)
           </div>
         )}
-        {/* --- FIM (Sem alteração) --- */}
 
-        {/* 6. (ATUALIZADO) Exibir Modificações Aplicadas com Tooltip */}
+        {/* Lista de Modificações (se houver) */}
         {listaModsDetalhada.length > 0 && (
           <div 
             className="item-detalhe bonus" 
-            style={{ fontStyle: 'italic', fontSize: '0.9em', color: 'var(--cor-texto-label)', cursor: 'help' }}
-            // Adiciona o 'title' com as descrições
-            title={descricoesModsString} 
+            style={{ 
+                marginTop: '5px',
+                fontStyle: 'italic', 
+                fontSize: '0.85em', 
+                color: 'var(--cor-texto-label)', 
+                cursor: 'help',
+                borderTop: '1px dashed #444',
+                paddingTop: '4px'
+            }}
+            title={descricoesModsString} // Tooltip nativo com as descrições
           >
             <strong>Mods:</strong> {nomesModsString}
           </div>
@@ -167,5 +199,4 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   );
 }
 
-// 3. Exportar a versão "memorizada"
 export default memo(ItemCard);
