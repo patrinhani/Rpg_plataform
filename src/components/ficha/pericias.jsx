@@ -1,7 +1,6 @@
 // src/components/ficha/pericias.jsx
-// (ATUALIZADO: Destaque visual para perícias de origem)
-
 import React from 'react';
+import { useFicha } from '../../contexts/FichaContext'; // [NOVO] Importar hook
 
 const ATRIBUTO_BASE = {
   acrobacia: { nome: 'Acrobacia', attr: 'agi' },
@@ -36,26 +35,14 @@ const ATRIBUTO_BASE = {
 
 const periciasLista = Object.keys(ATRIBUTO_BASE);
 
-function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChange, periciasDeOrigem }) {
-  
+function Pericias({ dadosPericias, dadosCalculados, onFichaChange, periciasDeOrigem }) {
+  // [NOVO] Acessa a instância da ficha para cálculos avançados de dados
+  const { fichaInstance } = useFicha();
+
   const handleChange = (e) => {
     const campo = e.target.id;
     const valor = e.target.value;
     onFichaChange('pericias', campo, valor);
-  };
-
-  const calcularBonusSeparado = (periciaKey) => {
-    const treino = dadosPericias[periciaKey] || 0;
-    const attrChave = ATRIBUTO_BASE[periciaKey].attr;
-    const valorAttr = dadosAtributos[attrChave] || 0;
-    const bonusInventario = dadosCalculados.bonusPericia[periciaKey] || 0; 
-    
-    const bonusTotal = Number(treino) + bonusInventario;
-    
-    let diceText = valorAttr === 0 ? "2d" : `${valorAttr}d`;
-    const bonusText = `${bonusTotal >= 0 ? "+" : ""}${bonusTotal}`;
-    
-    return { dice: diceText, bonus: bonusText };
   };
 
   return (
@@ -82,27 +69,44 @@ function Pericias({ dadosPericias, dadosAtributos, dadosCalculados, onFichaChang
         {periciasLista.map((periciaKey) => {
           const periciaInfo = ATRIBUTO_BASE[periciaKey];
           const treinoValor = dadosPericias[periciaKey];
-          const bonus = calcularBonusSeparado(periciaKey);
+          const bonusInventario = dadosCalculados.bonusPericia[periciaKey] || 0;
           
-          // Verifica se a perícia atual está na lista de origem
+          // [NOVO] Usa o método da classe para calcular dados finais + penalidades (Cego, Debilitado)
+          const infoDados = fichaInstance.getDadosPericia(
+              periciaKey, 
+              periciaInfo.attr, 
+              bonusInventario
+          );
+          
+          const diceText = `${infoDados.dados}d`; // Ex: "3d", "0d", "-2d"
+          const bonusText = `${infoDados.bonus >= 0 ? "+" : ""}${infoDados.bonus}`;
+          
           const isOrigem = periciasDeOrigem && periciasDeOrigem.includes(periciaKey);
           
           return (
             <li 
               key={periciaKey} 
               className={`pericia-item treino-${treinoValor} ${isOrigem ? 'pericia-origem' : ''}`}
+              title={infoDados.msgCondicao || ""} // Tooltip explica a penalidade
             >
               <span>
                 {periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})
-                {/* Ícone de estrela se for de origem */}
-                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px', fontSize: '0.8em'}} title="Perícia de Origem">★</span>}
+                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px', fontSize: '0.8em'}}>★</span>}
               </span>
 
               <div className="pericia-bonus-container">
-                <div className="pericia-dado-shape">
-                  <span className="pericia-dado-texto">{bonus.dice}</span>
+                <div 
+                    className="pericia-dado-shape"
+                    style={{ 
+                        // Muda cor se tiver penalidade ativa (Cego, Debilitado, etc)
+                        backgroundColor: infoDados.temPenalidade ? '#d40000' : 'var(--cor-destaque)',
+                        // Se os dados forem <= 0, fica cinza/apagado
+                        filter: infoDados.dados <= 0 ? 'grayscale(1)' : 'none'
+                    }}
+                >
+                  <span className="pericia-dado-texto">{diceText}</span>
                 </div>
-                <span className="pericia-bonus-texto">{bonus.bonus}</span>
+                <span className="pericia-bonus-texto">{bonusText}</span>
               </div>
 
               <select 
