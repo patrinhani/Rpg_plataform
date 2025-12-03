@@ -1,5 +1,6 @@
 {
-  "name": "rpg-plataform",
+"name": "sistema-caos",
+  "description": "Sistema C.A.O.S. - Controle de Agentes e Ocorrências Sobrenaturais",
   "private": true,
   "version": "0.0.0",
   "type": "module",
