@@ -17,7 +17,7 @@ import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../
 
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useFicha } from '../../contexts/FichaContext.jsx';
-import { useDialog } from '../../contexts/DialogContext.jsx'; // [NOVO]
+import { useDialog } from '../../contexts/DialogContext.jsx';
 import { db } from '../../lib/firebase'; 
 import { doc, updateDoc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore'; 
 
@@ -36,7 +36,9 @@ const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
-import ModalInterludio from '../../components/ModalInterludio.jsx';
+
+// --- CORREÇÃO AQUI: "const" em vez de "import" ---
+const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
@@ -62,7 +64,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const { fichaId: paramFichaId } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth(); 
-  const { showAlert, showConfirm } = useDialog(); // [NOVO]
+  const { showAlert, showConfirm } = useDialog(); 
   
   const { 
       personagem, calculados, carregarFicha, atualizarFicha, fichaInstance,
@@ -153,13 +155,19 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   }, [personagem.info.tema]);
 
   useEffect(() => {
-    const temaAtual = document.documentElement.dataset.tema || "tema-ordem";
-    if (tema === temaAtual) return; 
-    if (tema === "tema-sangue") setIsSangueAnimVisible(true);
-    else aplicarTemaComAnimacao(tema, temaAtual, () => {
-        document.documentElement.dataset.tema = tema;
-        localStorage.setItem("temaFichaOrdem", tema);
-    });
+    const temaNoDOM = document.documentElement.dataset.tema;
+    
+    if (tema !== temaNoDOM) {
+        if (!temaNoDOM) {
+            aplicarTemaSemAnimacao(tema);
+        } else {
+            if (tema === "tema-sangue") setIsSangueAnimVisible(true);
+            else aplicarTemaComAnimacao(tema, temaNoDOM, () => {
+                document.documentElement.dataset.tema = tema;
+                localStorage.setItem("temaFichaOrdem", tema);
+            });
+        }
+    }
   }, [tema]); 
 
   const handleThemeChange = (novoTema) => {
@@ -195,7 +203,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   useEffect(() => {
       const origemAtual = personagem.info.origem;
-      // Lógica de UI (dados no contexto)
   }, [personagem.info.origem]);
 
   useEffect(() => {
@@ -270,18 +277,15 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const handleAplicarInterludioHandler = (opcoes) => { 
       const resultado = aplicarInterludio(opcoes); 
-      // [ATUALIZADO]
       showAlert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`, "Interlúdio"); 
   };
 
   const salvarFichaLocal = () => { 
       debouncedSave(personagem); 
-      // [ATUALIZADO]
       showAlert("Ficha sincronizada com sucesso.", "Salvo"); 
   };
   
   const limparFicha = async () => { 
-      // [ATUALIZADO]
       const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
       if(confirmado) { 
           if(docRef.current) deleteDoc(docRef.current); 
@@ -297,10 +301,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           try { 
               const json = JSON.parse(e.target.result); 
               carregarFicha(json); 
-              // [ATUALIZADO]
               showAlert("Ficha importada com sucesso!", "Sucesso"); 
           } catch(err) { 
-              // [ATUALIZADO]
               showAlert("Erro ao ler arquivo JSON.", "Erro"); 
           } 
       }; 
@@ -386,10 +388,10 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
         {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={addRitual} />}
         {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={addTrilhaCustom} classesList={OpcoesClasse} />}
-        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={getPoderesDisponiveis(personagem.info.classe)} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
+        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={null} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
         {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
-        {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={FichaClass.calculosDetalhados.limite_pe} />}
+        {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={calculados.limite_pe || 1} />}
       </Suspense> 
     </>
   )

@@ -1,5 +1,5 @@
 /* src/styles/responsive.css */
-/* (VERSÃO OTIMIZADA PARA TODAS AS TELAS) */
+/* (VERSÃO FINAL: CORREÇÃO DE TRANSBORDO/ZOOM) */
 
 /* --- 1. Tablets e Telas Médias (< 1100px) --- */
 @media (max-width: 1100px) {
@@ -7,20 +7,24 @@
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "identidade   identidade"
+      "controles    controles"
       "atributos    defesa"
       "acoes-defesa resistencias"
       "pericias     pericias"
-      "controles    controles"
-      "calculo      calculo";
+      "calculo      calculo"
+      "progressao   progressao";
     gap: 15px;
+    padding: 15px;
   }
   
   .mesa-container {
-    grid-template-columns: 1fr 280px; 
+    grid-template-columns: 1fr; 
+    gap: 20px;
   }
 
   .box-atributos {
-    max-width: 450px;
+    width: 100%;
+    max-width: 380px;
   }
   
   #forca { top: 32%; left: 17%; }
@@ -33,129 +37,214 @@
 /* --- 2. MOBILE (< 768px) --- */
 @media (max-width: 768px) {
   
-  body { font-size: 90%; }
-
-  /* HUD */
-  .recursos-container-fixo {
-    padding: 10px;
-    flex-direction: column;
-    gap: 10px;
+  /* 1. CORREÇÃO DE ESCALA E TRANSBORDO */
+  html, body {
+    font-size: 85%; /* Reduz fontes para caber melhor */
+    overflow-x: hidden; /* Impede rolagem lateral */
+    width: 100vw;
+    max-width: 100%;
+    position: relative;
   }
+
+  #root {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Reset de larguras mínimas que causam o "estouro" */
+  .calc-bloco, 
+  .calc-bloco-coluna, 
+  .box, 
+  .pericia-item,
+  .dashboard-card,
+  .item-card {
+      min-width: 0 !important; /* Permite encolher abaixo do padrão */
+      width: 100% !important;
+  }
+
+  /* --- 2. HUD (Barra Superior) Compacta --- */
+  .recursos-container-fixo {
+    padding: 5px; /* Padding mínimo */
+    gap: 5px;
+    width: 100%;
+    flex-wrap: nowrap; /* Tenta manter na linha */
+  }
+  
   .recursos-hud-itens {
     width: 100%;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 3 Colunas exatas */
+    gap: 4px;
+    order: 2;
   }
+
   .recurso-hud-item {
-    padding: 5px;
+    padding: 4px 2px; /* Quase sem padding interno */
     min-width: 0;
-    flex-basis: 30%;
+    border: 1px solid rgba(255,255,255,0.1); /* Borda mais fina */
   }
+
+  .recurso-hud-item label {
+    font-size: 0.75em; /* Texto label bem pequeno */
+    margin-bottom: 1px;
+  }
+  
+  .hud-numeros-container {
+      justify-content: center; /* Centraliza números */
+  }
+
+  .hud-numeros-container .hud-input-atual {
+    font-size: 1em;
+    padding: 1px;
+    width: 30px; /* Input bem estreito */
+    height: 25px;
+  }
+  
+  .hud-valor-max {
+      font-size: 0.9em;
+  }
+  
+  /* Imagem do Personagem */
   .personagem-imagem-container {
-    width: 70px;
-    height: 70px;
-    order: -1;
-  }
-
-  /* Layouts Gerais */
-  .dashboard-grid {
-    grid-template-columns: 1fr; 
+    width: 45px;
+    height: 45px;
+    order: 1;
+    margin-right: 2px;
+    border-width: 2px;
   }
   
-  .mesa-container {
-    grid-template-columns: 1fr; 
-    display: flex;
-    flex-direction: column-reverse; 
-  }
-  
-  .mesa-sidebar {
-    width: 100%;
-    margin-top: 20px;
+  /* Esconde os trackers (visibilidade) se a tela for muito pequena, ou reduz muito */
+  .recursos-hud-trackers {
+      display: none; /* Oculta trackers no topo para economizar espaço (opcional) */
+      /* Se quiser manter, use: transform: scale(0.7); order: 3; */
   }
 
-  /* Ficha Layout */
+  /* --- 3. Layout Principal --- */
   .ficha-container {
     display: flex;
     flex-direction: column;
-    padding: 10px;
-  }
-  .ficha-abas {
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding: 5px;
-  }
-  
-  .box-identidade {
-    grid-template-columns: 1fr; 
-  }
-  .box-identidade .campo-horizontal {
-    grid-column: span 1 !important;
+    padding: 10px 8px; /* Padding lateral seguro */
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
+  /* Abas com rolagem, sem quebrar layout */
+  .ficha-abas {
+    width: 100%;
+    padding: 5px 0;
+    gap: 5px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-bottom: 1px solid #333;
+  }
+  .ficha-aba-link {
+      padding: 8px 12px;
+      font-size: 0.9em;
+      flex-shrink: 0;
+  }
+  
+  /* --- 4. Hexágono de Atributos (Fluido) --- */
   .box-atributos {
-    width: 280px;
-    height: 280px;
+    width: 100%; 
+    max-width: 260px; /* Tamanho máximo seguro */
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin: 10px auto;
+    transform: scale(0.95); /* Reduz um pouco para garantir margem */
   }
+  
   input[type="number"].input-hex {
-    font-size: 1.8em;
-    width: 45px;
-    height: 40px;
+    font-size: 1.4em; 
+    width: 18%; 
+    height: 15%;
+    padding: 0;
   }
+  
   #forca { top: 30%; left: 15%; }
   #agilidade { top: 12%; left: 43%; }
   #intelecto { top: 30%; left: 70%; }
   #presenca { top: 63%; left: 23%; }
-  #vigor { top: 63%; left: 62%; }
+  #vigor { top: 63%; left: 63%; }
 
-  .box-defesa {
-    grid-template-columns: 1fr; 
-  }
-
-  .pericias-grid-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Modais */
-  .modal-conteudo {
-    width: 95%;
-    max-height: 90vh;
-    margin: 10px;
-  }
+  /* --- 5. Ajustes de Formulário e Inputs --- */
   .form-custom-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr; /* 1 coluna forçada em forms */
+    gap: 10px;
   }
   
-  .login-box {
-    width: 95%;
-    padding: 20px;
-  }
-
-  /* CORREÇÃO DA ABA PROGRESSÃO */
-  .progressao-conteudo {
-    flex-direction: column;
-  }
-
-  .calc-bloco-coluna {
-    min-width: 100%; /* Ocupa largura total */
-    margin-bottom: 20px;
-  }
-
-  /* Botão Criar Trilha no Mobile */
-  .ficha-aba-conteudo .btn-add-item {
-      float: none !important;
+  .campo-horizontal {
       width: 100%;
-      margin: 10px 0;
-      font-size: 1em;
-      padding: 10px;
-      display: block;
+  }
+  
+  .campo-horizontal input, 
+  .campo-horizontal select,
+  .campo-horizontal textarea {
+      width: 100%; 
+      box-sizing: border-box;
+      font-size: 16px; /* Evita zoom automático em iPhones */
+  }
+
+  /* Listas de itens ocupam 100% da largura */
+  #lista-inventario-pessoal, 
+  .loja-lista-itens,
+  #lista-rituais,
+  #lista-poderes-pessoais,
+  .pericias-grid-container {
+      grid-template-columns: 1fr; /* 1 coluna sempre */
+      width: 100%;
+  }
+  
+  /* Ajuste de Perícias */
+  .pericias-grid-container {
+      grid-template-columns: 1fr 1fr; /* Tenta 2 colunas */
+  }
+  
+  /* --- 6. Botão Voltar (Rodapé) --- */
+  .btn-voltar-flutuante {
+      position: fixed;
+      top: auto !important;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%; 
+      max-width: 300px;
+      padding: 12px 0;
+      font-size: 0.9em;
+      background-color: rgba(10, 10, 10, 0.95);
+      border: 1px solid var(--cor-destaque);
+      box-shadow: 0 0 15px #000;
+      z-index: 9999;
+      text-align: center;
+      border-radius: 8px;
+  }
+
+  /* --- 7. Modais --- */
+  .modal-conteudo {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 10px auto;
+    padding: 0;
+    max-height: 90vh;
+  }
+  
+  .modal-body {
+      padding: 15px 10px;
   }
 }
 
-/* --- 3. TELAS MUITO PEQUENAS (< 400px) --- */
-@media (max-width: 400px) {
+/* --- 3. TELAS MUITO PEQUENAS (< 380px) --- */
+@media (max-width: 380px) {
   .pericias-grid-container {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr; /* 1 coluna se for muito pequeno */
   }
+  
   .recursos-hud-itens {
-    flex-wrap: wrap; 
+      grid-template-columns: 1fr; /* Empilha a HUD se não couber */
+  }
+  
+  .box-atributos {
+      transform: scale(0.85);
   }
 }
