@@ -1,5 +1,5 @@
 /* src/styles/style.css */
-/* (VERSÃO COM CORREÇÃO DO HEXÁGONO INVISÍVEL) */
+/* (VERSÃO CORRIGIDA E BLINDADA - Z-INDEX CAMADAS) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -10,7 +10,7 @@
   font-display: swap; 
 }
 
-/* --- 2. Reset Básico e Variáveis de Cor --- */
+/* --- 2. Reset Básico --- */
 * {
   margin: 0;
   padding: 0;
@@ -37,6 +37,7 @@
   color: #000;
 }
 
+/* --- VARIÁVEIS DE CORES --- */
 :root {
   --cor-texto-principal: #f0f0f0;
   --cor-texto-label: #b0b0b0; 
@@ -68,6 +69,7 @@
   --z-transicao: 9999;
 }
 
+/* --- DEFINIÇÃO DOS TEMAS --- */
 :root,
 :root[data-tema="tema-ordem"] {
   --cor-fundo: #050a10; 
@@ -100,13 +102,8 @@
   --cor-borda: #be29ec;
 }
 
-/* --- 3. Tipografia Principal --- */
-h1,
-h2,
-label,
-button,
-.pericia-item span:first-child,
-.titulo-bloco {
+/* --- 3. Tipografia --- */
+h1, h2, label, button, .pericia-item span:first-child, .titulo-bloco {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   color: var(--cor-texto-principal);
@@ -121,15 +118,46 @@ h2 {
   text-shadow: 0 0 10px rgba(0,0,0,0.5); 
 }
 
-/* --- 4. Layout Principal --- */
+/* --- 4. Layout Principal e Fundo (A MÁGICA ACONTECE AQUI) --- */
+
+/* Força transparência no root/body para não cobrir as camadas negativas */
+:root, html, body {
+  background-color: transparent !important;
+  background-image: none !important;
+  height: 100%;
+}
+
 body {
   font-family: "Roboto Condensed", sans-serif;
-  background-color: var(--cor-fundo);
-  background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
   color: var(--cor-texto-principal);
   line-height: 1.6;
   min-height: 100vh;
+  position: relative; /* Necessário para o z-index funcionar */
 }
+
+/* CAMADA -2: O Fundo de Cor (Fica lá atrás de tudo) */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--cor-fundo);
+  background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
+  z-index: -2; /* Atrás do Parallax (-1) */
+  pointer-events: none;
+  transition: background-color 0.5s ease;
+}
+
+/* CAMADA 1: O Conteúdo (Fica na frente de tudo) */
+#root {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* Container Principal da Ficha */
 .ficha-container {
   display: grid;
   max-width: 1400px;
@@ -145,7 +173,9 @@ body {
     "acoes-defesa pericias"
     "resistencias pericias"
     "calculo      calculo";
+  position: relative; /* Garante contexto */
 }
+
 #grid-identidade { grid-area: identidade; }
 #grid-controles { grid-area: controles; }
 #grid-atributos { grid-area: atributos; }
@@ -155,6 +185,8 @@ body {
 #grid-calculo { grid-area: calculo; }
 
 footer {
+  position: relative;
+  z-index: 1;
   grid-area: unset; 
   text-align: center;
   padding: 20px;
@@ -179,7 +211,6 @@ footer {
   -webkit-backdrop-filter: blur(8px);
   box-shadow: var(--sombra-vidro);
 }
-
 .box:hover {
   border-color: var(--cor-destaque); 
   box-shadow: 0 0 15px rgba(0,0,0,0.5);
@@ -279,7 +310,7 @@ input:-webkit-autofill:active{
     transition: background-color 5000s ease-in-out 0s;
 }
 
-/* --- 9. Estilo do Hexágono de Atributos (CORRIGIDO: Fallback de Imagem) --- */
+/* --- 9. Estilo do Hexágono de Atributos --- */
 .box-atributos {
   position: relative;
   background-size: contain;
@@ -295,7 +326,6 @@ input:-webkit-autofill:active{
   box-shadow: none; 
   backdrop-filter: none; 
   
-  /* --- CORREÇÃO: Imagem Padrão --- */
   background-image: url("/assets/images/hexagono.webp");
   
   filter: drop-shadow(0 0 15px rgba(var(--cor-destaque), 0.4));
@@ -498,7 +528,7 @@ input[type="number"].input-hex {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #000;
+  background-color: transparent;
   z-index: var(--z-transicao);
   pointer-events: none;
   opacity: 0;
@@ -1057,17 +1087,18 @@ input[type="number"].input-hex {
   color: var(--cor-texto-principal);
 }
 
-/* --- 21. Estilos do Parallax Background --- */
+/* --- 21. Estilos do Parallax Background (CAMADA -1) --- */
 #parallax-background {
   position: fixed; 
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: var(--z-fundo); 
+  z-index: -1; 
   overflow: hidden; 
   pointer-events: none; 
 }
+
 .simbolo-parallax {
   position: absolute;
   top: 50%;
@@ -1078,6 +1109,7 @@ input[type="number"].input-hex {
   opacity: 0;
   transition: opacity 0.8s ease-in-out, transform 0.2s ease-out, filter 0.5s ease;
 }
+
 :root[data-tema="tema-ordem"] #simbolo-ordem { opacity: 0.05; }
 :root[data-tema="tema-sangue"] #simbolo-sangue { opacity: 0.1; }
 :root[data-tema="tema-morte"] #simbolo-morte { opacity: 0.1; }
@@ -1143,189 +1175,6 @@ input[type="number"].input-hex {
 .ficha-aba-conteudo { display: none; }
 .ficha-aba-conteudo.active { display: block; }
 .ficha-aba-conteudo.active .ficha-container { margin-top: 0; }
-
-/* --- 24. Card de Item --- */
-#lista-inventario-pessoal {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-}
-#lista-inventario-pessoal .item-placeholder,
-#lista-rituais .item-placeholder,
-#lista-diario .item-placeholder { 
-  color: var(--cor-texto-label);
-  text-align: center;
-  padding: 20px;
-  grid-column: 1 / -1; 
-}
-.item-card {
-  background-color: rgba(30,30,30,0.6);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-.item-header {
-  padding: 10px 15px;
-  background-color: rgba(0,0,0,0.4);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-}
-.item-header h3 {
-  font-family: "Special Elite", monospace;
-  font-size: 1.3em;
-  color: var(--cor-destaque);
-  word-break: break-all;
-}
-.item-header-info {
-  font-family: "Roboto Condensed", sans-serif;
-  font-size: 0.9em;
-  color: var(--cor-texto-label);
-  text-align: right;
-  flex-shrink: 0;
-}
-.item-body {
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-grow: 1;
-}
-.item-detalhe {
-  font-family: "Roboto Condensed", sans-serif;
-  font-size: 1.1em;
-}
-.item-detalhe strong {
-  color: var(--cor-texto-label);
-  font-weight: normal;
-  margin-right: 5px;
-}
-.item-detalhe.bonus {
-  color: var(--cor-destaque);
-  font-weight: bold;
-}
-.item-descricao {
-  font-family: "Roboto Condensed", sans-serif;
-  font-size: 0.9em;
-  color: var(--cor-texto-label);
-  font-style: italic;
-  border-top: 1px dashed var(--cor-caixa);
-  padding-top: 10px;
-  margin-top: 5px;
-}
-.item-footer {
-  display: flex;
-  padding: 5px;
-  background-color: rgba(0,0,0,0.4);
-  border-top: 1px solid rgba(255,255,255,0.05);
-}
-.item-footer .item-inventario-toggle {
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
-  gap: 5px;
-  color: var(--cor-texto-label);
-  font-size: 0.9em;
-}
-.item-footer .item-inventario-editar {
-  margin-left: auto; 
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-destaque);
-  color: var(--cor-destaque);
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 2px;
-}
-.item-footer .item-inventario-editar:hover {
-  background-color: var(--cor-destaque);
-  color: var(--cor-caixa-recurso); 
-}
-.item-footer .item-inventario-remover {
-  margin-left: 5px; 
-  background-color: #401a1a;
-  border: 1px solid var(--cor-trans-sangue);
-  color: #f0f0f0;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-.item-footer .item-inventario-remover:hover {
-  background-color: var(--cor-trans-sangue);
-}
-.loja-item-add {
-  width: 100%;
-  margin: 0;
-  border-radius: 0;
-  border-top: 1px solid var(--cor-borda);
-  background-color: var(--cor-fundo);
-  color: var(--cor-destaque);
-}
-.loja-item-add:hover {
-  background-color: var(--cor-destaque);
-  color: var(--cor-caixa);
-}
-
-/* --- 25. Card de Ritual --- */
-.ritual-card .item-header {
-  background-color: var(--cor-caixa-recurso);
-  border-bottom: 1px solid var(--cor-caixa); 
-}
-.ritual-card.conhecimento { border-color: #ffeb3b; }
-.ritual-card.conhecimento .item-header h3, .ritual-card.conhecimento .item-header-info { color: #ffeb3b; }
-.ritual-card.energia { border-color: #be29ec; }
-.ritual-card.energia .item-header h3, .ritual-card.energia .item-header-info { color: #be29ec; }
-.ritual-card.sangue { border-color: #d40000; }
-.ritual-card.sangue .item-header h3, .ritual-card.sangue .item-header-info { color: #d40000; }
-.ritual-card.morte { border-color: #aaaaaa; } 
-.ritual-card.morte .item-header h3, .ritual-card.morte .item-header-info { color: #f0f0f0; }
-.ritual-card.medo { border-color: #aaaaaa; }
-.ritual-card.medo .item-header h3, .ritual-card.medo .item-header-info { color: #aaaaaa; }
-.ritual-card .item-detalhe.bonus.discente { color: var(--cor-destaque); font-weight: normal; font-style: italic; }
-.ritual-card .item-detalhe.bonus.verdadeiro { color: var(--cor-destaque); font-weight: bold; font-style: italic; }
-
-/* --- 26. Modal de Seleção de Perícia --- */
-.modal-conteudo.modal-pequeno { max-width: 500px; max-height: 80vh; }
-.modal-conteudo.modal-grande { max-width: 1200px; }
-#modal-pericia-descricao {
-  color: var(--cor-texto-label);
-  font-size: 1.1em;
-  margin-bottom: 20px;
-  text-align: center;
-}
-#lista-selecao-pericia {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-#lista-selecao-pericia li {
-  background-color: var(--cor-fundo);
-  border: 1px solid var(--cor-borda);
-  color: var(--cor-texto-principal);
-  padding: 10px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: "Special Elite", monospace;
-  text-transform: uppercase;
-  flex-basis: 130px; 
-  text-align: center;
-  transition: all 0.2s ease;
-}
-#lista-selecao-pericia li:hover {
-  background-color: var(--cor-destaque);
-  color: var(--cor-fundo);
-  transform: scale(1.05);
-}
-:root[data-tema="tema-morte"] #lista-selecao-pericia li:hover,
-:root[data-tema="tema-conhecimento"] #lista-selecao-pericia li:hover {
-  color: #111; 
-}
 
 /* --- 27. Container Fixo de Recursos --- */
 .recursos-container-fixo {
