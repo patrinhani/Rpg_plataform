@@ -1,5 +1,5 @@
 // src/pages/Mesa/index.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../lib/firebase';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,12 +32,15 @@ export default function Mesa() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
-  // [NOVO] Hook do Dialog
+  // Hook do Dialog
   const { showAlert, showConfirm, showPrompt } = useDialog();
   
   const [mesaData, setMesaData] = useState(null);
   const [fichasDaMesa, setFichasDaMesa] = useState([]);
   const [fichaAbertaId, setFichaAbertaId] = useState(null);
+  
+  // [NOVO] Estado para o Modal do Tracker
+  const [showTrackerModal, setShowTrackerModal] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
@@ -176,30 +179,72 @@ export default function Mesa() {
       return (
         <FichaProvider>
             <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cor-fundo)' }}>
+                
+                {/* [NOVO] Botão de abrir o Tracker Flutuante */}
                 {emCombate && (
-                    <IniciativaTracker 
-                        mesaId={mesaId}
-                        iniciativas={mesaData.iniciativas || []}
-                        turnoAtual={mesaData.turnoAtual || 0}
-                        rodada={mesaData.rodada || 1}
-                        souMestre={souMestre}
-                        fichasDaMesa={fichasDaMesa}
-                        usuarioUid={usuario.uid}
-                        onVerFichaCriatura={setCriaturaSelecionada}
-                        compact={true} 
-                    />
+                    <button 
+                        onClick={() => setShowTrackerModal(true)} 
+                        className="btn-login primary"
+                        style={{ 
+                          position: 'fixed', 
+                          top: '15px', 
+                          right: '15px', 
+                          zIndex: 2000, 
+                          padding: '10px 15px',
+                          fontSize: '1em',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          margin: 0
+                        }} 
+                    >
+                        ⚔️ Tracker (Popup)
+                    </button>
                 )}
-                <div style={{ position: 'relative', flexGrow: 1, marginTop: emCombate ? '70px' : '0' }}>
+                
+                <div style={{ position: 'relative', flexGrow: 1 }}>
                     <button 
                         onClick={() => setFichaAbertaId(null)} 
                         className="btn-voltar-flutuante"
-                        style={{ top: emCombate ? '85px' : '15px' }} 
+                        style={{ top: '15px', left: '15px' }} 
                     >
                         ← VOLTAR PARA A MESA
                     </button>
-                    <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} />
+                    {/* CORREÇÃO: Passa mesaId para mesaContexto */}
+                    <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} /> 
                 </div>
+                
                 {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
+
+                {/* NOVO: MODAL DO TRACKER */}
+                {showTrackerModal && (
+                    <div className="modal-overlay" onClick={() => setShowTrackerModal(false)}>
+                        <div 
+                            className="modal-conteudo modal-tracker" 
+                            style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh' }} 
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="modal-header">
+                                <h3>Tracker de Iniciativa</h3>
+                                <button onClick={() => setShowTrackerModal(false)} className="btn-fechar-modal">X</button>
+                            </div>
+                            <div className="modal-body" style={{ padding: '10px' }}>
+                                {/* Renderiza o Tracker em modo normal dentro do Modal */}
+                                <IniciativaTracker 
+                                    mesaId={mesaId}
+                                    iniciativas={mesaData.iniciativas || []}
+                                    turnoAtual={mesaData.turnoAtual || 0}
+                                    rodada={mesaData.rodada || 1}
+                                    souMestre={souMestre}
+                                    fichasDaMesa={fichasDaMesa}
+                                    usuarioUid={usuario.uid}
+                                    onVerFichaCriatura={setCriaturaSelecionada}
+                                    compact={false} 
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </FichaProvider>
       );
@@ -243,7 +288,7 @@ export default function Mesa() {
              </div>
         </div>
 
-        {/* TRACKER DE COMBATE (MODO GRANDE) */}
+        {/* TRACKER DE COMBATE (MODO GRANDE) - Exibido apenas no lobby */}
         {emCombate && (
             <div style={{ marginBottom: '20px' }}>
                 <IniciativaTracker 
@@ -318,7 +363,7 @@ export default function Mesa() {
                                 {ficha ? (
                                     <div style={{marginTop:'10px'}}>
                                         <h4 style={{color:'var(--cor-destaque)', margin:'5px 0'}}>{ficha.info.nome}</h4>
-                                        <p style={{fontSize:'0.8em', color:'#aaa'}}>{ficha.info.classe} {ficha.info.nex}</p>
+                                        <p style={{fontSize:'0.8em', color:'#aaa'}}>{ficha.info.classe} - NEX {ficha.info.nex}</p>
                                         {podeAbrir ? (
                                             <button onClick={() => setFichaAbertaId(jogador.uid)} className={isMe ? "btn-login primary" : "btn-login google"} style={{width:'100%', fontSize:'0.8em', marginTop:'5px'}}>
                                                 {isMe ? 'Abrir Minha Ficha' : 'Ver Ficha (Mestre)'}
@@ -360,17 +405,33 @@ export default function Mesa() {
             <div className="modal-conteudo" style={{maxWidth:'800px'}}>
                 <div className="modal-header"><h3>Bestiário</h3><button onClick={()=>setShowBestiarioModal(false)} className="btn-fechar-modal">X</button></div>
                 <div className="modal-body">
-                    {bestiario.map(m => (
-                        <div key={m.id} className="item-card" style={{padding:'15px', display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px', borderLeft:`4px solid ${m.elemento==='Sangue'?'red':'#444'}`}}>
-                            <div>
-                                <strong style={{fontSize:'1.2em'}}>{m.nome}</strong>
-                                <div style={{fontSize:'0.9em', color:'#aaa'}}>
-                                    VD {m.vd} | <span style={{color:'gold'}}>Iniciativa: {m.iniciativa}</span>
+                    {bestiario.map(m => {
+                        // Calcula a classe do elemento
+                        const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
+                        
+                        return (
+                            <div 
+                                key={m.id} 
+                                className={`item-card creature-card-elemento creature-card-${elemento}`} 
+                                onClick={()=>adicionarMonstro(m)} 
+                                style={{
+                                    padding:'15px', 
+                                    display:'flex', 
+                                    justifyContent:'space-between', 
+                                    alignItems:'center', 
+                                    marginBottom:'10px',
+                                }}
+                            >
+                                <div>
+                                    <strong style={{fontSize:'1.2em'}}>{m.nome}</strong>
+                                    <div style={{fontSize:'0.9em', color:'#aaa'}}>
+                                        VD {m.vd} | <span style={{color:'gold'}}>Iniciativa: {m.iniciativa}</span>
+                                    </div>
                                 </div>
+                                <button className="btn-login primary" style={{margin:0, padding:'5px 15px', flexShrink: 0}}>Adicionar</button>
                             </div>
-                            <button onClick={()=>adicionarMonstro(m)} className="btn-login primary" style={{margin:0, padding:'5px 15px'}}>Adicionar</button>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

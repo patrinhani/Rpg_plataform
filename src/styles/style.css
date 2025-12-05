@@ -542,7 +542,7 @@ input[type="number"].input-hex {
   50% { opacity: 1; }
   100% { opacity: 0; }
 }
-#transition-overlay.anim-energia {
+.anim-energia {
   animation: anim-glitch-image 1s ease;
 }
 @keyframes anim-glitch-image {
@@ -629,6 +629,7 @@ input[type="number"].input-hex {
   font-family: "Special Elite", monospace;
   font-size: 1.5em;
   color: var(--cor-destaque);
+  word-break: break-all;
 }
 .btn-fechar-modal {
   font-family: "Roboto Condensed", sans-serif;
@@ -871,6 +872,7 @@ input[type="number"].input-hex {
   font-family: "Roboto Condensed", sans-serif;
   padding: 8px;
   border-radius: 4px;
+  resize: vertical;
 }
 .form-custom-item button {
   margin-top: 15px;
@@ -1094,7 +1096,7 @@ input[type="number"].input-hex {
   pointer-events: none;
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
 }
-#transition-overlay.anim-morte .transition-symbol {
+.anim-morte .transition-symbol {
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.7)) brightness(2);
 }
 
@@ -1610,9 +1612,9 @@ input[type="number"].input-hex {
   100% { box-shadow: 0 0 8px var(--cor-tensao); transform: scale(1); }
 }
 
-html.modo-tensao::before,
-html.modo-sucesso::before,
-html.modo-morte::before {
+.modo-tensao::before,
+.modo-sucesso::before,
+.modo-morte::before {
   content: '';
   position: fixed;
   top: 0;
@@ -1632,18 +1634,18 @@ html.modo-morte::before {
   animation-timing-function: ease-in-out;
   animation-name: none; 
 }
-html.modo-tensao::before { animation-name: pulse-vignette-failure; }
-html.modo-tensao { --cor-borda: var(--cor-tensao) !important; }
-html.modo-tensao .recursos-container-fixo { animation: pulse-border-failure 2.5s infinite ease-in-out; }
-html.modo-tensao .simbolo-parallax { animation-name: pulse-symbol-failure; }
-html.modo-sucesso::before { animation-name: pulse-vignette-success; }
-html.modo-sucesso { --cor-borda: var(--cor-sucesso) !important; }
-html.modo-sucesso .recursos-container-fixo { animation: pulse-border-success 2.5s infinite ease-in-out; }
-html.modo-sucesso .simbolo-parallax { animation-name: pulse-symbol-success; }
-html.modo-morte::before { animation-name: pulse-vignette-morte; }
-html.modo-morte { --cor-borda: var(--cor-morte-brilho) !important; }
-html.modo-morte .recursos-container-fixo { animation: pulse-border-morte 2.5s infinite ease-in-out; }
-html.modo-morte .simbolo-parallax { animation-name: pulse-symbol-morte; }
+.modo-tensao::before { animation-name: pulse-vignette-failure; }
+.modo-tensao { --cor-borda: var(--cor-tensao) !important; }
+.modo-tensao .recursos-container-fixo { animation: pulse-border-failure 2.5s infinite ease-in-out; }
+.modo-tensao .simbolo-parallax { animation-name: pulse-symbol-failure; }
+.modo-sucesso::before { animation-name: pulse-vignette-success; }
+.modo-sucesso { --cor-borda: var(--cor-sucesso) !important; }
+.modo-sucesso .recursos-container-fixo { animation: pulse-border-success 2.5s infinite ease-in-out; }
+.modo-sucesso .simbolo-parallax { animation-name: pulse-symbol-success; }
+.modo-morte::before { animation-name: pulse-vignette-morte; }
+.modo-morte { --cor-borda: var(--cor-morte-brilho) !important; }
+.modo-morte .recursos-container-fixo { animation: pulse-border-morte 2.5s infinite ease-in-out; }
+.modo-morte .simbolo-parallax { animation-name: pulse-symbol-morte; }
 
 @keyframes pulse-vignette-failure {
   0% { box-shadow: inset 0 0 80px 40px rgba(139, 0, 0, 0.5); opacity: 0.7; }
@@ -2114,3 +2116,51 @@ html.modo-morte .simbolo-parallax { animation-name: pulse-symbol-morte; }
   border-left: 3px solid gold;
   border-color: gold;
 }
+
+/* --- NOVO: ESTILOS DO BESTIÁRIO (Modal Mesa) --- */
+.item-card.creature-card-elemento {
+    border: 1px solid rgba(255,255,255,0.1); 
+    border-left: 4px solid #aaa; 
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+/* SANGUE */
+.item-card.creature-card-sangue { 
+    border-color: var(--cor-destaque);
+    border-left-color: var(--cor-destaque) !important;
+    background-color: rgba(212, 0, 0, 0.1); 
+}
+.item-card.creature-card-sangue strong { color: var(--cor-destaque); }
+
+/* MORTE */
+.item-card.creature-card-morte { 
+    border-color: var(--cor-destaque); 
+    border-left-color: var(--cor-destaque) !important; 
+    background-color: rgba(224, 224, 224, 0.1); 
+}
+.item-card.creature-card-morte strong { color: var(--cor-destaque); }
+
+/* CONHECIMENTO */
+.item-card.creature-card-conhecimento { 
+    border-color: var(--cor-destaque-conhecimento);
+    border-left-color: var(--cor-destaque-conhecimento) !important; 
+    background-color: rgba(255, 235, 59, 0.15); 
+}
+.item-card.creature-card-conhecimento strong { color: var(--cor-destaque-conhecimento); }
+
+/* ENERGIA */
+.item-card.creature-card-energia { 
+    border-color: var(--cor-destaque); 
+    border-left-color: var(--cor-destaque) !important; 
+    background-color: rgba(190, 41, 236, 0.15); 
+}
+.item-card.creature-card-energia strong { color: var(--cor-destaque); }
+
+/* MEDO e Fallback */
+.item-card.creature-card-medo {
+    border-left-color: #999 !important;
+    border-color: #666;
+    background-color: rgba(50,50,50,0.4);
+}
+.item-card.creature-card-medo strong { color: #ccc; }

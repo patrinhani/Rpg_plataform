@@ -170,6 +170,43 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }
   }, [tema]); 
 
+  // --- LÓGICA DE ATIVAÇÃO DO PARALLAX (REVISADA) ---
+  useEffect(() => {
+    // A animação deve ser ligada APÓS o carregamento.
+    if (loading) return;
+
+    const parallaxContainer = document.getElementById("parallax-background");
+    // O querySelectorAll deve ser feito DENTRO do useEffect para garantir que os elementos já foram renderizados.
+    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
+    
+    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
+
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      
+      // Fator para o movimento (sensibilidade)
+      const moveX = (clientX - centerX) * -0.015;
+      const moveY = (clientY - centerY) * -0.015;
+      
+      parallaxSimbolos.forEach((simbolo) => {
+        // Aplica a transformação, combinando o offset de centralização (-50%) com o movimento.
+        // Isso garante que a posição inicial do CSS é respeitada.
+        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+      });
+    };
+    
+    // Adiciona o listener à janela.
+    window.addEventListener("mousemove", handleMouseMove);
+    
+    // Limpeza: remove o listener quando o componente é desmontado ou as dependências mudam.
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+
+  // Depende de 'loading' (para começar) e 'personagem.info.tema' (para resetar se o DOM mudar)
+  }, [loading, personagem.info.tema]); 
+
+
   const handleThemeChange = (novoTema) => {
       setTema(novoTema); 
       atualizarFicha('info', 'tema', novoTema); 
@@ -177,24 +214,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   useEffect(() => {
     if (loading) return;
-    const parallaxContainer = document.getElementById("parallax-background");
-    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
-    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      const moveX = (clientX - centerX) * -0.015;
-      const moveY = (clientY - centerY) * -0.015;
-      parallaxSimbolos.forEach((simbolo) => {
-        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-      });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [loading]);
-
-  useEffect(() => {
     const customTrilhas = personagem.trilhas_personalizadas || []; 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
@@ -202,7 +221,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
 
   useEffect(() => {
-      const origemAtual = personagem.info.origem;
+    const origemAtual = personagem.info.origem;
   }, [personagem.info.origem]);
 
   useEffect(() => {
