@@ -1,5 +1,5 @@
 /* src/styles/responsive.css */
-/* (VERSÃO FINAL: CORREÇÃO DE TRANSBORDO/ZOOM) */
+/* (VERSÃO REVISADA: CORREÇÃO DE Z-INDEX, SAFE AREA E DASHBOARD) */
 
 /* --- 1. Tablets e Telas Médias (< 1100px) --- */
 @media (max-width: 1100px) {
@@ -44,6 +44,7 @@
     width: 100vw;
     max-width: 100%;
     position: relative;
+    -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
   }
 
   #root {
@@ -60,6 +61,8 @@
   .item-card {
       min-width: 0 !important; /* Permite encolher abaixo do padrão */
       width: 100% !important;
+      word-wrap: break-word; /* Quebra palavras longas */
+      word-break: break-word;
   }
 
   /* --- 2. HUD (Barra Superior) Compacta --- */
@@ -68,6 +71,7 @@
     gap: 5px;
     width: 100%;
     flex-wrap: nowrap; /* Tenta manter na linha */
+    top: 0;
   }
   
   .recursos-hud-itens {
@@ -113,17 +117,16 @@
     border-width: 2px;
   }
   
-  /* Esconde os trackers (visibilidade) se a tela for muito pequena, ou reduz muito */
+  /* Esconde os trackers (visibilidade) se a tela for muito pequena */
   .recursos-hud-trackers {
-      display: none; /* Oculta trackers no topo para economizar espaço (opcional) */
-      /* Se quiser manter, use: transform: scale(0.7); order: 3; */
+      display: none; 
   }
 
-  /* --- 3. Layout Principal --- */
+  /* --- 3. Layout Principal da Ficha --- */
   .ficha-container {
     display: flex;
     flex-direction: column;
-    padding: 10px 8px; /* Padding lateral seguro */
+    padding: 10px 8px 60px 8px; /* Padding bottom extra para o botão flutuante não cobrir conteúdo */
     gap: 10px;
     width: 100%;
     box-sizing: border-box;
@@ -138,6 +141,8 @@
     overflow-x: auto;
     white-space: nowrap;
     border-bottom: 1px solid #333;
+    top: 55px; /* Ajuste para não conflitar com a HUD fixa */
+    z-index: 850; /* Z-Index menor que o HUD (900) */
   }
   .ficha-aba-link {
       padding: 8px 12px;
@@ -202,6 +207,7 @@
   }
   
   /* --- 6. Botão Voltar (Rodapé) --- */
+  /* CORREÇÃO DE Z-INDEX E SAFE AREA */
   .btn-voltar-flutuante {
       position: fixed;
       top: auto !important;
@@ -215,9 +221,14 @@
       background-color: rgba(10, 10, 10, 0.95);
       border: 1px solid var(--cor-destaque);
       box-shadow: 0 0 15px #000;
-      z-index: 9999;
       text-align: center;
       border-radius: 8px;
+      
+      /* Z-Index ajustado para ficar ABAIXO dos Modais (2000), mas ACIMA do conteúdo (1) */
+      z-index: 1500; 
+      
+      /* Respeita a área segura do iPhone (barra inferior) */
+      margin-bottom: env(safe-area-inset-bottom);
   }
 
   /* --- 7. Modais --- */
@@ -226,11 +237,64 @@
     max-width: 95% !important;
     margin: 10px auto;
     padding: 0;
-    max-height: 90vh;
+    max-height: 85vh; /* Garante visibilidade com teclado virtual */
+    display: flex;
+    flex-direction: column;
   }
   
   .modal-body {
       padding: 15px 10px;
+      overflow-y: auto;
+  }
+
+  /* --- 8. Ajustes Finos do Dashboard (Mobile) --- */
+  .dashboard-container {
+    padding: 10px; 
+    width: 100%;
+    overflow-x: hidden; 
+  }
+
+  .dashboard-header {
+    flex-direction: column; /* Empilha Título e Botões */
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .dashboard-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .dashboard-actions button {
+    flex: 1; /* Botões esticam para ocupar a largura total */
+    text-align: center;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr; /* Força 1 coluna de cards */
+    gap: 15px;
+  }
+
+  /* --- 9. Ajustes da Mesa/Lobby (Mobile) --- */
+  .mesa-container {
+    display: flex;
+    flex-direction: column-reverse; /* Sidebar abaixo do principal no mobile */
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  .mesa-sidebar {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  /* Melhoria nos Cards de Bestiário na Mesa */
+  .item-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .item-card div {
+    width: 100%;
   }
 }
 
@@ -246,5 +310,25 @@
   
   .box-atributos {
       transform: scale(0.85);
+  }
+  
+  /* Ajuste para números não saírem do hexágono em telas minúsculas */
+  input[type="number"].input-hex {
+      font-size: 1.1em;
+  }
+
+  /* Ajuste para Login não cortar */
+  .login-box {
+    padding: 20px 15px;
+    width: 95%;
+  }
+  
+  .login-box h1 {
+    font-size: 1.4em;
+  }
+  
+  .dashboard-actions button {
+    font-size: 0.9em;
+    padding: 8px;
   }
 }

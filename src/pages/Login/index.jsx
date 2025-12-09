@@ -1,18 +1,12 @@
 // src/pages/Login/index.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useDialog } from '../../contexts/DialogContext'; // [NOVO]
+import { useDialog } from '../../contexts/DialogContext';
 import './Login.css';
 
 export default function Login() {
-  const { 
-      loginGoogle, 
-      loginEmail,
-      criarContaEmail,
-      authError 
-  } = useAuth();
-  
-  const { showAlert } = useDialog(); // [NOVO]
+  const { loginGoogle, loginEmail, criarContaEmail, authError } = useAuth();
+  const { showAlert } = useDialog();
   
   const [nome, setNome] = useState(''); 
   const [email, setEmail] = useState('');
@@ -21,8 +15,56 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
 
+  // --- ESTADO DO PARALAXE ---
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  // EFEITO: Captura Movimento (Mouse ou Celular)
+  useEffect(() => {
+    // 1. Lógica para Mouse (Desktop)
+    const handleMouseMove = (e) => {
+      const x = (window.innerWidth - e.pageX * 2) / 25; // Sensibilidade
+      const y = (window.innerHeight - e.pageY * 2) / 25;
+      setOffset({ x, y });
+    };
+
+    // 2. Lógica para Giroscópio (Mobile)
+    const handleOrientation = (e) => {
+      // Limita os valores para o fundo não "fugir" da tela se inclinar muito
+      let x = e.gamma; // Inclinação Esquerda/Direita (-90 a 90)
+      let y = e.beta;  // Inclinação Frente/Trás (-180 a 180)
+
+      // Ajustes finos para a posição de "segurar o celular" (aprox 45 graus)
+      if (y > 90) y = 90;
+      if (y < -90) y = -90;
+      
+      // Multiplicador de sensibilidade para mobile
+      const mobileSensibilidade = 1.5; 
+      
+      setOffset({ 
+        x: x * mobileSensibilidade, 
+        y: (y - 45) * mobileSensibilidade // Remove 45deg para compensar a posição natural de segurar
+      });
+    };
+
+    // Adiciona os ouvintes
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    // Tenta adicionar suporte a orientação (Android funciona direto, iOS pode precisar de permissão)
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (window.DeviceOrientationEvent) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    };
+  }, []);
+
   const errorMessage = authError || localError;
 
+  // ... (Funções de Login mantidas iguais: handleGoogle, handleSubmitEmail) ...
   const handleGoogle = async () => {
     setLoading(true);
     setLocalError('');
@@ -46,7 +88,6 @@ export default function Login() {
                   throw new Error("Por favor, escolha um Nome de Usuário.");
               }
               await criarContaEmail(email, senha, nome);
-              // [ATUALIZADO]
               await showAlert(`Bem-vindo(a), ${nome}.\nVerifique seu e-mail para liberar o acesso.`, "Conta Criada!");
               setIsNewUser(false);
               setLoading(false);
@@ -64,6 +105,22 @@ export default function Login() {
 
   return (
     <div className="login-container">
+      
+      {/* --- NOVO: CAMADA DE PARALAXE --- */}
+      {/* Movemos o estilo para cá para ser dinâmico via React State */}
+      <div 
+        className="parallax-layer" 
+        style={{ 
+          transform: `translate(${offset.x}px, ${offset.y}px)` 
+        }}
+      >
+        <img 
+          src="/assets/images/Character.webp" 
+          alt="Símbolo de Fundo" 
+          className="login-bg-symbol" 
+        />
+      </div>
+
       <div className={`box login-box ${isNewUser ? 'mode-register' : 'mode-login'}`}>
         
         <img src="/assets/images/SimboloSemafinidade.webp" alt="Ordo Realitas" className="login-logo" />

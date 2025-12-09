@@ -1,5 +1,5 @@
 /* src/styles/style.css */
-/* (VERSÃO CORRIGIDA E BLINDADA - Z-INDEX CAMADAS) */
+/* (VERSÃO REVISADA: BLINDAGEM DE TEXTO, Z-INDEX E LAYOUT SEGURO) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -15,6 +15,11 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Melhoria de toque para mobile */
+input, button, select, textarea, a {
+  touch-action: manipulation;
 }
 
 ::-webkit-scrollbar {
@@ -60,11 +65,13 @@
   --sombra-vidro: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --borda-vidro: 1px solid rgba(255, 255, 255, 0.18);
 
+  /* SISTEMA DE CAMADAS (Z-INDEX) REVISADO */
   --z-fundo: -1;
   --z-conteudo: 1;
   --z-menu-fixo: 800;
   --z-hud: 900;
   --z-tracker-compacto: 1000; 
+  /* Nota: O botão flutuante no responsive.css está em 1500 */
   --z-modal: 2000; 
   --z-transicao: 9999;
 }
@@ -118,7 +125,7 @@ h2 {
   text-shadow: 0 0 10px rgba(0,0,0,0.5); 
 }
 
-/* --- 4. Layout Principal e Fundo (A MÁGICA ACONTECE AQUI) --- */
+/* --- 4. Layout Principal e Fundo --- */
 
 /* Força transparência no root/body para não cobrir as camadas negativas */
 :root, html, body {
@@ -210,6 +217,10 @@ footer {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: var(--sombra-vidro);
+  
+  /* SEGURANÇA: Quebra palavras longas para não estourar containers */
+  word-wrap: break-word; 
+  overflow-wrap: break-word;
 }
 .box:hover {
   border-color: var(--cor-destaque); 
@@ -629,6 +640,7 @@ input[type="number"].input-hex {
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.8);
+  /* Z-Index maior que o botão flutuante para cobri-lo */
   z-index: var(--z-modal); 
   display: flex;
   justify-content: center;
@@ -1717,7 +1729,7 @@ input[type="number"].input-hex {
   min-height: 140px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between; /* Melhor distribuição vertical */
   align-items: center;
   text-align: center;
   background-color: rgba(20, 20, 20, 0.6);
@@ -1727,6 +1739,7 @@ input[type="number"].input-hex {
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   position: relative;
+  overflow: hidden; /* BLINDAGEM: Conteúdo não sai do card */
 }
 .dashboard-card:hover {
   transform: translateY(-5px);
@@ -1737,9 +1750,16 @@ input[type="number"].input-hex {
   font-size: 1.2em;
   margin-bottom: 5px;
   color: #fff;
+  /* BLINDAGEM: Trunca nomes muito longos */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: 100%;
 }
 .dashboard-card p, .dashboard-card small {
   color: #aaa;
+  word-break: break-word; /* Quebra palavras longas na descrição */
 }
 .btn-excluir-card {
   position: absolute;
@@ -1791,6 +1811,10 @@ input[type="number"].input-hex {
   padding: 8px;
   background: rgba(255,255,255,0.03);
   border-radius: 4px;
+  flex-wrap: wrap; /* BLINDAGEM: Permite quebra de linha se nome for longo */
+}
+.mesa-jogador-item span {
+    word-break: break-all; /* BLINDAGEM: Quebra nomes sem espaço */
 }
 
 .estado-vazio {
