@@ -1,39 +1,59 @@
 /* src/App.css */
 
-/* IMPORTANTE: Removemos max-width, margin e padding que limitavam a tela */
-#root {
-  width: 100%;
-  min-height: 100vh;
+/* --- 1. TRAVAMENTO GLOBAL (App Shell) --- */
+html, body {
   margin: 0;
   padding: 0;
-  text-align: left; /* Reseta o alinhamento de texto centralizado padrão */
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* IMPEDE rolagem no corpo da página (a causa do espaço branco) */
+  background-color: transparent; /* Deixa o fundo vazar */
+  
+  /* Melhora a rolagem no iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Utilitários de Logo (pode manter se quiser, mas não afetam o login) */
+#root {
+  width: 100%;
+  height: 100vh; /* Ocupa exatamente a tela toda */
+  
+  /* A rolagem acontece AQUI DENTRO, e não na página */
+  overflow-y: auto; 
+  overflow-x: hidden;
+  
+  position: relative;
+  z-index: 1;
+}
+
+/* Remove a scrollbar padrão feia e coloca uma fina */
+#root::-webkit-scrollbar {
+  width: 6px;
+}
+#root::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1); 
+}
+#root::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2); 
+  border-radius: 3px;
+}
+#root::-webkit-scrollbar-thumb:hover {
+  background: var(--cor-destaque); 
+}
+
+/* Utilitários de Animação */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+.logo:hover { filter: drop-shadow(0 0 2em #646cffaa); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #61dafbaa); }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-
 @media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+  a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
 }

@@ -1,5 +1,5 @@
 /* src/styles/style.css */
-/* (VERSÃO REVISADA: BLINDAGEM DE TEXTO, Z-INDEX E LAYOUT SEGURO) */
+/* (VERSÃO FINAL: SUPORTE A APP NATIVO, PARALAXE GLOBAL E LAYOUT SEGURO) */
 
 /* --- 1. Importação de Fontes --- */
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap");
@@ -17,7 +17,7 @@
   box-sizing: border-box;
 }
 
-/* Melhoria de toque para mobile */
+/* Melhoria de toque para mobile (evita delay no clique) */
 input, button, select, textarea, a {
   touch-action: manipulation;
 }
@@ -65,7 +65,7 @@ input, button, select, textarea, a {
   --sombra-vidro: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --borda-vidro: 1px solid rgba(255, 255, 255, 0.18);
 
-  /* SISTEMA DE CAMADAS (Z-INDEX) REVISADO */
+  /* SISTEMA DE CAMADAS (Z-INDEX) - Organizado para evitar sobreposição errada */
   --z-fundo: -1;
   --z-conteudo: 1;
   --z-menu-fixo: 800;
@@ -127,7 +127,7 @@ h2 {
 
 /* --- 4. Layout Principal e Fundo --- */
 
-/* Força transparência no root/body para não cobrir as camadas negativas */
+/* Força transparência para deixar o fundo dinâmico vazar */
 :root, html, body {
   background-color: transparent !important;
   background-image: none !important;
@@ -139,10 +139,10 @@ body {
   color: var(--cor-texto-principal);
   line-height: 1.6;
   min-height: 100vh;
-  position: relative; /* Necessário para o z-index funcionar */
+  position: relative; 
 }
 
-/* CAMADA -2: O Fundo de Cor (Fica lá atrás de tudo) */
+/* CAMADA -2: O Fundo de Cor Sólida (Fica atrás dos símbolos) */
 body::before {
   content: "";
   position: fixed;
@@ -152,7 +152,7 @@ body::before {
   height: 100%;
   background-color: var(--cor-fundo);
   background-image: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 80%);
-  z-index: -2; /* Atrás do Parallax (-1) */
+  z-index: -2; 
   pointer-events: none;
   transition: background-color 0.5s ease;
 }
@@ -162,14 +162,16 @@ body::before {
   position: relative;
   z-index: 1;
   width: 100%;
+  /* Nota: O scroll agora é controlado pelo App.css neste elemento */
 }
 
-/* Container Principal da Ficha */
+/* Container Principal da Ficha - AJUSTADO PARA NÃO ESTOURAR */
 .ficha-container {
   display: grid;
+  width: 98%; /* Largura relativa segura */
   max-width: 1400px;
-  margin: 20px auto;
-  padding: 20px;
+  margin: 0 auto; /* Centraliza */
+  padding: 20px 10px 100px 10px; /* Padding bottom extra para garantir rolagem final */
   gap: 20px;
   grid-template-columns: 1fr 1.5fr;
   grid-template-areas:
@@ -180,7 +182,7 @@ body::before {
     "acoes-defesa pericias"
     "resistencias pericias"
     "calculo      calculo";
-  position: relative; /* Garante contexto */
+  position: relative;
 }
 
 #grid-identidade { grid-area: identidade; }
@@ -197,7 +199,8 @@ footer {
   grid-area: unset; 
   text-align: center;
   padding: 20px;
-  margin-top: 20px;
+  margin-top: auto; /* Empurra para o final do fluxo */
+  padding-bottom: 40px; /* Espaço de segurança */
   background-color: rgba(0,0,0,0.5);
   border-top: 1px solid var(--cor-borda);
   font-size: 0.9em;
@@ -1099,16 +1102,20 @@ input[type="number"].input-hex {
   color: var(--cor-texto-principal);
 }
 
-/* --- 21. Estilos do Parallax Background (CAMADA -1) --- */
+/* --- 21. ESTILO DO PARALAXE DINÂMICO (Atualizado) --- */
 #parallax-background {
   position: fixed; 
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 120vw; /* Maior que a tela para permitir movimento */
+  height: 120vh;
+  left: -10vw; /* Centraliza o excesso */
+  top: -10vh;
   z-index: -1; 
-  overflow: hidden; 
   pointer-events: none; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .simbolo-parallax {
@@ -1118,10 +1125,11 @@ input[type="number"].input-hex {
   width: 80%;
   max-width: 800px;
   transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 0.8s ease-in-out, transform 0.2s ease-out, filter 0.5s ease;
+  opacity: 0; /* JS controla a opacidade do símbolo ativo */
+  transition: opacity 0.8s ease-in-out, filter 0.5s ease;
 }
 
+/* Opacidades base por tema */
 :root[data-tema="tema-ordem"] #simbolo-ordem { opacity: 0.05; }
 :root[data-tema="tema-sangue"] #simbolo-sangue { opacity: 0.1; }
 :root[data-tema="tema-morte"] #simbolo-morte { opacity: 0.1; }
@@ -1664,12 +1672,12 @@ input[type="number"].input-hex {
     }
 }
 
-/* --- DASHBOARD (PAINEL) --- */
+/* --- DASHBOARD (PAINEL) - AJUSTADO PARA LAYOUT SEGURO --- */
 .dashboard-container {
-  width: 100%;
+  width: 98%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 10px 40px 10px;
 }
 
 .dashboard-header {
@@ -1699,6 +1707,7 @@ input[type="number"].input-hex {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
+  box-sizing: border-box; /* Garante que padding não estoure largura */
 }
 
 .card-novo {
@@ -1777,9 +1786,13 @@ input[type="number"].input-hex {
   color: red;
 }
 
-/* --- TELA DA MESA (LOBBY) --- */
+/* --- TELA DA MESA (LOBBY) - AJUSTADO PARA LAYOUT SEGURO --- */
 .mesa-container {
   display: grid;
+  width: 98%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px 10px;
   grid-template-columns: 1fr 320px;
   gap: 30px;
   align-items: start;
