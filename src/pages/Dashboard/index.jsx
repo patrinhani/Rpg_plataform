@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
-import { useDialog } from '../../contexts/DialogContext'; // [NOVO]
+import { useDialog } from '../../contexts/DialogContext'; 
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
 
 export default function Dashboard() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
-  const { showConfirm, showAlert } = useDialog(); // [NOVO]
+  const { showConfirm, showAlert } = useDialog(); 
   
   const [mesas, setMesas] = useState([]);
   const [fichasPessoais, setFichasPessoais] = useState([]);
@@ -46,7 +46,6 @@ export default function Dashboard() {
       setInputNomeMesa(''); setShowCriarMesa(false);
       navigate(`/mesa/${novoId}`);
     } catch (e) { 
-        // [ATUALIZADO]
         showAlert("Erro ao criar mesa: " + e.message, "Erro"); 
     }
   };
@@ -57,7 +56,6 @@ export default function Dashboard() {
       await entrarNaMesa(inputCodigoMesa, usuario.uid, usuario.displayName);
       navigate(`/mesa/${inputCodigoMesa}`);
     } catch (e) { 
-        // [ATUALIZADO]
         showAlert(e.message, "Erro"); 
     }
   };
@@ -75,7 +73,6 @@ export default function Dashboard() {
 
   const handleExcluirFicha = async (e, id) => {
     e.stopPropagation();
-    // [ATUALIZADO] Confirm via Dialog
     const confirmado = await showConfirm("Excluir esta ficha permanentemente? Essa ação não pode ser desfeita.", "Excluir Ficha");
     if(confirmado) {
         await excluirFichaPessoal(usuario.uid, id);
@@ -84,8 +81,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="login-container" style={{ alignItems: 'flex-start', paddingTop: '0', overflowY: 'auto' }}>
-      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.95)', marginTop: '50px' }}>
+    // CORREÇÃO: Removemos a classe 'login-container' que tinha fundo preto sólido
+    // Usamos um estilo simples para espaçamento superior
+    <div style={{ paddingTop: '50px', width: '100%', minHeight: '100vh' }}>
+      
+      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.85)' }}>
         
         <div className="dashboard-header">
           <h1 style={{ margin: 0 }}>Painel do Agente: <span style={{color:'var(--cor-destaque)'}}>{usuario?.displayName}</span></h1>

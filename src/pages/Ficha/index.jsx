@@ -9,8 +9,7 @@ import {
     poderesEspecialista, 
     poderesOcultista, 
     poderesGerais, 
-    poderesParanormais,
-    Patentes,       
+    poderesParanormais, 
     OpcoesClasse 
 } from '../../lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../lib/progressao.js'; 
@@ -37,7 +36,6 @@ const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
 
-// --- CORREÇÃO AQUI: "const" em vez de "import" ---
 const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
@@ -113,6 +111,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
 
+  // --- 1. CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL ---
   useEffect(() => {
     if (!usuario || !idAlvo) {
         setLoading(false);
@@ -125,6 +124,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
     }
     
+    // O 'onSnapshot' garante que se o Player mudar, o Mestre recebe a atualização na hora
     const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
         if (docSnap.exists()) {
             const dadosFirestore = docSnap.data();
@@ -142,18 +142,22 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     return () => unsubscribe();
   }, [usuario, mesaContexto, idAlvo]);
 
+  // Salva alterações locais no banco
   useEffect(() => {
       if (!loading && !isInitializing.current) {
           debouncedSave(personagem);
       }
   }, [personagem]);
 
+  // --- 2. REGRA DE SINCRONIZAÇÃO DO TEMA ---
+  // Se 'personagem.info.tema' mudar (via banco ou local), atualiza o estado local
   useEffect(() => {
      if (personagem.info.tema && personagem.info.tema !== tema) {
          setTema(personagem.info.tema);
      }
   }, [personagem.info.tema]);
 
+  // Aplica o tema visualmente (Animação)
   useEffect(() => {
     const temaNoDOM = document.documentElement.dataset.tema;
     
@@ -161,6 +165,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         if (!temaNoDOM) {
             aplicarTemaSemAnimacao(tema);
         } else {
+            // Animação toca para o Mestre também se ele estiver com a ficha aberta
             if (tema === "tema-sangue") setIsSangueAnimVisible(true);
             else aplicarTemaComAnimacao(tema, temaNoDOM, () => {
                 document.documentElement.dataset.tema = tema;
@@ -170,46 +175,21 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }
   }, [tema]); 
 
-  // --- LÓGICA DE ATIVAÇÃO DO PARALLAX (REVISADA) ---
+  // --- 3. REGRA DE ESCOPO (LIMPEZA AO SAIR) ---
   useEffect(() => {
-    // A animação deve ser ligada APÓS o carregamento.
-    if (loading) return;
-
-    const parallaxContainer = document.getElementById("parallax-background");
-    // O querySelectorAll deve ser feito DENTRO do useEffect para garantir que os elementos já foram renderizados.
-    const parallaxSimbolos = parallaxContainer ? parallaxContainer.querySelectorAll(".simbolo-parallax") : null;
-    
-    if (!parallaxContainer || !parallaxSimbolos || parallaxSimbolos.length === 0) return;
-
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      
-      // Fator para o movimento (sensibilidade)
-      const moveX = (clientX - centerX) * -0.015;
-      const moveY = (clientY - centerY) * -0.015;
-      
-      parallaxSimbolos.forEach((simbolo) => {
-        // Aplica a transformação, combinando o offset de centralização (-50%) com o movimento.
-        // Isso garante que a posição inicial do CSS é respeitada.
-        simbolo.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-      });
+    // Quando este componente (Ficha) for desmontado (sair da tela)
+    return () => {
+        // Reseta para o tema padrão (Ordem/Azul)
+        // Isso garante que o Dashboard ou Mesa não fiquem com o tema do personagem
+        aplicarTemaSemAnimacao('tema-ordem');
+        document.documentElement.dataset.tema = 'tema-ordem';
     };
-    
-    // Adiciona o listener à janela.
-    window.addEventListener("mousemove", handleMouseMove);
-    
-    // Limpeza: remove o listener quando o componente é desmontado ou as dependências mudam.
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
-  // Depende de 'loading' (para começar) e 'personagem.info.tema' (para resetar se o DOM mudar)
-  }, [loading, personagem.info.tema]); 
-
-
+  // Handler que salva o tema no banco, disparando a atualização para todos
   const handleThemeChange = (novoTema) => {
       setTema(novoTema); 
-      atualizarFicha('info', 'tema', novoTema); 
+      atualizarFicha('info', 'tema', novoTema); // Salva no objeto 'personagem' -> vai pro Firestore
   };
 
   useEffect(() => {
@@ -219,10 +199,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
     setTrilhasPorClasse(trilhasAgrupadas);
   }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
-
-  useEffect(() => {
-    const origemAtual = personagem.info.origem;
-  }, [personagem.info.origem]);
 
   useEffect(() => {
     const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha";
@@ -349,13 +325,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   return (
     <>
       {VoltarBtn}
-      <div id="parallax-background">
-        <img src="/assets/images/SimboloSemafinidade.webp" id="simbolo-ordem" className="simbolo-parallax" alt=""/>
-        <img src="/assets/images/SimboloSangue.webp" id="simbolo-sangue" className="simbolo-parallax" alt=""/>
-        <img src="/assets/images/SimboloMorte.webp" id="simbolo-morte" className="simbolo-parallax" alt=""/>
-        <img src="/assets/images/SimboloConhecimento.webp" id="simbolo-conhecimento" className="simbolo-parallax" alt=""/>
-        <img src="/assets/images/SimboloEnergia.webp" id="simbolo-energia" className="simbolo-parallax" alt=""/>
-      </div>
+      
+      {/* O BackgroundDinamico já está no App.jsx, não precisamos dele aqui */}
       <div id="transition-overlay"></div>
 
       <Suspense fallback={null}>

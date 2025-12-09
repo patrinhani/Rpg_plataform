@@ -4,7 +4,7 @@ import { db } from '../../lib/firebase';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDialog } from '../../contexts/DialogContext'; // [NOVO] Import do Dialog
+import { useDialog } from '../../contexts/DialogContext'; 
 
 import { 
     importarPersonagemParaMesa, 
@@ -22,7 +22,6 @@ import {
 import { bestiario } from '../../lib/bestiario';
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
 
-// --- IMPORTAÇÕES DE COMPONENTES ---
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
 import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
 import Ficha from '../Ficha/index.jsx';
@@ -32,14 +31,11 @@ export default function Mesa() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
-  // Hook do Dialog
   const { showAlert, showConfirm, showPrompt } = useDialog();
   
   const [mesaData, setMesaData] = useState(null);
   const [fichasDaMesa, setFichasDaMesa] = useState([]);
   const [fichaAbertaId, setFichaAbertaId] = useState(null);
-  
-  // [NOVO] Estado para o Modal do Tracker
   const [showTrackerModal, setShowTrackerModal] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
@@ -61,20 +57,17 @@ export default function Mesa() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.jogadores && !data.jogadores.some(j => j.uid === usuario.uid)) {
-           // [ATUALIZADO] Alerta via Dialog (sem await pois é dentro de useEffect, apenas dispara)
            showAlert("Você foi removido desta mesa.", "Aviso");
            sairDaMesa();
            return;
         }
         setMesaData(data);
       } else {
-          // [ATUALIZADO]
           showAlert("Esta mesa foi excluída ou não existe.", "Erro");
           sairDaMesa();
       }
     }, (error) => {
        console.error("Erro ao carregar mesa:", error);
-       // [ATUALIZADO]
        showAlert("Erro de permissão ou conexão.", "Erro");
        sairDaMesa();
     });
@@ -96,29 +89,25 @@ export default function Mesa() {
     return () => unsub();
   }, [mesaId]);
 
-  // --- AÇÕES GERAIS ---
+  // --- AÇÕES ---
   const handleCopiarCodigo = () => { 
       navigator.clipboard.writeText(mesaId); 
-      // [ATUALIZADO]
       showAlert("Código copiado para a área de transferência!", "Sucesso"); 
   };
   
   const handleEditarNome = async () => {
       if (!souMestre) return;
-      // [ATUALIZADO] Prompt via Dialog
       const novo = await showPrompt("Novo nome da mesa:", "Editar Mesa", "Nome da Mesa", mesaData.nome);
       if (novo && novo.trim()) await atualizarNomeMesa(mesaId, novo);
   };
 
   const handleExpulsar = async (uid) => {
-      // [ATUALIZADO] Confirm via Dialog
       const confirmado = await showConfirm("Tem certeza que deseja remover este jogador da mesa?", "Expulsar Jogador");
       if (confirmado) {
           await removerJogadorDaMesa(mesaId, uid);
       }
   };
 
-  // --- AÇÕES DE COMBATE ---
   const toggleCombate = async () => {
       await alternarCombate(mesaId, !emCombate, mesaData.jogadores);
   };
@@ -138,15 +127,13 @@ export default function Mesa() {
   };
 
   const adicionarMonstro = async (monstro) => {
-      // [ATUALIZADO] Prompt via Dialog
       const ini = await showPrompt(`Iniciativa para ${monstro.nome} (Bônus: ${monstro.iniciativa}):`, "Adicionar Monstro", "0", "0");
-      if (ini !== null) { // Verifica se não cancelou (pode ser string vazia se o usuário apagar, mas geralmente retorna valor)
+      if (ini !== null) { 
           await adicionarMonstroIniciativa(mesaId, monstro, ini || "0");
           setShowBestiarioModal(false);
       }
   };
 
-  // --- IMPORTAÇÃO E CRIAÇÃO ---
   const abrirImportacao = async () => {
       const lista = await listarPersonagensPessoais(usuario.uid);
       setMinhasFichas(lista);
@@ -154,7 +141,6 @@ export default function Mesa() {
   };
   
   const confirmarImportacao = async (dadosFicha) => {
-      // [ATUALIZADO] Confirm via Dialog
       const confirmado = await showConfirm(`Importar "${dadosFicha.info.nome}" para esta mesa?`, "Importar Personagem");
       if (confirmado) {
           await importarPersonagemParaMesa(mesaId, usuario.uid, dadosFicha);
@@ -163,7 +149,6 @@ export default function Mesa() {
   };
 
   const criarNova = async () => {
-      // [ATUALIZADO] Confirm via Dialog
       const confirmado = await showConfirm("Criar uma ficha do zero nesta mesa?", "Nova Ficha");
       if (confirmado) {
           await importarPersonagemParaMesa(mesaId, usuario.uid, null);
@@ -178,24 +163,16 @@ export default function Mesa() {
   if (isFichaOpen) {
       return (
         <FichaProvider>
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cor-fundo)' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
                 
-                {/* [NOVO] Botão de abrir o Tracker Flutuante */}
                 {emCombate && (
                     <button 
                         onClick={() => setShowTrackerModal(true)} 
                         className="btn-login primary"
                         style={{ 
-                          position: 'fixed', 
-                          top: '15px', 
-                          right: '15px', 
-                          zIndex: 2000, 
-                          padding: '10px 15px',
-                          fontSize: '1em',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          margin: 0
+                          position: 'fixed', top: '15px', right: '15px', zIndex: 2000, 
+                          padding: '10px 15px', fontSize: '1em', border: 'none', 
+                          borderRadius: '4px', cursor: 'pointer', margin: 0
                         }} 
                     >
                         ⚔️ Tracker (Popup)
@@ -210,13 +187,11 @@ export default function Mesa() {
                     >
                         ← VOLTAR PARA A MESA
                     </button>
-                    {/* CORREÇÃO: Passa mesaId para mesaContexto */}
                     <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} /> 
                 </div>
                 
                 {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
 
-                {/* NOVO: MODAL DO TRACKER */}
                 {showTrackerModal && (
                     <div className="modal-overlay" onClick={() => setShowTrackerModal(false)}>
                         <div 
@@ -229,7 +204,6 @@ export default function Mesa() {
                                 <button onClick={() => setShowTrackerModal(false)} className="btn-fechar-modal">X</button>
                             </div>
                             <div className="modal-body" style={{ padding: '10px' }}>
-                                {/* Renderiza o Tracker em modo normal dentro do Modal */}
                                 <IniciativaTracker 
                                     mesaId={mesaId}
                                     iniciativas={mesaData.iniciativas || []}
@@ -252,8 +226,9 @@ export default function Mesa() {
 
   // RENDERIZAÇÃO: MODO LOBBY
   return (
-    <div className="login-container" style={{ flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '0', overflowY: 'auto' }}>
-      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.95)', marginTop: '30px', minHeight: '90vh', borderColor: emCombate ? 'var(--cor-destaque)' : '#333' }}>
+    // CORREÇÃO: Removemos a classe 'login-container'
+    <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh' }}>
+      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.85)', minHeight: '90vh', borderColor: emCombate ? 'var(--cor-destaque)' : '#333' }}>
         
         <div className="dashboard-header">
              <div>
@@ -288,7 +263,7 @@ export default function Mesa() {
              </div>
         </div>
 
-        {/* TRACKER DE COMBATE (MODO GRANDE) - Exibido apenas no lobby */}
+        {/* TRACKER DE COMBATE (MODO GRANDE) */}
         {emCombate && (
             <div style={{ marginBottom: '20px' }}>
                 <IniciativaTracker 
@@ -406,7 +381,6 @@ export default function Mesa() {
                 <div className="modal-header"><h3>Bestiário</h3><button onClick={()=>setShowBestiarioModal(false)} className="btn-fechar-modal">X</button></div>
                 <div className="modal-body">
                     {bestiario.map(m => {
-                        // Calcula a classe do elemento
                         const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
                         
                         return (
