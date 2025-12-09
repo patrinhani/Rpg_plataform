@@ -5,6 +5,8 @@ import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDialog } from '../../contexts/DialogContext'; 
+// [1] Importa CSS para animação do símbolo
+import '../Login/Login.css'; 
 
 import { 
     importarPersonagemParaMesa, 
@@ -47,6 +49,32 @@ export default function Mesa() {
   const [npcNome, setNpcNome] = useState('');
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
+
+  // [2] --- LÓGICA DO PARALAXE (Copiado do Dashboard) ---
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setOffset({ 
+        x: (window.innerWidth - e.pageX * 2) / 25,
+        y: (window.innerHeight - e.pageY * 2) / 25
+      });
+    };
+    
+    const handleOrientation = (e) => {
+      const x = e.gamma ? e.gamma * 1.5 : 0;
+      const y = e.beta ? (e.beta - 45) * 1.5 : 0;
+      setOffset({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', handleOrientation);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (window.DeviceOrientationEvent) window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, []);
 
   const sairDaMesa = () => navigate('/');
 
@@ -159,11 +187,11 @@ export default function Mesa() {
   
   const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
   
-  // RENDERIZAÇÃO: MODO FICHA
+  // RENDERIZAÇÃO: MODO FICHA (Mantido igual, mas com fundo escuro base)
   if (isFichaOpen) {
       return (
         <FichaProvider>
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#050505' }}>
                 
                 {emCombate && (
                     <button 
@@ -224,11 +252,44 @@ export default function Mesa() {
       );
   }
 
-  // RENDERIZAÇÃO: MODO LOBBY
+  // RENDERIZAÇÃO: MODO LOBBY DA MESA (COM EFEITO GLASS E PARALAXE)
   return (
-    // CORREÇÃO: Removemos a classe 'login-container'
-    <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh' }}>
-      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.85)', minHeight: '90vh', borderColor: emCombate ? 'var(--cor-destaque)' : '#333' }}>
+    // Container Principal com trava de rolagem e fundo base
+    <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
+      
+      {/* [3] --- CAMADA DE PARALAXE --- */}
+      <div 
+        className="parallax-layer" 
+        style={{ 
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          position: 'fixed', zIndex: 0 
+        }}
+      >
+        <img 
+          src="/assets/images/Character.webp" 
+          alt="Símbolo de Fundo" 
+          className="login-bg-symbol" 
+        />
+      </div>
+
+      {/* [4] --- CONTAINER GLASSMORPHISM --- */}
+      <div 
+        className="dashboard-container box" 
+        style={{ 
+            // Estilo Vidro
+            background: 'rgba(12, 18, 24, 0.75)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',
+            position: 'relative', 
+            zIndex: 1, // Acima do símbolo
+            
+            minHeight: '90vh', 
+            // Borda condicional (Combate)
+            borderColor: emCombate ? 'var(--cor-destaque)' : 'rgba(255, 255, 255, 0.1)' 
+        }}
+      >
         
         <div className="dashboard-header">
              <div>
@@ -375,6 +436,7 @@ export default function Mesa() {
         </div>
       </div>
 
+      {/* --- MODAIS (Permanecem iguais) --- */}
       {showBestiarioModal && (
         <div className="modal-overlay">
             <div className="modal-conteudo" style={{maxWidth:'800px'}}>
@@ -382,7 +444,6 @@ export default function Mesa() {
                 <div className="modal-body">
                     {bestiario.map(m => {
                         const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
-                        
                         return (
                             <div 
                                 key={m.id} 

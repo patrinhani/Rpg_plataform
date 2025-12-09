@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import { useDialog } from '../../contexts/DialogContext'; 
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
+import '../Login/Login.css'; // Importa estilos do Login (para a animação do símbolo de fundo)
 
 export default function Dashboard() {
   const { usuario, logout } = useAuth();
@@ -18,6 +19,43 @@ export default function Dashboard() {
   const [showEntrarMesa, setShowEntrarMesa] = useState(false);
   const [inputNomeMesa, setInputNomeMesa] = useState('');
   const [inputCodigoMesa, setInputCodigoMesa] = useState('');
+
+  // --- ESTADO DO PARALAXE ---
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    // 1. Lógica para Mouse (Desktop)
+    const handleMouseMove = (e) => {
+      const x = (window.innerWidth - e.pageX * 2) / 25;
+      const y = (window.innerHeight - e.pageY * 2) / 25;
+      setOffset({ x, y });
+    };
+
+    // 2. Lógica para Giroscópio (Mobile)
+    const handleOrientation = (e) => {
+      let x = e.gamma;
+      let y = e.beta;
+      if (y > 90) y = 90;
+      if (y < -90) y = -90;
+      const mobileSensibilidade = 1.5; 
+      setOffset({ 
+        x: x * mobileSensibilidade, 
+        y: (y - 45) * mobileSensibilidade 
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (window.DeviceOrientationEvent) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (usuario) carregarDados();
@@ -81,11 +119,41 @@ export default function Dashboard() {
   };
 
   return (
-    // CORREÇÃO: Removemos a classe 'login-container' que tinha fundo preto sólido
-    // Usamos um estilo simples para espaçamento superior
-    <div style={{ paddingTop: '50px', width: '100%', minHeight: '100vh' }}>
+    // Container Principal: Fundo escuro base e trava de rolagem horizontal
+    <div style={{ paddingTop: '50px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
       
-      <div className="dashboard-container box" style={{ background: 'rgba(10,10,10,0.85)' }}>
+      {/* --- CAMADA DE PARALAXE (Símbolo de Fundo) --- */}
+      <div 
+        className="parallax-layer" 
+        style={{ 
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          position: 'fixed', // Fixado para ficar no fundo
+          zIndex: 0
+        }}
+      >
+        {/* IMAGEM CORRIGIDA: Character.webp */}
+        <img 
+          src="/assets/images/Character.webp" 
+          alt="Símbolo de Fundo" 
+          className="login-bg-symbol" 
+        />
+      </div>
+
+      {/* --- DASHBOARD COM EFEITO GLASS --- */}
+      <div 
+        className="dashboard-container box" 
+        style={{ 
+          // Efeito Glassmorphism (Vidro Fosco)
+          background: 'rgba(12, 18, 24, 0.75)', // Fundo semi-transparente
+          backdropFilter: 'blur(12px)',         // Desfoque do que está atrás
+          WebkitBackdropFilter: 'blur(12px)',   // Suporte para Safari
+          border: '1px solid rgba(255, 255, 255, 0.1)', // Borda sutil
+          boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',     // Sombra para destacar
+          
+          position: 'relative', 
+          zIndex: 1 // Garante que fique acima do símbolo
+        }}
+      >
         
         <div className="dashboard-header">
           <h1 style={{ margin: 0 }}>Painel do Agente: <span style={{color:'var(--cor-destaque)'}}>{usuario?.displayName}</span></h1>
