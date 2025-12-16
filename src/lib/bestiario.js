@@ -1471,8 +1471,8 @@ export const bestiario = [
     ],
   },
   {
-    id: "anfitriao_mistico",
-    nome: "Anfitrião Místico",
+    id: "Estrangeiro",
+    nome: "Estrangeiro",
     elemento: "Conhecimento",
     vd: 340,
     tipo: "Criatura Grande",
