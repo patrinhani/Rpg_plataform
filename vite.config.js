@@ -1,24 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'; // <--- Importe isto
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    ViteImageOptimizer({ // <--- Adicione esta configuração
+      png: { quality: 80 },
+      jpeg: { quality: 75 },
+      webp: { quality: 80, lossless: false },
+    }),
+  ],
   build: {
-    // Aumenta o limite de aviso de tamanho de arquivo para 1MB (padrão é 500kb)
-    // Isso evita avisos no terminal, já que estamos separando os chunks propositalmente
-    chunkSizeWarningLimit: 1000,
-    
+    chunkSizeWarningLimit: 1000, 
     rollupOptions: {
       output: {
         manualChunks: {
-          // Cria um arquivo separado apenas para o React e Rotas (cache longo)
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          
-          // Cria um arquivo separado para o Firebase (que é pesado)
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
         },
       },
     },
   },
-})
+});

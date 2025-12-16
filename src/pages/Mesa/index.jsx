@@ -21,9 +21,6 @@ import {
     avancarTurno
 } from '../../lib/mesas';
 
-// [REMOVIDO] A importação estática foi removida daqui:
-// import { bestiario } from '../../lib/bestiario';
-
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
 
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
@@ -45,9 +42,9 @@ export default function Mesa() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
   
-  // [NOVO] Estado para guardar o bestiário apenas quando carregado
+  // Estado para guardar o bestiário apenas quando carregado (Otimização de Carregamento)
   const [listaBestiario, setListaBestiario] = useState(null);
-  
+
   const [criaturaSelecionada, setCriaturaSelecionada] = useState(null);
   const [minhasFichas, setMinhasFichas] = useState([]);
 
@@ -56,25 +53,33 @@ export default function Mesa() {
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
 
-  // [PARALAXE]
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  // [OTIMIZAÇÃO DE PERFORMANCE - PARALAXE]
+  // Usamos useRef para manipular o DOM diretamente sem re-renderizar o React
+  const parallaxRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setOffset({ 
-        x: (window.innerWidth - e.pageX * 2) / 25,
-        y: (window.innerHeight - e.pageY * 2) / 25
-      });
+      // Se a referência não existir (ex: página não carregou), não faz nada
+      if (!parallaxRef.current) return;
+
+      // Calcula a posição diretamente (Matemática leve)
+      const x = (window.innerWidth - e.pageX * 2) / 25;
+      const y = (window.innerHeight - e.pageY * 2) / 25;
+
+      // Aplica o estilo diretamente no elemento HTML (Zero React Re-renders)
+      parallaxRef.current.style.transform = `translate(${x}px, ${y}px)`;
     };
     
     const handleOrientation = (e) => {
+      if (!parallaxRef.current) return;
       const x = e.gamma ? e.gamma * 1.5 : 0;
       const y = e.beta ? (e.beta - 45) * 1.5 : 0;
-      setOffset({ x, y });
+      parallaxRef.current.style.transform = `translate(${x}px, ${y}px)`;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', handleOrientation);
+    // 'passive: true' melhora a performance de scroll e touch
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', handleOrientation, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -125,13 +130,12 @@ export default function Mesa() {
 
   // --- AÇÕES ---
 
-  // [NOVO] Função para abrir e carregar o bestiário sob demanda
+  // Função otimizada para carregar bestiário sob demanda
   const abrirBestiario = async () => {
       setShowBestiarioModal(true);
-      
-      // Se a lista ainda estiver vazia (null), carrega o ficheiro
       if (!listaBestiario) {
           try {
+              // Importação dinâmica (Code Splitting)
               const modulo = await import('../../lib/bestiario');
               setListaBestiario(modulo.bestiario);
           } catch (error) {
@@ -210,6 +214,7 @@ export default function Mesa() {
   
   const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
   
+  // MODO FICHA
   if (isFichaOpen) {
       return (
         <FichaProvider>
@@ -274,14 +279,22 @@ export default function Mesa() {
       );
   }
 
+  // MODO MESA
   return (
     <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
       
+      {/* [CAMADA DE PARALAXE OTIMIZADA] 
+        Usamos ref={parallaxRef} e willChange: 'transform' para performance máxima.
+      */}
       <div 
+        ref={parallaxRef} 
         className="parallax-layer" 
         style={{ 
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
-          position: 'fixed', zIndex: 0 
+          position: 'fixed', 
+          zIndex: 0,
+          willChange: 'transform', // Avisa o navegador para usar a GPU
+          top: 0, left: 0, right: 0, bottom: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}
       >
         <img 
@@ -356,7 +369,6 @@ export default function Mesa() {
                 <div style={{ display:'flex', gap:'15px', justifyContent:'center', marginTop: '10px', flexWrap: 'wrap', background: 'rgba(0,0,0,0.6)', padding:'15px', borderRadius:'0 0 8px 8px' }}>
                     {souMestre ? (
                         <>
-                            {/* [ALTERADO] Botão agora chama a função abrirBestiario */}
                             <button onClick={abrirBestiario} className="btn-login google" style={{width:'auto', padding:'5px 20px'}}>+ BESTIÁRIO</button>
                             <div style={{display:'flex', gap:'5px', alignItems:'center', borderLeft:'1px solid #555', paddingLeft:'15px'}}>
                                 <span style={{color:'gold', fontSize:'0.9em'}}>NPC Rápido:</span>
@@ -457,7 +469,6 @@ export default function Mesa() {
             <div className="modal-conteudo" style={{maxWidth:'800px'}}>
                 <div className="modal-header"><h3>Bestiário</h3><button onClick={()=>setShowBestiarioModal(false)} className="btn-fechar-modal">X</button></div>
                 <div className="modal-body">
-                    {/* [ALTERADO] Verifica se a lista já carregou */}
                     {!listaBestiario ? (
                         <div style={{padding:'20px', textAlign:'center', color:'#aaa'}}>Carregando grimório de criaturas...</div>
                     ) : (
