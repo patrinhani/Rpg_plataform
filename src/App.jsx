@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css'; 
 import './styles/style.css';
 import './styles/responsive.css';
@@ -8,23 +8,34 @@ import { useAuth } from './contexts/AuthContext.jsx';
 
 // Contextos
 import { FichaProvider } from './contexts/FichaContext.jsx';
-import { DialogProvider } from './contexts/DialogContext.jsx';
+// DialogContext não precisa ser lazy pois é usado globalmente
+// import { DialogProvider } from './contexts/DialogContext.jsx'; 
+// (Nota: Você já importou no index ou main? Se não, mantenha aqui, mas o provider geralmente envolve o App)
 
 // Componentes Globais
-import SystemDialog from './components/SystemDialog.jsx';
-import BackgroundDinamico from './components/BackgroundDinamico.jsx'; // [NOVO]
+import BackgroundDinamico from './components/BackgroundDinamico.jsx'; 
 
-// Páginas
-import Login from './pages/Login/index.jsx'; 
-import Verificacao from './pages/Verificacao/index.jsx';
-import Dashboard from './pages/Dashboard/index.jsx';
-import Ficha from './pages/Ficha/index.jsx';
-import Mesa from './pages/Mesa/index.jsx';
+// Páginas - IMPORTAÇÃO OTIMIZADA (Lazy)
+// O navegador só vai baixar estes arquivos quando a rota for acessada
+const Login = lazy(() => import('./pages/Login/index.jsx'));
+const Verificacao = lazy(() => import('./pages/Verificacao/index.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard/index.jsx'));
+const Ficha = lazy(() => import('./pages/Ficha/index.jsx'));
+const Mesa = lazy(() => import('./pages/Mesa/index.jsx'));
 
 // Firebase
 import { db } from './lib/firebase.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
+
+// Componente de Carregamento Reutilizável (Extraído do seu código original)
+const TelaCarregamento = () => (
+  <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#020406', color:'#fff', flexDirection: 'column', gap: '15px'}}>
+      <img src="/assets/images/SimboloSemafinidade.webp" style={{width:'50px', opacity:0.5, animation: 'spin 2s linear infinite'}} alt="Carregando" />
+      <span style={{fontFamily: 'monospace', fontSize: '0.8em', color: '#666'}}>CARREGANDO SISTEMA...</span>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 function App() {
   const { usuario, loading: authLoading } = useAuth();
@@ -81,20 +92,18 @@ function App() {
       }
   };
 
-  // 1. Loading
+  // 1. Loading Inicial (Auth)
   if (authLoading || (usuario && verificandoNome)) {
-      return (
-        <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#020406', color:'#fff', flexDirection: 'column', gap: '15px'}}>
-            <img src="/assets/images/SimboloSemafinidade.webp" style={{width:'50px', opacity:0.5, animation: 'spin 2s linear infinite'}} alt="Carregando" />
-            <span style={{fontFamily: 'monospace', fontSize: '0.8em', color: '#666'}}>CARREGANDO SISTEMA...</span>
-            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        </div>
-      );
+      return <TelaCarregamento />;
   }
 
-  // 2. Login (Fundo próprio)
+  // 2. Login (Fundo próprio, usamos Suspense aqui também caso o Login seja pesado)
   if (!usuario) {
-      return <Login />;
+      return (
+        <Suspense fallback={<TelaCarregamento />}>
+            <Login />
+        </Suspense>
+      );
   }
 
   // 3. Bloqueio de Nome
@@ -117,7 +126,11 @@ function App() {
 
   // 4. Verificação de E-mail
   if (!usuario.emailVerified) {
-      return <Verificacao />;
+      return (
+        <Suspense fallback={<TelaCarregamento />}>
+            <Verificacao />
+        </Suspense>
+      );
   }
 
   // --- APP PRINCIPAL ---
@@ -126,18 +139,21 @@ function App() {
         {/* Adiciona o fundo dinâmico atrás de tudo */}
         <BackgroundDinamico />
         
-        <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/mesa/:mesaId" element={<Mesa />} />
-            <Route path="/ficha/:fichaId" element={
-            <FichaProvider>
-                <div className='ficha-wrapper'>
-                    <Ficha />
-                </div>
-            </FichaProvider>
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        {/* Suspense envolve todas as rotas para mostrar carregamento na troca de página */}
+        <Suspense fallback={<TelaCarregamento />}>
+            <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/mesa/:mesaId" element={<Mesa />} />
+                <Route path="/ficha/:fichaId" element={
+                <FichaProvider>
+                    <div className='ficha-wrapper'>
+                        <Ficha />
+                    </div>
+                </FichaProvider>
+                } />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </Suspense>
       </>
   );
 }

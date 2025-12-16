@@ -5,7 +5,6 @@ import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDialog } from '../../contexts/DialogContext'; 
-// [1] Importa CSS para animação do símbolo
 import '../Login/Login.css'; 
 
 import { 
@@ -21,7 +20,10 @@ import {
     atualizarNPCStatus,
     avancarTurno
 } from '../../lib/mesas';
-import { bestiario } from '../../lib/bestiario';
+
+// [REMOVIDO] A importação estática foi removida daqui:
+// import { bestiario } from '../../lib/bestiario';
+
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
 
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
@@ -42,6 +44,10 @@ export default function Mesa() {
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
+  
+  // [NOVO] Estado para guardar o bestiário apenas quando carregado
+  const [listaBestiario, setListaBestiario] = useState(null);
+  
   const [criaturaSelecionada, setCriaturaSelecionada] = useState(null);
   const [minhasFichas, setMinhasFichas] = useState([]);
 
@@ -50,7 +56,7 @@ export default function Mesa() {
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
 
-  // [2] --- LÓGICA DO PARALAXE (Copiado do Dashboard) ---
+  // [PARALAXE]
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -118,6 +124,23 @@ export default function Mesa() {
   }, [mesaId]);
 
   // --- AÇÕES ---
+
+  // [NOVO] Função para abrir e carregar o bestiário sob demanda
+  const abrirBestiario = async () => {
+      setShowBestiarioModal(true);
+      
+      // Se a lista ainda estiver vazia (null), carrega o ficheiro
+      if (!listaBestiario) {
+          try {
+              const modulo = await import('../../lib/bestiario');
+              setListaBestiario(modulo.bestiario);
+          } catch (error) {
+              console.error("Erro ao carregar o bestiário:", error);
+              showAlert("Erro ao carregar lista de criaturas.", "Erro");
+          }
+      }
+  };
+
   const handleCopiarCodigo = () => { 
       navigator.clipboard.writeText(mesaId); 
       showAlert("Código copiado para a área de transferência!", "Sucesso"); 
@@ -187,7 +210,6 @@ export default function Mesa() {
   
   const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
   
-  // RENDERIZAÇÃO: MODO FICHA (Mantido igual, mas com fundo escuro base)
   if (isFichaOpen) {
       return (
         <FichaProvider>
@@ -252,12 +274,9 @@ export default function Mesa() {
       );
   }
 
-  // RENDERIZAÇÃO: MODO LOBBY DA MESA (COM EFEITO GLASS E PARALAXE)
   return (
-    // Container Principal com trava de rolagem e fundo base
     <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
       
-      {/* [3] --- CAMADA DE PARALAXE --- */}
       <div 
         className="parallax-layer" 
         style={{ 
@@ -272,21 +291,18 @@ export default function Mesa() {
         />
       </div>
 
-      {/* [4] --- CONTAINER GLASSMORPHISM --- */}
       <div 
         className="dashboard-container box" 
         style={{ 
-            // Estilo Vidro
             background: 'rgba(12, 18, 24, 0.75)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',
             position: 'relative', 
-            zIndex: 1, // Acima do símbolo
+            zIndex: 1, 
             
             minHeight: '90vh', 
-            // Borda condicional (Combate)
             borderColor: emCombate ? 'var(--cor-destaque)' : 'rgba(255, 255, 255, 0.1)' 
         }}
       >
@@ -324,7 +340,6 @@ export default function Mesa() {
              </div>
         </div>
 
-        {/* TRACKER DE COMBATE (MODO GRANDE) */}
         {emCombate && (
             <div style={{ marginBottom: '20px' }}>
                 <IniciativaTracker 
@@ -341,7 +356,8 @@ export default function Mesa() {
                 <div style={{ display:'flex', gap:'15px', justifyContent:'center', marginTop: '10px', flexWrap: 'wrap', background: 'rgba(0,0,0,0.6)', padding:'15px', borderRadius:'0 0 8px 8px' }}>
                     {souMestre ? (
                         <>
-                            <button onClick={() => setShowBestiarioModal(true)} className="btn-login google" style={{width:'auto', padding:'5px 20px'}}>+ BESTIÁRIO</button>
+                            {/* [ALTERADO] Botão agora chama a função abrirBestiario */}
+                            <button onClick={abrirBestiario} className="btn-login google" style={{width:'auto', padding:'5px 20px'}}>+ BESTIÁRIO</button>
                             <div style={{display:'flex', gap:'5px', alignItems:'center', borderLeft:'1px solid #555', paddingLeft:'15px'}}>
                                 <span style={{color:'gold', fontSize:'0.9em'}}>NPC Rápido:</span>
                                 <input type="text" placeholder="Nome" value={npcNome} onChange={e=>setNpcNome(e.target.value)} style={{width:'100px'}} />
@@ -436,37 +452,41 @@ export default function Mesa() {
         </div>
       </div>
 
-      {/* --- MODAIS (Permanecem iguais) --- */}
       {showBestiarioModal && (
         <div className="modal-overlay">
             <div className="modal-conteudo" style={{maxWidth:'800px'}}>
                 <div className="modal-header"><h3>Bestiário</h3><button onClick={()=>setShowBestiarioModal(false)} className="btn-fechar-modal">X</button></div>
                 <div className="modal-body">
-                    {bestiario.map(m => {
-                        const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
-                        return (
-                            <div 
-                                key={m.id} 
-                                className={`item-card creature-card-elemento creature-card-${elemento}`} 
-                                onClick={()=>adicionarMonstro(m)} 
-                                style={{
-                                    padding:'15px', 
-                                    display:'flex', 
-                                    justifyContent:'space-between', 
-                                    alignItems:'center', 
-                                    marginBottom:'10px',
-                                }}
-                            >
-                                <div>
-                                    <strong style={{fontSize:'1.2em'}}>{m.nome}</strong>
-                                    <div style={{fontSize:'0.9em', color:'#aaa'}}>
-                                        VD {m.vd} | <span style={{color:'gold'}}>Iniciativa: {m.iniciativa}</span>
+                    {/* [ALTERADO] Verifica se a lista já carregou */}
+                    {!listaBestiario ? (
+                        <div style={{padding:'20px', textAlign:'center', color:'#aaa'}}>Carregando grimório de criaturas...</div>
+                    ) : (
+                        listaBestiario.map(m => {
+                            const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
+                            return (
+                                <div 
+                                    key={m.id} 
+                                    className={`item-card creature-card-elemento creature-card-${elemento}`} 
+                                    onClick={()=>adicionarMonstro(m)} 
+                                    style={{
+                                        padding:'15px', 
+                                        display:'flex', 
+                                        justifyContent:'space-between', 
+                                        alignItems:'center', 
+                                        marginBottom:'10px',
+                                    }}
+                                >
+                                    <div>
+                                        <strong style={{fontSize:'1.2em'}}>{m.nome}</strong>
+                                        <div style={{fontSize:'0.9em', color:'#aaa'}}>
+                                            VD {m.vd} | <span style={{color:'gold'}}>Iniciativa: {m.iniciativa}</span>
+                                        </div>
                                     </div>
+                                    <button className="btn-login primary" style={{margin:0, padding:'5px 15px', flexShrink: 0}}>Adicionar</button>
                                 </div>
-                                <button className="btn-login primary" style={{margin:0, padding:'5px 15px', flexShrink: 0}}>Adicionar</button>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>
