@@ -1,16 +1,12 @@
 // src/pages/Ficha/index.jsx
-import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import '../../App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { 
-    poderesCombatente, 
-    poderesEspecialista, 
-    poderesOcultista, 
-    poderesGerais, 
-    poderesParanormais, 
-    OpcoesClasse 
+    poderesCombatente, poderesEspecialista, poderesOcultista, 
+    poderesGerais, poderesParanormais, OpcoesClasse 
 } from '../../lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../lib/progressao.js'; 
 
@@ -20,6 +16,7 @@ import { useDialog } from '../../contexts/DialogContext.jsx';
 import { db } from '../../lib/firebase'; 
 import { doc, updateDoc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore'; 
 
+// Lazy Loading de Componentes
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
@@ -33,10 +30,9 @@ const ModalPoderes = lazy(() => import('../../components/ModalPoderes.jsx'));
 const ModalRituais = lazy(() => import('../../components/ModalRituais.jsx'));
 const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.jsx'));
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
+const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
-
-const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
@@ -86,6 +82,10 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const docRef = useRef(null); 
   const isInitializing = useRef(true); 
   
+  // Controle de Atualização Remota (IMPORTANTE PARA EVITAR LOOPS)
+  const isRemoteUpdate = useRef(false);
+
+  // Modais States
   const [isLojaOpen, setIsLojaOpen] = useState(false);
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [itemPendente, setItemPendente] = useState(null); 
@@ -111,7 +111,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
 
-  // --- 1. CARREGAMENTO E SINCRONIZAÇÃO EM TEMPO REAL ---
+  // --- 1. SINCRONIZAÇÃO EM TEMPO REAL ---
   useEffect(() => {
     if (!usuario || !idAlvo) {
         setLoading(false);
@@ -124,10 +124,10 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
     }
     
-    // O 'onSnapshot' garante que se o Player mudar, o Mestre recebe a atualização na hora
     const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
         if (docSnap.exists()) {
             const dadosFirestore = docSnap.data();
+            isRemoteUpdate.current = true; // Marca que veio do banco
             carregarFicha(dadosFirestore); 
         } else if (isInitializing.current) {
              if (!isModoMesa || propFichaId === usuario.uid) {
@@ -140,32 +140,33 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }, (error) => { console.error("Erro Firestore:", error); setLoading(false); });
 
     return () => unsubscribe();
-  }, [usuario, mesaContexto, idAlvo]);
+  }, [usuario, mesaContexto, idAlvo, carregarFicha]);
 
-  // Salva alterações locais no banco
+  // --- 2. SALVAMENTO OTIMIZADO ---
   useEffect(() => {
       if (!loading && !isInitializing.current) {
+          // Se for update remoto, ignora o salvamento
+          if (isRemoteUpdate.current) {
+              isRemoteUpdate.current = false;
+              return;
+          }
           debouncedSave(personagem);
       }
-  }, [personagem]);
+  }, [personagem, loading]);
 
-  // --- 2. REGRA DE SINCRONIZAÇÃO DO TEMA ---
-  // Se 'personagem.info.tema' mudar (via banco ou local), atualiza o estado local
+  // --- 3. SINCRONIZAÇÃO DO TEMA ---
   useEffect(() => {
      if (personagem.info.tema && personagem.info.tema !== tema) {
          setTema(personagem.info.tema);
      }
-  }, [personagem.info.tema]);
+  }, [personagem.info.tema, tema]);
 
-  // Aplica o tema visualmente (Animação)
   useEffect(() => {
     const temaNoDOM = document.documentElement.dataset.tema;
-    
     if (tema !== temaNoDOM) {
         if (!temaNoDOM) {
             aplicarTemaSemAnimacao(tema);
         } else {
-            // Animação toca para o Mestre também se ele estiver com a ficha aberta
             if (tema === "tema-sangue") setIsSangueAnimVisible(true);
             else aplicarTemaComAnimacao(tema, temaNoDOM, () => {
                 document.documentElement.dataset.tema = tema;
@@ -175,37 +176,34 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }
   }, [tema]); 
 
-  // --- 3. REGRA DE ESCOPO (LIMPEZA AO SAIR) ---
   useEffect(() => {
-    // Quando este componente (Ficha) for desmontado (sair da tela)
     return () => {
-        // Reseta para o tema padrão (Ordem/Azul)
-        // Isso garante que o Dashboard ou Mesa não fiquem com o tema do personagem
         aplicarTemaSemAnimacao('tema-ordem');
         document.documentElement.dataset.tema = 'tema-ordem';
     };
   }, []);
 
-  // Handler que salva o tema no banco, disparando a atualização para todos
-  const handleThemeChange = (novoTema) => {
-      setTema(novoTema); 
-      atualizarFicha('info', 'tema', novoTema); // Salva no objeto 'personagem' -> vai pro Firestore
-  };
-
+  // --- 4. MEMOIZAÇÃO DE DADOS COMPLEXOS ---
   useEffect(() => {
     if (loading) return;
     const customTrilhas = personagem.trilhas_personalizadas || []; 
     const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
     setTrilhasPorClasse(trilhasAgrupadas);
-  }, [personagem.trilhas_personalizadas, personagem.info.classe]); 
+  }, [personagem.trilhas_personalizadas, personagem.info.classe, loading]); 
 
   useEffect(() => {
     const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha";
     document.title = title;
   }, [personagem.info.nome, personagem.info.nex]); 
 
-  const handleFichaChange = (secao, campo, valor) => {
+  // --- HANDLERS MEMOIZADOS ---
+  const handleThemeChange = useCallback((novoTema) => {
+      setTema(novoTema); 
+      atualizarFicha('info', 'tema', novoTema); 
+  }, [atualizarFicha]);
+
+  const handleFichaChange = useCallback((secao, campo, valor) => {
        if (secao === 'info' && campo === 'trilha') {
            const trilha = valor;
            const customTrilhas = personagem.trilhas_personalizadas || [];
@@ -217,9 +215,9 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
            }
        }
        atualizarFicha(secao, campo, valor);
-  };
+  }, [atualizarFicha, personagem.trilhas_personalizadas]);
 
-  const handleAddItem = (itemOriginal) => { 
+  const handleAddItem = useCallback((itemOriginal) => { 
       if (itemOriginal.tipoBonus === 'generico') { 
           setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' }); setIsSelecaoOpen(true); setIsLojaOpen(false); 
       } else if (itemOriginal.tipoBonus === 'escolhaElemento') { 
@@ -227,9 +225,9 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       } else { 
           addItem(itemOriginal); 
       } 
-  };
+  }, [addItem]);
 
-  const handleVincularItem = (valorSelecionado) => { 
+  const handleVincularItem = useCallback((valorSelecionado) => { 
       if (!itemPendente) return; 
       if (itemPendente.tipoVinculo === 'poderElemento') { 
           const poderOriginal = allPoderesList.find(p => p.key === itemPendente.powerKey); 
@@ -250,9 +248,9 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           addItem(itemVinculado); 
       } 
       setIsSelecaoOpen(false); setItemPendente(null); 
-  };
+  }, [itemPendente, addPoder, addItem, atualizarFicha]);
   
-  const handleTogglePoder = (poder) => { 
+  const handleTogglePoder = useCallback((poder) => { 
       const aprendidos = personagem.poderes_aprendidos || []; 
       const isAprendido = aprendidos.some(p => p.key === poder.key || p.key.startsWith(`${poder.key}_`)); 
       if (isAprendido) { 
@@ -265,32 +263,42 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
               addPoder(poder); 
           } 
       } 
-  };
+  }, [personagem.poderes_aprendidos, removePoder, addPoder]);
   
-  const handleSalvarItemEditado = (itemAtualizado) => { if (itemParaEditar) { updateItem(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); } };
-  const handleSalvarNota = (dadosNota) => { if (notaParaEditar) updateNota(notaParaEditar.id, dadosNota); else addNota(dadosNota); setIsDiarioModalOpen(false); };
+  const handleSalvarItemEditado = useCallback((itemAtualizado) => { 
+      if (itemParaEditar) { updateItem(itemParaEditar.inventarioId, itemAtualizado); setIsModalEditarItemOpen(false); } 
+  }, [itemParaEditar, updateItem]);
+
+  const handleSalvarNota = useCallback((dadosNota) => { 
+      if (notaParaEditar) updateNota(notaParaEditar.id, dadosNota); else addNota(dadosNota); setIsDiarioModalOpen(false); 
+  }, [notaParaEditar, updateNota, addNota]);
   
-  const handleAplicarInterludioHandler = (opcoes) => { 
+  const handleAplicarInterludioHandler = useCallback((opcoes) => { 
       const resultado = aplicarInterludio(opcoes); 
       showAlert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`, "Interlúdio"); 
-  };
+  }, [aplicarInterludio, showAlert]);
 
-  const salvarFichaLocal = () => { 
+  const salvarFichaLocal = useCallback(() => { 
       debouncedSave(personagem); 
       showAlert("Ficha sincronizada com sucesso.", "Salvo"); 
-  };
+  }, [debouncedSave, personagem, showAlert]);
   
-  const limparFicha = async () => { 
+  const limparFicha = useCallback(async () => { 
       const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
       if(confirmado) { 
           if(docRef.current) deleteDoc(docRef.current); 
           navigate('/'); 
       } 
-  };
+  }, [showConfirm, navigate]);
   
-  const exportarFicha = () => { const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `ficha_${personagem.info.nome || "agente"}.json`; a.click(); };
+  const exportarFicha = useCallback(() => { 
+      const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); 
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement("a"); 
+      a.href = url; a.download = `ficha_${personagem.info.nome || "agente"}.json`; a.click(); 
+  }, [personagem]);
   
-  const importarFicha = (arquivo) => { 
+  const importarFicha = useCallback((arquivo) => { 
       const reader = new FileReader(); 
       reader.onload = (e) => { 
           try { 
@@ -302,8 +310,29 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           } 
       }; 
       reader.readAsText(arquivo); 
-  };
+  }, [carregarFicha, showAlert]);
   
+  // Props de Controles Memoizadas
+  const controlesProps = useMemo(() => ({
+    temaAtual: tema, onSave: salvarFichaLocal, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
+    onThemeChange: handleThemeChange, canChangeTheme: calculados.canChangeTheme
+  }), [tema, salvarFichaLocal, limparFicha, exportarFicha, importarFicha, handleThemeChange, calculados.canChangeTheme]);
+
+  // Funções de Abrir Modais Memoizadas
+  const openLoja = useCallback(() => setIsLojaOpen(true), []);
+  const openRituais = useCallback(() => setIsRitualModalOpen(true), []);
+  const openPoderes = useCallback(() => setIsPoderesModalOpen(true), []);
+  const openTrilha = useCallback(() => setIsTrilhaModalOpen(true), []);
+  const openInterludio = useCallback(() => setIsInterludioModalOpen(true), []);
+  
+  const openEditItem = useCallback((id) => { 
+      setItemParaEditar(personagem.inventario.find(i => i.inventarioId === id)); setIsModalEditarItemOpen(true); 
+  }, [personagem.inventario]);
+  
+  const openEditNota = useCallback((nota) => { 
+      setNotaParaEditar(nota); setIsDiarioModalOpen(true); 
+  }, []);
+
   const VoltarBtn = !isModoMesa ? <button onClick={() => navigate('/')} className="btn-voltar-flutuante" style={{ top: '15px' }}>← DASHBOARD</button> : null;
 
   if (loading) {
@@ -315,18 +344,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       );
   }
   
-  const controlesProps = {
-    temaAtual: tema, onSave: salvarFichaLocal, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
-    onThemeChange: handleThemeChange, canChangeTheme: calculados.canChangeTheme
-  };
-
   const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando Aba...</div>;
 
   return (
     <>
       {VoltarBtn}
       
-      {/* O BackgroundDinamico já está no App.jsx, não precisamos dele aqui */}
       <div id="transition-overlay"></div>
 
       <Suspense fallback={null}>
@@ -341,7 +364,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
                 {aba.charAt(0).toUpperCase() + aba.slice(1)}
             </button>
         ))}
-        <button className="ficha-aba-link" style={{ color: 'var(--cor-destaque)', fontWeight: 'bold', marginLeft: 'auto' }} onClick={() => setIsInterludioModalOpen(true)}>
+        <button className="ficha-aba-link" style={{ color: 'var(--cor-destaque)', fontWeight: 'bold', marginLeft: 'auto' }} onClick={openInterludio}>
             💤 Interlúdio
         </button>
       </nav>
@@ -354,22 +377,22 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           />
         )}
         {abaAtiva === 'inventario' && (
-          <Inventario inventario={personagem.inventario} onAbrirLoja={() => setIsLojaOpen(true)} onRemoveItem={removeItem} onToggleItem={toggleItem} onEditItem={(id) => { setItemParaEditar(personagem.inventario.find(i => i.inventarioId === id)); setIsModalEditarItemOpen(true); }} />
+          <Inventario inventario={personagem.inventario} onAbrirLoja={openLoja} onRemoveItem={removeItem} onToggleItem={toggleItem} onEditItem={openEditItem} />
         )}
         {abaAtiva === 'rituais' && (
-          <Rituais rituais={personagem.rituais} onAbrirModal={() => setIsRitualModalOpen(true)} onRemoveRitual={removeRitual} />
+          <Rituais rituais={personagem.rituais} onAbrirModal={openRituais} onRemoveRitual={removeRitual} />
         )}
         {abaAtiva === 'poderes' && (
-          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} onAbrirModal={() => setIsPoderesModalOpen(true)} />
+          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} onAbrirModal={openPoderes} />
         )}
         {abaAtiva === 'progressao' && (
           <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
-            <button className="btn-add-item btn-criar-trilha" onClick={() => setIsTrilhaModalOpen(true)}>+ Criar Trilha</button>
+            <button className="btn-add-item btn-criar-trilha" onClick={openTrilha}>+ Criar Trilha</button>
             <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} info={personagem.info} />
           </div>
         )}
         {abaAtiva === 'diario' && (
-          <Diario diarioData={personagem.diario || []} onAbrirModal={(nota) => { setNotaParaEditar(nota); setIsDiarioModalOpen(true); }} onRemoveNota={removeNota} />
+          <Diario diarioData={personagem.diario || []} onAbrirModal={openEditNota} onRemoveNota={removeNota} />
         )}
 
         <footer><p></p></footer>

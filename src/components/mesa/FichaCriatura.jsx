@@ -1,7 +1,7 @@
 // src/components/mesa/FichaCriatura.jsx
-import React from 'react';
+import React, { memo } from 'react';
 
-export default function FichaCriatura({ dados, onClose }) {
+function FichaCriatura({ dados, onClose }) {
   if (!dados) return null;
 
   // Cores baseadas no elemento
@@ -13,14 +13,13 @@ export default function FichaCriatura({ dados, onClose }) {
     Medo: '#fff'
   };
   
-  // Caminhos dos símbolos (baseados nos seus arquivos)
+  // Caminhos dos símbolos
   const simbolos = {
     Sangue: '/assets/images/SimboloSangue.webp',
     Morte: '/assets/images/SimboloMorte.webp',
     Conhecimento: '/assets/images/SimboloConhecimento.webp',
     Energia: '/assets/images/SimboloEnergia.webp',
     Medo: '/assets/images/SimboloSemafinidade.webp',
-    // Fallback para monstros sem elemento definido
     undefined: '/assets/images/SimboloSemafinidade.webp'
   };
   
@@ -51,29 +50,29 @@ export default function FichaCriatura({ dados, onClose }) {
                     display: 'flex', 
                     justifyContent: 'center', 
                     marginBottom: '20px',
-                    position: 'relative',       // Para posicionar o fundo absoluto
-                    overflow: 'hidden',         // Corta o que passar da borda
+                    position: 'relative',       
+                    overflow: 'hidden',         
                     borderRadius: '6px',
                     border: `1px solid ${corTema}`,
-                    boxShadow: `0 0 20px ${corTema}30`, // Glow suave da cor do elemento
-                    backgroundColor: '#080808', // Fundo bem escuro
-                    minHeight: '250px'          // Garante altura mesmo se a imagem for pequena
+                    boxShadow: `0 0 20px ${corTema}30`, 
+                    backgroundColor: '#080808', 
+                    minHeight: '250px'          
                 }}>
                     
                     {/* 1. Símbolo de Fundo (Marca d'água) */}
                     <div style={{
                         position: 'absolute',
-                        top: '-10%', left: '-10%', width: '120%', height: '120%', // Um pouco maior para cobrir bem
+                        top: '-10%', left: '-10%', width: '120%', height: '120%', 
                         backgroundImage: `url(${simboloFundo})`,
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',
                         backgroundSize: 'contain',
-                        opacity: 0.15,          // Bem sutil
-                        filter: 'grayscale(0.4)', // Levemente desaturado para não brigar com a foto
+                        opacity: 0.15,          
+                        filter: 'grayscale(0.4)', 
                         zIndex: 0
                     }}></div>
 
-                    {/* 2. Vinheta (Sombra nas bordas para dar foco no centro) */}
+                    {/* 2. Vinheta (Sombra nas bordas) */}
                     <div style={{
                         position: 'absolute',
                         top: 0, left: 0, width: '100%', height: '100%',
@@ -81,17 +80,19 @@ export default function FichaCriatura({ dados, onClose }) {
                         zIndex: 1
                     }}></div>
 
-                    {/* 3. A Foto da Criatura */}
+                    {/* 3. A Foto da Criatura (OTIMIZADA) */}
                     <img 
                         src={dados.foto} 
                         alt={dados.nome} 
+                        loading="lazy"      // <-- Carregamento preguiçoso
+                        decoding="async"    // <-- Decodificação em paralelo
                         style={{ 
                             maxWidth: '100%', 
                             maxHeight: '400px', 
                             objectFit: 'contain', 
-                            zIndex: 2,             // Fica acima dos efeitos
+                            zIndex: 2,             
                             position: 'relative',
-                            filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.8))' // Sombra na própria criatura para destacar do fundo
+                            filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.8))' 
                         }}
                     />
                 </div>
@@ -165,3 +166,6 @@ export default function FichaCriatura({ dados, onClose }) {
     </div>
   );
 }
+
+// OTIMIZAÇÃO: Exporta com memo para evitar re-render desnecessário
+export default memo(FichaCriatura);
