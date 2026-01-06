@@ -1,0 +1,283 @@
+{
+  "info": {
+    "nome": "Dante",
+    "jogador": "Protocolo Sparda",
+    "origem": "mercenario",
+    "classe": "combatente",
+    "trilha": "aniquilador",
+    "nex": "99%",
+    "prestigio": 4,
+    "deslocamento": 12,
+    "foto": "",
+    "tema": "tema-sangue"
+  },
+  "atributos": {
+    "for": 5,
+    "agi": 3,
+    "int": 1,
+    "pre": 1,
+    "vig": 3
+  },
+  "pericias": {
+    "acrobacia": 0,
+    "crime": 0,
+    "furtividade": 0,
+    "iniciativa": 15,
+    "pilotagem": 0,
+    "pontaria": 15,
+    "reflexos": 15,
+    "atletismo": 5,
+    "luta": 15,
+    "atualidades": 0,
+    "ciencias": 0,
+    "investigacao": 0,
+    "medicina": 0,
+    "ocultismo": 0,
+    "profissao": 0,
+    "sobrevivencia": 0,
+    "tatica": 0,
+    "tecnologia": 0,
+    "adestramento": 0,
+    "artes": 0,
+    "diplomacia": 0,
+    "enganacao": 0,
+    "intimidacao": 10,
+    "intuicao": 0,
+    "percepcao": 5,
+    "religiao": 0,
+    "vontade": 5,
+    "fortitude": 15
+  },
+  "recursos": {
+    "pv_atual": 223,
+    "pv_max": 223,
+    "pe_atual": 110,
+    "pe_max": 110,
+    "san_atual": 65,
+    "san_max": 65
+  },
+  "inventario": [
+    {
+      "inventarioId": "rebellion_id",
+      "nome": "Rebellion (Acha)",
+      "categoria": 2,
+      "espacos": 2,
+      "tipo": "Arma",
+      "dano": "1d12+1d8+5",
+      "critico": "18 / x5",
+      "alcance": "Curto",
+      "descricao": "Espada pesada demoníaca. Build focada em crítico massivo.",
+      "modificacoes": [
+        "Perigosa",
+        "Cruel",
+        "Sangue de Ferro",
+        "Sanguinária",
+        "Lancinante",
+        "Vibrante"
+      ],
+      "ignorarCalculos": false
+    },
+    {
+      "inventarioId": "ebony_id",
+      "nome": "Ebony (Pistola)",
+      "categoria": 3,
+      "espacos": 1,
+      "tipo": "Arma",
+      "dano": "2d12",
+      "critico": "19 / x3",
+      "alcance": "Curto",
+      "descricao": "Pistola preta rápida. Modificada para acerto e impacto.",
+      "modificacoes": [
+        "Calibre Grosso",
+        "Mira Laser"
+      ],
+      "ignorarCalculos": false
+    },
+    {
+      "inventarioId": "ivory_id",
+      "nome": "Ivory (Pistola)",
+      "categoria": 3,
+      "espacos": 1,
+      "tipo": "Arma",
+      "dano": "2d12",
+      "critico": "19 / x5",
+      "alcance": "Curto",
+      "descricao": "Pistola branca para finalização. Munição Dum Dum aumenta multiplicador.",
+      "modificacoes": [
+        "Calibre Grosso",
+        "Munição Dum Dum"
+      ],
+      "ignorarCalculos": false
+    },
+    {
+      "inventarioId": "prot_pesada_id",
+      "nome": "Traje de Caçador (Proteção Pesada)",
+      "categoria": 3,
+      "espacos": 5,
+      "defesa": 12,
+      "tipo": "Proteção",
+      "descricao": "Casaco de couro reforçado sobrenaturalmente.",
+      "modificacoes": [
+        "Blindada",
+        "Regenerativa"
+      ],
+      "ignorarCalculos": false
+    },
+    {
+      "inventarioId": "bandoleira_id",
+      "nome": "Bandoleira",
+      "categoria": 1,
+      "espacos": 1,
+      "tipo": "Acessório",
+      "descricao": "Permite sacar armas como ação livre.",
+      "modificacoes": [],
+      "ignorarCalculos": false
+    },
+    {
+      "inventarioId": "vestimenta_id",
+      "nome": "Botas Reforçadas (Vestimenta)",
+      "categoria": 2,
+      "espacos": 1,
+      "tipo": "Vestimenta",
+      "periciaVinculada": "reflexos",
+      "valorBonus": 5,
+      "tipoBonus": "generico",
+      "descricao": "Aprimorada para mobilidade (Trickster Style). +5 em Reflexos.",
+      "modificacoes": [
+        "Aprimorada"
+      ],
+      "ignorarCalculos": false
+    }
+  ],
+  "poderes_aprendidos": [
+    {
+      "key": "origem_mercenario",
+      "nome": "Posição de Combate (Origem)",
+      "descricao": "Pode gastar 2 PE para receber uma ação de movimento extra no primeiro turno. +1d8 em dano corpo a corpo.",
+      "tipo": "Origem",
+      "isOrigemPower": true
+    },
+    {
+      "key": "classe_nex10",
+      "nome": "A Favorita (Aniquilador 10%)",
+      "descricao": "Escolha uma arma (Acha/Rebellion). A categoria dela é reduzida em I.",
+      "tipo": "Classe"
+    },
+    {
+      "key": "poder_nex15",
+      "nome": "Reflexos Defensivos",
+      "descricao": "+2 em Defesa e testes de resistência até o início do próximo turno se fizer ação de movimento ou padrão. (Royal Guard Passivo)",
+      "tipo": "Combate"
+    },
+    {
+      "key": "poder_nex30",
+      "nome": "Sangue de Ferro",
+      "descricao": "+2 PV por nível de NEX. Durabilidade demoníaca.",
+      "tipo": "Sangue"
+    },
+    {
+      "key": "classe_nex40",
+      "nome": "Técnica Secreta (Aniquilador 40%)",
+      "descricao": "A categoria da favorita é reduzida em II. Recebe modificação extra (Destruidor: +1 Multiplicador Crítico).",
+      "tipo": "Classe"
+    },
+    {
+      "key": "poder_nex45",
+      "nome": "Golpe Pesado",
+      "descricao": "O dano de armas corpo a corpo aumenta em um dado do mesmo tipo. (Rebellion: 1d12 -> 2d12)",
+      "tipo": "Combate"
+    },
+    {
+      "key": "classe_nex50",
+      "nome": "Versatilidade: Revidar (Guerreiro)",
+      "descricao": "Ao bloquear um ataque, gaste reação para atacar o alvo. (Royal Guard Release)",
+      "tipo": "Classe"
+    },
+    {
+      "key": "poder_nex60",
+      "nome": "Golpe de Sorte",
+      "descricao": "+1 na margem de ameaça.",
+      "tipo": "Energia"
+    },
+    {
+      "key": "classe_nex65",
+      "nome": "Técnica Sublime (Aniquilador 65%)",
+      "descricao": "Ao atacar com favorita, ignora resistência a dano (Perfurante).",
+      "tipo": "Classe"
+    },
+    {
+      "key": "poder_nex75",
+      "nome": "Golpe de Sorte (Afinidade)",
+      "descricao": "+1 no multiplicador de crítico.",
+      "tipo": "Energia"
+    },
+    {
+      "key": "poder_nex85",
+      "nome": "Anatomia Insana",
+      "descricao": "Chance de 50% de ignorar o dano extra de acertos críticos e furtivos inimigos.",
+      "tipo": "Sangue"
+    },
+    {
+      "key": "classe_nex99",
+      "nome": "Para Matar (Aniquilador 99%)",
+      "descricao": "Aumenta o multiplicador de crítico da favorita em +1.",
+      "tipo": "Classe"
+    },
+    {
+      "key": "poder_nex99",
+      "nome": "Surto Temporal",
+      "descricao": "Uma vez por rodada, gasta 3 PE para realizar uma ação padrão adicional. (Quicksilver)",
+      "tipo": "Morte"
+    }
+  ],
+  "rituais": [
+    {
+      "inventarioId": "ritual_odio",
+      "nome": "Ódio Incontrolável",
+      "elemento": "Sangue",
+      "circulo": 2,
+      "alcance": "Pessoal",
+      "duracao": "Cena",
+      "descricao": "Transformação em Devil Trigger focado em fúria. +2 ataque, +2 dano, +5 RD, mas não faz ações mentais."
+    }
+  ],
+  "defesa": {
+    "equip": 12,
+    "outros": 2
+  },
+  "resistencias": {
+    "balistico": 5,
+    "corte": 5,
+    "impacto": 5,
+    "perfuracao": 5,
+    "eletricidade": 0,
+    "fogo": 0,
+    "frio": 0,
+    "quimico": 0,
+    "mental": 0,
+    "sangue": 5,
+    "morte": 0,
+    "conhecimento": 0,
+    "energia": 0
+  },
+  "bonusManuais": {
+    "pv_nex": 0,
+    "pv_outros": 0,
+    "pe_nex": 0,
+    "pe_outros": 0,
+    "san_nex": 0,
+    "san_outros": 0
+  },
+  "perseguicao": {
+    "sucessos": 0,
+    "falhas": 0
+  },
+  "visibilidade": 0,
+  "trilhas_personalizadas": [],
+  "diario": [],
+  "condicoesAtivas": [],
+  "buffsTemporarios": {
+    "exercicio": 0,
+    "leitura": 0
+  }
+}
