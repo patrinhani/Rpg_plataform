@@ -123,7 +123,7 @@ export default function Dashboard() {
     }
   };
 
-  // --- FUNÇÃO DE IMPORTAR JSON (CORRIGIDA) ---
+  // --- FUNÇÃO DE IMPORTAR JSON ---
   const handleImportarFicha = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -135,23 +135,19 @@ export default function Dashboard() {
       try {
         const jsonContent = JSON.parse(e.target.result);
         
+        // Validação simples
         if (!jsonContent.info || !jsonContent.atributos) {
             throw new Error("Arquivo inválido. O JSON não parece ser uma ficha.");
         }
 
         const nomeLido = jsonContent.info.nome || "Sem Nome";
-        const confirmacao = window.confirm(`Arquivo lido: "${nomeLido}".\nDeseja importar esta ficha para sua conta?`);
         
-        if (!confirmacao) {
-            setLoading(false);
-            return;
-        }
-
-        // Constrói objeto manualmente para evitar erros de referência
+        // Construção do objeto para garantir a estrutura correta no Firebase
         const novaFicha = {
             uid: usuario.uid,
             dono: usuario.displayName,
             dataCriacao: new Date().toISOString(),
+            // Copia explicitamente as seções
             info: jsonContent.info || {},
             atributos: jsonContent.atributos || {},
             pericias: jsonContent.pericias || {},
@@ -168,6 +164,7 @@ export default function Dashboard() {
             bonusManuais: jsonContent.bonusManuais || {}
         };
 
+        // Salva na subcoleção do usuário para aparecer na lista correta
         const colecaoDestino = collection(db, "users", usuario.uid, "personagens");
         await addDoc(colecaoDestino, novaFicha);
 
@@ -276,14 +273,21 @@ export default function Dashboard() {
           </div>
           
           <div className="dashboard-grid">
-             {fichasPessoais.map(ficha => (
-                <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card">
-                   {/* CORREÇÃO DO PROBLEMA VISUAL: Usamos ficha.nome em vez de ficha.info.nome */}
-                   <h4>{ficha.nome || "Sem Nome"}</h4>
-                   <p style={{ fontSize: '0.9em' }}>{ficha.classe || "Mundano"} - {ficha.nex || "0%"}</p>
-                   <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>
-                </div>
-             ))}
+             {fichasPessoais.map(ficha => {
+                // --- LÓGICA DE VISUALIZAÇÃO HÍBRIDA ---
+                // Tenta pegar de info.nome, se não existir, tenta ficha.nome, se não, "Sem Nome"
+                const nomePersonagem = ficha.info?.nome || ficha.nome || "Sem Nome";
+                const classePersonagem = ficha.info?.classe || ficha.classe || "Mundano";
+                const nexPersonagem = ficha.info?.nex || ficha.nex || "0%";
+
+                return (
+                  <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card">
+                     <h4>{nomePersonagem}</h4>
+                     <p style={{ fontSize: '0.9em' }}>{classePersonagem} - {nexPersonagem}</p>
+                     <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>
+                  </div>
+                );
+             })}
              {fichasPessoais.length === 0 && !loading && <div className="estado-vazio">Nenhuma ficha pessoal criada.</div>}
           </div>
         </div>

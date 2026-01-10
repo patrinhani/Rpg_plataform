@@ -3,16 +3,28 @@ import React, { createContext, useContext, useState, useRef, useMemo, useCallbac
 import Personagem from '../lib/personagem.js';
 import { database, Patentes, getPatenteInfo } from '../lib/database.js';
 
-const FichaContext = createContext();
+// Inicializa com null para podermos detectar se o Provider está faltando
+const FichaContext = createContext(null);
 
 export function useFicha() {
-  return useContext(FichaContext);
+  const context = useContext(FichaContext);
+  if (!context) {
+    throw new Error("useFicha deve ser usado dentro de um FichaProvider.");
+  }
+  return context;
 }
 
 export function FichaProvider({ children }) {
-  // 1. Instância Única e Estado
-  const fichaRef = useRef(new Personagem());
-  const [personagem, setPersonagem] = useState(fichaRef.current.getDados());
+  // 1. Instância Única da Classe Personagem
+  const fichaRef = useRef(null);
+  
+  // Inicialização Lazy do Ref para evitar erros de construtor no render inicial
+  if (!fichaRef.current) {
+    fichaRef.current = new Personagem();
+  }
+
+  // 2. Estado React sincronizado com a instância
+  const [personagem, setPersonagem] = useState(() => fichaRef.current.getDados());
   
   const [calculados, setCalculados] = useState({
     defesaTotal: 10, 
@@ -26,15 +38,18 @@ export function FichaProvider({ children }) {
     bloqueio_rd: '—', 
     esquiva_bonus: '—', 
     tem_contra_ataque: false,
-    atributosDetalhados: { // Inicializa com valores padrão para evitar erro de undefined
+    atributosDetalhados: { 
         for: { valorFinal: 1 }, agi: { valorFinal: 1 }, int: { valorFinal: 1 }, 
         pre: { valorFinal: 1 }, vig: { valorFinal: 1 }
-    }
+    },
+    limite_pe: 1
   });
 
   // --- Função Central de Cálculo (Memoizada) ---
   const atualizarCalculos = useCallback(() => {
     const ficha = fichaRef.current;
+    if (!ficha) return;
+
     ficha.calcularValoresMaximos(); 
     
     const dados = ficha.getDados(); 
@@ -51,7 +66,6 @@ export function FichaProvider({ children }) {
     // Defesa
     const agi = atributosDetalhados.agi.valorFinal;
     const vig = atributosDetalhados.vig.valorFinal; 
-    const int = atributosDetalhados.int.valorFinal; // Usado em lógica interna se houver
     const equip = dados.defesa.equip || 0; 
     const outros = parseInt(dados.defesa.outros) || 0;
     
@@ -85,27 +99,31 @@ export function FichaProvider({ children }) {
         bonusPericiaCalculado[key] = ficha.getBonusPericiaInventario(key); 
     });
 
+    const nexNum = parseInt(String(dados.info.nex).replace(/[^0-9]/g, '')) || 0;
+
     setCalculados({ 
         defesaTotal, 
         atributosDetalhados,
         cargaAtual: ficha.getPesoTotal(), 
         cargaMax: ficha.getMaxPeso(), 
         periciasTreinadas: Object.values(dados.pericias).filter(v => parseInt(v) >= 5).length, 
-        periciasTotal: 0, // Ajuste conforme lógica
+        periciasTotal: 0, 
         bonusPericia: bonusPericiaCalculado, 
-        canChangeTheme: parseInt(String(dados.info.nex).replace(/[^0-9]/g, '')) >= 50, 
+        canChangeTheme: nexNum >= 50, 
         patente: getPatenteInfo(parseInt(dados.info.prestigio) || 0) || Patentes[0], 
         bloqueio_rd: (treino_fortitude >= 5) ? bonus_fortitude : '—', 
         esquiva_bonus: (treino_reflexos >= 5) ? bonus_reflexos : '—', 
         tem_contra_ataque: treino_luta >= 5, 
+        limite_pe: ficha.calculosDetalhados?.limite_pe || 1
     });
     
-    // Atualiza estado visual
+    // Atualiza estado visual do React
     setPersonagem({ ...dados });
   }, []);
 
   // --- Carregar Dados ---
   const carregarFicha = useCallback((dados) => {
+    if (!fichaRef.current) return;
     fichaRef.current.carregarDados(dados);
     atualizarCalculos(); 
   }, [atualizarCalculos]);
@@ -113,6 +131,7 @@ export function FichaProvider({ children }) {
   // --- Atualizar Dados ---
   const atualizarFicha = useCallback((secao, campo, valor, skipRecalc = false) => {
     const ficha = fichaRef.current;
+    if (!ficha) return;
 
     if (secao === 'info') {
         if (campo === 'nex') { 
@@ -124,18 +143,23 @@ export function FichaProvider({ children }) {
             const nova = valor; 
             const antiga = ficha.getDados().info.origem; 
             
+            // Remove perícias da origem antiga
             if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) {
                 database.periciasPorOrigem[antiga].fixas.forEach(p => { 
                     if (ficha.getBonusTotalPericia(p) === 5) ficha.setTreinoPericia(p, 0); 
                 }); 
             }
+            // Adiciona novas
             if (database.periciasPorOrigem?.[nova]?.fixas) {
                 database.periciasPorOrigem[nova].fixas.forEach(p => { 
                     if (ficha.getBonusTotalPericia(p) === 0) ficha.setTreinoPericia(p, 5); 
                 }); 
             }
             
+            // Remove poder de origem antigo
             if (antiga) ficha.poderes_aprendidos = ficha.poderes_aprendidos.filter(p => !p.isOrigemPower); 
+            
+            // Adiciona novo poder
             const dadosOrigem = database.periciasPorOrigem?.[nova]; 
             if (dadosOrigem && dadosOrigem.poder) {
                 ficha.addPoder({ 
@@ -148,9 +172,6 @@ export function FichaProvider({ children }) {
             }
             ficha.setInfo(campo, valor); 
         } 
-        else if (campo === 'classe') {
-             ficha.setInfo(campo, valor);
-        }
         else {
             ficha.setInfo(campo, valor);
         }
@@ -194,7 +215,7 @@ export function FichaProvider({ children }) {
       aplicarInterludio: (opcoes) => { const res = fichaRef.current.aplicarInterludio(opcoes); atualizarCalculos(); return res; }
   }), [atualizarCalculos]);
 
-  // --- Valor Final do Contexto (Memoizado) ---
+  // --- Valor Final do Contexto ---
   const value = useMemo(() => ({
       personagem,
       calculados,
