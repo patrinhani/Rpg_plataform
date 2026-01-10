@@ -2050,3 +2050,228 @@ input[type="number"].input-hex {
     background-color: rgba(50,50,50,0.4);
 }
 .item-card.creature-card-medo strong { color: #ccc; }
+
+/* --- ADICIONAR AO FINAL DE src/styles/style.css --- */
+
+/* --- 25. ESTILOS DOS CARDS (ITENS, RITUAIS E NOTAS) --- */
+.item-card {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(20, 20, 20, 0.6); /* Fundo semi-transparente */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden; /* Garante que nada saia do card */
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  min-height: 200px; /* Altura mínima para padronizar */
+  position: relative;
+}
+
+.item-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cor-destaque);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+  background-color: rgba(20, 20, 20, 0.8);
+}
+
+/* Cabeçalho do Card */
+.item-header {
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-header h3 {
+  font-family: "Special Elite", monospace;
+  font-size: 1.1em;
+  color: var(--cor-destaque);
+  margin: 0;
+  text-transform: uppercase;
+  /* Trunca títulos muito longos */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.item-header-info {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 0.85em;
+  color: var(--cor-texto-label);
+  text-align: right;
+  line-height: 1.1;
+}
+
+/* Corpo do Card */
+.item-body {
+  padding: 15px;
+  flex-grow: 1; /* Ocupa o espaço disponível */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.item-detalhe {
+  font-size: 0.9em;
+  color: var(--cor-texto-principal);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+  padding-bottom: 2px;
+}
+.item-detalhe strong {
+  color: var(--cor-texto-label);
+  margin-right: 5px;
+}
+
+.item-detalhe.bonus {
+  color: var(--cor-destaque);
+  border: none;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.item-descricao {
+  margin-top: 10px;
+  font-size: 0.85em;
+  color: #aaa;
+  font-style: italic;
+  line-height: 1.4;
+  white-space: pre-wrap; /* Respeita quebras de linha */
+}
+
+/* Rodapé do Card (Botões) */
+.item-footer {
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end; /* Alinha botões à direita */
+  flex-wrap: wrap;
+}
+
+.item-footer button {
+  flex: 1;
+  font-size: 0.8em;
+  padding: 6px 10px;
+  margin: 0;
+}
+
+.item-inventario-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: auto; /* Empurra para a esquerda */
+}
+.item-inventario-toggle label {
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+/* Botões Específicos */
+.item-inventario-editar {
+  background-color: #333;
+  color: #fff;
+}
+.item-inventario-remover {
+  background-color: rgba(100, 0, 0, 0.6);
+  color: #ffcccc;
+}
+.item-inventario-remover:hover {
+  background-color: #d40000;
+  color: white;
+}
+.loja-item-add {
+  background-color: var(--cor-sucesso);
+  color: #000;
+  font-weight: bold;
+}
+
+/* --- VARIAÇÕES ELEMENTAIS (Para Rituais/Itens Amaldiçoados) --- */
+.ritual-card.sangue {
+  border-color: #8a0000;
+  box-shadow: inset 0 0 15px rgba(138, 0, 0, 0.2);
+}
+.ritual-card.sangue .item-header h3 { color: #ff4444; }
+
+.ritual-card.morte {
+  border-color: #444;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+.ritual-card.morte .item-header h3 { color: #ccc; }
+
+.ritual-card.energia {
+  border-color: #7b00ff;
+  box-shadow: inset 0 0 15px rgba(123, 0, 255, 0.15);
+}
+.ritual-card.energia .item-header h3 { color: #d08aff; }
+
+.ritual-card.conhecimento {
+  border-color: #bfa100;
+  box-shadow: inset 0 0 15px rgba(191, 161, 0, 0.15);
+}
+.ritual-card.conhecimento .item-header h3 { color: #ffeb3b; }
+
+/* --- ADICIONAR AO FINAL DE src/styles/style.css --- */
+
+/* --- 26. MODO ECONOMIA DE MEMÓRIA (Dispositivos Fracos) --- */
+/* Ativado via classe .modo-economia no body */
+
+body.modo-economia {
+  /* Remove imagem de fundo fixa para economizar GPU */
+  background-image: none !important;
+  background-color: var(--cor-fundo) !important;
+}
+
+/* 1. Desligar o Parallax e Partículas */
+body.modo-economia #parallax-background,
+body.modo-economia #transition-overlay,
+body.modo-economia #three-transition-overlay, 
+body.modo-economia .particula-sangue-splatter,
+body.modo-economia .personagem-imagem-fundo {
+  display: none !important;
+}
+
+/* 2. Remover o efeito de Vidro (Blur) - O MAIOR VILÃO DE PERFORMANCE */
+body.modo-economia .box,
+body.modo-economia .recursos-container-fixo,
+body.modo-economia .ficha-abas,
+body.modo-economia .modal-conteudo,
+body.modo-economia .card-iniciativa,
+body.modo-economia .dashboard-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  /* Substitui transparência por cor sólida escura para manter leitura */
+  background-color: #050505 !important; 
+  border: 1px solid #333;
+}
+
+/* 3. Simplificar Sombras Pesadas */
+body.modo-economia * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Reativar bordas simples para feedback visual (já que removemos sombras) */
+body.modo-economia .box:hover,
+body.modo-economia .item-card:hover {
+  border-color: var(--cor-destaque) !important;
+}
+
+/* 4. Parar Animações Infinitas */
+body.modo-economia .simbolo-parallax,
+body.modo-economia .logo,
+body.modo-economia .recursos-container-fixo,
+body.modo-economia .tracker-linha.full .tracker-box.checked {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ajuste específico para o HUD fixo ficar legível sem blur */
+body.modo-economia .recursos-container-fixo {
+  border-bottom: 2px solid var(--cor-destaque);
+  background-color: #000 !important;
+}
+
