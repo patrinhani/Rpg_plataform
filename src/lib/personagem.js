@@ -7,7 +7,6 @@ class Personagem {
   }
 
   reset() {
-    // (Mantive o reset igual para economizar espaço, o foco são os métodos abaixo)
     this.atributos = { for: 1, agi: 1, int: 1, pre: 1, vig: 1 };
     this.pericias = {
       acrobacia: 0, crime: 0, furtividade: 0, iniciativa: 0, pilotagem: 0, pontaria: 0, reflexos: 0,
@@ -33,7 +32,7 @@ class Personagem {
     this.calculosDetalhados = { pv_base: 0, pv_nivel: 0, pv_origem: 0, pv_total: 0, pe_base: 0, pe_nivel: 0, pe_origem: 0, pe_total: 0, san_base: 0, san_nivel: 0, san_origem: 0, san_total: 0, limite_pe: 1 };
   }
 
-  // --- SETTERS (Mantidos) ---
+  // --- SETTERS ---
   setPerseguicao(tipo, valor) {
     if (tipo === 'sucessos' || tipo === 'falhas') {
       let num = parseInt(valor) || 0;
@@ -80,8 +79,7 @@ class Personagem {
   
   getCondicoes() { return this.condicoesAtivas; }
 
-  // --- NOVA LÓGICA DE ATRIBUTOS DETALHADOS ---
-  // Retorna objeto: { valorFinal, modificadores: [{nome, valor}] }
+  // --- LÓGICA DE ATRIBUTOS DETALHADOS ---
   getAtributoDetalhado(attrKey) {
     let valorBase = parseInt(this.atributos[attrKey]) || 0;
     let mods = [];
@@ -117,34 +115,25 @@ class Personagem {
     return { valorFinal: valorBase, modificadores: mods };
   }
 
-  // Mantido para compatibilidade interna, mas usa a lógica nova
   getAtributoFinal(attrKey) {
     return this.getAtributoDetalhado(attrKey).valorFinal;
   }
 
-  // --- NOVA LÓGICA DE DADOS DE PERÍCIA ---
-  // Retorna { dados: '3d', bonusTotal: +5, penalidadeCondicao: 0, msg: '' }
+  // --- LÓGICA DE DADOS DE PERÍCIA ---
   getDadosPericia(periciaKey, atributoBase, bonusInventario) {
-      // 1. Pega o atributo já penalizado (ex: Agi 3 - 2 (Debilitado) = 1)
       const attrDet = this.getAtributoDetalhado(atributoBase);
       let dadosAtuais = attrDet.valorFinal;
       let msgCondicao = "";
       let temPenalidade = false;
 
-      // Se o atributo já está negativo ou zero devido a condições, os dados refletem isso
-      if (dadosAtuais < 1) dadosAtuais = 0; // O sistema trata < 1d como 2d-take-lowest ou 0d? Geralmente 0d ou dt20 rola 2d20L.
-      // Vamos assumir que se for <=0 vira "0d" (ou regra da casa). 
-      // O componente visual vai tratar o "0d" ou "-1d".
+      if (dadosAtuais < 1) dadosAtuais = 0; 
       
-      // 2. Aplica penalidades ESPECÍFICAS de perícia (ex: Cego em Agi/For)
-      // A condição "Cego" reduz dados de testes de Agi e For.
       if (this.condicoesAtivas.includes('cego') && ['agi', 'for'].includes(atributoBase)) {
           dadosAtuais -= 2;
           msgCondicao += "Cego (-2d)\n";
           temPenalidade = true;
       }
       
-      // Se Ababaldo/Apavorado (afetam testes de perícia em geral)
       if (this.condicoesAtivas.includes('apavorado')) {
            dadosAtuais -= 2;
            msgCondicao += "Apavorado (-2d)\n";
@@ -159,15 +148,12 @@ class Personagem {
       const bonusTotal = parseInt(treino) + parseInt(bonusInventario);
 
       return {
-          dados: dadosAtuais, // Número inteiro de dados (pode ser negativo)
+          dados: dadosAtuais,
           bonus: bonusTotal,
           temPenalidade,
           msgCondicao: msgCondicao.trim() + (attrDet.modificadores.length > 0 ? `\nAtributo: ${attrDet.modificadores.map(m=>`${m.nome} ${m.valor}`).join(', ')}` : '')
       };
   }
-
-  // ... (Restante dos métodos aplicarInterludio, addPoder, etc. mantidos iguais) ...
-  // Apenas para garantir a integridade do arquivo, vou manter o resto do código inalterado.
   
   aplicarInterludio(opcoes) {
     const { acoes, conforto, prato, emGrupo } = opcoes;
@@ -355,9 +341,12 @@ class Personagem {
     const bonusEspecificos = inventarioAtivo
       .filter((item) => item.tipoBonus === "especifico" && item.periciaVinculada === periciaKey)
       .map((item) => parseInt(item.valorBonus) || 0).reduce((a, b) => a + b, 0);
+    
+    // --- CORREÇÃO DE SEGURANÇA NO ID ---
     const bonusCustom = inventarioAtivo
-      .filter((item) => (item.id.startsWith("custom_") || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
+      .filter((item) => ((item.id && item.id.startsWith("custom_")) || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
       .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); 
+      
     return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
   }
   
@@ -421,6 +410,7 @@ class Personagem {
     }
   }
 
+  // --- CÁLCULO DE VALORES MÁXIMOS CORRIGIDO ---
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
@@ -456,10 +446,19 @@ class Personagem {
         break; 
     }
 
-    const niveisAcima = Math.floor((nex - 5) / 5);
+    // --- CORREÇÃO DO NEX 99% ---
+    // Níveis acima de 5% (cada 5% é um nível).
+    // 5% = 0 aumentos
+    // 95% = 18 aumentos
+    // 99% = 19 aumentos
+    let niveisAcima = Math.floor((nex - 5) / 5);
+    if (nex >= 99) niveisAcima = 19;
+    
     const nexLevelsCalculated = Math.max(0, niveisAcima);
+    const nivelTotal = nexLevelsCalculated + 1; // Equivalente ao "Nível" do personagem (1 a 20)
     const multiplicadorNex = Math.floor(nex / 5);
 
+    // Bônus de Origem
     let bonusOrigemPv = 0;
     let bonusOrigemPe = 0;
     let bonusOrigemSan = 0;
@@ -471,6 +470,7 @@ class Personagem {
       case "mergulhador": bonusOrigemPv = 5; break;
     }
 
+    // Bônus Manuais
     const bonusManualPvNex = (parseInt(this.bonusManuais.pv_nex) || 0) * nexLevelsCalculated;
     const bonusManualPvOutros = parseInt(this.bonusManuais.pv_outros) || 0;
     const bonusManualPeNex = (parseInt(this.bonusManuais.pe_nex) || 0) * nexLevelsCalculated;
@@ -478,12 +478,34 @@ class Personagem {
     const bonusManualSanNex = (parseInt(this.bonusManuais.san_nex) || 0) * nexLevelsCalculated;
     const bonusManualSanOutros = parseInt(this.bonusManuais.san_outros) || 0;
 
+    // --- CÁLCULO DE PODERES DE STATUS ---
+    let bonusPoderesPv = 0;
+    let bonusPoderesPe = 0;
+
+    // Verifica Sangue de Ferro (+2 PV por nível)
+    const temSangueDeFerro = this.poderes_aprendidos.some(p => 
+        p.key === "sangue_de_ferro" || (p.nome && p.nome.toLowerCase().includes("sangue de ferro"))
+    );
+    if (temSangueDeFerro) {
+        bonusPoderesPv += (2 * nivelTotal); 
+    }
+
+    // Verifica Potencial Aprimorado (+1 PE por nível)
+    const temPotencialAprimorado = this.poderes_aprendidos.some(p => 
+        p.key === "potencial_aprimorado" || (p.nome && p.nome.toLowerCase().includes("potencial aprimorado"))
+    );
+    if (temPotencialAprimorado) {
+        bonusPoderesPe += (1 * nivelTotal);
+    }
+
+    // Limite PE
     let limitePE = Math.floor(nex / 5);
     if (nex >= 99) { limitePE = 20; } 
     if (limitePE < 1) limitePE = 1;
     if (this.info.origem === 'universitario') { limitePE += 1; }
     this.calculosDetalhados.limite_pe = limitePE;
 
+    // Preenche Detalhes
     this.calculosDetalhados.pv_base = pvBase;
     this.calculosDetalhados.pv_nivel = nexLevelsCalculated * pvPorNivel;
     this.calculosDetalhados.pv_origem = bonusOrigemPv; 
@@ -494,8 +516,9 @@ class Personagem {
     this.calculosDetalhados.san_nivel = nexLevelsCalculated * sanPorNivel;
     this.calculosDetalhados.san_origem = bonusOrigemSan; 
 
-    this.recursos.pv_max = Math.max(1, pvBase + this.calculosDetalhados.pv_nivel + bonusOrigemPv + bonusManualPvNex + bonusManualPvOutros);
-    this.recursos.pe_max = Math.max(1, peBase + this.calculosDetalhados.pe_nivel + bonusOrigemPe + bonusManualPeNex + bonusManualPeOutros);
+    // Soma Final (Incluindo Poderes)
+    this.recursos.pv_max = Math.max(1, pvBase + this.calculosDetalhados.pv_nivel + bonusOrigemPv + bonusPoderesPv + bonusManualPvNex + bonusManualPvOutros);
+    this.recursos.pe_max = Math.max(1, peBase + this.calculosDetalhados.pe_nivel + bonusOrigemPe + bonusPoderesPe + bonusManualPeNex + bonusManualPeOutros);
     this.recursos.san_max = Math.max(1, sanBase + this.calculosDetalhados.san_nivel + bonusOrigemSan + bonusManualSanNex + bonusManualSanOutros);
 
     if (origem === "cultista_arrependido") {

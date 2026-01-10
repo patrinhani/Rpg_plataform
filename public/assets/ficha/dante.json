@@ -151,82 +151,82 @@
   ],
   "poderes_aprendidos": [
     {
-      "key": "origem_mercenario",
+      "key": "posicao_de_combate",
       "nome": "Posição de Combate (Origem)",
       "descricao": "Pode gastar 2 PE para receber uma ação de movimento extra no primeiro turno. +1d8 em dano corpo a corpo.",
       "tipo": "Origem",
       "isOrigemPower": true
     },
     {
-      "key": "classe_nex10",
-      "nome": "A Favorita (Aniquilador 10%)",
+      "key": "a_favorita",
+      "nome": "A Favorita (Pistola)",
       "descricao": "Escolha uma arma (Acha/Rebellion). A categoria dela é reduzida em I.",
       "tipo": "Classe"
     },
     {
-      "key": "poder_nex15",
+      "key": "reflexos_defensivos",
       "nome": "Reflexos Defensivos",
-      "descricao": "+2 em Defesa e testes de resistência até o início do próximo turno se fizer ação de movimento ou padrão. (Royal Guard Passivo)",
+      "descricao": "+2 em Defesa e testes de resistência até o início do próximo turno se fizer ação de movimento ou padrão.",
       "tipo": "Combate"
     },
     {
-      "key": "poder_nex30",
+      "key": "sangue_de_ferro",
       "nome": "Sangue de Ferro",
       "descricao": "+2 PV por nível de NEX. Durabilidade demoníaca.",
       "tipo": "Sangue"
     },
     {
-      "key": "classe_nex40",
-      "nome": "Técnica Secreta (Aniquilador 40%)",
-      "descricao": "A categoria da favorita é reduzida em II. Recebe modificação extra (Destruidor: +1 Multiplicador Crítico).",
+      "key": "tecnica_letal",
+      "nome": "Técnica Letal (Aniquilador 40%)",
+      "descricao": "A categoria da favorita é reduzida em II. Recebe modificação extra.",
       "tipo": "Classe"
     },
     {
-      "key": "poder_nex45",
+      "key": "golpe_pesado",
       "nome": "Golpe Pesado",
-      "descricao": "O dano de armas corpo a corpo aumenta em um dado do mesmo tipo. (Rebellion: 1d12 -> 2d12)",
+      "descricao": "O dano de armas corpo a corpo aumenta em um dado do mesmo tipo.",
       "tipo": "Combate"
     },
     {
-      "key": "classe_nex50",
+      "key": "versatilidade_revidar",
       "nome": "Versatilidade: Revidar (Guerreiro)",
-      "descricao": "Ao bloquear um ataque, gaste reação para atacar o alvo. (Royal Guard Release)",
+      "descricao": "Ao bloquear um ataque, gaste reação para atacar o alvo.",
       "tipo": "Classe"
     },
     {
-      "key": "poder_nex60",
+      "key": "golpe_de_sorte",
       "nome": "Golpe de Sorte",
       "descricao": "+1 na margem de ameaça.",
       "tipo": "Energia"
     },
     {
-      "key": "classe_nex65",
+      "key": "tecnica_sublime",
       "nome": "Técnica Sublime (Aniquilador 65%)",
-      "descricao": "Ao atacar com favorita, ignora resistência a dano (Perfurante).",
+      "descricao": "Ao atacar com favorita, ignora resistência a dano.",
       "tipo": "Classe"
     },
     {
-      "key": "poder_nex75",
+      "key": "golpe_de_sorte_afinidade",
       "nome": "Golpe de Sorte (Afinidade)",
       "descricao": "+1 no multiplicador de crítico.",
       "tipo": "Energia"
     },
     {
-      "key": "poder_nex85",
+      "key": "anatomia_insana",
       "nome": "Anatomia Insana",
       "descricao": "Chance de 50% de ignorar o dano extra de acertos críticos e furtivos inimigos.",
       "tipo": "Sangue"
     },
     {
-      "key": "classe_nex99",
+      "key": "para_matar",
       "nome": "Para Matar (Aniquilador 99%)",
       "descricao": "Aumenta o multiplicador de crítico da favorita em +1.",
       "tipo": "Classe"
     },
     {
-      "key": "poder_nex99",
+      "key": "surto_temporal",
       "nome": "Surto Temporal",
-      "descricao": "Uma vez por rodada, gasta 3 PE para realizar uma ação padrão adicional. (Quicksilver)",
+      "descricao": "Uma vez por rodada, gasta 3 PE para realizar uma ação padrão adicional.",
       "tipo": "Morte"
     }
   ],

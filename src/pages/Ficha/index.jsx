@@ -121,6 +121,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     if (isModoMesa) {
         docRef.current = doc(db, "mesas", mesaContexto, "personagens", idAlvo);
     } else {
+        // CORREÇÃO DE CAMINHO: Agora busca na subcoleção correta
         docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
     }
     
@@ -298,25 +299,18 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       a.href = url; a.download = `ficha_${personagem.info.nome || "agente"}.json`; a.click(); 
   }, [personagem]);
   
-  const importarFicha = useCallback((arquivo) => { 
-      const reader = new FileReader(); 
-      reader.onload = (e) => { 
-          try { 
-              const json = JSON.parse(e.target.result); 
-              carregarFicha(json); 
-              showAlert("Ficha importada com sucesso!", "Sucesso"); 
-          } catch(err) { 
-              showAlert("Erro ao ler arquivo JSON.", "Erro"); 
-          } 
-      }; 
-      reader.readAsText(arquivo); 
-  }, [carregarFicha, showAlert]);
-  
+  // REMOVI A FUNÇÃO 'importarFicha' PARA USAR APENAS O DASHBOARD
+
   // Props de Controles Memoizadas
   const controlesProps = useMemo(() => ({
-    temaAtual: tema, onSave: salvarFichaLocal, onClear: limparFicha, onExport: exportarFicha, onImport: importarFicha,
-    onThemeChange: handleThemeChange, canChangeTheme: calculados.canChangeTheme
-  }), [tema, salvarFichaLocal, limparFicha, exportarFicha, importarFicha, handleThemeChange, calculados.canChangeTheme]);
+    temaAtual: tema, 
+    onSave: salvarFichaLocal, 
+    onClear: limparFicha, 
+    onExport: exportarFicha, 
+    // onImport removido para evitar conflitos com o Dashboard
+    onThemeChange: handleThemeChange, 
+    canChangeTheme: calculados.canChangeTheme
+  }), [tema, salvarFichaLocal, limparFicha, exportarFicha, handleThemeChange, calculados.canChangeTheme]);
 
   // Funções de Abrir Modais Memoizadas
   const openLoja = useCallback(() => setIsLojaOpen(true), []);

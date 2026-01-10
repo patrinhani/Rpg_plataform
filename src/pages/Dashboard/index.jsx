@@ -4,7 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import { useDialog } from '../../contexts/DialogContext'; 
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
-import '../Login/Login.css'; // Importa estilos do Login (para a animação do símbolo de fundo)
+import '../Login/Login.css'; 
+
+// --- IMPORTS DO FIREBASE ---
+import { db } from '../../lib/firebase'; 
+import { collection, addDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
   const { usuario, logout } = useAuth();
@@ -20,18 +24,16 @@ export default function Dashboard() {
   const [inputNomeMesa, setInputNomeMesa] = useState('');
   const [inputCodigoMesa, setInputCodigoMesa] = useState('');
 
-  // --- ESTADO DO PARALAXE ---
+  // --- EFEITO DE PARALAXE ---
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // 1. Lógica para Mouse (Desktop)
     const handleMouseMove = (e) => {
       const x = (window.innerWidth - e.pageX * 2) / 25;
       const y = (window.innerHeight - e.pageY * 2) / 25;
       setOffset({ x, y });
     };
 
-    // 2. Lógica para Giroscópio (Mobile)
     const handleOrientation = (e) => {
       let x = e.gamma;
       let y = e.beta;
@@ -57,6 +59,7 @@ export default function Dashboard() {
     };
   }, []);
 
+  // --- CARREGAMENTO DE DADOS ---
   useEffect(() => {
     if (usuario) carregarDados();
   }, [usuario]);
@@ -77,6 +80,7 @@ export default function Dashboard() {
     }
   }
 
+  // --- AÇÕES DE MESA ---
   const handleCriarMesa = async () => {
     if (!inputNomeMesa) return;
     try {
@@ -98,6 +102,7 @@ export default function Dashboard() {
     }
   };
 
+  // --- AÇÕES DE FICHA ---
   const handleCriarFicha = async () => {
     setLoading(true);
     try {
@@ -118,40 +123,92 @@ export default function Dashboard() {
     }
   };
 
+  // --- FUNÇÃO DE IMPORTAR JSON (CORRIGIDA) ---
+  const handleImportarFicha = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+      try {
+        const jsonContent = JSON.parse(e.target.result);
+        
+        if (!jsonContent.info || !jsonContent.atributos) {
+            throw new Error("Arquivo inválido. O JSON não parece ser uma ficha.");
+        }
+
+        const nomeLido = jsonContent.info.nome || "Sem Nome";
+        const confirmacao = window.confirm(`Arquivo lido: "${nomeLido}".\nDeseja importar esta ficha para sua conta?`);
+        
+        if (!confirmacao) {
+            setLoading(false);
+            return;
+        }
+
+        // Constrói objeto manualmente para evitar erros de referência
+        const novaFicha = {
+            uid: usuario.uid,
+            dono: usuario.displayName,
+            dataCriacao: new Date().toISOString(),
+            info: jsonContent.info || {},
+            atributos: jsonContent.atributos || {},
+            pericias: jsonContent.pericias || {},
+            recursos: jsonContent.recursos || {},
+            defesa: jsonContent.defesa || {},
+            resistencias: jsonContent.resistencias || {},
+            inventario: Array.isArray(jsonContent.inventario) ? jsonContent.inventario : [],
+            rituais: Array.isArray(jsonContent.rituais) ? jsonContent.rituais : [],
+            poderes_aprendidos: Array.isArray(jsonContent.poderes_aprendidos) ? jsonContent.poderes_aprendidos : [],
+            trilhas_personalizadas: Array.isArray(jsonContent.trilhas_personalizadas) ? jsonContent.trilhas_personalizadas : [],
+            diario: Array.isArray(jsonContent.diario) ? jsonContent.diario : [],
+            perseguicao: jsonContent.perseguicao || { sucessos: 0, falhas: 0 },
+            visibilidade: jsonContent.visibilidade || 0,
+            bonusManuais: jsonContent.bonusManuais || {}
+        };
+
+        const colecaoDestino = collection(db, "users", usuario.uid, "personagens");
+        await addDoc(colecaoDestino, novaFicha);
+
+        showAlert(`Ficha "${nomeLido}" importada com sucesso!`, "Sucesso");
+        window.location.reload(); 
+
+      } catch (error) {
+        console.error("Erro ao importar:", error);
+        showAlert("Erro ao processar o arquivo: " + error.message, "Erro");
+        setLoading(false);
+      }
+    };
+    
+    reader.readAsText(file);
+    event.target.value = null; 
+  };
+
   return (
-    // Container Principal: Fundo escuro base e trava de rolagem horizontal
     <div style={{ paddingTop: '50px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
       
-      {/* --- CAMADA DE PARALAXE (Símbolo de Fundo) --- */}
       <div 
         className="parallax-layer" 
         style={{ 
           transform: `translate(${offset.x}px, ${offset.y}px)`,
-          position: 'fixed', // Fixado para ficar no fundo
+          position: 'fixed', 
           zIndex: 0
         }}
       >
-        {/* IMAGEM CORRIGIDA: Character.webp */}
-        <img 
-          src="/assets/images/Character.webp" 
-          alt="Símbolo de Fundo" 
-          className="login-bg-symbol" 
-        />
+        <img src="/assets/images/Character.webp" alt="Símbolo de Fundo" className="login-bg-symbol" />
       </div>
 
-      {/* --- DASHBOARD COM EFEITO GLASS --- */}
       <div 
         className="dashboard-container box" 
         style={{ 
-          // Efeito Glassmorphism (Vidro Fosco)
-          background: 'rgba(12, 18, 24, 0.75)', // Fundo semi-transparente
-          backdropFilter: 'blur(12px)',         // Desfoque do que está atrás
-          WebkitBackdropFilter: 'blur(12px)',   // Suporte para Safari
-          border: '1px solid rgba(255, 255, 255, 0.1)', // Borda sutil
-          boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',     // Sombra para destacar
-          
+          background: 'rgba(12, 18, 24, 0.75)', 
+          backdropFilter: 'blur(12px)',         
+          WebkitBackdropFilter: 'blur(12px)',   
+          border: '1px solid rgba(255, 255, 255, 0.1)', 
+          boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',     
           position: 'relative', 
-          zIndex: 1 // Garante que fique acima do símbolo
+          zIndex: 1 
         }}
       >
         
@@ -160,7 +217,7 @@ export default function Dashboard() {
           <button onClick={logout} className="item-inventario-remover">SAIR DO SISTEMA</button>
         </div>
 
-        {/* SEÇÃO DE MESAS */}
+        {/* SEÇÃO 1: MESAS */}
         <div className="dashboard-section">
           <h2 style={{ color: 'var(--cor-destaque)', borderBottom: 'none' }}>MISSÕES (MESAS)</h2>
           
@@ -198,18 +255,32 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SEÇÃO DE FICHAS PESSOAIS */}
+        {/* SEÇÃO 2: FICHAS PESSOAIS */}
         <div className="dashboard-section" style={{ borderTop: '1px solid #333', paddingTop: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
              <h2 style={{ color: '#aaa', fontSize: '1.2em', borderBottom: 'none', margin: 0 }}>FICHAS PESSOAIS (OFFLINE)</h2>
-             <button onClick={handleCriarFicha} className="btn-add-item" style={{fontSize: '1em'}}>+ Nova Ficha</button>
+             
+             <div style={{display: 'flex', gap: '10px'}}>
+               <label className="btn-login google" style={{width:'auto', fontSize:'0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0}}>
+                 Importar JSON
+                 <input 
+                    type="file" 
+                    accept=".json" 
+                    onChange={handleImportarFicha} 
+                    style={{display: 'none'}} 
+                 />
+               </label>
+
+               <button onClick={handleCriarFicha} className="btn-add-item" style={{fontSize: '1em'}}>+ Nova Ficha</button>
+             </div>
           </div>
           
           <div className="dashboard-grid">
              {fichasPessoais.map(ficha => (
                 <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card">
-                   <h4>{ficha.nome}</h4>
-                   <p style={{ fontSize: '0.9em' }}>{ficha.classe} - {ficha.nex}</p>
+                   {/* CORREÇÃO DO PROBLEMA VISUAL: Usamos ficha.nome em vez de ficha.info.nome */}
+                   <h4>{ficha.nome || "Sem Nome"}</h4>
+                   <p style={{ fontSize: '0.9em' }}>{ficha.classe || "Mundano"} - {ficha.nex || "0%"}</p>
                    <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>
                 </div>
              ))}

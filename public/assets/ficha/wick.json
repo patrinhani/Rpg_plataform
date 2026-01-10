@@ -1,0 +1,230 @@
+{
+  "info": {
+    "nome": "Agente Híbrido",
+    "jogador": "Min-Maxer",
+    "origem": "engenheiro",
+    "classe": "combatente",
+    "trilha": "aniquilador",
+    "nex": "65%",
+    "prestigio": 4,
+    "deslocamento": 9,
+    "foto": "",
+    "tema": "tema-sangue"
+  },
+  "atributos": {
+    "for": 1,
+    "agi": 5,
+    "int": 2,
+    "pre": 3,
+    "vig": 3
+  },
+  "pericias": {
+    "acrobacia": 5,
+    "crime": 0,
+    "furtividade": 5,
+    "iniciativa": 10,
+    "pilotagem": 0,
+    "pontaria": 15,
+    "reflexos": 15,
+    "atletismo": 5,
+    "luta": 10,
+    "atualidades": 0,
+    "ciencias": 0,
+    "investigacao": 0,
+    "medicina": 0,
+    "ocultismo": 5,
+    "profissao": 5,
+    "sobrevivencia": 0,
+    "tatica": 5,
+    "tecnologia": 5,
+    "adestramento": 0,
+    "artes": 0,
+    "diplomacia": 0,
+    "enganacao": 0,
+    "intimidacao": 5,
+    "intuicao": 5,
+    "percepcao": 5,
+    "religiao": 0,
+    "vontade": 10,
+    "fortitude": 10
+  },
+  "poderes_aprendidos": [
+    {
+      "key": "tiro_certeiro",
+      "nome": "Tiro Certeiro",
+      "descricao": "Soma Agilidade no dano com armas de fogo e ignora penalidade contra alvos engajados.",
+      "tipo": "Combatente"
+    },
+    {
+      "key": "combater_duas_armas",
+      "nome": "Combater com Duas Armas",
+      "descricao": "Permite atacar com duas armas (Pistola + Soqueira) na mesma ação agredir com -1d20.",
+      "tipo": "Combatente"
+    },
+    {
+      "key": "segurar_gatilho",
+      "nome": "Segurar o Gatilho",
+      "descricao": "Gasta 2 PE por acerto de arma de fogo para realizar um ataque adicional.",
+      "tipo": "Combatente"
+    },
+    {
+      "key": "artista_marcial",
+      "nome": "Artista Marcial",
+      "descricao": "Aumenta o dano desarmado e permite considerar soco como arma ágil.",
+      "tipo": "Combatente"
+    },
+    {
+      "key": "golpe_sorte",
+      "nome": "Golpe de Sorte",
+      "descricao": "+1 na margem de ameaça.",
+      "tipo": "Energia"
+    },
+    {
+      "key": "afortunado",
+      "nome": "Afortunado",
+      "descricao": "Pode rerrolar resultados 1 em testes de perícia.",
+      "tipo": "Energia"
+    },
+    {
+      "key": "classe_favorita",
+      "nome": "A Favorita (Pistola)",
+      "descricao": "Reduz categoria da Pistola em I.",
+      "tipo": "Classe"
+    },
+    {
+      "key": "classe_tecnica_letal",
+      "nome": "Técnica Letal",
+      "descricao": "Reduz categoria da favorita em mais I (Total II).",
+      "tipo": "Classe"
+    },
+    {
+      "key": "classe_potencial_aprimorado",
+      "nome": "Potencial Aprimorado",
+      "descricao": "Aumenta multiplicador de crítico da favorita em +1.",
+      "tipo": "Classe"
+    }
+  ],
+  "inventario": [
+    {
+      "inventarioId": "pistola_juizo",
+      "nome": "Pistola do Juízo Final",
+      "categoria": 2,
+      "espacos": 1,
+      "dano": "2d12+1d8",
+      "critico": "15/x5",
+      "alcance": "Curto",
+      "tipo": "Balístico",
+      "descricao": "Modificada com Calibre Grosso e Mira Laser. Amaldiçoada com Lancinante (Sangue) e Predadora. Categoria reduzida por Aniquilador.",
+      "modificacoes": ["Calibre Grosso", "Mira Laser", "Lancinante", "Predadora"],
+      "tipoItem": "Arma"
+    },
+    {
+      "inventarioId": "soqueira_tatica",
+      "nome": "Soqueira Tática",
+      "categoria": 2,
+      "espacos": 1,
+      "dano": "1d6+1d6",
+      "critico": "19/x2",
+      "alcance": "Toque",
+      "tipo": "Impacto",
+      "descricao": "Modificada com Perigosa. Amaldiçoada com Sanguinária (Sangramento) e Vibrante (Ataque extra por 1 PE).",
+      "modificacoes": ["Perigosa", "Sanguinária", "Vibrante"],
+      "tipoItem": "Arma"
+    },
+    {
+      "inventarioId": "municao_dumdum",
+      "nome": "Munição Dum Dum (Pacote)",
+      "categoria": 1,
+      "espacos": 1,
+      "quantidade": 3,
+      "descricao": "Aumenta multiplicador de crítico em +1.",
+      "tipoItem": "Munição"
+    },
+    {
+      "inventarioId": "protecao_leve",
+      "nome": "Proteção Leve",
+      "categoria": 1,
+      "espacos": 2,
+      "defesa": 5,
+      "descricao": "Proteção básica para não prejudicar mobilidade.",
+      "tipoItem": "Equipamento"
+    },
+    {
+      "inventarioId": "vestimenta_reflexos",
+      "nome": "Vestimenta de Reflexos",
+      "categoria": 1,
+      "espacos": 1,
+      "descricao": "+2 em Reflexos e Defesa. Categoria reduzida por Engenheiro.",
+      "tipoItem": "Acessório",
+      "periciaVinculada": "reflexos",
+      "valorBonus": 2,
+      "tipoBonus": "generico"
+    },
+    {
+      "inventarioId": "mochila_militar",
+      "nome": "Mochila Militar",
+      "categoria": 1,
+      "espacos": 0,
+      "descricao": "+2 espaços no inventário.",
+      "tipoItem": "Equipamento"
+    }
+  ],
+  "rituais": [
+    {
+      "inventarioId": "ritual_amaldicoar",
+      "nome": "Amaldiçoar Arma (Energia)",
+      "elemento": "Energia",
+      "circulo": 1,
+      "alcance": "Toque",
+      "duracao": "Cena",
+      "descricao": "Adiciona +1d6 de dano de energia e ofusca o alvo."
+    }
+  ],
+  "recursos": {
+    "pv_atual": 107,
+    "pv_max": 107,
+    "pe_atual": 65,
+    "pe_max": 65,
+    "san_atual": 48,
+    "san_max": 48
+  },
+  "defesa": {
+    "equip": 5,
+    "outros": 7
+  },
+  "resistencias": {
+    "balistico": 0,
+    "corte": 0,
+    "impacto": 0,
+    "perfuracao": 0,
+    "eletricidade": 0,
+    "fogo": 0,
+    "frio": 0,
+    "quimico": 0,
+    "mental": 0,
+    "sangue": 0,
+    "morte": 0,
+    "conhecimento": 0,
+    "energia": 0
+  },
+  "perseguicao": {
+    "sucessos": 0,
+    "falhas": 0
+  },
+  "visibilidade": 0,
+  "trilhas_personalizadas": [],
+  "diario": [],
+  "condicoesAtivas": [],
+  "buffsTemporarios": {
+    "exercicio": 0,
+    "leitura": 0
+  },
+  "bonusManuais": {
+    "pv_nex": 0,
+    "pv_outros": 0,
+    "pe_nex": 0,
+    "pe_outros": 0,
+    "san_nex": 0,
+    "san_outros": 0
+  }
+}
