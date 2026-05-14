@@ -31,6 +31,7 @@ const ModalRituais = lazy(() => import('../../components/ModalRituais.jsx'));
 const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.jsx'));
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
+const ExportFicha = lazy(() => import('../../components/ExportFicha.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
 
@@ -353,7 +354,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       <Recursos dados={personagem.recursos} dadosPerseguicao={personagem.perseguicao} dadosVisibilidade={personagem.visibilidade} info={personagem.info} onFichaChange={handleFichaChange} />
 
       <nav className="ficha-abas">
-        {['principal', 'inventario', 'rituais', 'poderes', 'progressao', 'diario'].map(aba => (
+        {['principal', 'inventario', 'rituais', 'poderes', 'progressao', 'diario', 'exportar'].map(aba => (
             <button key={aba} className={`ficha-aba-link ${abaAtiva === aba ? 'active' : ''}`} onClick={() => setAbaAtiva(aba)}>
                 {aba.charAt(0).toUpperCase() + aba.slice(1)}
             </button>
@@ -387,6 +388,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         )}
         {abaAtiva === 'diario' && (
           <Diario diarioData={personagem.diario || []} onAbrirModal={openEditNota} onRemoveNota={removeNota} />
+        )}
+
+        {abaAtiva === 'exportar' && (
+          <div className="ficha-aba-conteudo active" style={{ maxWidth: '700px', margin: '20px auto', padding: '0 10px' }}>
+            <ExportFicha personagem={personagem} calculados={calculados} />
+          </div>
         )}
 
         <footer><p></p></footer>
