@@ -1,6 +1,4 @@
 // src/lib/personagem.js
-import { database } from './database.js';
-
 class Personagem {
   constructor() {
     this.reset();
@@ -66,7 +64,7 @@ class Personagem {
   setDefesa(campo, valor) { this.defesa[campo] = parseInt(valor) || 0; }
   setResistencia(campo, valor) {
     const num = parseInt(valor);
-    if (this.resistencias.hasOwnProperty(campo)) { this.resistencias[campo] = isNaN(num) ? 0 : num; }
+    if (Object.prototype.hasOwnProperty.call(this.resistencias, campo)) { this.resistencias[campo] = isNaN(num) ? 0 : num; }
   }
 
   toggleCondicao(condicaoId) {
@@ -246,7 +244,7 @@ class Personagem {
   }
   getPoderesAprendidos() { return this.poderes_aprendidos; }
 
-  getBonusTotalPericia(pericia, atributoBase) { return this.pericias[pericia] || 0; }
+  getBonusTotalPericia(pericia) { return this.pericias[pericia] || 0; }
 
   addItemInventario(item) {
     const itemComId = {

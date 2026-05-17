@@ -1,5 +1,5 @@
 // src/pages/Dashboard/index.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import { useDialog } from '../../contexts/DialogContext'; 
@@ -59,12 +59,7 @@ export default function Dashboard() {
     };
   }, []);
 
-  // --- CARREGAMENTO DE DADOS ---
-  useEffect(() => {
-    if (usuario) carregarDados();
-  }, [usuario]);
-
-  async function carregarDados() {
+  const carregarDados = useCallback(async () => {
     setLoading(true);
     try {
       const [listaMesas, listaFichas] = await Promise.all([
@@ -78,7 +73,12 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [usuario]);
+
+  // --- CARREGAMENTO DE DADOS ---
+  useEffect(() => {
+    if (usuario) carregarDados();
+  }, [usuario, carregarDados]);
 
   // --- AÇÕES DE MESA ---
   const handleCriarMesa = async () => {

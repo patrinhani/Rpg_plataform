@@ -11,7 +11,7 @@ const TEMA_CLASSES = {
   energia: 'res-energia',
 };
 
-function DefesaStatus({ dadosInfo, dadosDefesa, dadosResistencias, dadosCalculados, onFichaChange }) {
+function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, onFichaChange }) {
   
   // Handler para os inputs de DEFESA (Outros)
   const handleDefesaChange = (e) => {

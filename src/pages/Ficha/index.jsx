@@ -76,7 +76,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
-  const [periciasDeOrigem, setPericiasDeOrigem] = useState([]);
+  const [periciasDeOrigem] = useState([]);
   
   const [loading, setLoading] = useState(true); 
   const docRef = useRef(null); 
@@ -133,7 +133,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         } else if (isInitializing.current) {
              if (!isModoMesa || propFichaId === usuario.uid) {
                 console.log("Criando ficha inicial...");
-                await setDoc(docRef.current, personagem); 
+                await setDoc(docRef.current, fichaInstance.getDados()); 
              }
         }
         if (isInitializing.current) isInitializing.current = false;
@@ -141,7 +141,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }, (error) => { console.error("Erro Firestore:", error); setLoading(false); });
 
     return () => unsubscribe();
-  }, [usuario, mesaContexto, idAlvo, carregarFicha]);
+  }, [usuario, mesaContexto, idAlvo, carregarFicha, isModoMesa, propFichaId, fichaInstance]);
 
   // --- 2. SALVAMENTO OTIMIZADO ---
   useEffect(() => {
@@ -153,7 +153,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           }
           debouncedSave(personagem);
       }
-  }, [personagem, loading]);
+  }, [personagem, loading, debouncedSave]);
 
   // --- 3. SINCRONIZAÇÃO DO TEMA ---
   useEffect(() => {

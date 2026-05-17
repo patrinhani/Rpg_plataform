@@ -8,10 +8,6 @@ import PEIcon from '../assets/icons/pe-icon.svg';
 const RecursosFixos = ({ pv, sanidade, pe, setPv, setSanidade, setPe }) => {
   const { tema } = useTema();
 
-  const handleInputChange = (e, setter) => {
-    setter(parseInt(e.target.value, 10) || 0);
-  };
-
   const getTemaIcon = () => {
     switch (tema) {
       case 'tema-ordem': return '/assets/images/Character.webp';

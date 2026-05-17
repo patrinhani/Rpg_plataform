@@ -69,18 +69,6 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
     const bonusValor = parseInt(customBonusPericia) || 0;
     const periciaNome = customPericiaSelect;
 
-    // Calcula Categoria e Espaços FINAIS
-    let categoriaFinal = (parseInt(customCat) || 0) + customMods.length;
-    let espacosFinal = parseFloat(customEspacos) || 0;
-    
-    customMods.forEach(modKey => {
-      const modData = todasModificacoes[modKey];
-      if (modData) {
-        espacosFinal += (modData.espacos || 0);
-      }
-    });
-    espacosFinal = Math.max(0, espacosFinal);
-
     const itemCustom = {
       id: `custom_${Date.now()}`, 
       nome: customNome || "Item Personalizado",

@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { avancarTurno, removerDaIniciativa, atualizarNPCStatus } from '../../lib/mesas';
 
 export default function IniciativaTracker({ 
-    mesaId, iniciativas, turnoAtual, rodada, souMestre, fichasDaMesa, usuarioUid, onVerFichaCriatura,
+    mesaId, iniciativas, turnoAtual, rodada, souMestre, fichasDaMesa, onVerFichaCriatura,
     compact = false 
 }) {
 
