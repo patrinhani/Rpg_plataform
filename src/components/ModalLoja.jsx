@@ -18,6 +18,8 @@ const todasModificacoes = {
   ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
 };
 
+const ordenarPorNome = (itens) => [...itens].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
 /**
  * Props:
  * - isOpen, onClose, onAddItem, pericias
@@ -47,7 +49,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
       ...(database.municoes || []),
     ],
     protecoes: [...(database.protecoes || [])],
-    geral: [...(database.equipGeral || [])],
+    geral: ordenarPorNome(database.equipGeral || []),
     paranormal: [...(database.itensParanormais || [])],
   };
 

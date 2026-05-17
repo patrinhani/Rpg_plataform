@@ -24,9 +24,11 @@ class Personagem {
     this.trilhas_personalizadas = []; 
     this.poderes_aprendidos = []; 
     this.diario = []; 
+    this.periciasCustom = [];
     this.condicoesAtivas = [];
     this.buffsTemporarios = { exercicio: 0, leitura: 0 };
-    this.bonusManuais = { pv_nex: 0, pv_outros: 0, pe_nex: 0, pe_outros: 0, san_nex: 0, san_outros: 0 };
+    this.bonusManuais = { pv_nex: 0, pv_outros: 0, pe_nex: 0, pe_outros: 0, san_nex: 0, san_outros: 0, defesa: 0, bloqueio: 0, esquiva: 0, limite_pe: 0 };
+    this.bonusPericiasManuais = {};
     this.calculosDetalhados = { pv_base: 0, pv_nivel: 0, pv_origem: 0, pv_total: 0, pe_base: 0, pe_nivel: 0, pe_origem: 0, pe_total: 0, san_base: 0, san_nivel: 0, san_origem: 0, san_total: 0, limite_pe: 1 };
   }
 
@@ -61,6 +63,7 @@ class Personagem {
   setInfo(campo, valor) { this.info[campo] = valor; }
   setRecurso(campo, valor) { this.recursos[campo] = parseInt(valor) || 0; }
   setBonusManual(campo, valor) { this.bonusManuais[campo] = parseInt(valor) || 0; }
+  setBonusPericiaManual(campo, valor) { this.bonusPericiasManuais[campo] = parseInt(valor) || 0; }
   setDefesa(campo, valor) { this.defesa[campo] = parseInt(valor) || 0; }
   setResistencia(campo, valor) {
     const num = parseInt(valor);
@@ -228,6 +231,7 @@ class Personagem {
       const key = `custom_${Date.now() + Math.random()}`.replace(/\./g, '');
       const newTrilha = { ...trilhaData, id: `custom_trilha_${Date.now() + Math.random()}`, key: key, isCustom: true };
       this.trilhas_personalizadas.push(newTrilha);
+      return newTrilha;
   }
   removeTrilhaPersonalizada(trilhaKey) {
       this.trilhas_personalizadas = this.trilhas_personalizadas.filter((trilha) => trilha.key !== trilhaKey);
@@ -245,6 +249,42 @@ class Personagem {
   getPoderesAprendidos() { return this.poderes_aprendidos; }
 
   getBonusTotalPericia(pericia) { return this.pericias[pericia] || 0; }
+
+  addPericiaCustom(dadosPericia) {
+    const nome = (dadosPericia?.nome || '').trim();
+    if (!nome) return null;
+
+    const baseKey = nome
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'pericia';
+
+    let key = `custom_${baseKey}`;
+    let contador = 2;
+    while (this.pericias[key] !== undefined || this.periciasCustom.some(p => p.key === key)) {
+      key = `custom_${baseKey}_${contador}`;
+      contador += 1;
+    }
+
+    const novaPericia = {
+      key,
+      nome,
+      attr: dadosPericia?.attr || 'int',
+    };
+
+    this.periciasCustom.push(novaPericia);
+    this.pericias[key] = 0;
+    this.bonusPericiasManuais[key] = 0;
+    return novaPericia;
+  }
+
+  removePericiaCustom(key) {
+    this.periciasCustom = this.periciasCustom.filter(pericia => pericia.key !== key);
+    delete this.pericias[key];
+    delete this.bonusPericiasManuais[key];
+  }
 
   addItemInventario(item) {
     const itemComId = {
@@ -379,6 +419,8 @@ class Personagem {
       inventario: [...this.inventario], 
       rituais: [...this.rituais], 
       bonusManuais: { ...this.bonusManuais },
+      bonusPericiasManuais: { ...this.bonusPericiasManuais },
+      periciasCustom: [...this.periciasCustom],
       trilhas_personalizadas: [...this.trilhas_personalizadas], 
       poderes_aprendidos: [...this.poderes_aprendidos], 
       diario: [...this.diario], 
@@ -389,8 +431,9 @@ class Personagem {
   
   carregarDados(dados) {
     if (dados) {
+      this.reset();
       this.atributos = dados.atributos || this.atributos;
-      this.pericias = dados.pericias || this.pericias;
+      this.pericias = { ...this.pericias, ...(dados.pericias || {}) };
       this.info = { ...this.info, ...dados.info };
       this.recursos = dados.recursos || this.recursos;
       this.defesa = dados.defesa || this.defesa;
@@ -399,7 +442,13 @@ class Personagem {
       this.visibilidade = dados.visibilidade || 0; 
       this.inventario = dados.inventario || [];
       this.rituais = dados.rituais || []; 
-      this.bonusManuais = dados.bonusManuais || this.bonusManuais;
+      this.bonusManuais = { ...this.bonusManuais, ...(dados.bonusManuais || {}) };
+      this.bonusPericiasManuais = { ...(dados.bonusPericiasManuais || {}) };
+      this.periciasCustom = Array.isArray(dados.periciasCustom) ? dados.periciasCustom : [];
+      this.periciasCustom.forEach(pericia => {
+        if (this.pericias[pericia.key] === undefined) this.pericias[pericia.key] = 0;
+        if (this.bonusPericiasManuais[pericia.key] === undefined) this.bonusPericiasManuais[pericia.key] = 0;
+      });
       this.trilhas_personalizadas = dados.trilhas_personalizadas || []; 
       this.poderes_aprendidos = dados.poderes_aprendidos || []; 
       this.diario = dados.diario || [];
@@ -501,6 +550,8 @@ class Personagem {
     if (nex >= 99) { limitePE = 20; } 
     if (limitePE < 1) limitePE = 1;
     if (this.info.origem === 'universitario') { limitePE += 1; }
+    limitePE += parseInt(this.bonusManuais.limite_pe) || 0;
+    if (limitePE < 1) limitePE = 1;
     this.calculosDetalhados.limite_pe = limitePE;
 
     // Preenche Detalhes

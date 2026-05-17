@@ -11,7 +11,7 @@ const TEMA_CLASSES = {
   energia: 'res-energia',
 };
 
-function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, onFichaChange }) {
+function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusManuais, onFichaChange }) {
   
   // Handler para os inputs de DEFESA (Outros)
   const handleDefesaChange = (e) => {
@@ -22,6 +22,10 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, onFicha
   const handleResistenciaChange = (e) => {
     const campo = e.target.id.replace('res_', ''); // Remove o prefixo 'res_'
     onFichaChange('resistencias', campo, e.target.value);
+  };
+
+  const handleBonusManualChange = (e) => {
+    onFichaChange('bonusManuais', e.target.id.replace('bonus_', ''), e.target.value);
   };
 
   // Pega os valores de SDA calculados no App.jsx
@@ -63,6 +67,19 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, onFicha
             />
           </div>
         </div>
+
+        <div className="campos-linha-defesa defesa-ajustes-manuais">
+          <div className="campo-valor-simples editavel">
+            <label htmlFor="bonus_defesa">AJUSTE DEFESA</label>
+            <input
+              id="bonus_defesa"
+              type="number"
+              className="valor"
+              value={bonusManuais?.defesa || 0}
+              onChange={handleBonusManualChange}
+            />
+          </div>
+        </div>
       </div>
 
       {/* BLOCO: AÇÕES DE DEFESA */}
@@ -88,6 +105,28 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, onFicha
             <div className="valor-acao">
               {tem_contra_ataque ? 'SIM' : 'NÃO'}
             </div>
+          </div>
+        </div>
+        <div className="acoes-grid acoes-ajustes-manuais">
+          <div className="campo-valor-simples editavel">
+            <label htmlFor="bonus_bloqueio">AJUSTE BLOQUEIO</label>
+            <input
+              id="bonus_bloqueio"
+              type="number"
+              className="valor"
+              value={bonusManuais?.bloqueio || 0}
+              onChange={handleBonusManualChange}
+            />
+          </div>
+          <div className="campo-valor-simples editavel">
+            <label htmlFor="bonus_esquiva">AJUSTE ESQUIVA</label>
+            <input
+              id="bonus_esquiva"
+              type="number"
+              className="valor"
+              value={bonusManuais?.esquiva || 0}
+              onChange={handleBonusManualChange}
+            />
           </div>
         </div>
       </div>

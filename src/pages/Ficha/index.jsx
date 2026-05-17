@@ -6,7 +6,7 @@ import '../../App.css';
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { 
     poderesCombatente, poderesEspecialista, poderesOcultista, 
-    poderesGerais, poderesParanormais, OpcoesClasse 
+    poderesGerais, poderesParanormais, OpcoesClasse, database
 } from '../../lib/database.js';
 import { progressaoClasses, getMergedTrilhas, groupTrilhasByClass } from '../../lib/progressao.js'; 
 
@@ -66,6 +66,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       addRitual, removeRitual,
       addPoder, removePoder,
       addTrilhaCustom, 
+      addPericiaCustom, removePericiaCustom,
       addNota, updateNota, removeNota,
       toggleCondicao, aplicarInterludio
   } = useFicha();
@@ -76,7 +77,16 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
-  const [periciasDeOrigem] = useState([]);
+  const trilhasUnificadas = useMemo(() => getMergedTrilhas(personagem.trilhas_personalizadas || []), [personagem.trilhas_personalizadas]);
+  const periciasDeOrigem = useMemo(() => database.periciasPorOrigem?.[personagem.info.origem]?.fixas || [], [personagem.info.origem]);
+  const periciasParaLoja = useMemo(() => [
+      ...listaTodasPericias,
+      ...(personagem.periciasCustom || []).map(pericia => pericia.key)
+  ], [personagem.periciasCustom]);
+  const opcoesPericiaFicha = useMemo(() => [
+      ...opcoesPericia,
+      ...(personagem.periciasCustom || []).map(pericia => ({ nome: pericia.nome, valor: pericia.key }))
+  ], [personagem.periciasCustom]);
   
   const [loading, setLoading] = useState(true); 
   const docRef = useRef(null); 
@@ -187,11 +197,9 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   // --- 4. MEMOIZAÇÃO DE DADOS COMPLEXOS ---
   useEffect(() => {
     if (loading) return;
-    const customTrilhas = personagem.trilhas_personalizadas || []; 
-    const trilhasUnificadas = getMergedTrilhas(customTrilhas); 
     const trilhasAgrupadas = groupTrilhasByClass(trilhasUnificadas);
     setTrilhasPorClasse(trilhasAgrupadas);
-  }, [personagem.trilhas_personalizadas, personagem.info.classe, loading]); 
+  }, [trilhasUnificadas, loading]); 
 
   useEffect(() => {
     const title = personagem.info.nome ? `${personagem.info.nome} - NEX ${personagem.info.nex || "0%"}` : "Ficha";
@@ -220,13 +228,13 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   const handleAddItem = useCallback((itemOriginal) => { 
       if (itemOriginal.tipoBonus === 'generico') { 
-          setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericia, tipoVinculo: 'pericia' }); setIsSelecaoOpen(true); setIsLojaOpen(false); 
+          setItemPendente({ ...itemOriginal, tituloModal: `Vincular: ${itemOriginal.nome}`, descricaoModal: 'Escolha uma perícia:', opcoes: opcoesPericiaFicha, tipoVinculo: 'pericia' }); setIsSelecaoOpen(true); setIsLojaOpen(false); 
       } else if (itemOriginal.tipoBonus === 'escolhaElemento') { 
           setItemPendente({ ...itemOriginal, tituloModal: `Escolher Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'elemento' }); setIsSelecaoOpen(true); setIsLojaOpen(false); 
       } else { 
           addItem(itemOriginal); 
       } 
-  }, [addItem]);
+  }, [addItem, opcoesPericiaFicha]);
 
   const handleVincularItem = useCallback((valorSelecionado) => { 
       if (!itemPendente) return; 
@@ -273,6 +281,15 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const handleSalvarNota = useCallback((dadosNota) => { 
       if (notaParaEditar) updateNota(notaParaEditar.id, dadosNota); else addNota(dadosNota); setIsDiarioModalOpen(false); 
   }, [notaParaEditar, updateNota, addNota]);
+
+  const handleAddTrilhaCustom = useCallback(async (dadosTrilha) => {
+      const resultado = addTrilhaCustom(dadosTrilha);
+      if (resultado?.dados) {
+          await saveToFirestore(resultado.dados);
+      }
+      setIsTrilhaModalOpen(false);
+      showAlert("Trilha personalizada salva.", "Trilha");
+  }, [addTrilhaCustom, saveToFirestore, showAlert]);
   
   const handleAplicarInterludioHandler = useCallback((opcoes) => { 
       const resultado = aplicarInterludio(opcoes); 
@@ -367,7 +384,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         {abaAtiva === 'principal' && (
           <FichaPrincipal
             personagem={personagem} calculados={calculados} fichaInstance={fichaInstance} handleFichaChange={handleFichaChange}
-            controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={toggleCondicao} 
+            controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={toggleCondicao}
+            onAddPericiaCustom={addPericiaCustom} onRemovePericiaCustom={removePericiaCustom}
           />
         )}
         {abaAtiva === 'inventario' && (
@@ -377,12 +395,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           <Rituais rituais={personagem.rituais} onAbrirModal={openRituais} onRemoveRitual={removeRitual} />
         )}
         {abaAtiva === 'poderes' && (
-          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} onAbrirModal={openPoderes} />
+          <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} info={personagem.info} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} onAbrirModal={openPoderes} />
         )}
         {abaAtiva === 'progressao' && (
           <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
             <button className="btn-add-item btn-criar-trilha" onClick={openTrilha}>+ Criar Trilha</button>
-            <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={getMergedTrilhas(personagem.trilhas_personalizadas)} info={personagem.info} />
+            <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} />
           </div>
         )}
         {abaAtiva === 'diario' && (
@@ -391,12 +409,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
         <footer><p></p></footer>
         
-        {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={listaTodasPericias} />}
+        {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={periciasParaLoja} />}
         {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
         {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={addRitual} />}
-        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={addTrilhaCustom} classesList={OpcoesClasse} />}
+        {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={handleAddTrilhaCustom} classesList={OpcoesClasse} />}
         {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={null} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
-        {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={listaTodasPericias} />}
+        {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={periciasParaLoja} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
         {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={calculados.limite_pe || 1} />}
       </Suspense> 

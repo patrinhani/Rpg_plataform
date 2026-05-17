@@ -19,7 +19,9 @@ function FichaPrincipal({
   controlesProps,
   trilhasPorClasse,
   periciasDeOrigem,
-  onToggleCondicao 
+  onToggleCondicao,
+  onAddPericiaCustom,
+  onRemovePericiaCustom
 }) {
     // Extrai a prop 'canChangeTheme' diretamente do objeto 'calculados'
     const { canChangeTheme } = calculados; 
@@ -63,9 +65,9 @@ function FichaPrincipal({
       />
       
       <DefesaStatus
-        dadosInfo={personagem.info}
         dadosDefesa={personagem.defesa}
         dadosResistencias={personagem.resistencias}
+        bonusManuais={personagem.bonusManuais}
         dadosCalculados={calculados} 
         onFichaChange={handleFichaChange}
       />
@@ -76,6 +78,10 @@ function FichaPrincipal({
   dadosCalculados={calculados}
   onFichaChange={handleFichaChange}
   periciasDeOrigem={periciasDeOrigem}
+  periciasCustom={personagem.periciasCustom || []}
+  bonusPericiasManuais={personagem.bonusPericiasManuais || {}}
+  onAddPericiaCustom={onAddPericiaCustom}
+  onRemovePericiaCustom={onRemovePericiaCustom}
   nex={personagem.info.nex} // <--- ADICIONE ESTA LINHA
 />
 

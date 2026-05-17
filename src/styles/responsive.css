@@ -205,6 +205,10 @@
   .pericias-grid-container {
       grid-template-columns: 1fr 1fr; /* Tenta 2 colunas */
   }
+
+  .pericia-custom-form {
+      grid-template-columns: 1fr;
+  }
   
   /* --- 6. Botão Voltar (Rodapé) --- */
   /* CORREÇÃO DE Z-INDEX E SAFE AREA */

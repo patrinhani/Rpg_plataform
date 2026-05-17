@@ -94,6 +94,15 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
             onChange={handleChange}
           />
         </div>
+        <div className="calc-linha">
+          <label>Ajuste Manual (Limite PE/Turno)</label>
+          <input 
+            type="number" 
+            id="bonus-limite-pe"
+            value={dados.limite_pe || 0}
+            onChange={handleChange}
+          />
+        </div>
         <div className="calc-linha total">
           <label>Total de PE Máximo</label>
           <span id="calc-pe-total">{calculos.pe_total}</span>

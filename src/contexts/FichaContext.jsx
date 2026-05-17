@@ -68,6 +68,7 @@ export function FichaProvider({ children }) {
     const vig = atributosDetalhados.vig.valorFinal; 
     const equip = dados.defesa.equip || 0; 
     const outros = parseInt(dados.defesa.outros) || 0;
+    const ajusteManualDefesa = parseInt(dados.bonusManuais?.defesa) || 0;
     
     let bonusOrigemDefesa = (dados.info.origem === "policial") ? 2 : 0;
     let penalidadeDefesa = 0;
@@ -84,7 +85,7 @@ export function FichaProvider({ children }) {
         penalidadeDefesa -= 10;
     }
     
-    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa; 
+    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa + ajusteManualDefesa; 
 
     // Ações de Defesa e Perícias
     const treino_fortitude = parseInt(dados.pericias.fortitude) || 0; 
@@ -93,10 +94,12 @@ export function FichaProvider({ children }) {
     
     const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig; 
     const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
+    const bonusManualBloqueio = parseInt(dados.bonusManuais?.bloqueio) || 0;
+    const bonusManualEsquiva = parseInt(dados.bonusManuais?.esquiva) || 0;
     
     const bonusPericiaCalculado = {}; 
     Object.keys(dados.pericias).forEach(key => { 
-        bonusPericiaCalculado[key] = ficha.getBonusPericiaInventario(key); 
+        bonusPericiaCalculado[key] = ficha.getBonusPericiaInventario(key) + (parseInt(dados.bonusPericiasManuais?.[key]) || 0); 
     });
 
     const nexNum = parseInt(String(dados.info.nex).replace(/[^0-9]/g, '')) || 0;
@@ -107,12 +110,12 @@ export function FichaProvider({ children }) {
         cargaAtual: ficha.getPesoTotal(), 
         cargaMax: ficha.getMaxPeso(), 
         periciasTreinadas: Object.values(dados.pericias).filter(v => parseInt(v) >= 5).length, 
-        periciasTotal: 0, 
+        periciasTotal: Object.keys(dados.pericias).length, 
         bonusPericia: bonusPericiaCalculado, 
         canChangeTheme: nexNum >= 50, 
         patente: getPatenteInfo(parseInt(dados.info.prestigio) || 0) || Patentes[0], 
-        bloqueio_rd: (treino_fortitude >= 5) ? bonus_fortitude : '—', 
-        esquiva_bonus: (treino_reflexos >= 5) ? bonus_reflexos : '—', 
+        bloqueio_rd: (treino_fortitude >= 5 || bonusManualBloqueio !== 0) ? ((treino_fortitude >= 5 ? bonus_fortitude : 0) + bonusManualBloqueio) : '—', 
+        esquiva_bonus: (treino_reflexos >= 5 || bonusManualEsquiva !== 0) ? ((treino_reflexos >= 5 ? bonus_reflexos : 0) + bonusManualEsquiva) : '—', 
         tem_contra_ataque: treino_luta >= 5, 
         limite_pe: ficha.calculosDetalhados?.limite_pe || 1
     });
@@ -183,6 +186,7 @@ export function FichaProvider({ children }) {
     else if (secao === 'defesa') ficha.setDefesa(campo, valor); 
     else if (secao === 'pericias') ficha.setTreinoPericia(campo, valor); 
     else if (secao === 'bonusManuais') ficha.setBonusManual(campo, valor);
+    else if (secao === 'bonusPericiasManuais') ficha.setBonusPericiaManual(campo, valor);
     else if (secao === 'resistencias') ficha.setResistencia(campo, valor);
 
     if (!skipRecalc) {
@@ -205,7 +209,9 @@ export function FichaProvider({ children }) {
       addPoder: (pod) => { fichaRef.current.addPoder(pod); atualizarCalculos(); },
       removePoder: (key) => { fichaRef.current.removePoder(key); atualizarCalculos(); },
       
-      addTrilhaCustom: (t) => { fichaRef.current.addTrilhaPersonalizada(t); atualizarCalculos(); },
+      addTrilhaCustom: (t) => { const trilha = fichaRef.current.addTrilhaPersonalizada(t); atualizarCalculos(); return { trilha, dados: fichaRef.current.getDados() }; },
+      addPericiaCustom: (p) => { const pericia = fichaRef.current.addPericiaCustom(p); atualizarCalculos(); return pericia; },
+      removePericiaCustom: (key) => { fichaRef.current.removePericiaCustom(key); atualizarCalculos(); },
       
       addNota: (n) => { fichaRef.current.addNotaDiario(n); atualizarCalculos(); },
       updateNota: (id, n) => { fichaRef.current.updateNotaDiario(id, n); atualizarCalculos(); },
