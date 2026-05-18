@@ -46,6 +46,44 @@ const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
 
+function criarDadosVisualDev(base) {
+    const dados = JSON.parse(JSON.stringify(base));
+
+    dados.info = {
+        ...dados.info,
+        nome: 'Agente Visual',
+        jogador: 'Codex',
+        origem: 'desgarrado',
+        classe: 'especialista',
+        trilha: 'infiltrador',
+        nex: '40%',
+        prestigio: 25,
+        tema: 'tema-ordem',
+    };
+    dados.atributos = { for: 2, agi: 3, int: 3, pre: 2, vig: 2 };
+    dados.pericias = {
+        ...dados.pericias,
+        crime: 5,
+        fortitude: 5,
+        furtividade: 10,
+        investigacao: 10,
+        reflexos: 5,
+        tecnologia: 5,
+        custom_caos_ritual: 5,
+    };
+    dados.periciasCustom = [{ key: 'custom_caos_ritual', nome: 'Caos Ritual', attr: 'pre' }];
+    dados.bonusPericiasManuais = { investigacao: 1, custom_caos_ritual: 2 };
+    dados.defesa = { ...dados.defesa, equip: 2, outros: 1 };
+    dados.bonusManuais = { ...dados.bonusManuais, defesa: 2, esquiva: 1, limite_pe: 1 };
+    dados.recursos = { pv_atual: 24, pv_max: 24, pe_atual: 18, pe_max: 18, san_atual: 20, san_max: 20 };
+    dados.poderes_aprendidos = poderesGerais[0] ? [poderesGerais[0]] : [];
+    dados.diario = [
+        { id: 'dev-nota-1', titulo: 'Nota visual', texto: 'Registro local para revisar espacamento e cards.', data: new Date().toISOString() },
+    ];
+
+    return dados;
+}
+
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
@@ -57,7 +95,7 @@ function debounce(func, delay) {
 export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const { fichaId: paramFichaId } = useParams();
   const navigate = useNavigate();
-  const { usuario } = useAuth(); 
+  const { usuario, devVisualMode } = useAuth(); 
   const { showAlert, showConfirm } = useDialog(); 
   
   const { 
@@ -91,6 +129,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [loading, setLoading] = useState(true); 
   const docRef = useRef(null); 
   const isInitializing = useRef(true); 
+  const devVisualLoaded = useRef(false);
   
   // Controle de Atualização Remota (IMPORTANTE PARA EVITAR LOOPS)
   const isRemoteUpdate = useRef(false);
@@ -123,6 +162,17 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
 
   // --- 1. SINCRONIZAÇÃO EM TEMPO REAL ---
   useEffect(() => {
+    if (devVisualMode) {
+        docRef.current = null;
+        if (!devVisualLoaded.current) {
+            carregarFicha(criarDadosVisualDev(fichaInstance.getDados()));
+            devVisualLoaded.current = true;
+        }
+        isInitializing.current = false;
+        setLoading(false);
+        return undefined;
+    }
+
     if (!usuario || !idAlvo) {
         setLoading(false);
         return;
@@ -151,10 +201,11 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }, (error) => { console.error("Erro Firestore:", error); setLoading(false); });
 
     return () => unsubscribe();
-  }, [usuario, mesaContexto, idAlvo, carregarFicha, isModoMesa, propFichaId, fichaInstance]);
+  }, [usuario, mesaContexto, idAlvo, carregarFicha, isModoMesa, propFichaId, fichaInstance, devVisualMode]);
 
   // --- 2. SALVAMENTO OTIMIZADO ---
   useEffect(() => {
+      if (devVisualMode) return;
       if (!loading && !isInitializing.current) {
           // Se for update remoto, ignora o salvamento
           if (isRemoteUpdate.current) {
@@ -163,7 +214,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           }
           debouncedSave(personagem);
       }
-  }, [personagem, loading, debouncedSave]);
+  }, [personagem, loading, debouncedSave, devVisualMode]);
 
   // --- 3. SINCRONIZAÇÃO DO TEMA ---
   useEffect(() => {

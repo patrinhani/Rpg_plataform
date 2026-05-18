@@ -11,7 +11,7 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, devVisualMode } = useAuth();
   const navigate = useNavigate();
   const { showConfirm, showAlert } = useDialog(); 
   
@@ -61,6 +61,20 @@ export default function Dashboard() {
 
   const carregarDados = useCallback(async () => {
     setLoading(true);
+
+    if (devVisualMode) {
+      setMesas([]);
+      setFichasPessoais([{
+        id: 'codex-demo',
+        info: { nome: 'Agente Visual', classe: 'Especialista', nex: '40%' },
+        nome: 'Agente Visual',
+        classe: 'Especialista',
+        nex: '40%',
+      }]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [listaMesas, listaFichas] = await Promise.all([
         buscarMinhasMesas(usuario.uid),
@@ -73,7 +87,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [usuario]);
+  }, [usuario, devVisualMode]);
 
   // --- CARREGAMENTO DE DADOS ---
   useEffect(() => {
@@ -104,6 +118,11 @@ export default function Dashboard() {
 
   // --- AÇÕES DE FICHA ---
   const handleCriarFicha = async () => {
+    if (devVisualMode) {
+      navigate('/ficha/codex-demo');
+      return;
+    }
+
     setLoading(true);
     try {
       const novoId = await criarFichaPessoal(usuario.uid);

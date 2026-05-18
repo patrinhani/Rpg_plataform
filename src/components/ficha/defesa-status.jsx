@@ -31,7 +31,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
   // Pega os valores de SDA calculados no App.jsx
   const { defesaTotal, bloqueio_rd, esquiva_bonus, tem_contra_ataque } = dadosCalculados;
 
-  const agiBonus = parseInt(dadosCalculados.bonusPericia.agi) || 0;
+  const agiBonus = parseInt(dadosCalculados.atributosDetalhados?.agi?.valorFinal) || 0;
 
   return (
     <>

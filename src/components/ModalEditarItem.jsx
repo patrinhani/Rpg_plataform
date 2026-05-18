@@ -123,7 +123,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
                 <input type="text" id="edit-item-nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
               
-              <div className="form-custom-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+              <div className="form-custom-grid form-custom-grid-stats">
                 <div className="campo-horizontal">
                   <label>Cat. Base</label>
                   <input type="number" id="edit-item-cat-base" value={catBase} onChange={(e) => setCatBase(e.target.value)} min="0" max="4" />
@@ -175,15 +175,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
               </div>
 
               <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
-              <div className="form-custom-grid" style={{ 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-                  maxHeight: '200px', 
-                  overflowY: 'auto', 
-                  backgroundColor: 'var(--cor-fundo)', 
-                  padding: '10px', 
-                  borderRadius: '4px',
-                  border: '1px solid var(--cor-caixa-recurso)'
-              }}>
+              <div className="form-custom-grid mods-lista-custom mods-lista-custom-alta">
                 
                 {modificacoesArmas.map(mod => (
                   <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>

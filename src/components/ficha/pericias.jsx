@@ -151,9 +151,9 @@ function Pericias({
               className={`pericia-item treino-${treinoValor} ${isOrigem ? 'pericia-origem' : ''} ${isCustom ? 'pericia-custom' : ''}`}
               title={infoDados.msgCondicao || ""}
             >
-              <span>
+              <span className="pericia-nome">
                 {periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})
-                {isOrigem && <span style={{color: 'var(--cor-destaque)', marginLeft: '5px'}}>*</span>}
+                {isOrigem && <span className="pericia-origem-marcador">*</span>}
               </span>
 
               {isCustom && (

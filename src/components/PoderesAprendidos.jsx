@@ -118,7 +118,7 @@ function PoderesAprendidos({
     });
 
     const renderPoderesLista = (lista, corBorda = 'var(--cor-destaque)', options = {}) => (
-        <ul className="loja-lista-itens" style={{ gridTemplateColumns: '1fr' }}>
+        <ul className="loja-lista-itens poderes-lista">
             {lista.length > 0 ? (
                 lista.map((poder) => {
                     const baseKey = getBasePowerKey(poder.key);
@@ -130,15 +130,15 @@ function PoderesAprendidos({
                     return (
                         <li
                             key={poder.key}
-                            className={`item-card ${options.progressao ? 'poder-progressao-card' : ''} ${poder.adquirido === false ? 'poder-futuro' : ''}`}
+                            className={`item-card poder-card ${options.progressao ? 'poder-progressao-card' : ''} ${poder.adquirido === false ? 'poder-futuro' : ''}`}
                             style={{
                                 borderLeft: borderColor,
                                 marginBottom: '10px',
                                 opacity: poder.adquirido === false ? 0.65 : 1,
                             }}
                         >
-                            <div className="item-header" style={{ borderBottom: 'none' }}>
-                                <h3 style={{ fontSize: '1.2em' }}>{poder.nome}</h3>
+                            <div className="item-header poder-card-header">
+                                <h3>{poder.nome}</h3>
                                 <div className="item-header-info">
                                     {poder.tipo && <div><strong>Tipo:</strong> {poder.tipo}</div>}
                                     {poder.fonte && <div><strong>Fonte:</strong> {poder.fonte}</div>}
@@ -146,12 +146,12 @@ function PoderesAprendidos({
                                     {poder.elemento && isParanormalInGroup && <div><strong>Elemento:</strong> {poder.elemento}</div>}
                                 </div>
                             </div>
-                            <div className="item-body" style={{ paddingTop: '5px' }}>
-                                <div className="item-descricao" style={{ borderTop: 'none', fontStyle: 'normal', color: 'var(--cor-texto-principal)' }}>
+                            <div className="item-body poder-card-body">
+                                <div className="item-descricao poder-descricao">
                                     {poder.descricao}
                                 </div>
                                 {poder.prerequisito &&
-                                    <div className="item-detalhe" style={{fontSize: '0.9em', color: 'var(--cor-texto-label)', marginTop: '5px'}}>
+                                    <div className="item-detalhe poder-prerequisito">
                                         <strong>Pre-requisito:</strong> {poder.prerequisito}
                                     </div>
                                 }
@@ -166,8 +166,8 @@ function PoderesAprendidos({
     );
 
     return (
-        <main className="ficha-container-inventario">
-            <section className="box box-inventario" id="grid-poderes-aprendidos">
+        <main className="ficha-container-inventario poderes-aprendidos-view">
+            <section className="box box-inventario poderes-aprendidos-box" id="grid-poderes-aprendidos">
                 <div className="inventario-header">
                     <h2>PODERES</h2>
                     <button
@@ -179,27 +179,27 @@ function PoderesAprendidos({
                     </button>
                 </div>
 
-                <h3 style={{ color: 'var(--cor-destaque-conhecimento)', borderBottom: '1px solid var(--cor-destaque-conhecimento)', marginBottom: '10px', marginTop: '0px', paddingBottom: '5px' }}>
+                <h3 className="poderes-section-title poderes-section-origem">
                     ORIGEM
                 </h3>
                 {renderPoderesLista(poderesAgrupados.origem, 'var(--cor-destaque-conhecimento)')}
 
-                <h3 style={{ color: 'var(--cor-destaque)', borderBottom: '1px solid var(--cor-destaque)', marginBottom: '10px', marginTop: '20px', paddingBottom: '5px' }}>
+                <h3 className="poderes-section-title">
                     PROGRESSAO
                 </h3>
                 {renderPoderesLista(poderesAgrupados.progressao, 'var(--cor-destaque)', { progressao: true })}
 
-                <h3 style={{ color: 'var(--cor-destaque)', borderBottom: '1px solid var(--cor-destaque)', marginBottom: '10px', marginTop: '20px', paddingBottom: '5px' }}>
+                <h3 className="poderes-section-title">
                     PODERES DE CLASSE
                 </h3>
                 {renderPoderesLista(poderesAgrupados.classe)}
 
-                <h3 style={{ color: 'var(--cor-destaque)', borderBottom: '1px solid var(--cor-destaque)', marginBottom: '10px', marginTop: '20px', paddingBottom: '5px' }}>
+                <h3 className="poderes-section-title">
                     PODERES GERAIS
                 </h3>
                 {renderPoderesLista(poderesAgrupados.geral)}
 
-                <h3 style={{ color: 'var(--cor-destaque)', borderBottom: '1px solid var(--cor-destaque)', marginBottom: '10px', marginTop: '20px', paddingBottom: '5px' }}>
+                <h3 className="poderes-section-title">
                     PODERES PARANORMAIS
                 </h3>
                 {renderPoderesLista(poderesAgrupados.paranormal)}

@@ -186,7 +186,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               </div>
               
               {/* Inputs de Categoria e Espaços atualizados (Layout de 4 colunas) */}
-              <div className="form-custom-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+              <div className="form-custom-grid form-custom-grid-stats">
                 <div className="campo-horizontal">
                   <label>Cat. Base</label>
                   <input type="number" id="custom-item-cat" value={customCat} onChange={(e) => setCustomCat(e.target.value)} min="0" max="4" />
@@ -234,15 +234,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
 
               {/* 9. NOVA SEÇÃO: MODIFICAÇÕES (CUSTOM) */}
               <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
-              <div className="form-custom-grid" style={{ 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-                  maxHeight: '150px', 
-                  overflowY: 'auto', 
-                  backgroundColor: 'var(--cor-fundo)', 
-                  padding: '10px', 
-                  borderRadius: '4px',
-                  border: '1px solid var(--cor-caixa-recurso)'
-              }}>
+              <div className="form-custom-grid mods-lista-custom">
                 
                 {/* Checkboxes para todas as modificações */}
                 {modificacoesArmas.map(mod => (

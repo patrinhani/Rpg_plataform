@@ -47,6 +47,7 @@ input, button, select, textarea, a {
   --cor-texto-principal: #f0f0f0;
   --cor-texto-label: #b0b0b0; 
   --cor-caixa-recurso: #0a0a0a;
+  --cor-caixa-recurso-rgb: 10 10 10;
   
   --cor-trans-ordem: #001a2e;
   --cor-trans-sangue: #2a0000;
@@ -64,6 +65,8 @@ input, button, select, textarea, a {
 
   --sombra-vidro: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --borda-vidro: 1px solid rgba(255, 255, 255, 0.18);
+  --motion-fast: 0.18s ease;
+  --motion-medium: 0.28s ease;
 
   /* SISTEMA DE CAMADAS (Z-INDEX) - Organizado para evitar sobreposição errada */
   --z-fundo: -1;
@@ -81,36 +84,46 @@ input, button, select, textarea, a {
 :root[data-tema="tema-ordem"] {
   --cor-fundo: #050a10; 
   --cor-caixa: rgba(26, 47, 64, 0.65); 
+  --cor-caixa-rgb: 26 47 64;
   --cor-destaque: #0091ff;
+  --cor-destaque-rgb: 0 145 255;
   --cor-borda: #0091ff;
 }
 :root[data-tema="tema-sangue"] {
   --cor-fundo: #1a0505;
   --cor-caixa: rgba(58, 26, 26, 0.65);
+  --cor-caixa-rgb: 58 26 26;
   --cor-destaque: #d40000;
+  --cor-destaque-rgb: 212 0 0;
   --cor-borda: #d40000;
 }
 :root[data-tema="tema-morte"] {
   --cor-fundo: #0a0a0a;
   --cor-caixa: rgba(47, 47, 47, 0.65);
+  --cor-caixa-rgb: 47 47 47;
   --cor-destaque: #e0e0e0;
+  --cor-destaque-rgb: 224 224 224;
   --cor-borda: #888888;
 }
 :root[data-tema="tema-conhecimento"] {
   --cor-fundo: #141200;
   --cor-caixa: rgba(59, 55, 26, 0.65);
+  --cor-caixa-rgb: 59 55 26;
   --cor-destaque: #ffeb3b;
+  --cor-destaque-rgb: 255 235 59;
   --cor-borda: #ffeb3b;
 }
 :root[data-tema="tema-energia"] {
   --cor-fundo: #100014;
   --cor-caixa: rgba(58, 26, 62, 0.65);
+  --cor-caixa-rgb: 58 26 62;
   --cor-destaque: #be29ec;
+  --cor-destaque-rgb: 190 41 236;
   --cor-borda: #be29ec;
 }
 
 /* --- 3. Tipografia --- */
-h1, h2, label, button, .pericia-item span:first-child, .titulo-bloco {
+h1, h2, label, button, .pericia-item .pericia-nome, .titulo-bloco {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   color: var(--cor-texto-principal);
@@ -224,10 +237,20 @@ footer {
   /* SEGURANÇA: Quebra palavras longas para não estourar containers */
   word-wrap: break-word; 
   overflow-wrap: break-word;
+  animation: panel-enter var(--motion-medium) both;
 }
 .box:hover {
   border-color: var(--cor-destaque); 
   box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* --- 6. Estilos Específicos dos Blocos --- */
@@ -285,7 +308,7 @@ input[type="file"]::file-selector-button {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
   margin: 5px;
-  transition: filter 0.2s;
+  transition: filter var(--motion-fast), transform var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast);
 }
 button:hover {
   filter: brightness(1.2);
@@ -305,6 +328,7 @@ textarea,
   font-family: "Roboto Condensed", sans-serif;
   font-size: 1.1em;
   transition: all 0.3s ease; 
+  min-width: 0;
 }
 
 input:focus, select:focus, textarea:focus, 
@@ -342,7 +366,7 @@ input:-webkit-autofill:active{
   
   background-image: url("/assets/images/hexagono.webp");
   
-  filter: drop-shadow(0 0 15px rgba(var(--cor-destaque), 0.4));
+  filter: drop-shadow(0 0 15px rgb(var(--cor-destaque-rgb) / 0.4));
 }
 :root[data-tema="tema-ordem"] .box-atributos {
   background-image: url("/assets/images/hexagono.webp");
@@ -650,6 +674,7 @@ input[type="number"].input-hex {
   align-items: center;
   padding: 20px;
   backdrop-filter: blur(10px); 
+  animation: modal-fade-in var(--motion-medium) both;
 }
 .modal-conteudo {
   width: 100%;
@@ -661,6 +686,7 @@ input[type="number"].input-hex {
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  animation: modal-panel-in var(--motion-medium) both;
 }
 .modal-header {
   display: flex;
@@ -724,15 +750,33 @@ input[type="number"].input-hex {
   display: block;
 }
 
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .loja-lista-itens {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
+  align-items: stretch;
 }
 #lista-inventario-pessoal .item-placeholder,
 #lista-rituais .item-placeholder,
-#lista-diario .item-placeholder { 
+#lista-diario .item-placeholder,
+.loja-lista-itens > .item-placeholder { 
   color: var(--cor-texto-label);
   text-align: center;
   padding: 20px;
@@ -755,9 +799,14 @@ input[type="number"].input-hex {
 
 .box-defesa {
   display: grid;
-  grid-template-columns: 1fr 2fr; 
-  gap: 20px;
-  align-items: center;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.8fr); 
+  gap: 14px 20px;
+  align-items: stretch;
+}
+
+.box-defesa .titulo-bloco {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
 }
 
 .box-defesa .defesa-ajustes-manuais {
@@ -770,7 +819,10 @@ input[type="number"].input-hex {
   border: 1px solid var(--cor-borda);
   padding: 15px 10px;
   border-radius: 4px;
-  box-shadow: 0 0 10px rgba(var(--cor-destaque), 0.2);
+  box-shadow: 0 0 10px rgb(var(--cor-destaque-rgb) / 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .valor-total-bloco span {
   font-family: "Special Elite", monospace;
@@ -785,7 +837,8 @@ input[type="number"].input-hex {
 }
 
 .campos-linha-defesa {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
 }
@@ -918,6 +971,24 @@ input[type="number"].input-hex {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
 }
+
+.form-custom-grid-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mods-lista-custom {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: var(--cor-fundo);
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--cor-caixa-recurso);
+}
+
+.mods-lista-custom-alta {
+  max-height: 200px;
+}
 .form-custom-item textarea {
   min-height: 60px;
   background-color: var(--cor-fundo);
@@ -935,48 +1006,57 @@ input[type="number"].input-hex {
 /* --- 18. Estilos de Perícia --- */
 .box-pericias {
   border: 2px solid var(--cor-destaque);
-  background-color: rgba(var(--cor-caixa), 0.9); 
-  box-shadow: 0 0 20px rgba(var(--cor-destaque), 0.15);
+  background-color: rgb(var(--cor-caixa-rgb) / 0.78); 
+  box-shadow: 0 0 20px rgb(var(--cor-destaque-rgb) / 0.15);
 }
 
 .pericias-grid-container {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); 
   gap: 12px;
 }
 .pericia-item {
   display: flex;
   flex-direction: column; 
   justify-content: space-between;
+  gap: 8px;
   position: relative;
   padding: 12px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.2) 100%);
-  min-height: 130px; 
-  transition: all 0.2s ease-in-out;
+  min-height: 185px; 
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast), filter var(--motion-fast), opacity var(--motion-fast);
 }
 .pericia-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-.pericia-item span:first-child {
+.pericia-item .pericia-nome {
+  display: block;
   font-size: 1.15em;
   font-weight: bold;
   text-align: center;
   line-height: 1.2;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   padding-bottom: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  min-height: 42px;
+  overflow-wrap: anywhere;
+}
+
+.pericia-origem-marcador {
+  color: var(--cor-destaque);
+  margin-left: 5px;
 }
 .pericia-bonus-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: auto 0;
+  margin: 0;
   gap: 10px;
 }
 .pericia-dado-shape {
@@ -1040,10 +1120,15 @@ input[type="number"].input-hex {
   border: 1px solid #444;
   color: var(--cor-texto-principal);
   border-radius: 3px;
+  min-height: 32px;
 }
 
 .pericia-item.pericia-custom {
   border-style: dashed;
+}
+
+.pericia-item.pericia-custom .pericia-nome {
+  padding-right: 26px;
 }
 
 .btn-remover-pericia-custom {
@@ -1058,6 +1143,11 @@ input[type="number"].input-hex {
   background: rgba(0,0,0,0.6);
   color: var(--cor-texto-label);
   line-height: 1;
+}
+
+.btn-remover-pericia-custom:hover {
+  color: var(--cor-texto-principal);
+  background: var(--cor-trans-sangue);
 }
 .pericia-item.treino-0 {
   opacity: 0.6;
@@ -1078,12 +1168,12 @@ input[type="number"].input-hex {
 .pericia-item.treino-5 {
   opacity: 1;
   border-color: var(--cor-destaque);
-  box-shadow: inset 0 0 10px rgba(var(--cor-destaque), 0.1);
+  box-shadow: inset 0 0 10px rgb(var(--cor-destaque-rgb) / 0.1);
 }
 .pericia-item.treino-10 {
   opacity: 1;
   border: 1px solid var(--cor-destaque);
-  background: linear-gradient(135deg, rgba(var(--cor-destaque), 0.1) 0%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(135deg, rgb(var(--cor-destaque-rgb) / 0.1) 0%, rgba(0,0,0,0.3) 100%);
   box-shadow: 0 0 8px var(--cor-destaque);
 }
 .pericia-item.treino-10 .pericia-bonus-texto {
@@ -1092,7 +1182,7 @@ input[type="number"].input-hex {
 .pericia-item.treino-15 {
   opacity: 1;
   border: 2px solid var(--cor-destaque);
-  background: linear-gradient(135deg, rgba(var(--cor-destaque), 0.2) 0%, rgba(0,0,0,0.4) 100%);
+  background: linear-gradient(135deg, rgb(var(--cor-destaque-rgb) / 0.2) 0%, rgba(0,0,0,0.4) 100%);
   box-shadow: 0 0 15px var(--cor-destaque);
   transform: scale(1.02);
 }
@@ -1245,7 +1335,7 @@ input[type="number"].input-hex {
   
   position: sticky;
   top: 110px; 
-  background: rgba(var(--cor-caixa-recurso), 0.9);
+  background: rgb(var(--cor-caixa-recurso-rgb) / 0.9);
   backdrop-filter: blur(5px);
   z-index: var(--z-menu-fixo);
   border-bottom: 2px solid var(--cor-caixa); 
@@ -1268,7 +1358,7 @@ input[type="number"].input-hex {
   background-color: var(--cor-destaque);
   border-color: var(--cor-destaque);
   color: #fff;
-  box-shadow: 0 0 10px rgba(var(--cor-destaque), 0.4);
+  box-shadow: 0 0 10px rgb(var(--cor-destaque-rgb) / 0.4);
 }
 :root[data-tema="tema-morte"] .ficha-aba-link.active,
 :root[data-tema="tema-conhecimento"] .ficha-aba-link.active {
@@ -2164,7 +2254,8 @@ input[type="number"].input-hex {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .item-header h3 {
@@ -2173,11 +2264,10 @@ input[type="number"].input-hex {
   color: var(--cor-destaque);
   margin: 0;
   text-transform: uppercase;
-  /* Trunca títulos muito longos */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 70%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  max-width: min(100%, 42rem);
 }
 
 .item-header-info {
@@ -2186,6 +2276,8 @@ input[type="number"].input-hex {
   color: var(--cor-texto-label);
   text-align: right;
   line-height: 1.1;
+  flex: 0 0 auto;
+  max-width: 45%;
 }
 
 /* Corpo do Card */
@@ -2222,9 +2314,87 @@ input[type="number"].input-hex {
   font-style: italic;
   line-height: 1.4;
   white-space: pre-wrap; /* Respeita quebras de linha */
+  overflow-wrap: anywhere;
+}
+
+.poderes-aprendidos-view {
+  padding-bottom: 100px;
+}
+
+.poderes-aprendidos-box {
+  gap: 18px;
+}
+
+.poderes-section-title {
+  color: var(--cor-destaque);
+  border-bottom: 1px solid var(--cor-destaque);
+  margin: 20px 0 10px;
+  padding-bottom: 5px;
+  letter-spacing: 0;
+}
+
+.poderes-section-title:first-of-type {
+  margin-top: 0;
+}
+
+.poderes-section-origem {
+  color: var(--cor-destaque-conhecimento);
+  border-bottom-color: var(--cor-destaque-conhecimento);
+}
+
+.poderes-lista {
+  grid-template-columns: 1fr;
+}
+
+.poder-card {
+  min-height: 0;
+}
+
+.poder-card-header {
+  border-bottom: none;
+}
+
+.poder-card-header h3 {
+  font-size: 1.2em;
+}
+
+.poder-card-body {
+  padding-top: 5px;
+}
+
+.poder-descricao {
+  border-top: none;
+  color: var(--cor-texto-principal);
+  font-style: normal;
+  margin-top: 0;
+}
+
+.poder-prerequisito {
+  color: var(--cor-texto-label);
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.poder-progressao-card {
+  background: linear-gradient(135deg, rgb(var(--cor-destaque-rgb) / 0.1), rgba(20, 20, 20, 0.62));
+}
+
+.poder-futuro {
+  filter: grayscale(0.35);
 }
 
 /* Rodapé do Card (Botões) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .item-footer {
   padding: 10px 15px;
   background-color: rgba(0, 0, 0, 0.2);

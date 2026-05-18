@@ -234,6 +234,19 @@ p.subtitulo {
   background-color: #f0f0f0;
 }
 
+.btn-login.dev-visual {
+  background-color: rgba(0, 145, 255, 0.12);
+  color: #9bd7ff;
+  border: 1px dashed rgba(0, 145, 255, 0.55);
+  font-size: 0.9em;
+  margin-top: 8px;
+}
+
+.btn-login.dev-visual:hover {
+  background-color: rgba(0, 145, 255, 0.22);
+  color: #fff;
+}
+
 .toggle-link {
   font-size: 0.85em;
   color: #888;

@@ -7,6 +7,7 @@ import './Login.css';
 export default function Login() {
   const { loginGoogle, loginEmail, criarContaEmail, authError } = useAuth();
   const { showAlert } = useDialog();
+  const canUseDevVisualMode = import.meta.env.DEV && ['localhost', '127.0.0.1'].includes(window.location.hostname);
   
   const [nome, setNome] = useState(''); 
   const [email, setEmail] = useState('');
@@ -75,6 +76,11 @@ export default function Login() {
       setLoading(false);
       setLocalError(error.message);
     }
+  };
+
+  const handleDevVisualMode = () => {
+    window.localStorage.setItem('codexVisualMode', '1');
+    window.location.reload();
   };
   
   const handleSubmitEmail = async (e) => {
@@ -179,6 +185,12 @@ export default function Login() {
             <button className="btn-login google" onClick={handleGoogle} type="button" disabled={loading}>
                 <span style={{fontWeight: 'bold', color: '#4285F4', marginRight: '8px'}}>G</span> Entrar com Google
             </button>
+
+            {canUseDevVisualMode && (
+              <button className="btn-login dev-visual" onClick={handleDevVisualMode} type="button" disabled={loading}>
+                Modo Visual Local
+              </button>
+            )}
             
         </form>
         

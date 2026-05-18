@@ -13,6 +13,26 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
+const DEV_VISUAL_MODE_KEY = 'codexVisualMode';
+
+function canUseDevVisualMode() {
+  return Boolean(
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  );
+}
+
+function isDevVisualModeEnabled() {
+  return canUseDevVisualMode() && window.localStorage.getItem(DEV_VISUAL_MODE_KEY) === '1';
+}
+
+const devVisualUser = {
+  uid: 'codex-dev-user',
+  displayName: 'Codex Visual',
+  email: 'codex.visual@local',
+  emailVerified: true,
+};
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -22,6 +42,7 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const devVisualMode = isDevVisualModeEnabled();
 
   // 1. Login Google
   async function loginGoogle() {
@@ -87,10 +108,22 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    if (devVisualMode) {
+      window.localStorage.removeItem(DEV_VISUAL_MODE_KEY);
+      setUsuario(null);
+      return Promise.resolve();
+    }
+
     return signOut(auth);
   }
 
   useEffect(() => {
+    if (isDevVisualModeEnabled()) {
+      setUsuario(devVisualUser);
+      setLoading(false);
+      return undefined;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUsuario(user || null);
       setLoading(false);
@@ -101,6 +134,7 @@ export function AuthProvider({ children }) {
   const value = {
     usuario,
     loading, // <--- CORREÇÃO 1: Exportando o loading
+    devVisualMode,
     authError,
     loginGoogle,
     criarContaEmail,
