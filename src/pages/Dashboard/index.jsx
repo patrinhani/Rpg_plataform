@@ -1,5 +1,5 @@
 // src/pages/Dashboard/index.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import { useDialog } from '../../contexts/DialogContext'; 
@@ -11,7 +11,7 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, devVisualMode } = useAuth();
   const navigate = useNavigate();
   const { showConfirm, showAlert } = useDialog(); 
   
@@ -59,13 +59,22 @@ export default function Dashboard() {
     };
   }, []);
 
-  // --- CARREGAMENTO DE DADOS ---
-  useEffect(() => {
-    if (usuario) carregarDados();
-  }, [usuario]);
-
-  async function carregarDados() {
+  const carregarDados = useCallback(async () => {
     setLoading(true);
+
+    if (devVisualMode) {
+      setMesas([]);
+      setFichasPessoais([{
+        id: 'codex-demo',
+        info: { nome: 'Agente Visual', classe: 'Especialista', nex: '40%' },
+        nome: 'Agente Visual',
+        classe: 'Especialista',
+        nex: '40%',
+      }]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [listaMesas, listaFichas] = await Promise.all([
         buscarMinhasMesas(usuario.uid),
@@ -78,7 +87,12 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [usuario, devVisualMode]);
+
+  // --- CARREGAMENTO DE DADOS ---
+  useEffect(() => {
+    if (usuario) carregarDados();
+  }, [usuario, carregarDados]);
 
   // --- AÇÕES DE MESA ---
   const handleCriarMesa = async () => {
@@ -104,6 +118,11 @@ export default function Dashboard() {
 
   // --- AÇÕES DE FICHA ---
   const handleCriarFicha = async () => {
+    if (devVisualMode) {
+      navigate('/ficha/codex-demo');
+      return;
+    }
+
     setLoading(true);
     try {
       const novoId = await criarFichaPessoal(usuario.uid);

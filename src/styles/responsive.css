@@ -179,6 +179,10 @@
     gap: 10px;
   }
   
+  .form-custom-grid-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .campo-horizontal {
       width: 100%;
   }
@@ -204,6 +208,34 @@
   /* Ajuste de Perícias */
   .pericias-grid-container {
       grid-template-columns: 1fr 1fr; /* Tenta 2 colunas */
+  }
+
+  .pericias-header {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+  }
+
+  .pericias-header-actions {
+      justify-content: space-between;
+  }
+
+  .btn-pericia-custom {
+      flex: 0 0 auto;
+  }
+
+  .pericia-custom-form {
+      grid-template-columns: 1fr;
+  }
+
+  .box-defesa {
+      grid-template-columns: 1fr;
+  }
+
+  .campos-linha-defesa,
+  .box-acoes-defesa .acoes-grid,
+  .box-acoes-defesa .acoes-ajustes-manuais {
+      grid-template-columns: 1fr;
   }
   
   /* --- 6. Botão Voltar (Rodapé) --- */
@@ -245,6 +277,27 @@
   .modal-body {
       padding: 15px 10px;
       overflow-y: auto;
+  }
+
+  .modal-abas {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 4px;
+  }
+
+  .modal-abas .aba-link {
+      flex: 0 0 auto;
+      font-size: 1em;
+  }
+
+  .item-header {
+      flex-direction: column;
+      align-items: stretch;
+  }
+
+  .item-header-info {
+      max-width: 100%;
+      text-align: left;
   }
 
   /* --- 8. Ajustes Finos do Dashboard (Mobile) --- */
@@ -330,5 +383,24 @@
   .dashboard-actions button {
     font-size: 0.9em;
     padding: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .pericias-grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .form-custom-grid-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .pericias-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pericias-contador {
+    text-align: left;
   }
 }

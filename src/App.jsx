@@ -35,7 +35,7 @@ const TelaCarregamento = () => (
 );
 
 function App() {
-  const { usuario, loading: authLoading } = useAuth();
+  const { usuario, loading: authLoading, devVisualMode } = useAuth();
   
   const [verificandoNome, setVerificandoNome] = useState(true);
   const [precisaNome, setPrecisaNome] = useState(false);
@@ -45,6 +45,11 @@ function App() {
   useEffect(() => {
     if (authLoading) return;
     if (!usuario) {
+        setVerificandoNome(false);
+        return;
+    }
+    if (devVisualMode) {
+        setPrecisaNome(false);
         setVerificandoNome(false);
         return;
     }
@@ -68,7 +73,7 @@ function App() {
         setVerificandoNome(false);
     }
     checarNome();
-  }, [usuario, authLoading]);
+  }, [usuario, authLoading, devVisualMode]);
 
   // --- SALVAR NOME ---
   const salvarNomePerfil = async (e) => {

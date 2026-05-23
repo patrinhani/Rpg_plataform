@@ -18,6 +18,8 @@ const todasModificacoes = {
   ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
 };
 
+const ordenarPorNome = (itens) => [...itens].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
 /**
  * Props:
  * - isOpen, onClose, onAddItem, pericias
@@ -47,7 +49,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
       ...(database.municoes || []),
     ],
     protecoes: [...(database.protecoes || [])],
-    geral: [...(database.equipGeral || [])],
+    geral: ordenarPorNome(database.equipGeral || []),
     paranormal: [...(database.itensParanormais || [])],
   };
 
@@ -68,18 +70,6 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
 
     const bonusValor = parseInt(customBonusPericia) || 0;
     const periciaNome = customPericiaSelect;
-
-    // Calcula Categoria e Espaços FINAIS
-    let categoriaFinal = (parseInt(customCat) || 0) + customMods.length;
-    let espacosFinal = parseFloat(customEspacos) || 0;
-    
-    customMods.forEach(modKey => {
-      const modData = todasModificacoes[modKey];
-      if (modData) {
-        espacosFinal += (modData.espacos || 0);
-      }
-    });
-    espacosFinal = Math.max(0, espacosFinal);
 
     const itemCustom = {
       id: `custom_${Date.now()}`, 
@@ -196,7 +186,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               </div>
               
               {/* Inputs de Categoria e Espaços atualizados (Layout de 4 colunas) */}
-              <div className="form-custom-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+              <div className="form-custom-grid form-custom-grid-stats">
                 <div className="campo-horizontal">
                   <label>Cat. Base</label>
                   <input type="number" id="custom-item-cat" value={customCat} onChange={(e) => setCustomCat(e.target.value)} min="0" max="4" />
@@ -244,15 +234,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
 
               {/* 9. NOVA SEÇÃO: MODIFICAÇÕES (CUSTOM) */}
               <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
-              <div className="form-custom-grid" style={{ 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-                  maxHeight: '150px', 
-                  overflowY: 'auto', 
-                  backgroundColor: 'var(--cor-fundo)', 
-                  padding: '10px', 
-                  borderRadius: '4px',
-                  border: '1px solid var(--cor-caixa-recurso)'
-              }}>
+              <div className="form-custom-grid mods-lista-custom">
                 
                 {/* Checkboxes para todas as modificações */}
                 {modificacoesArmas.map(mod => (

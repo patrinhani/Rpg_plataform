@@ -1,5 +1,5 @@
 // src/pages/Mesa/index.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from '../../lib/firebase';
 import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,10 +15,7 @@ import {
     alternarCombate, 
     atualizarIniciativa, 
     adicionarNPCIniciativa, 
-    adicionarMonstroIniciativa, 
-    removerDaIniciativa,
-    atualizarNPCStatus,
-    avancarTurno
+    adicionarMonstroIniciativa
 } from '../../lib/mesas';
 
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
@@ -87,7 +84,7 @@ export default function Mesa() {
     };
   }, []);
 
-  const sairDaMesa = () => navigate('/');
+  const sairDaMesa = useCallback(() => navigate('/'), [navigate]);
 
   // 1. Monitorar Dados da Mesa
   useEffect(() => {
@@ -111,7 +108,7 @@ export default function Mesa() {
        sairDaMesa();
     });
     return () => unsub();
-  }, [mesaId, usuario.uid]);
+  }, [mesaId, usuario.uid, showAlert, sairDaMesa]);
 
   const souMestre = mesaData?.mestre === usuario.uid;
   const emCombate = mesaData?.emCombate || false;

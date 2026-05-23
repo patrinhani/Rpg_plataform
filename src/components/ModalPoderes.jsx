@@ -6,13 +6,11 @@ import {
     poderesCombatente, 
     poderesEspecialista, 
     poderesOcultista,
-    poderesGerais, 
     poderesParanormais
 } from '../lib/database.js';
 // A linha 'import { trilhas }' foi removida
 
 // Cria conjuntos de chaves para lookup rápido para evitar confusão entre listas
-const generalKeys = new Set(poderesGerais.map(p => p.key));
 const paranormalKeys = new Set(poderesParanormais.map(p => p.key));
 
 /**
@@ -23,7 +21,6 @@ function ModalPoderes({
     isOpen, 
     onClose, 
     classe, 
-    poderesDisponiveis,
     poderesGerais,
     poderesParanormais,
     poderesAprendidos,
