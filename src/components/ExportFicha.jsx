@@ -17,6 +17,35 @@ function capitalizarPrimeira(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function escaparHTML(valor) {
+  return valor.replace(/[&<>"']/g, (caractere) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  })[caractere]);
+}
+
+function sanitizarParaHTML(valor) {
+  if (typeof valor === 'string') return escaparHTML(valor);
+  if (Array.isArray(valor)) return valor.map(sanitizarParaHTML);
+  if (valor && typeof valor === 'object') {
+    return Object.fromEntries(
+      Object.entries(valor).map(([chave, conteudo]) => [chave, sanitizarParaHTML(conteudo)]),
+    );
+  }
+  return valor;
+}
+
+function normalizarNomeArquivo(nome) {
+  return String(nome || 'ficha')
+    .replace(/\s+/g, '_')
+    .replace(/[<>:"/\\|?*]|\p{Cc}/gu, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') || 'ficha';
+}
+
 const ATRIBUTOS_LABEL = {
   for: 'Força',
   agi: 'Agilidade',
@@ -70,7 +99,20 @@ function exportarJSON(personagem, nomeArquivo) {
 // Gerador do HTML de impressão
 // ------------------------------------------------------------------
 function gerarHTMLImpressao(personagem, calculados) {
-  const { info, atributos, pericias, recursos, defesa, resistencias, inventario, rituais, poderes_aprendidos, condicoesAtivas } = personagem;
+  const dadosSeguros = sanitizarParaHTML(personagem) || {};
+  const calculosSeguros = sanitizarParaHTML(calculados) || {};
+  const {
+    info = {},
+    atributos = {},
+    pericias = {},
+    recursos = {},
+    defesa = {},
+    resistencias = {},
+    inventario = [],
+    rituais = [],
+    poderes_aprendidos = [],
+    condicoesAtivas = [],
+  } = dadosSeguros;
 
   const corTema = {
     'tema-ordem': '#0091ff',
@@ -390,13 +432,13 @@ function gerarHTMLImpressao(personagem, calculados) {
       <div class="secao-titulo">Defesa &amp; Combate</div>
       <div style="background:#f5f5f5;border-radius:6px;border:1px solid #ddd;overflow:hidden">
         ${[
-          ['Defesa Total', calculados?.defesaTotal ?? 10],
-          ['Bloqueio (RD)', calculados?.bloqueio_rd ?? '—'],
-          ['Esquiva', calculados?.esquiva_bonus ?? '—'],
+          ['Defesa Total', calculosSeguros.defesaTotal ?? 10],
+          ['Bloqueio (RD)', calculosSeguros.bloqueio_rd ?? '—'],
+          ['Esquiva', calculosSeguros.esquiva_bonus ?? '—'],
           ['Defesa Equip.', defesa?.equip || 0],
           ['Defesa Outros', defesa?.outros || 0],
           ['Deslocamento', `${info.deslocamento || 9}m`],
-          ['Limite PE/turno', calculados?.limite_pe ?? 1],
+          ['Limite PE/turno', calculosSeguros.limite_pe ?? 1],
         ].map(([l, v]) => `<div class="stat-row"><span>${l}</span><span class="stat-val">${v}</span></div>`).join('')}
       </div>
     </div>
@@ -413,7 +455,7 @@ function gerarHTMLImpressao(personagem, calculados) {
         <tr>
           <td>${p.nome}</td>
           <td>${[...Array(Math.floor(parseInt(p.treino || 0) / 5))].map(() => `<span class="treino-dot">●</span>`).join('')} ${p.treino}</td>
-          <td>${calculados?.bonusPericia?.[Object.keys(PERICIAS_LABEL).find(k => PERICIAS_LABEL[k] === p.nome)] || 0}</td>
+          <td>${calculosSeguros.bonusPericia?.[Object.keys(PERICIAS_LABEL).find(k => PERICIAS_LABEL[k] === p.nome)] || 0}</td>
         </tr>`).join('')}
       </tbody>
     </table>
@@ -516,7 +558,7 @@ export default function ExportFicha({ personagem, calculados }) {
 
   const handleExportJSON = useCallback(() => {
     try {
-      const nome = personagem?.info?.nome?.replace(/\s+/g, '_') || 'ficha';
+      const nome = normalizarNomeArquivo(personagem?.info?.nome);
       exportarJSON(personagem, `CAOS_${nome}`);
       setStatus('json');
       setTimeout(() => setStatus(null), 2500);

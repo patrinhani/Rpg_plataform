@@ -193,7 +193,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
             carregarFicha(dadosFirestore); 
         } else if (isInitializing.current) {
              if (!isModoMesa || propFichaId === usuario.uid) {
-                console.log("Criando ficha inicial...");
                 await setDoc(docRef.current, fichaInstance.getDados()); 
              }
         }

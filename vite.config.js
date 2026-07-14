@@ -1,19 +1,10 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'; // <--- Importe isto
 
 export default defineConfig({
-  plugins: [
-    react(),
-    ViteImageOptimizer({ // <--- Adicione esta configuração
-      png: { quality: 80 },
-      jpeg: { quality: 75 },
-      webp: { quality: 80, lossless: false },
-    }),
-  ],
+  plugins: [react()],
   build: {
-    chunkSizeWarningLimit: 1000, 
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
