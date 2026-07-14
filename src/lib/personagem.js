@@ -1,4 +1,5 @@
 // src/lib/personagem.js
+import { calcularDefesaItem, calcularStatsItem, normalizarModificacoes } from './inventario.js';
 class Personagem {
   constructor() {
     this.reset();
@@ -13,8 +14,9 @@ class Personagem {
       adestramento: 0, artes: 0, diplomacia: 0, enganacao: 0, intimidacao: 0, intuicao: 0, percepcao: 0, religiao: 0, vontade: 0,
       fortitude: 0,
     };
-    this.info = { nome: "", jogador: "", origem: "desgarrado", classe: "especialista", trilha: "nenhuma", nex: "5%", prestigio: 0, deslocamento: 9, monstruoso_elemento: "", possuido_elemento: "", foto: "", tema: "tema-ordem" };
+    this.info = { nome: "", jogador: "", origem: "desgarrado", classe: "especialista", trilha: "nenhuma", nex: "5%", estagio_sobrevivente: 1, prestigio: 0, deslocamento: 9, monstruoso_elemento: "", possuido_elemento: "", foto: "", tema: "tema-ordem" };
     this.recursos = { pv_atual: 10, pv_max: 10, pe_atual: 10, pe_max: 10, san_atual: 10, san_max: 10 };
+    this._recursosInicializados = false;
     this.defesa = { equip: 0, outros: 0 };
     this.resistencias = { balistico: 0, corte: 0, impacto: 0, perfuracao: 0, eletricidade: 0, fogo: 0, frio: 0, quimico: 0, mental: 0, sangue: 0, morte: 0, conhecimento: 0, energia: 0 };
     this.perseguicao = { sucessos: 0, falhas: 0 };
@@ -25,6 +27,9 @@ class Personagem {
     this.poderes_aprendidos = []; 
     this.diario = []; 
     this.periciasCustom = [];
+    this.pericias.fortitude = 5;
+    this.pericias.sobrevivencia = 5;
+    this.periciasOrigemAplicadas = ['fortitude', 'sobrevivencia'];
     this.condicoesAtivas = [];
     this.buffsTemporarios = { exercicio: 0, leitura: 0 };
     this.bonusManuais = { pv_nex: 0, pv_outros: 0, pe_nex: 0, pe_outros: 0, san_nex: 0, san_outros: 0, defesa: 0, bloqueio: 0, esquiva: 0, limite_pe: 0 };
@@ -47,7 +52,8 @@ class Personagem {
   setVisibilidade(campo, delta) {
     let valor = parseInt(delta) || 0;
     let valorNovo = this.visibilidade + valor;
-    if (valorNovo < 0) valorNovo = 0; if (valorNovo > 3) valorNovo = 3; 
+    if (valorNovo < -99) valorNovo = -99;
+    if (valorNovo > 99) valorNovo = 99;
     this.visibilidade = valorNovo;
   }
   
@@ -59,9 +65,49 @@ class Personagem {
     this.atributos[campo] = num;
   }
   
-  setTreinoPericia(campo, valor) { this.pericias[campo] = parseInt(valor) || 0; }
+  setTreinoPericia(campo, valor) {
+    const treino = parseInt(valor) || 0;
+    this.pericias[campo] = treino;
+    if (treino !== 5 && this.periciasOrigemAplicadas.includes(campo)) {
+      this.periciasOrigemAplicadas = this.periciasOrigemAplicadas.filter(pericia => pericia !== campo);
+    }
+  }
+  trocarPericiasOrigem(novasPericias = []) {
+    this.periciasOrigemAplicadas.forEach(pericia => {
+      if (this.pericias[pericia] === 5) this.pericias[pericia] = 0;
+    });
+
+    this.periciasOrigemAplicadas = [];
+    novasPericias.forEach(pericia => {
+      if (this.pericias[pericia] === 0) {
+        this.pericias[pericia] = 5;
+        this.periciasOrigemAplicadas.push(pericia);
+      }
+    });
+  }
   setInfo(campo, valor) { this.info[campo] = valor; }
-  setRecurso(campo, valor) { this.recursos[campo] = parseInt(valor) || 0; }
+  setRecurso(campo, valor) {
+    if (!Object.prototype.hasOwnProperty.call(this.recursos, campo)) return;
+
+    const numero = Number.parseInt(valor, 10);
+    const valorSeguro = Number.isNaN(numero) ? 0 : numero;
+
+    if (campo.endsWith('_atual')) {
+      const campoMaximo = campo.replace('_atual', '_max');
+      const maximo = Math.max(0, Number.parseInt(this.recursos[campoMaximo], 10) || 0);
+      this.recursos[campo] = Math.min(Math.max(0, valorSeguro), maximo);
+      return;
+    }
+
+    if (campo.endsWith('_max')) {
+      this.recursos[campo] = Math.max(1, valorSeguro);
+      const campoAtual = campo.replace('_max', '_atual');
+      this.recursos[campoAtual] = Math.min(
+        Math.max(0, Number.parseInt(this.recursos[campoAtual], 10) || 0),
+        this.recursos[campo],
+      );
+    }
+  }
   setBonusManual(campo, valor) { this.bonusManuais[campo] = parseInt(valor) || 0; }
   setBonusPericiaManual(campo, valor) { this.bonusPericiasManuais[campo] = parseInt(valor) || 0; }
   setDefesa(campo, valor) { this.defesa[campo] = parseInt(valor) || 0; }
@@ -77,43 +123,45 @@ class Personagem {
       this.condicoesAtivas.push(condicaoId);
     }
   }
+
+  aplicarCondicao(condicaoId, evolucao = null) {
+    if (!this.condicoesAtivas.includes(condicaoId)) {
+      this.condicoesAtivas.push(condicaoId);
+      return;
+    }
+
+    if (evolucao) {
+      this.condicoesAtivas = this.condicoesAtivas.filter(condicao => condicao !== condicaoId);
+      if (!this.condicoesAtivas.includes(evolucao)) this.condicoesAtivas.push(evolucao);
+    }
+  }
+
+  getCondicoesAutomaticas() {
+    const automaticas = [];
+    const pvAtual = Number.parseInt(this.recursos.pv_atual, 10) || 0;
+    const pvMax = Math.max(1, Number.parseInt(this.recursos.pv_max, 10) || 1);
+    const sanAtual = Number.parseInt(this.recursos.san_atual, 10) || 0;
+    const sanMax = Math.max(1, Number.parseInt(this.recursos.san_max, 10) || 1);
+
+    if (pvAtual <= 0) automaticas.push('morrendo', 'inconsciente');
+    else if (pvAtual * 2 < pvMax) automaticas.push('machucado');
+
+    if (sanAtual <= 0) automaticas.push('enlouquecendo');
+    else if (sanAtual * 2 < sanMax) automaticas.push('perturbado');
+
+    return automaticas;
+  }
+
+  getCondicoesEfetivas() {
+    return [...new Set([...this.condicoesAtivas, ...this.getCondicoesAutomaticas()])];
+  }
   
   getCondicoes() { return this.condicoesAtivas; }
 
   // --- LÓGICA DE ATRIBUTOS DETALHADOS ---
   getAtributoDetalhado(attrKey) {
-    let valorBase = parseInt(this.atributos[attrKey]) || 0;
-    let mods = [];
-
-    // Físicos (FOR, AGI, VIG)
-    if (['for', 'agi', 'vig'].includes(attrKey)) {
-      if (this.condicoesAtivas.includes('inconsciente')) {
-         mods.push({ nome: 'Inconsciente', valor: -valorBase }); // Zera
-         valorBase = 0;
-      } else if (this.condicoesAtivas.includes('debilitado')) {
-         valorBase -= 2;
-         mods.push({ nome: 'Debilitado', valor: -2 });
-      } else if (this.condicoesAtivas.includes('fraco')) {
-         valorBase -= 1;
-         mods.push({ nome: 'Fraco', valor: -1 });
-      }
-    }
-    
-    // Mentais (INT, PRE)
-    if (['int', 'pre'].includes(attrKey)) {
-       if (this.condicoesAtivas.includes('inconsciente')) {
-          mods.push({ nome: 'Inconsciente', valor: -valorBase });
-          valorBase = 0;
-       } else if (this.condicoesAtivas.includes('esmorecido')) {
-          valorBase -= 2;
-          mods.push({ nome: 'Esmorecido', valor: -2 });
-       } else if (this.condicoesAtivas.includes('frustrado')) {
-          valorBase -= 1;
-          mods.push({ nome: 'Frustrado', valor: -1 });
-       }
-    }
-
-    return { valorFinal: valorBase, modificadores: mods };
+    const valorBase = Number.parseInt(this.atributos[attrKey], 10) || 0;
+    return { valorFinal: valorBase, modificadores: [] };
   }
 
   getAtributoFinal(attrKey) {
@@ -124,91 +172,186 @@ class Personagem {
   getDadosPericia(periciaKey, atributoBase, bonusInventario) {
       const attrDet = this.getAtributoDetalhado(atributoBase);
       let dadosAtuais = attrDet.valorFinal;
-      let msgCondicao = "";
+      const condicoes = this.getCondicoesEfetivas();
+      const mensagens = [];
       let temPenalidade = false;
 
-      if (dadosAtuais < 1) dadosAtuais = 0; 
-      
-      if (this.condicoesAtivas.includes('cego') && ['agi', 'for'].includes(atributoBase)) {
+      if (['for', 'agi', 'vig'].includes(atributoBase)) {
+        if (condicoes.includes('debilitado') || condicoes.includes('exausto')) {
           dadosAtuais -= 2;
-          msgCondicao += "Cego (-2d)\n";
+          mensagens.push('Debilitado/Exausto (-2d20)');
+          temPenalidade = true;
+        } else if (condicoes.includes('fraco') || condicoes.includes('fatigado')) {
+          dadosAtuais -= 1;
+          mensagens.push('Fraco/Fatigado (-1d20)');
+          temPenalidade = true;
+        }
+      }
+
+      if (['int', 'pre'].includes(atributoBase)) {
+        if (condicoes.includes('esmorecido')) {
+          dadosAtuais -= 2;
+          mensagens.push('Esmorecido (-2d20)');
+          temPenalidade = true;
+        } else if (condicoes.includes('frustrado')) {
+          dadosAtuais -= 1;
+          mensagens.push('Frustrado (-1d20)');
+          temPenalidade = true;
+        }
+      }
+      
+      if (condicoes.includes('cego') && ['agi', 'for'].includes(atributoBase)) {
+          dadosAtuais -= 2;
+          mensagens.push('Cego (-2d20)');
           temPenalidade = true;
       }
       
-      if (this.condicoesAtivas.includes('apavorado')) {
+      if (condicoes.includes('apavorado')) {
            dadosAtuais -= 2;
-           msgCondicao += "Apavorado (-2d)\n";
+           mensagens.push('Apavorado (-2d20)');
            temPenalidade = true;
-      } else if (this.condicoesAtivas.includes('abalado')) {
+      } else if (condicoes.includes('abalado')) {
            dadosAtuais -= 1;
-           msgCondicao += "Abalado (-1d)\n";
+           mensagens.push('Abalado (-1d20)');
            temPenalidade = true;
       }
 
+      if (condicoes.includes('ofuscado') && ['luta', 'pontaria', 'percepcao'].includes(periciaKey)) {
+        dadosAtuais -= 1;
+        mensagens.push('Ofuscado (-1d20)');
+        temPenalidade = true;
+      }
+
+      if (this.info.origem === 'experimento' && periciaKey === 'diplomacia') {
+        dadosAtuais -= 1;
+        mensagens.push('Mutação/Experimento (-1d20)');
+        temPenalidade = true;
+      }
+
       const treino = this.pericias[periciaKey] || 0;
-      const bonusTotal = parseInt(treino) + parseInt(bonusInventario);
+      let bonusTotal = (Number.parseInt(treino, 10) || 0) + (Number.parseInt(bonusInventario, 10) || 0);
+      const aplicarPenalidade = (valor, mensagem) => {
+        bonusTotal += valor;
+        mensagens.push(mensagem);
+        temPenalidade = true;
+      };
+
+      if (condicoes.includes('surdo') && periciaKey === 'iniciativa') aplicarPenalidade(-5, 'Surdo (-5)');
+      const desprevenido = ['desprevenido', 'cego', 'atordoado', 'surpreendido']
+        .some(condicao => condicoes.includes(condicao));
+      if (desprevenido && periciaKey === 'reflexos') aplicarPenalidade(-5, 'Desprevenido (-5)');
+      if (condicoes.includes('cego') && periciaKey === 'percepcao') aplicarPenalidade(-10, 'Cego (-10)');
+      if (condicoes.includes('fascinado') && periciaKey === 'percepcao') aplicarPenalidade(-10, 'Fascinado (-10)');
+      if (condicoes.includes('caido') && periciaKey === 'luta') aplicarPenalidade(-5, 'Caído (-5 em ataque corpo a corpo)');
+      if ((condicoes.includes('agarrado') || condicoes.includes('enredado')) && ['luta', 'pontaria'].includes(periciaKey)) {
+        aplicarPenalidade(-2, 'Agarrado/Enredado (-2 em ataque)');
+      }
+
+      if (['acrobacia', 'crime', 'furtividade'].includes(periciaKey)) {
+        const usaProtecaoPesada = this.inventario.some(item =>
+          !item.ignorarCalculos && !item.quebrado && item.id === 'protecao_pesada',
+        );
+        if (usaProtecaoPesada) {
+          bonusTotal -= 5;
+          mensagens.push('Proteção pesada (carga -5)');
+          temPenalidade = true;
+        }
+        if (this.getEstadoCarga().sobrecarregado) {
+          bonusTotal -= 5;
+          mensagens.push('Sobrecarregado (carga -5)');
+          temPenalidade = true;
+        }
+      }
+
+      const descricaoDados = dadosAtuais > 0
+        ? `${dadosAtuais}d20`
+        : `${2 + Math.abs(dadosAtuais)}d20 (pior)`;
 
       return {
           dados: dadosAtuais,
+          descricaoDados,
           bonus: bonusTotal,
           temPenalidade,
-          msgCondicao: msgCondicao.trim() + (attrDet.modificadores.length > 0 ? `\nAtributo: ${attrDet.modificadores.map(m=>`${m.nome} ${m.valor}`).join(', ')}` : '')
+          msgCondicao: mensagens.join('\n'),
       };
   }
   
-  aplicarInterludio(opcoes) {
-    const { acoes, conforto, prato, emGrupo } = opcoes;
+  aplicarInterludio(opcoes = {}) {
+    const acoes = [...new Set(Array.isArray(opcoes.acoes) ? opcoes.acoes : [])].slice(0, 2);
+    const conforto = opcoes.conforto || 'normal';
+    const prato = opcoes.prato || 'simples';
+    const participantesRelaxando = Math.max(1, parseInt(opcoes.participantesRelaxando) || (opcoes.emGrupo ? 2 : 1));
     const limitePE = this.calculosDetalhados.limite_pe || 1;
-    
+
     let fatorBase = 1;
     if (conforto === 'precario') fatorBase = 0.5;
     if (conforto === 'confortavel') fatorBase = 2;
     if (conforto === 'luxuoso') fatorBase = 3;
+    const fatorSono = conforto === 'precario' && ['explorador', 'mateiro'].includes(this.info.origem)
+      ? 1
+      : fatorBase;
 
     let pvRecuperado = 0;
     let peRecuperado = 0;
     let sanRecuperada = 0;
-    let msgExtras = [];
-
-    let fatorPV = fatorBase;
-    let fatorPE = fatorBase;
+    const msgExtras = [];
+    let fatorPV = fatorSono;
+    let fatorPE = fatorSono;
 
     if (acoes.includes('alimentar')) {
-        if (prato === 'nutritivo') fatorPV += 1; 
-        if (prato === 'energetico') fatorPE += 1; 
+      if (prato === 'nutritivo') fatorPV += 1;
+      if (prato === 'energetico') fatorPE += 1;
     }
 
     if (acoes.includes('dormir')) {
-        pvRecuperado += Math.floor(limitePE * fatorPV);
-        peRecuperado += Math.floor(limitePE * fatorPE);
+      pvRecuperado += Math.floor(limitePE * fatorPV);
+      peRecuperado += Math.floor(limitePE * fatorPE);
     }
 
     if (acoes.includes('relaxar')) {
-        let sanTotal = Math.floor(limitePE * fatorBase);
-        if (emGrupo) sanTotal += 1;
-        if (acoes.includes('alimentar') && prato === 'favorito') sanTotal += 2;
-        sanRecuperada += sanTotal;
+      let sanTotal = Math.floor(limitePE * fatorBase) + participantesRelaxando;
+      if (acoes.includes('alimentar') && prato === 'favorito') sanTotal += 2;
+      sanRecuperada += sanTotal;
     }
 
     if (acoes.includes('exercitar')) {
+      const limiteExercicio = Math.max(0, this.getAtributoFinal('vig'));
+      if (this.buffsTemporarios.exercicio < limiteExercicio) {
         this.buffsTemporarios.exercicio += 1;
-        msgExtras.push("Você recebeu +1d6 em um teste Físico (AGI/FOR/VIG) futuro.");
+        msgExtras.push("Você recebeu +1d6 em um teste físico (AGI/FOR/VIG) futuro.");
+      } else {
+        msgExtras.push(`Bônus de exercício já está no limite do Vigor (${limiteExercicio}).`);
+      }
     }
 
     if (acoes.includes('ler')) {
+      const limiteLeitura = Math.max(0, this.getAtributoFinal('int'));
+      if (this.buffsTemporarios.leitura < limiteLeitura) {
         this.buffsTemporarios.leitura += 1;
-        msgExtras.push("Você recebeu +1d6 em um teste Mental (INT/PRE) futuro.");
+        const dadosLeitura = this.info.origem === 'nerd_entusiasta' ? 2 : 1;
+        msgExtras.push(`Você recebeu +${dadosLeitura}d6 em um teste mental (INT/PRE) futuro.`);
+      } else {
+        msgExtras.push(`Bônus de leitura já está no limite do Intelecto (${limiteLeitura}).`);
+      }
     }
 
     if (acoes.includes('manutencao')) {
-        msgExtras.push("Seus itens quebrados foram reparados e munições repostas.");
+      const item = this.inventario.find(itemInventario =>
+        String(itemInventario.inventarioId) === String(opcoes.itemManutencaoId),
+      );
+      if (item) {
+        item.quebrado = false;
+        if (Number.isFinite(Number(item.pv_max))) item.pv_atual = Number(item.pv_max);
+        msgExtras.push(`${item.nome || 'Item'} foi reparado.`);
+      } else {
+        msgExtras.push("Nenhum item foi selecionado para manutenção.");
+      }
     }
 
     if (acoes.includes('revisar')) {
-        let bonusRevisar = 0;
-        if (acoes.includes('alimentar') && prato === 'rapido') bonusRevisar = 5;
-        const msgBonus = bonusRevisar > 0 ? ` (Bônus +${bonusRevisar} por Prato Rápido)` : "";
-        msgExtras.push(`Faça um teste de Perícia${msgBonus} para encontrar pistas perdidas.`);
+      const bonusRevisar = acoes.includes('alimentar') && prato === 'rapido' ? 5 : 0;
+      const msgBonus = bonusRevisar > 0 ? ` (Bônus +${bonusRevisar} por Prato Rápido)` : "";
+      msgExtras.push(`Faça um teste de perícia${msgBonus} para encontrar pistas perdidas.`);
     }
 
     const pvAntes = this.recursos.pv_atual;
@@ -219,12 +362,20 @@ class Personagem {
     this.recursos.pe_atual = Math.min(this.recursos.pe_max, this.recursos.pe_atual + peRecuperado);
     this.recursos.san_atual = Math.min(this.recursos.san_max, this.recursos.san_atual + sanRecuperada);
 
-    return { 
-        pv: this.recursos.pv_atual - pvAntes, 
-        pe: this.recursos.pe_atual - peAntes, 
-        san: this.recursos.san_atual - sanAntes,
-        extras: msgExtras
+    return {
+      pv: this.recursos.pv_atual - pvAntes,
+      pe: this.recursos.pe_atual - peAntes,
+      san: this.recursos.san_atual - sanAntes,
+      extras: msgExtras,
     };
+  }
+
+  consumirBuffTemporario(tipo) {
+    if (!['exercicio', 'leitura'].includes(tipo)) return false;
+    const quantidade = Math.max(0, parseInt(this.buffsTemporarios[tipo]) || 0);
+    if (quantidade === 0) return false;
+    this.buffsTemporarios[tipo] = quantidade - 1;
+    return true;
   }
 
   addTrilhaPersonalizada(trilhaData) {
@@ -293,7 +444,7 @@ class Personagem {
       ignorarCalculos: false,
       categoriaBase: item.categoriaBase ?? item.categoria,
       espacosBase: item.espacosBase ?? item.espacos,
-      modificacoes: item.modificacoes || [], 
+      modificacoes: normalizarModificacoes(item.modificacoes),
     };
     delete itemComId.categoria;
     delete itemComId.espacos;
@@ -311,7 +462,7 @@ class Personagem {
       this.inventario[index] = {
         ...itemOriginal, 
         ...dadosAtualizados, 
-        modificacoes: dadosAtualizados.modificacoes || itemOriginal.modificacoes || [],
+        modificacoes: normalizarModificacoes(dadosAtualizados.modificacoes || itemOriginal.modificacoes),
         categoriaBase: dadosAtualizados.categoriaBase ?? itemOriginal.categoriaBase ?? itemOriginal.categoria,
         espacosBase: dadosAtualizados.espacosBase ?? itemOriginal.espacosBase ?? itemOriginal.espacos,
       };
@@ -348,55 +499,78 @@ class Personagem {
   }
 
   getBonusDefesaInventario() {
-    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
-    let bonusProtecao = 0;
-    let bonusEscudo = 0;
-    
-    const protecaoLeve = inventarioAtivo.find((item) => item.id === "protecao_leve");
-    const protecaoPesada = inventarioAtivo.find((item) => item.id === "protecao_pesada");
-    
-    if (protecaoPesada) { bonusProtecao = protecaoPesada.defesa || 10; } 
-    else if (protecaoLeve) { bonusProtecao = protecaoLeve.defesa || 5; }
-    
-    const escudo = inventarioAtivo.find((item) => item.id === "escudo");
-    if (escudo) { bonusEscudo = escudo.defesa || 2; }
-    
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos && !item.quebrado);
+    const bonusProtecao = inventarioAtivo
+      .filter(item => item.id === 'protecao_leve' || item.id === 'protecao_pesada')
+      .map(calcularDefesaItem)
+      .reduce((maior, defesa) => Math.max(maior, defesa), 0);
+
+    const bonusEscudo = inventarioAtivo
+      .filter(item => item.id === 'escudo' || item.id === 'escudo_balistico_sah')
+      .map(calcularDefesaItem)
+      .reduce((maior, defesa) => Math.max(maior, defesa), 0);
+
     const bonusOutrosItens = inventarioAtivo
-      .filter(item => item.defesa > 0 && item.id !== "protecao_leve" && item.id !== "protecao_pesada" && item.id !== "escudo")
-      .reduce((acc, item) => acc + (parseInt(item.defesa) || 0), 0);
+      .filter(item => item.defesa > 0 && !item.id?.startsWith('protecao_') && !item.id?.startsWith('escudo'))
+      .reduce((acc, item) => acc + calcularDefesaItem(item), 0);
 
     return bonusProtecao + bonusEscudo + bonusOutrosItens;
   }
 
+  getResistenciasInventario() {
+    const resistencias = {};
+    const protecaoPesada = this.inventario.find(item =>
+      !item.ignorarCalculos && !item.quebrado && item.id === 'protecao_pesada',
+    );
+
+    if (protecaoPesada) {
+      const rd = normalizarModificacoes(protecaoPesada.modificacoes).includes('blindada') ? 5 : 2;
+      for (const tipo of ['balistico', 'corte', 'impacto', 'perfuracao']) resistencias[tipo] = rd;
+    }
+
+    return resistencias;
+  }
+
+  getResistenciasOrigem() {
+    if (this.info.origem === 'experimento') {
+      return Object.fromEntries(Object.keys(this.resistencias).map(tipo => [tipo, 2]));
+    }
+    if (this.info.origem === 'teorico_conspiracao') {
+      return { mental: Math.max(0, this.getAtributoFinal('int')) };
+    }
+    return {};
+  }
+
+  getBonusPericiaOrigem(periciaKey) {
+    if (this.info.origem === 'diplomata' && periciaKey === 'diplomacia') return 2;
+    if (this.info.origem === 'profetizado' && periciaKey === 'vontade') return 2;
+    return 0;
+  }
+
   getBonusPericiaInventario(periciaKey) {
-    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
-    const bonusVestimentas = inventarioAtivo
-      .filter((item) => (item.id === "vestimenta" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
-    const bonusUtensilios = inventarioAtivo
-      .filter((item) => (item.id === "utensilio" || item.tipoBonus === "generico") && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
-    const bonusEspecificos = inventarioAtivo
-      .filter((item) => item.tipoBonus === "especifico" && item.periciaVinculada === periciaKey)
-      .map((item) => parseInt(item.valorBonus) || 0).reduce((a, b) => a + b, 0);
-    
-    // --- CORREÇÃO DE SEGURANÇA NO ID ---
-    const bonusCustom = inventarioAtivo
-      .filter((item) => ((item.id && item.id.startsWith("custom_")) || item.tipoBonus === 'custom') && item.periciaVinculada === periciaKey)
-      .reduce((acc, item) => acc + (parseInt(item.valorBonus) || 0), 0); 
-      
-    return bonusVestimentas + bonusUtensilios + bonusEspecificos + bonusCustom;
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos && !item.quebrado);
+    return inventarioAtivo
+      .filter(item => item.periciaVinculada === periciaKey)
+      .map(item => {
+        const valorBase = Number.parseInt(item.valorBonus, 10) || 0;
+        return normalizarModificacoes(item.modificacoes).includes('aprimorado')
+          ? Math.max(5, valorBase)
+          : valorBase;
+      })
+      .reduce((maior, valor) => Math.max(maior, valor), 0);
   }
   
   getPesoTotal() {
-    return this.inventario.filter((item) => !item.ignorarCalculos).reduce((acc, item) => acc + (parseFloat(item.espacosBase ?? item.espacos) || 0), 0);
+    return this.inventario
+      .filter(item => !item.ignorarCalculos)
+      .reduce((total, item) => total + calcularStatsItem(item).espacos, 0);
   }
   
   getMaxPeso() {
     const forca = this.getAtributoFinal('for');
     let maxPesoBase = forca > 0 ? forca * 5 : 2; 
     
-    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos);
+    const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos && !item.quebrado);
     if (inventarioAtivo.some((item) => item.id === "mochila_militar")) maxPesoBase += 2;
 
     if (this.info.trilha === "tecnico") {
@@ -404,6 +578,21 @@ class Personagem {
       maxPesoBase += (intelecto * 5); 
     }
     return Math.max(0, maxPesoBase);
+  }
+
+  getEstadoCarga() {
+    const atual = this.getPesoTotal();
+    const maximo = this.getMaxPeso();
+    return {
+      atual,
+      maximo,
+      limiteAbsoluto: maximo * 2,
+      sobrecarregado: atual > maximo,
+      acimaDoLimite: atual > maximo * 2,
+      penalidadeDefesa: atual > maximo ? -5 : 0,
+      penalidadePericias: atual > maximo ? -5 : 0,
+      penalidadeDeslocamento: atual > maximo ? -3 : 0,
+    };
   }
 
   getDados() {
@@ -421,10 +610,13 @@ class Personagem {
       bonusManuais: { ...this.bonusManuais },
       bonusPericiasManuais: { ...this.bonusPericiasManuais },
       periciasCustom: [...this.periciasCustom],
+      periciasOrigemAplicadas: [...this.periciasOrigemAplicadas],
       trilhas_personalizadas: [...this.trilhas_personalizadas], 
       poderes_aprendidos: [...this.poderes_aprendidos], 
       diario: [...this.diario], 
       condicoesAtivas: [...this.condicoesAtivas], 
+      condicoesAutomaticas: this.getCondicoesAutomaticas(),
+      condicoesEfetivas: this.getCondicoesEfetivas(),
       buffsTemporarios: {...this.buffsTemporarios}
     };
   }
@@ -435,25 +627,37 @@ class Personagem {
       this.atributos = dados.atributos || this.atributos;
       this.pericias = { ...this.pericias, ...(dados.pericias || {}) };
       this.info = { ...this.info, ...dados.info };
-      this.recursos = dados.recursos || this.recursos;
+      this.recursos = { ...this.recursos, ...(dados.recursos || {}) };
+      this._recursosInicializados = Boolean(dados.recursos);
       this.defesa = dados.defesa || this.defesa;
       this.resistencias = dados.resistencias || this.resistencias;
       this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; 
-      this.visibilidade = dados.visibilidade || 0; 
-      this.inventario = dados.inventario || [];
-      this.rituais = dados.rituais || []; 
+      this.visibilidade = dados.visibilidade ?? 0;
+      this.inventario = Array.isArray(dados.inventario)
+        ? dados.inventario.map(item => ({
+            ...item,
+            modificacoes: normalizarModificacoes(item.modificacoes),
+          }))
+        : [];
+      this.rituais = Array.isArray(dados.rituais) ? dados.rituais : [];
       this.bonusManuais = { ...this.bonusManuais, ...(dados.bonusManuais || {}) };
       this.bonusPericiasManuais = { ...(dados.bonusPericiasManuais || {}) };
       this.periciasCustom = Array.isArray(dados.periciasCustom) ? dados.periciasCustom : [];
+      this.periciasOrigemAplicadas = Array.isArray(dados.periciasOrigemAplicadas)
+        ? dados.periciasOrigemAplicadas.filter(pericia => Object.prototype.hasOwnProperty.call(this.pericias, pericia))
+        : [];
       this.periciasCustom.forEach(pericia => {
         if (this.pericias[pericia.key] === undefined) this.pericias[pericia.key] = 0;
         if (this.bonusPericiasManuais[pericia.key] === undefined) this.bonusPericiasManuais[pericia.key] = 0;
       });
-      this.trilhas_personalizadas = dados.trilhas_personalizadas || []; 
-      this.poderes_aprendidos = dados.poderes_aprendidos || []; 
-      this.diario = dados.diario || [];
-      this.condicoesAtivas = dados.condicoesAtivas || [];
-      this.buffsTemporarios = dados.buffsTemporarios || { exercicio: 0, leitura: 0 };
+      this.trilhas_personalizadas = Array.isArray(dados.trilhas_personalizadas) ? dados.trilhas_personalizadas : [];
+      this.poderes_aprendidos = Array.isArray(dados.poderes_aprendidos) ? dados.poderes_aprendidos : [];
+      this.diario = Array.isArray(dados.diario) ? dados.diario : [];
+      this.condicoesAtivas = Array.isArray(dados.condicoesAtivas) ? [...new Set(dados.condicoesAtivas.filter(Boolean))] : [];
+      this.buffsTemporarios = {
+        exercicio: Math.max(0, parseInt(dados.buffsTemporarios?.exercicio) || 0),
+        leitura: Math.max(0, parseInt(dados.buffsTemporarios?.leitura) || 0),
+      };
     }
   }
 
@@ -461,8 +665,13 @@ class Personagem {
   calcularValoresMaximos() {
     const classe = this.info.classe.toLowerCase().trim();
     const origem = this.info.origem.toLowerCase().trim(); 
-    const nexString = this.info.nex || "5%";
-    const nex = parseInt(nexString.replace('%', '')) || 5;
+    const sobrevivente = classe === 'sobrevivente';
+    const nexString = this.info.nex || (sobrevivente ? "0%" : "5%");
+    const nexInformado = parseInt(nexString.replace('%', ''));
+    const nex = sobrevivente ? 0 : (Number.isNaN(nexInformado) ? 5 : Math.min(99, Math.max(0, nexInformado)));
+    const estagioSobrevivente = sobrevivente
+      ? Math.min(5, Math.max(1, parseInt(this.info.estagio_sobrevivente) || 1))
+      : 0;
 
     const vigor = this.getAtributoFinal('vig');
     const presenca = this.getAtributoFinal('pre');
@@ -485,7 +694,7 @@ class Personagem {
         break;
       case "sobrevivente":
         pvBase = 8 + vigor; peBase = 2 + presenca; sanBase = 8; 
-        pvPorNivel = 2 + vigor; pePorNivel = 1 + presenca; sanPorNivel = 2;
+        pvPorNivel = 2; pePorNivel = 1; sanPorNivel = 2;
         break;
       default: 
         pvBase = 16 + vigor; peBase = 3 + presenca; sanBase = 16;
@@ -493,13 +702,17 @@ class Personagem {
         break; 
     }
 
+    if (origem === 'cultista_arrependido') {
+      sanBase = Math.floor(sanBase / 2);
+    }
+
     // --- CORREÇÃO DO NEX 99% ---
     // Níveis acima de 5% (cada 5% é um nível).
     // 5% = 0 aumentos
     // 95% = 18 aumentos
     // 99% = 19 aumentos
-    let niveisAcima = Math.floor((nex - 5) / 5);
-    if (nex >= 99) niveisAcima = 19;
+    let niveisAcima = sobrevivente ? estagioSobrevivente - 1 : Math.floor((nex - 5) / 5);
+    if (!sobrevivente && nex >= 99) niveisAcima = 19;
     
     const nexLevelsCalculated = Math.max(0, niveisAcima);
     const nivelTotal = nexLevelsCalculated + 1; // Equivalente ao "Nível" do personagem (1 a 20)
@@ -546,8 +759,8 @@ class Personagem {
     }
 
     // Limite PE
-    let limitePE = Math.floor(nex / 5);
-    if (nex >= 99) { limitePE = 20; } 
+    let limitePE = sobrevivente ? 1 : Math.floor(nex / 5);
+    if (!sobrevivente && nex >= 99) { limitePE = 20; }
     if (limitePE < 1) limitePE = 1;
     if (this.info.origem === 'universitario') { limitePE += 1; }
     limitePE += parseInt(this.bonusManuais.limite_pe) || 0;
@@ -570,8 +783,15 @@ class Personagem {
     this.recursos.pe_max = Math.max(1, peBase + this.calculosDetalhados.pe_nivel + bonusOrigemPe + bonusPoderesPe + bonusManualPeNex + bonusManualPeOutros);
     this.recursos.san_max = Math.max(1, sanBase + this.calculosDetalhados.san_nivel + bonusOrigemSan + bonusManualSanNex + bonusManualSanOutros);
 
-    if (origem === "cultista_arrependido") {
-      this.recursos.san_max = Math.floor(this.recursos.san_max / 2); 
+    if (!this._recursosInicializados) {
+      this.recursos.pv_atual = this.recursos.pv_max;
+      this.recursos.pe_atual = this.recursos.pe_max;
+      this.recursos.san_atual = this.recursos.san_max;
+      this._recursosInicializados = true;
+    } else {
+      this.recursos.pv_atual = Math.min(Math.max(0, Number.parseInt(this.recursos.pv_atual, 10) || 0), this.recursos.pv_max);
+      this.recursos.pe_atual = Math.min(Math.max(0, Number.parseInt(this.recursos.pe_atual, 10) || 0), this.recursos.pe_max);
+      this.recursos.san_atual = Math.min(Math.max(0, Number.parseInt(this.recursos.san_atual, 10) || 0), this.recursos.san_max);
     }
 
     this.calculosDetalhados.pv_total = this.recursos.pv_max;

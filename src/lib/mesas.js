@@ -14,13 +14,18 @@ import Personagem from './personagem';
 
 // --- PERSONAGENS ---
 
+function normalizarDadosPersonagem(dadosPersonagem = null) {
+  const personagem = new Personagem();
+  if (dadosPersonagem) personagem.carregarDados(dadosPersonagem);
+  personagem.calcularValoresMaximos();
+  return personagem.getDados();
+}
+
 export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem) {
   const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
-  
-  // CORREÇÃO AQUI: Se não vier dados, cria uma nova instância da classe
-  const dadosFinais = dadosPersonagem || new Personagem().getDados();
-  
-  dadosFinais.info.jogador = jogadorUid; 
+
+  const dadosFinais = normalizarDadosPersonagem(dadosPersonagem);
+  dadosFinais.info.jogador = jogadorUid;
   await setDoc(charRef, dadosFinais);
 }
 
@@ -42,9 +47,8 @@ export async function listarPersonagensPessoais(uid) {
 }
 
 export async function criarFichaPessoal(uid, dadosIniciais = null) {
-  // CORREÇÃO AQUI: Cria nova instância se não houver dados iniciais
-  const dados = dadosIniciais || new Personagem().getDados();
-  
+  const dados = normalizarDadosPersonagem(dadosIniciais);
+
   const docRef = await addDoc(collection(db, "users", uid, "personagens"), dados);
   return docRef.id;
 }

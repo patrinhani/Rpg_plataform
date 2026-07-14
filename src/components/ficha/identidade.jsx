@@ -5,6 +5,33 @@
 import React from 'react'; 
 import { OpcoesOrigem } from '../../lib/database.js'; 
 
+function otimizarFoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    reader.onload = () => {
+      const imagem = new Image();
+      imagem.onerror = () => reject(new Error('Formato de imagem inválido.'));
+      imagem.onload = () => {
+        const limite = 512;
+        const escala = Math.min(1, limite / Math.max(imagem.width, imagem.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(imagem.width * escala));
+        canvas.height = Math.max(1, Math.round(imagem.height * escala));
+        const contexto = canvas.getContext('2d');
+        if (!contexto) {
+          reject(new Error('Não foi possível processar a imagem.'));
+          return;
+        }
+        contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/webp', 0.82));
+      };
+      imagem.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
 
   const handleChange = (e) => {
@@ -24,15 +51,15 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
   };
   
   // --- NOVO: Handler para o upload da foto ---
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Salva a imagem como uma string Base64
-        onFichaChange('info', 'foto', reader.result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const fotoOtimizada = await otimizarFoto(file);
+        onFichaChange('info', 'foto', fotoOtimizada);
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -136,17 +163,37 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
         </select>
       </div>
       
-      {/* --- CAMPO DE NEX ADICIONADO AQUI --- */}
-      <div className="campo-horizontal">
-        <label>NEX</label>
-        <input 
-          type="text" 
-          id="nex"
-          value={dados.nex || '0%'} 
-          onChange={handleChange} 
-        />
-      </div>
-      {/* --- FIM DA ADIÇÃO --- */}
+      {classeAtual === 'sobrevivente' ? (
+        <>
+          <div className="campo-horizontal campo-readonly">
+            <label>NEX</label>
+            <span className="campo-valor">0%</span>
+          </div>
+          <div className="campo-horizontal">
+            <label>ESTÁGIO</label>
+            <input
+              type="number"
+              id="estagio_sobrevivente"
+              min="1"
+              max="5"
+              value={dados.estagio_sobrevivente || 1}
+              onChange={handleChange}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="campo-horizontal">
+          <label>NEX (%)</label>
+          <input
+            type="number"
+            id="nex"
+            min="0"
+            max="99"
+            value={parseInt(dados.nex, 10) || 0}
+            onChange={handleChange}
+          />
+        </div>
+      )}
 
       {(dados.trilha === 'monstruoso' || dados.trilha === 'possuido') && (
         <div className="campo-horizontal">

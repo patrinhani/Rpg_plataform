@@ -8,7 +8,9 @@ function Recursos({
   dadosPerseguicao, 
   dadosVisibilidade, 
   info, // Recebe o 'info' para pegar a foto e o tema
-  onFichaChange 
+  onFichaChange,
+  buffsTemporarios = { exercicio: 0, leitura: 0 },
+  onConsumirBuff,
 }) {
 
   const handleChange = (e) => {
@@ -174,6 +176,33 @@ function Recursos({
       
       {/* --- Trackers de Furtividade / Perseguição --- */}
       <div className="recursos-hud-trackers">
+        {(buffsTemporarios.exercicio > 0 || buffsTemporarios.leitura > 0) && (
+          <div className="tracker-linha">
+            <span>Bônus de interlúdio</span>
+            <div className="vis-tracker-container" style={{flexWrap: 'wrap'}}>
+              {buffsTemporarios.exercicio > 0 && (
+                <button
+                  type="button"
+                  className="vis-btn"
+                  title="Após rolar seus dados físicos, marque um bônus de exercício como usado."
+                  onClick={() => onConsumirBuff?.('exercicio')}
+                >
+                  Físico +1d6 ({buffsTemporarios.exercicio})
+                </button>
+              )}
+              {buffsTemporarios.leitura > 0 && (
+                <button
+                  type="button"
+                  className="vis-btn"
+                  title="Após rolar seus dados físicos, marque um bônus de leitura como usado."
+                  onClick={() => onConsumirBuff?.('leitura')}
+                >
+                  Mental {info.origem === 'nerd_entusiasta' ? '+2d6' : '+1d6'} ({buffsTemporarios.leitura})
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <div 
           className={`tracker-linha visibilidade ${visibilidadeAtual >= 3 ? 'full' : ''}`}
         >

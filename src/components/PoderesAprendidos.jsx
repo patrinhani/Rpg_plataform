@@ -40,8 +40,10 @@ function getPoderOrigem(info) {
 }
 
 function getPoderesProgressao(info, progressaoClasses, progressaoTrilhas) {
-    const nexAtual = parseInt(String(info?.nex || '0').replace(/[^0-9]/g, ''), 10) || 0;
     const classeKey = String(info?.classe || '').toLowerCase();
+    const nexAtual = classeKey === 'sobrevivente'
+        ? Math.min(5, Math.max(1, parseInt(info?.estagio_sobrevivente, 10) || 1))
+        : (parseInt(String(info?.nex || '0').replace(/[^0-9]/g, ''), 10) || 0);
     const trilhaKey = String(info?.trilha || '').toLowerCase();
     const poderes = [];
 
@@ -57,11 +59,12 @@ function getPoderesProgressao(info, progressaoClasses, progressaoTrilhas) {
 
                 poderes.push({
                     key: `progressao_${keyBase}_${nivel}`,
-                    nome: `${dados.nome} - ${nivel}%`,
+                    nome: `${dados.nome} - ${nivel}${dados.escala === 'NEX' ? '%' : 'º estágio'}`,
                     descricao: descricaoFinal,
                     tipo: 'Progressao',
                     fonte: origem,
                     nivel,
+                    escala: dados.escala || 'NEX',
                     adquirido: nivel <= nexAtual,
                 });
             });
@@ -142,7 +145,12 @@ function PoderesAprendidos({
                                 <div className="item-header-info">
                                     {poder.tipo && <div><strong>Tipo:</strong> {poder.tipo}</div>}
                                     {poder.fonte && <div><strong>Fonte:</strong> {poder.fonte}</div>}
-                                    {poder.nivel && <div><strong>NEX:</strong> {poder.nivel}% {poder.adquirido ? '(obtido)' : '(futuro)'}</div>}
+                                    {poder.nivel && (
+                                      <div>
+                                        <strong>{poder.escala === 'NEX' ? 'NEX' : 'Estágio'}:</strong>{' '}
+                                        {poder.nivel}{poder.escala === 'NEX' ? '%' : ''} {poder.adquirido ? '(obtido)' : '(futuro)'}
+                                      </div>
+                                    )}
                                     {poder.elemento && isParanormalInGroup && <div><strong>Elemento:</strong> {poder.elemento}</div>}
                                 </div>
                             </div>

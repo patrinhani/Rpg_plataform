@@ -29,7 +29,15 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
   };
 
   // Pega os valores de SDA calculados no App.jsx
-  const { defesaTotal, bloqueio_rd, esquiva_bonus, tem_contra_ataque } = dadosCalculados;
+  const {
+    defesaTotal,
+    bloqueio_rd,
+    esquiva_bonus,
+    defesa_esquiva,
+    equipamentoDefesa,
+    modificadorCaido,
+    tem_contra_ataque,
+  } = dadosCalculados;
 
   const agiBonus = parseInt(dadosCalculados.atributosDetalhados?.agi?.valorFinal) || 0;
 
@@ -54,7 +62,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
           </div>
           <div className="campo-valor-simples">
             <label>EQUIPAMENTO</label>
-            <div className="valor">{dadosDefesa.equip || 0}</div>
+            <div className="valor">{equipamentoDefesa || 0}</div>
           </div>
           <div className="campo-valor-simples editavel">
             <label htmlFor="outros">OUTROS</label>
@@ -97,7 +105,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
           <div className="acao-defesa" title="Treinado em Reflexos">
             <label>ESQUIVA</label>
             <div className="valor-acao">
-              {esquiva_bonus !== '—' ? <span>+ {esquiva_bonus}</span> : '—'}
+              {esquiva_bonus !== '—' ? <span>+{esquiva_bonus} (DEF {defesa_esquiva})</span> : '—'}
             </div>
           </div>
           <div className="acao-defesa" title="Treinado em Luta">
@@ -107,6 +115,18 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
             </div>
           </div>
         </div>
+        {modificadorCaido && (
+          <div className="acoes-grid" title="Modificador contextual da condição Caído">
+            <div className="acao-defesa">
+              <label>CAÍDO — CORPO A CORPO</label>
+              <div className="valor-acao">{modificadorCaido.corpoACorpo}</div>
+            </div>
+            <div className="acao-defesa">
+              <label>CAÍDO — DISTÂNCIA</label>
+              <div className="valor-acao">+{modificadorCaido.distancia}</div>
+            </div>
+          </div>
+        )}
         <div className="acoes-grid acoes-ajustes-manuais">
           <div className="campo-valor-simples editavel">
             <label htmlFor="bonus_bloqueio">AJUSTE BLOQUEIO</label>
@@ -141,6 +161,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
           {dadosResistencias && Object.keys(dadosResistencias).map((key) => {
             // (NOVO) Pega a classe de tema correspondente
             const temaClasse = TEMA_CLASSES[key] || '';
+            const totalCalculado = dadosCalculados.resistenciasCalculadas?.[key] ?? dadosResistencias[key] ?? 0;
             
             return (
               <div 
@@ -148,7 +169,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
                 className={`campo-valor-simples editavel ${temaClasse}`} 
                 key={key}
               >
-                <label htmlFor={`res_${key}`}>{key}</label>
+                <label htmlFor={`res_${key}`}>{key} <small>(total {totalCalculado})</small></label>
                 <input
                   id={`res_${key}`}
                   type="number"
@@ -156,6 +177,7 @@ function DefesaStatus({ dadosDefesa, dadosResistencias, dadosCalculados, bonusMa
                   value={dadosResistencias[key] || 0}
                   onChange={handleResistenciaChange}
                   min="0"
+                  title="Ajuste manual; proteções são somadas automaticamente ao total"
                 />
               </div>
             );

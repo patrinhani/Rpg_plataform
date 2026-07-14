@@ -14,7 +14,7 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useFicha } from '../../contexts/FichaContext.jsx';
 import { useDialog } from '../../contexts/DialogContext.jsx';
 import { db } from '../../lib/firebase'; 
-import { doc, updateDoc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore'; 
+import { doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 
 // Lazy Loading de Componentes
 const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
@@ -107,7 +107,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       addTrilhaCustom, 
       addPericiaCustom, removePericiaCustom,
       addNota, updateNota, removeNota,
-      toggleCondicao, aplicarInterludio
+      toggleCondicao, reaplicarCondicao, aplicarInterludio, consumirBuffTemporario
   } = useFicha();
   
   const idAlvo = propFichaId || paramFichaId || usuario?.uid;
@@ -150,12 +150,13 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
   const saveToFirestore = useCallback(async (dadosCompletos) => {
-    if (docRef.current) {
-        try {
-            await updateDoc(docRef.current, dadosCompletos); 
-        } catch (e) {
-            console.error("Erro ao salvar no Firestore:", e);
-        }
+    if (!docRef.current) return { ok: false, semDestino: true };
+    try {
+        await setDoc(docRef.current, dadosCompletos, { merge: true });
+        return { ok: true };
+    } catch (error) {
+        console.error("Erro ao salvar no Firestore:", error);
+        return { ok: false, error };
     }
   }, []);
   
@@ -336,29 +337,45 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const handleAddTrilhaCustom = useCallback(async (dadosTrilha) => {
       const resultado = addTrilhaCustom(dadosTrilha);
       if (resultado?.dados) {
-          await saveToFirestore(resultado.dados);
+          const salvamento = await saveToFirestore(resultado.dados);
+          if (!salvamento.ok && !salvamento.semDestino) {
+            showAlert(`A trilha foi criada na ficha aberta, mas não pôde ser sincronizada: ${salvamento.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
+            setIsTrilhaModalOpen(false);
+            return;
+          }
       }
       setIsTrilhaModalOpen(false);
       showAlert("Trilha personalizada salva.", "Trilha");
   }, [addTrilhaCustom, saveToFirestore, showAlert]);
   
   const handleAplicarInterludioHandler = useCallback((opcoes) => { 
-      const resultado = aplicarInterludio(opcoes); 
-      showAlert(`Interlúdio Finalizado!\nRecuperado: PV: ${resultado.pv} | PE: ${resultado.pe} | SAN: ${resultado.san}`, "Interlúdio"); 
+      const resultado = aplicarInterludio(opcoes);
+      const extras = resultado.extras?.length ? `\n\n${resultado.extras.join('\n')}` : '';
+      showAlert(`Interlúdio finalizado!\nRecuperado: PV ${resultado.pv} | PE ${resultado.pe} | SAN ${resultado.san}${extras}`, "Interlúdio");
   }, [aplicarInterludio, showAlert]);
 
-  const salvarFichaLocal = useCallback(() => { 
-      debouncedSave(personagem); 
-      showAlert("Ficha sincronizada com sucesso.", "Salvo"); 
-  }, [debouncedSave, personagem, showAlert]);
+  const salvarFichaLocal = useCallback(async () => {
+      const resultado = await saveToFirestore(personagem);
+      if (resultado.ok) {
+        showAlert("Ficha sincronizada com sucesso.", "Salvo");
+      } else if (resultado.semDestino) {
+        showAlert("Esta ficha está em modo local e não possui um destino de sincronização.", "Modo local");
+      } else {
+        showAlert(`Não foi possível sincronizar a ficha: ${resultado.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
+      }
+  }, [saveToFirestore, personagem, showAlert]);
   
   const limparFicha = useCallback(async () => { 
       const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
       if(confirmado) { 
-          if(docRef.current) deleteDoc(docRef.current); 
-          navigate('/'); 
+          try {
+            if(docRef.current) await deleteDoc(docRef.current);
+            navigate('/');
+          } catch (error) {
+            showAlert(`Não foi possível apagar a ficha: ${error.message}`, "Erro");
+          }
       } 
-  }, [showConfirm, navigate]);
+  }, [showConfirm, navigate, showAlert]);
   
   const exportarFicha = useCallback(() => { 
       const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); 
@@ -418,7 +435,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         {isSangueAnimVisible && <AnimacaoSangue isVisible={isSangueAnimVisible} onComplete={() => { setIsSangueAnimVisible(false); aplicarTemaSemAnimacao('tema-sangue'); }} />}
       </Suspense>
 
-      <Recursos dados={personagem.recursos} dadosPerseguicao={personagem.perseguicao} dadosVisibilidade={personagem.visibilidade} info={personagem.info} onFichaChange={handleFichaChange} />
+      <Recursos dados={personagem.recursos} dadosPerseguicao={personagem.perseguicao} dadosVisibilidade={personagem.visibilidade} info={personagem.info} onFichaChange={handleFichaChange} buffsTemporarios={personagem.buffsTemporarios} onConsumirBuff={consumirBuffTemporario} />
 
       <nav className="ficha-abas">
         {['principal', 'inventario', 'rituais', 'poderes', 'progressao', 'diario', 'exportar'].map(aba => (
@@ -436,11 +453,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           <FichaPrincipal
             personagem={personagem} calculados={calculados} fichaInstance={fichaInstance} handleFichaChange={handleFichaChange}
             controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={toggleCondicao}
+            onReaplicarCondicao={reaplicarCondicao}
             onAddPericiaCustom={addPericiaCustom} onRemovePericiaCustom={removePericiaCustom}
           />
         )}
         {abaAtiva === 'inventario' && (
-          <Inventario inventario={personagem.inventario} onAbrirLoja={openLoja} onRemoveItem={removeItem} onToggleItem={toggleItem} onEditItem={openEditItem} />
+          <Inventario inventario={personagem.inventario} calculados={calculados} onAbrirLoja={openLoja} onRemoveItem={removeItem} onToggleItem={toggleItem} onEditItem={openEditItem} />
         )}
         {abaAtiva === 'rituais' && (
           <Rituais rituais={personagem.rituais} onAbrirModal={openRituais} onRemoveRitual={removeRitual} />
@@ -473,7 +491,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
         {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={null} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
         {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={periciasParaLoja} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
-        {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={calculados.limite_pe || 1} />}
+        {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={calculados.limite_pe || 1} origem={personagem.info.origem} inventario={personagem.inventario} />}
       </Suspense> 
     </>
   )

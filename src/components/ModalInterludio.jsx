@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { database } from '../lib/database.js';
 import { useDialog } from '../contexts/DialogContext'; // [NOVO]
 
-function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
+function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventario = [] }) {
   const [acoesSelecionadas, setAcoesSelecionadas] = useState([]);
   const [conforto, setConforto] = useState('normal');
   const [prato, setPrato] = useState('simples');
-  const [emGrupo, setEmGrupo] = useState(false);
+  const [participantesRelaxando, setParticipantesRelaxando] = useState(1);
+  const [itemManutencaoId, setItemManutencaoId] = useState('');
   
   const { showAlert } = useDialog(); // [NOVO]
 
@@ -31,7 +32,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
         acoes: acoesSelecionadas,
         conforto,
         prato,
-        emGrupo
+        participantesRelaxando,
+        itemManutencaoId,
     });
     onClose();
   };
@@ -42,9 +44,12 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
       { id: 'alimentar', icone: '🍖', nome: 'Alimentar-se', desc: 'Bônus especiais de prato.' },
       { id: 'exercitar', icone: '🏋️', nome: 'Exercitar-se', desc: '+1d6 em teste Físico futuro.' },
       { id: 'ler', icone: '📚', nome: 'Ler', desc: '+1d6 em teste Mental futuro.' },
-      { id: 'manutencao', icone: '🔧', nome: 'Manutenção', desc: 'Repara itens quebrados.' },
+      { id: 'manutencao', icone: '🔧', nome: 'Manutenção', desc: 'Repara um item quebrado.' },
       { id: 'revisar', icone: '🔍', nome: 'Revisar Caso', desc: 'Teste para achar pistas perdidas.' },
   ];
+  const itensQuebrados = inventario.filter(item => item.quebrado);
+  const sonoPrecarioNormal = ['explorador', 'mateiro'].includes(origem);
+  const bonusLeitura = origem === 'nerd_entusiasta' ? '+2d6' : '+1d6';
 
   return (
     <div className="modal-overlay">
@@ -98,13 +103,30 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                             <small style={{ color: '#888', display: 'block', marginTop: '3px' }}>
                                 {database.interludio.conforto.find(c => c.id === conforto)?.descricao}
                             </small>
+                            {acoesSelecionadas.includes('dormir') && conforto === 'precario' && sonoPrecarioNormal && (
+                              <small style={{ color: 'var(--cor-destaque)', display: 'block', marginTop: '3px' }}>
+                                Sua origem considera esta condição de sono como normal.
+                              </small>
+                            )}
                         </div>
                     )}
 
                     {acoesSelecionadas.includes('relaxar') && (
-                        <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" id="chkGrupo" checked={emGrupo} onChange={(e) => setEmGrupo(e.target.checked)} style={{width: '20px', height: '20px'}} />
-                            <label htmlFor="chkGrupo" style={{cursor: 'pointer'}}>Relaxar com o grupo? (+1 SAN)</label>
+                        <div style={{ marginBottom: '15px' }}>
+                            <label htmlFor="participantes-relaxando" style={{display: 'block', marginBottom: '5px'}}>
+                              Personagens relaxando (incluindo você)
+                            </label>
+                            <input
+                              className="modal-input"
+                              type="number"
+                              id="participantes-relaxando"
+                              min="1"
+                              value={participantesRelaxando}
+                              onChange={(e) => setParticipantesRelaxando(Math.max(1, parseInt(e.target.value) || 1))}
+                            />
+                            <small style={{ color: '#888', display: 'block', marginTop: '3px' }}>
+                              Cada participante recupera +1 SAN para cada personagem realizando a ação.
+                            </small>
                         </div>
                     )}
 
@@ -126,7 +148,27 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE }) {
                         <p style={{fontSize: '0.9em', color: '#aaa'}}>💪 <strong>Exercitar-se:</strong> Anote que você tem +1d6 para um teste de AGI, FOR ou VIG.</p>
                     )}
                     {acoesSelecionadas.includes('ler') && (
-                        <p style={{fontSize: '0.9em', color: '#aaa'}}>📚 <strong>Ler:</strong> Anote que você tem +1d6 para um teste de INT ou PRE.</p>
+                        <p style={{fontSize: '0.9em', color: '#aaa'}}>📚 <strong>Ler:</strong> anote {bonusLeitura} para um teste de INT ou PRE.</p>
+                    )}
+                    {acoesSelecionadas.includes('manutencao') && (
+                      <div style={{ marginBottom: '15px' }}>
+                        <label htmlFor="item-manutencao" style={{display: 'block', marginBottom: '5px'}}>Item quebrado</label>
+                        <select
+                          className="modal-input"
+                          id="item-manutencao"
+                          value={itemManutencaoId}
+                          onChange={(e) => setItemManutencaoId(e.target.value)}
+                          style={{width: '100%'}}
+                        >
+                          <option value="">Selecione um item</option>
+                          {itensQuebrados.map(item => (
+                            <option key={item.inventarioId} value={item.inventarioId}>{item.nome}</option>
+                          ))}
+                        </select>
+                        {itensQuebrados.length === 0 && (
+                          <small style={{ color: '#888', display: 'block', marginTop: '3px' }}>Não há itens marcados como quebrados.</small>
+                        )}
+                      </div>
                     )}
                      {acoesSelecionadas.includes('revisar') && (
                         <p style={{fontSize: '0.9em', color: '#aaa'}}>🔍 <strong>Revisar Caso:</strong> Faça um teste de perícia com o Mestre para achar pistas.</p>

@@ -3,6 +3,13 @@
 // Não requer nenhuma dependência externa — usa apenas APIs nativas do browser.
 
 import React, { useState, useCallback } from 'react';
+import { calcularDanoArma } from '../lib/calculosCombate.js';
+import {
+  calcularAlcanceItem,
+  calcularCriticoItem,
+  calcularDefesaItem,
+  calcularStatsItem,
+} from '../lib/inventario.js';
 
 // ------------------------------------------------------------------
 // Helpers
@@ -15,6 +22,13 @@ function formatarNex(nex) {
 function capitalizarPrimeira(str) {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatarProgressao(info = {}) {
+  if (String(info.classe).toLowerCase() === 'sobrevivente') {
+    return { valor: String(info.estagio_sobrevivente || 1), escala: 'ESTÁGIO' };
+  }
+  return { valor: formatarNex(info.nex), escala: 'NEX' };
 }
 
 function escaparHTML(valor) {
@@ -112,7 +126,10 @@ function gerarHTMLImpressao(personagem, calculados) {
     rituais = [],
     poderes_aprendidos = [],
     condicoesAtivas = [],
+    condicoesEfetivas = [],
   } = dadosSeguros;
+  const progressao = formatarProgressao(info);
+  const condicoesExibidas = condicoesEfetivas.length > 0 ? condicoesEfetivas : condicoesAtivas;
 
   const corTema = {
     'tema-ordem': '#0091ff',
@@ -127,7 +144,7 @@ function gerarHTMLImpressao(personagem, calculados) {
     .map(([k, v]) => ({ nome: PERICIAS_LABEL[k] || k, treino: v }))
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
-  const resistenciasAtivas = Object.entries(resistencias)
+  const resistenciasAtivas = Object.entries(calculosSeguros.resistenciasCalculadas || resistencias)
     .filter(([, v]) => parseInt(v) > 0)
     .map(([k, v]) => ({ nome: RES_LABEL[k] || k, valor: v }));
 
@@ -392,8 +409,8 @@ function gerarHTMLImpressao(personagem, calculados) {
       <div class="header-sub" style="margin-top:2px">Jogador: ${info.jogador || '—'} &nbsp;|&nbsp; Prestígio: ${info.prestigio || 0} PP</div>
     </div>
     <div class="header-nex">
-      ${formatarNex(info.nex)}
-      <small>NEX</small>
+      ${progressao.valor}
+      <small>${progressao.escala}</small>
     </div>
   </div>
 
@@ -435,9 +452,9 @@ function gerarHTMLImpressao(personagem, calculados) {
           ['Defesa Total', calculosSeguros.defesaTotal ?? 10],
           ['Bloqueio (RD)', calculosSeguros.bloqueio_rd ?? '—'],
           ['Esquiva', calculosSeguros.esquiva_bonus ?? '—'],
-          ['Defesa Equip.', defesa?.equip || 0],
+          ['Defesa Equip.', calculosSeguros.equipamentoDefesa ?? defesa?.equip ?? 0],
           ['Defesa Outros', defesa?.outros || 0],
-          ['Deslocamento', `${info.deslocamento || 9}m`],
+          ['Deslocamento', `${calculosSeguros.deslocamentoFinal ?? info.deslocamento ?? 9}m`],
           ['Limite PE/turno', calculosSeguros.limite_pe ?? 1],
         ].map(([l, v]) => `<div class="stat-row"><span>${l}</span><span class="stat-val">${v}</span></div>`).join('')}
       </div>
@@ -449,7 +466,7 @@ function gerarHTMLImpressao(personagem, calculados) {
   <div class="secao-titulo">Perícias Treinadas</div>
   <div class="no-break">
     <table class="tabela-pericias">
-      <thead><tr><th>Perícia</th><th>Treino</th><th>Bônus Inv.</th></tr></thead>
+      <thead><tr><th>Perícia</th><th>Treino</th><th>Bônus</th></tr></thead>
       <tbody>
         ${periciasTreinadas.map(p => `
         <tr>
@@ -473,10 +490,10 @@ function gerarHTMLImpressao(personagem, calculados) {
   </div>` : ''}
 
   <!-- CONDIÇÕES ATIVAS -->
-  ${condicoesAtivas && condicoesAtivas.length > 0 ? `
+  ${condicoesExibidas.length > 0 ? `
   <div class="secao-titulo">Condições Ativas</div>
   <div class="no-break">
-    ${condicoesAtivas.map(c => `<span class="condicao-badge">${capitalizarPrimeira(c)}</span>`).join('')}
+    ${condicoesExibidas.map(c => `<span class="condicao-badge">${capitalizarPrimeira(c)}</span>`).join('')}
   </div>` : ''}
 
   <!-- ARMAS -->
@@ -486,10 +503,10 @@ function gerarHTMLImpressao(personagem, calculados) {
     ${inventarioArmas.map(item => `
     <div class="item-row">
       <span class="item-nome">${item.nome}</span>
-      <span class="item-tag">Dano ${item.dano}</span>
-      <span class="item-tag">Crítico ${item.critico || '—'}</span>
-      <span class="item-tag">${item.alcance || 'Corpo'}</span>
-      <span class="item-tag">Cat ${item.categoriaBase ?? 0}</span>
+      <span class="item-tag">Dano ${calcularDanoArma(item)}</span>
+      <span class="item-tag">Crítico ${calcularCriticoItem(item) || '—'}</span>
+      <span class="item-tag">${calcularAlcanceItem(item) || 'Corpo'}</span>
+      <span class="item-tag">Cat ${calcularStatsItem(item).categoria}</span>
       ${(item.modificacoes || []).length > 0 ? `<span class="item-detalhe">+${item.modificacoes.join(', ')}</span>` : ''}
     </div>`).join('')}
   </div>` : ''}
@@ -501,8 +518,8 @@ function gerarHTMLImpressao(personagem, calculados) {
     ${inventarioProtecoes.map(item => `
     <div class="item-row">
       <span class="item-nome">${item.nome}</span>
-      <span class="item-tag">+${item.defesa} DEF</span>
-      <span class="item-tag">${item.espacosBase ?? 0} esp.</span>
+      <span class="item-tag">+${calcularDefesaItem(item)} DEF</span>
+      <span class="item-tag">${calcularStatsItem(item).espacos} esp.</span>
     </div>`).join('')}
   </div>` : ''}
 
@@ -513,8 +530,8 @@ function gerarHTMLImpressao(personagem, calculados) {
     ${inventarioItens.map(item => `
     <div class="item-row">
       <span class="item-nome">${item.nome}</span>
-      <span class="item-tag">Cat ${item.categoriaBase ?? 0}</span>
-      <span class="item-tag">${item.espacosBase ?? 0} esp.</span>
+      <span class="item-tag">Cat ${calcularStatsItem(item).categoria}</span>
+      <span class="item-tag">${calcularStatsItem(item).espacos} esp.</span>
       ${item.descricao ? `<span class="item-detalhe">${item.descricao.substring(0, 80)}${item.descricao.length > 80 ? '…' : ''}</span>` : ''}
     </div>`).join('')}
   </div>` : ''}
@@ -542,7 +559,7 @@ function gerarHTMLImpressao(personagem, calculados) {
 
   <!-- RODAPÉ -->
   <div class="rodape">
-    Sistema C.A.O.S. — Ordem Paranormal &nbsp;|&nbsp; Exportado em ${new Date().toLocaleDateString('pt-BR')} &nbsp;|&nbsp; ${info.nome || 'Agente'} · NEX ${formatarNex(info.nex)}
+    Sistema C.A.O.S. — Ordem Paranormal &nbsp;|&nbsp; Exportado em ${new Date().toLocaleDateString('pt-BR')} &nbsp;|&nbsp; ${info.nome || 'Agente'} · ${progressao.escala} ${progressao.valor}
   </div>
 
 </div>

@@ -9,6 +9,7 @@ import '../Login/Login.css';
 // --- IMPORTS DO FIREBASE ---
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc } from 'firebase/firestore';
+import Personagem from '../../lib/personagem.js';
 
 export default function Dashboard() {
   const { usuario, logout, devVisualMode } = useAuth();
@@ -154,33 +155,23 @@ export default function Dashboard() {
       try {
         const jsonContent = JSON.parse(e.target.result);
         
-        // Validação simples
-        if (!jsonContent.info || !jsonContent.atributos) {
+        const objetoValido = valor => valor && typeof valor === 'object' && !Array.isArray(valor);
+        if (!objetoValido(jsonContent) || !objetoValido(jsonContent.info) || !objetoValido(jsonContent.atributos)) {
             throw new Error("Arquivo inválido. O JSON não parece ser uma ficha.");
         }
 
         const nomeLido = jsonContent.info.nome || "Sem Nome";
         
-        // Construção do objeto para garantir a estrutura correta no Firebase
+        const personagemImportado = new Personagem();
+        personagemImportado.carregarDados(jsonContent);
+        personagemImportado.calcularValoresMaximos();
+
+        // Normaliza versões antigas sem descartar campos atuais da ficha.
         const novaFicha = {
+            ...personagemImportado.getDados(),
             uid: usuario.uid,
             dono: usuario.displayName,
             dataCriacao: new Date().toISOString(),
-            // Copia explicitamente as seções
-            info: jsonContent.info || {},
-            atributos: jsonContent.atributos || {},
-            pericias: jsonContent.pericias || {},
-            recursos: jsonContent.recursos || {},
-            defesa: jsonContent.defesa || {},
-            resistencias: jsonContent.resistencias || {},
-            inventario: Array.isArray(jsonContent.inventario) ? jsonContent.inventario : [],
-            rituais: Array.isArray(jsonContent.rituais) ? jsonContent.rituais : [],
-            poderes_aprendidos: Array.isArray(jsonContent.poderes_aprendidos) ? jsonContent.poderes_aprendidos : [],
-            trilhas_personalizadas: Array.isArray(jsonContent.trilhas_personalizadas) ? jsonContent.trilhas_personalizadas : [],
-            diario: Array.isArray(jsonContent.diario) ? jsonContent.diario : [],
-            perseguicao: jsonContent.perseguicao || { sucessos: 0, falhas: 0 },
-            visibilidade: jsonContent.visibilidade || 0,
-            bonusManuais: jsonContent.bonusManuais || {}
         };
 
         // Salva na subcoleção do usuário para aparecer na lista correta

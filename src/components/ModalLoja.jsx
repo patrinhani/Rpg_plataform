@@ -3,20 +3,14 @@
 
 import React, { useState } from 'react';
 // 1. Importa database E as modificações (do Passo 1)
-import { 
-  database,
-  modificacoesArmas, 
-  modificacoesProtecoes, 
-  modificacoesAcessorios 
-} from '../lib/database.js'; //
+import { database } from '../lib/database.js';
 import ItemCard from './ItemCard.jsx';
-
-// 2. Cria o objeto de mapeamento
-const todasModificacoes = {
-  ...modificacoesArmas.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesProtecoes.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-};
+import {
+  calcularStatsItem,
+  getModificacoesCompativeis,
+  getTodasModificacoes,
+  modificacoesSaoIncompativeis,
+} from '../lib/inventario.js';
 
 const ordenarPorNome = (itens) => [...itens].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
@@ -36,6 +30,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
   const [customDefesa, setCustomDefesa] = useState(0);
   const [customBonusPericia, setCustomBonusPericia] = useState(0);
   const [customPericiaSelect, setCustomPericiaSelect] = useState('');
+  const [customTipo, setCustomTipo] = useState('livre');
   
   // 3. Novo estado para as modificações do item custom
   const [customMods, setCustomMods] = useState([]);
@@ -59,7 +54,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
       if (prevMods.includes(modKey)) {
         return prevMods.filter(m => m !== modKey);
       } else {
-        return [...prevMods, modKey];
+        return [...prevMods.filter(chave => !modificacoesSaoIncompativeis(chave, modKey)), modKey];
       }
     });
   };
@@ -84,6 +79,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
       valorBonus: bonusValor,
       periciaVinculada: bonusValor > 0 && periciaNome ? periciaNome : null,
       tipoBonus: bonusValor > 0 && periciaNome ? "custom" : null,
+      tipoItem: customTipo === 'livre' ? null : customTipo,
       
       // Salva as modificações
       modificacoes: customMods,
@@ -99,6 +95,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
     setCustomDefesa(0);
     setCustomBonusPericia(0);
     setCustomPericiaSelect('');
+    setCustomTipo('livre');
     setCustomMods([]); // Limpa as mods
     onClose();
   };
@@ -114,16 +111,20 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
   }
   
   // 6. Calcula a categoria final para exibição no JSX
-  const catFinalCustom = (parseInt(customCat) || 0) + customMods.length;
-  // Calcula os espaços finais (para exibição)
-  let espFinalCustom = parseFloat(customEspacos) || 0;
-  customMods.forEach(modKey => {
-      const modData = todasModificacoes[modKey];
-      if (modData) {
-        espFinalCustom += (modData.espacos || 0);
-      }
-    });
-  espFinalCustom = Math.max(0, espFinalCustom);
+  const itemCustomPreview = {
+    id: 'custom_preview',
+    tipoItem: customTipo === 'livre' ? null : customTipo,
+    categoriaBase: customCat,
+    espacosBase: customEspacos,
+    modificacoes: customMods,
+    tipoBonus: customTipo === 'acessorio' ? 'custom' : null,
+  };
+  const statsCustom = calcularStatsItem(itemCustomPreview);
+  const catFinalCustom = statsCustom.categoria;
+  const espFinalCustom = statsCustom.espacos;
+  const modificacoesCustomDisponiveis = customTipo === 'livre'
+    ? getTodasModificacoes()
+    : getModificacoesCompativeis(itemCustomPreview);
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -184,6 +185,18 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
                 <label>Nome do Item</label>
                 <input type="text" id="custom-item-nome" required value={customNome} onChange={(e) => setCustomNome(e.target.value)} />
               </div>
+              <div className="campo-horizontal">
+                <label>Tipo do Item</label>
+                <select value={customTipo} onChange={(e) => { setCustomTipo(e.target.value); setCustomMods([]); }}>
+                  <option value="livre">Livre / regra da mesa</option>
+                  <option value="arma-corpo-a-corpo">Arma corpo a corpo ou de disparo</option>
+                  <option value="arma-fogo">Arma de fogo</option>
+                  <option value="arma-fogo-balas">Munição de balas</option>
+                  <option value="protecao-leve">Proteção leve</option>
+                  <option value="protecao-pesada">Proteção pesada</option>
+                  <option value="acessorio">Acessório</option>
+                </select>
+              </div>
               
               {/* Inputs de Categoria e Espaços atualizados (Layout de 4 colunas) */}
               <div className="form-custom-grid form-custom-grid-stats">
@@ -236,28 +249,7 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
               <div className="form-custom-grid mods-lista-custom">
                 
-                {/* Checkboxes para todas as modificações */}
-                {modificacoesArmas.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
-                    <input 
-                      type="checkbox"
-                      checked={customMods.includes(mod.key)}
-                      onChange={() => handleCustomModToggle(mod.key)}
-                    />
-                    {mod.nome}
-                  </label>
-                ))}
-                {modificacoesProtecoes.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
-                    <input 
-                      type="checkbox"
-                      checked={customMods.includes(mod.key)}
-                      onChange={() => handleCustomModToggle(mod.key)}
-                    />
-                    {mod.nome}
-                  </label>
-                ))}
-                {modificacoesAcessorios.map(mod => (
+                {modificacoesCustomDisponiveis.map(mod => (
                   <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
                     <input 
                       type="checkbox"

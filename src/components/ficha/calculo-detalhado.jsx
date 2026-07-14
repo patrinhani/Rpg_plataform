@@ -5,7 +5,9 @@ import React from 'react';
 // Este componente recebe os 'dados' (personagem.bonusManuais)
 // e os 'calculos' (personagem.calculosDetalhados)
 // e a função 'onFichaChange'
-function CalculoDetalhado({ dados, calculos, onFichaChange }) {
+function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
+  const sobrevivente = classe === 'sobrevivente';
+  const escala = sobrevivente ? 'Estágio' : 'NEX';
 
   // Handler local para os inputs de bônus manuais
   const handleChange = (e) => {
@@ -30,7 +32,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-pv-base">{calculos.pv_base}</span>
         </div>
         <div className="calc-linha">
-          <label>PV por Nível (Classe + VIG)</label>
+          <label>{sobrevivente ? 'PV por Estágio (Classe)' : 'PV por Nível (Classe + VIG)'}</label>
           <span id="calc-pv-nivel">{calculos.pv_nivel}</span>
         </div>
         <div className="calc-linha origem-bonus">
@@ -38,7 +40,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-pv-origem">{calculos.pv_origem}</span>
         </div>
         <div className="calc-linha">
-          <label>Bônus Manual (+PV p/ NEX)</label>
+          <label>Bônus Manual (+PV p/ {escala})</label>
           <input 
             type="number" 
             id="bonus-pv-nex" 
@@ -69,7 +71,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-pe-base">{calculos.pe_base}</span>
         </div>
         <div className="calc-linha">
-          <label>PE por Nível (Classe + PRE)</label>
+          <label>{sobrevivente ? 'PE por Estágio (Classe)' : 'PE por Nível (Classe + PRE)'}</label>
           <span id="calc-pe-nivel">{calculos.pe_nivel}</span>
         </div>
         <div className="calc-linha origem-bonus">
@@ -77,7 +79,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-pe-origem">{calculos.pe_origem}</span>
         </div>
         <div className="calc-linha">
-          <label>Bônus Manual (+PE p/ NEX)</label>
+          <label>Bônus Manual (+PE p/ {escala})</label>
           <input 
             type="number" 
             id="bonus-pe-nex"
@@ -117,7 +119,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-san-base">{calculos.san_base}</span>
         </div>
         <div className="calc-linha">
-          <label>SAN por Nível (Classe)</label>
+          <label>{sobrevivente ? 'SAN por Estágio (Classe)' : 'SAN por Nível (Classe)'}</label>
           <span id="calc-san-nivel">{calculos.san_nivel}</span>
         </div>
         <div className="calc-linha origem-bonus">
@@ -125,7 +127,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange }) {
           <span id="calc-san-origem">{calculos.san_origem}</span>
         </div>
         <div className="calc-linha">
-          <label>Bônus Manual (+SAN p/ NEX)</label>
+          <label>Bônus Manual (+SAN p/ {escala})</label>
           <input 
             type="number" 
             id="bonus-san-nex"

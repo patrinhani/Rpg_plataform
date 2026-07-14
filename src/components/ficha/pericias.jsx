@@ -46,7 +46,6 @@ function Pericias({
   dadosCalculados,
   onFichaChange,
   periciasDeOrigem,
-  nex,
   periciasCustom = [],
   bonusPericiasManuais = {},
   onAddPericiaCustom,
@@ -56,8 +55,6 @@ function Pericias({
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customNome, setCustomNome] = useState('');
   const [customAttr, setCustomAttr] = useState('int');
-
-  const nexAtual = parseInt((nex || "0").replace('%','')) || 0;
 
   const periciasCustomOrdenadas = useMemo(() => {
     return [...(periciasCustom || [])].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -106,10 +103,9 @@ function Pericias({
         <div className="pericias-header-actions">
           <div className="pericias-contador">
             Treinadas:
-            <span style={{ color: dadosCalculados.periciasTreinadas > dadosCalculados.periciasTotal ? 'var(--cor-trans-sangue)' : 'var(--cor-destaque)'}}>
+            <span style={{ color: 'var(--cor-destaque)'}}>
               {dadosCalculados.periciasTreinadas}
-            </span> /
-            <span>{dadosCalculados.periciasTotal}</span>
+            </span>
           </div>
           <button type="button" className="btn-add-item btn-pericia-custom" onClick={() => setShowCustomForm(prev => !prev)}>
             + Pericia
@@ -175,7 +171,7 @@ function Pericias({
                         filter: infoDados.dados <= 0 ? 'grayscale(1)' : 'none'
                     }}
                 >
-                  <span className="pericia-dado-texto">{infoDados.dados}d</span>
+                  <span className="pericia-dado-texto">{infoDados.descricaoDados}</span>
                 </div>
                 <span className="pericia-bonus-texto">{infoDados.bonus >= 0 ? "+" : ""}{infoDados.bonus}</span>
               </div>
@@ -198,12 +194,8 @@ function Pericias({
               >
                 <option value="0">+0 (Destreinado)</option>
                 <option value="5">+5 (Treinado)</option>
-                <option value="10" disabled={nexAtual < 35}>
-                    +10 (Vet){nexAtual < 35 ? ' (NEX 35%)' : ''}
-                </option>
-                <option value="15" disabled={nexAtual < 70}>
-                    +15 (Exp){nexAtual < 70 ? ' (NEX 70%)' : ''}
-                </option>
+                <option value="10">+10 (Veterano)</option>
+                <option value="15">+15 (Expert)</option>
               </select>
             </li>
           );

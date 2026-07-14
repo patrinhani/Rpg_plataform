@@ -20,6 +20,7 @@ function FichaPrincipal({
   trilhasPorClasse,
   periciasDeOrigem,
   onToggleCondicao,
+  onReaplicarCondicao,
   onAddPericiaCustom,
   onRemovePericiaCustom
 }) {
@@ -52,8 +53,10 @@ function FichaPrincipal({
         
         {/* Área de Condições (Fica logo abaixo dos controles) */}
         <Condicoes 
-           ativas={personagem.condicoesAtivas || []} 
-           onToggle={onToggleCondicao} 
+           ativas={personagem.condicoesEfetivas || personagem.condicoesAtivas || []}
+           automaticas={personagem.condicoesAutomaticas || []}
+           onToggle={onToggleCondicao}
+           onReaplicar={onReaplicarCondicao}
         />
         
       </div>
@@ -82,12 +85,12 @@ function FichaPrincipal({
   bonusPericiasManuais={personagem.bonusPericiasManuais || {}}
   onAddPericiaCustom={onAddPericiaCustom}
   onRemovePericiaCustom={onRemovePericiaCustom}
-  nex={personagem.info.nex} // <--- ADICIONE ESTA LINHA
 />
 
       <CalculoDetalhado
         dados={personagem.bonusManuais}
         calculos={fichaInstance.calculosDetalhados}
+        classe={personagem.info.classe}
         onFichaChange={handleFichaChange}
       />
 

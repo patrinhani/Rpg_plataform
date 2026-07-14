@@ -3,21 +3,15 @@
 // (OTIMIZADO COM React.memo)
 
 import React, { memo } from 'react';
-import { 
-  modificacoesArmas, 
-  modificacoesProtecoes, 
-  modificacoesAcessorios 
-} from '../lib/database.js';
-
-// Importa a função de cálculo de dano (Certifique-se de ter criado este arquivo)
 import { calcularDanoArma } from '../lib/calculosCombate.js';
-
-// Cria o objeto de mapeamento para acesso rápido às descrições das mods
-const todasModificacoes = {
-  ...modificacoesArmas.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesProtecoes.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-};
+import {
+  calcularAlcanceItem,
+  calcularBonusAtaqueItem,
+  calcularCriticoItem,
+  calcularDefesaItem,
+  calcularStatsItem,
+  getModificacao,
+} from '../lib/inventario.js';
 
 /**
  * Props:
@@ -74,30 +68,14 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   if (item.elemento) {
     cardClasses += ` ritual-card ${item.elemento.toLowerCase()}`;
   }
+  if (item.quebrado) cardClasses += ' item-quebrado';
 
   // --- 3. Cálculos de Stats (Categoria e Espaços) ---
-  const modsAplicadas = item.modificacoes || [];
-  
-  // Fallback seguro para categoria e espaços (usa a base se existir, senão o valor direto)
-  const catBase = (item.categoriaBase ?? item.categoria) ?? 0;
-  const espacosBase = (item.espacosBase ?? item.espacos) ?? 0;
-
-  // Calcula valores finais somando as modificações
-  let categoriaFinal = (parseInt(catBase) || 0);
-  let espacosFinal = parseFloat(espacosBase) || 0;
+  const { categoria: categoriaFinal, espacos: espacosFinal, modificacoes: modsAplicadas } = calcularStatsItem(item);
   
   // Gera lista detalhada para o tooltip
   const listaModsDetalhada = modsAplicadas.map(key => {
-      const modData = todasModificacoes[key];
-      
-      // Soma aos totais
-      if (modData) {
-          categoriaFinal += (modData.cat || 1); // Maioria sobe +1 Categoria
-          espacosFinal += (modData.espacos || 0);
-      } else {
-          // Se for mod customizada sem dados no banco, assume +1 Cat
-          categoriaFinal += 1;
-      }
+      const modData = getModificacao(key);
 
       return {
         nome: modData?.nome || key,
@@ -105,9 +83,6 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
       };
   });
   
-  // Garante que espaço não seja negativo
-  espacosFinal = Math.max(0, espacosFinal);
-
   // Strings para exibição
   const nomesModsString = listaModsDetalhada.map(mod => mod.nome).join(', ');
   const descricoesModsString = listaModsDetalhada.map(mod => `${mod.nome}: ${mod.descricao}`).join('\n');
@@ -115,12 +90,16 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   // --- 4. Cálculo de Dano Dinâmico ---
   // Se o item tem dano, calcula o valor real considerando as mods
   const danoExibido = item.dano ? calcularDanoArma(item) : null;
+  const defesaExibida = calcularDefesaItem(item);
+  const bonusAtaque = calcularBonusAtaqueItem(item);
+  const criticoExibido = calcularCriticoItem(item);
+  const alcanceExibido = calcularAlcanceItem(item);
 
   return (
     <li className={cardClasses}>
       
       <div className="item-header">
-        <h3>{item.nome}</h3>
+        <h3>{item.nome}{item.quebrado ? ' (Quebrado)' : ''}</h3>
         <div className="item-header-info">
           <div><strong>CAT:</strong> {categoriaFinal}</div>
           <div><strong>ESP:</strong> {Number.isInteger(espacosFinal) ? espacosFinal : espacosFinal.toFixed(1)}</div>
@@ -148,9 +127,10 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             </div>
         )}
 
-        {item.defesa > 0 && <div className="item-detalhe"><strong>Defesa:</strong> +{item.defesa}</div>}
-        {item.critico && <div className="item-detalhe"><strong>Crítico:</strong> {item.critico}</div>}
-        {item.alcance && <div className="item-detalhe"><strong>Alcance:</strong> {item.alcance}</div>}
+        {defesaExibida > 0 && <div className="item-detalhe"><strong>Defesa:</strong> +{defesaExibida}</div>}
+        {bonusAtaque !== 0 && <div className="item-detalhe"><strong>Ataque:</strong> +{bonusAtaque}</div>}
+        {criticoExibido && <div className="item-detalhe"><strong>Crítico:</strong> {criticoExibido}</div>}
+        {alcanceExibido && <div className="item-detalhe"><strong>Alcance:</strong> {alcanceExibido}</div>}
         {item.tipo && <div className="item-detalhe"><strong>Tipo:</strong> {item.tipo}</div>}
         
         {/* Bônus de Perícia */}

@@ -1,7 +1,7 @@
 // /src/lib/progressao.js
 /**
  * Mapeamento da progressão de habilidades para as classes baseadas no NEX.
- * (Sobrevivente é adaptado de Estágio para NEX para simplificação na ficha).
+ * Sobrevivente usa Estágio; as demais classes usam NEX.
  */
 
 const progressaoClasses = {
@@ -37,7 +37,7 @@ const progressaoClasses = {
     habilidades: {
       5: "Eclético, Perito (2 PE, +1d6)",
       10: "Habilidade de trilha",
-      14: "Poder de especialista",
+      15: "Poder de especialista",
       20: "Aumento de atributo",
       25: "Perito (3 PE, +1d8)",
       30: "Poder de especialista",
@@ -69,7 +69,7 @@ const progressaoClasses = {
       30: "Poder de ocultista",
       35: "Grau de treinamento",
       40: "Habilidade de trilha",
-      48: "Poder de ocultista",
+      45: "Poder de ocultista",
       50: "Aumento de atributo, Versatilidade",
       55: "Escolhido pelo Outro Lado (3º círculo)",
       60: "Poder de ocultista",
@@ -86,13 +86,12 @@ const progressaoClasses = {
   sobrevivente: {
     nome: "Sobrevivente",
     escala: "Estágio",
-    // Mapeamento de Estágio para NEX (Estágio 1=5%, 2=15%, 3=35%, 4=55%, 5=75%)
     habilidades: {
-      5: "Empenho",
-      15: "Trilha (1º habilidade)",
-      35: "Aumento de atributo",
-      55: "Trilha (2º habilidade)",
-      75: "Cicatrizado",
+      1: "Empenho",
+      2: "Trilha (1º habilidade)",
+      3: "Aumento de atributo",
+      4: "Trilha (2º habilidade)",
+      5: "Cicatrizado",
     }
   }
 };
@@ -376,8 +375,8 @@ const progressaoTrilhas = {
         classe: "sobrevivente",
         escala: "Estágio",
         habilidades: {
-            15: "Durão (+4 PV, +2 PV no 3º estágio)",
-            55: "Pancada Forte (1 PE: +O no teste de ataque)",
+            2: "Durão (+4 PV, +2 PV no 3º estágio)",
+            4: "Pancada Forte (1 PE: +O no teste de ataque)",
         },
     },
     esperto: {
@@ -385,8 +384,8 @@ const progressaoTrilhas = {
         classe: "sobrevivente",
         escala: "Estágio",
         habilidades: {
-            15: "Esperto (Treinado em 1 perícia adicional)",
-            55: "Entendido (1 PE: +1d4 em teste de 2 perícias treinadas)",
+            2: "Esperto (Treinado em 1 perícia adicional)",
+            4: "Entendido (1 PE: +1d4 em teste de 2 perícias treinadas)",
         },
     },
     esoterico: {
@@ -394,8 +393,8 @@ const progressaoTrilhas = {
         classe: "sobrevivente",
         escala: "Estágio",
         habilidades: {
-            15: "Esotérico (1 PE: sentir energias paranormais em alcance curto)",
-            55: "Iniciado (Aprende e pode conjurar 1 ritual de 1º círculo)",
+            2: "Esotérico (1 PE: sentir energias paranormais em alcance curto)",
+            4: "Iniciado (Aprende e pode conjurar 1 ritual de 1º círculo)",
         },
     },
 };
@@ -426,7 +425,7 @@ const getMergedTrilhas = (customTrilhas) => {
         mergedTrilhas[newKey] = {
             nome: trilha.nome,
             classe: trilha.classe, // Salva a classe associada na customizada
-            escala: "NEX",
+            escala: trilha.escala || (trilha.classe === 'sobrevivente' ? 'Estágio' : 'NEX'),
             requiresChoice: trilha.requiresChoice || null,
             habilidades: habilidadesObjeto,
             isCustom: true, // Marca como customizada

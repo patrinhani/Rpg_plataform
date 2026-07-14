@@ -21,11 +21,14 @@ function ProgressaoHabilidades({
     info
 }) {
   
-  const nexAtual = parseInt(nexString.replace('%', '')) || 0;
+  const classeAtual = classe.toLowerCase();
+  const nexAtual = classeAtual === 'sobrevivente'
+    ? Math.min(5, Math.max(1, parseInt(info?.estagio_sobrevivente) || 1))
+    : (parseInt(nexString.replace('%', '')) || 0);
   
   const isTrilhaAtiva = trilha && trilha !== 'nenhuma' && progressaoTrilhas[trilha.toLowerCase()];
   
-  const dadosClasse = progressaoClasses[classe.toLowerCase()] || null;
+  const dadosClasse = progressaoClasses[classeAtual] || null;
   const dadosTrilha = isTrilhaAtiva ? progressaoTrilhas[trilha.toLowerCase()] : null;
 
   if (!dadosClasse) {

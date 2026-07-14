@@ -1559,18 +1559,19 @@ condicoes: [
     { id: "caido", nome: "Caído", tipo: "fisica", descricao: "-5 ataque corpo a corpo, -3m deslocamento. -5 Defesa vs corpo a corpo, +5 vs distância." },
     { id: "cego", nome: "Cego", tipo: "sensorial", descricao: "Desprevenido, lento, –10 Percepção. Camuflagem total contra você." },
     { id: "confuso", nome: "Confuso", tipo: "mental", descricao: "Comportamento aleatório (1d6)." },
-    { id: "debilitado", nome: "Debilitado", tipo: "fisica", descricao: "–1 em For, Agi e Vig. Se aplicado de novo, vira Inconsciente.", evolucao: "inconsciente" },
+    { id: "debilitado", nome: "Debilitado", tipo: "fisica", descricao: "–2d20 em testes de For, Agi e Vig. Se aplicado de novo, vira Inconsciente.", evolucao: "inconsciente" },
     { id: "desprevenido", nome: "Desprevenido", tipo: "mental", descricao: "–5 na Defesa e Reflexos." },
     { id: "doente", nome: "Doente", tipo: "fisica", descricao: "Sob efeito de doença." },
     { id: "em_chamas", nome: "Em Chamas", tipo: "fisica", descricao: "1d6 dano de fogo por rodada." },
     { id: "enjoado", nome: "Enjoado", tipo: "fisica", descricao: "Só uma ação (padrão ou movimento) por rodada." },
+    { id: "enlouquecendo", nome: "Enlouquecendo", tipo: "mental", descricao: "Sanidade 0. Precisa ser estabilizado antes de ficar insano." },
     { id: "enredado", nome: "Enredado", tipo: "fisica", descricao: "Lento, vulnerável, –2 em ataque." },
     { id: "envenenado", nome: "Envenenado", tipo: "fisica", descricao: "Efeito de veneno (dano ou condição)." },
     { id: "esmorecido", nome: "Esmorecido", tipo: "mental", descricao: "–2d20 em testes de Int e Pre." }, // Estágio final de Frustrado
     { id: "exausto", nome: "Exausto", tipo: "fisica", descricao: "Debilitado, lento, vulnerável. Se aplicado de novo, vira Inconsciente.", evolucao: "inconsciente" },
     { id: "fascinado", nome: "Fascinado", tipo: "mental", descricao: "–10 Percepção, não pode agir." },
     { id: "fatigado", nome: "Fatigado", tipo: "fisica", descricao: "Fraco e vulnerável. Se aplicado de novo, vira Exausto.", evolucao: "exausto" },
-    { id: "fraco", nome: "Fraco", tipo: "fisica", descricao: "–1 em For, Agi e Vig. Se aplicado de novo, vira Debilitado.", evolucao: "debilitado" },
+    { id: "fraco", nome: "Fraco", tipo: "fisica", descricao: "–1d20 em testes de For, Agi e Vig. Se aplicado de novo, vira Debilitado.", evolucao: "debilitado" },
     { id: "frustrado", nome: "Frustrado", tipo: "mental", descricao: "–1d20 em testes de Int e Pre. Se aplicado de novo, vira Esmorecido.", evolucao: "esmorecido" },
     { id: "imovel", nome: "Imóvel", tipo: "fisica", descricao: "Deslocamento 0." },
     { id: "inconsciente", nome: "Inconsciente", tipo: "mental", descricao: "Indefeso, não pode agir." }, // Estágio final de vários
@@ -1680,6 +1681,10 @@ periciasPorOrigem: {
         fixas: ["profissao", "vontade"], 
         poder: { nome: "Invenção Paranormal", descricao: "Possui um item (cat 0) com um ritual de 1º círculo. Ativar: Ação padrão, Profissão (DT 15+5/uso). Falha: Enguiça." }
     },
+    investigador: {
+        fixas: ["investigacao", "percepcao"],
+        poder: { nome: "Faro para Pistas", descricao: "Uma vez por cena, quando fizer um teste para procurar pistas, pode gastar 1 PE para receber +5 nesse teste." }
+    },
     jovem_mistico: { 
         fixas: ["ocultismo", "religiao"], 
         poder: { nome: "A Culpa é das Estrelas", descricao: "Escolha nº da sorte (1-6). Início da cena, gaste 1 PE e role 1d6. Se cair seu nº, +2 em perícias na cena. Se não, escolhe mais um nº." }
@@ -1687,6 +1692,10 @@ periciasPorOrigem: {
     legista_noturno: { 
         fixas: ["ciencias", "medicina"], 
         poder: { nome: "Luto Habitual", descricao: "Sofre metade do dano mental por cenas de morte/cadáveres. Gaste 2 PE para +5 em Medicina (primeiros socorros/necropsia)." }
+    },
+    lutador: {
+        fixas: ["luta", "reflexos"],
+        poder: { nome: "Mão Pesada", descricao: "Você recebe +2 em rolagens de dano com ataques corpo a corpo." }
     },
     magnata: { 
         fixas: ["diplomacia", "pilotagem"], 

@@ -30,6 +30,11 @@ export function FichaProvider({ children }) {
     defesaTotal: 10, 
     cargaAtual: 0, 
     cargaMax: 2, 
+    cargaLimiteAbsoluto: 4,
+    sobrecarregado: false,
+    cargaAcimaDoLimite: false,
+    deslocamentoFinal: 9,
+    resistenciasCalculadas: {},
     periciasTreinadas: 0, 
     periciasTotal: 0, 
     bonusPericia: {}, 
@@ -37,6 +42,9 @@ export function FichaProvider({ children }) {
     patente: Patentes[0], 
     bloqueio_rd: '—', 
     esquiva_bonus: '—', 
+    defesa_esquiva: '—',
+    equipamentoDefesa: 0,
+    modificadorCaido: null,
     tem_contra_ataque: false,
     atributosDetalhados: { 
         for: { valorFinal: 1 }, agi: { valorFinal: 1 }, int: { valorFinal: 1 }, 
@@ -65,57 +73,102 @@ export function FichaProvider({ children }) {
     
     // Defesa
     const agi = atributosDetalhados.agi.valorFinal;
-    const vig = atributosDetalhados.vig.valorFinal; 
-    const equip = dados.defesa.equip || 0; 
+    const equipInventario = ficha.getBonusDefesaInventario();
+    const equipManualLegado = Number.parseInt(dados.defesa.equip, 10) || 0;
+    const equip = equipInventario + equipManualLegado;
     const outros = parseInt(dados.defesa.outros) || 0;
     const ajusteManualDefesa = parseInt(dados.bonusManuais?.defesa) || 0;
+    const condicoes = dados.condicoesEfetivas || dados.condicoesAtivas || [];
+    const estadoCarga = ficha.getEstadoCarga();
     
     let bonusOrigemDefesa = (dados.info.origem === "policial") ? 2 : 0;
     let penalidadeDefesa = 0;
     
-    if (dados.condicoesAtivas.includes('vulneravel') || 
-        dados.condicoesAtivas.includes('desprevenido') || 
-        dados.condicoesAtivas.includes('atordoado') || 
-        dados.condicoesAtivas.includes('cego') ||
-        dados.condicoesAtivas.includes('agarrado') || 
-        dados.condicoesAtivas.includes('caido')) {
-            penalidadeDefesa -= 5;
-    }
-    if (dados.condicoesAtivas.includes('indefeso') || dados.condicoesAtivas.includes('inconsciente')) {
-        penalidadeDefesa -= 10;
-    }
+    const indefeso = ['indefeso', 'inconsciente', 'paralisado', 'petrificado']
+      .some(condicao => condicoes.includes(condicao));
+    const vulneravel = ['vulneravel', 'desprevenido', 'atordoado', 'surpreendido', 'cego', 'agarrado', 'enredado', 'exausto', 'fatigado']
+      .some(condicao => condicoes.includes(condicao));
+
+    if (indefeso) penalidadeDefesa = -10;
+    else if (vulneravel) penalidadeDefesa = -5;
     
-    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa + ajusteManualDefesa; 
+    const defesaTotal = 10 + agi + equip + outros + bonusOrigemDefesa + penalidadeDefesa
+      + ajusteManualDefesa + estadoCarga.penalidadeDefesa;
+
+    const bonusPericiaCalculado = {};
+    Object.keys(dados.pericias).forEach(key => {
+        bonusPericiaCalculado[key] = ficha.getBonusPericiaInventario(key)
+          + ficha.getBonusPericiaOrigem(key)
+          + (parseInt(dados.bonusPericiasManuais?.[key]) || 0);
+    });
 
     // Ações de Defesa e Perícias
     const treino_fortitude = parseInt(dados.pericias.fortitude) || 0; 
     const treino_reflexos = parseInt(dados.pericias.reflexos) || 0; 
     const treino_luta = parseInt(dados.pericias.luta) || 0;
     
-    const bonus_fortitude = Math.floor(treino_fortitude / 5) + vig; 
-    const bonus_reflexos = Math.floor(treino_reflexos / 5) + agi;
+    const bonus_fortitude = treino_fortitude + (bonusPericiaCalculado.fortitude || 0);
+    const bonus_reflexos = treino_reflexos + (bonusPericiaCalculado.reflexos || 0);
     const bonusManualBloqueio = parseInt(dados.bonusManuais?.bloqueio) || 0;
     const bonusManualEsquiva = parseInt(dados.bonusManuais?.esquiva) || 0;
-    
-    const bonusPericiaCalculado = {}; 
-    Object.keys(dados.pericias).forEach(key => { 
-        bonusPericiaCalculado[key] = ficha.getBonusPericiaInventario(key) + (parseInt(dados.bonusPericiasManuais?.[key]) || 0); 
-    });
 
     const nexNum = parseInt(String(dados.info.nex).replace(/[^0-9]/g, '')) || 0;
+    const resistenciasInventario = ficha.getResistenciasInventario();
+    const resistenciasOrigem = ficha.getResistenciasOrigem();
+    const rdPetrificado = condicoes.includes('petrificado') ? 10 : 0;
+    const resistenciasCalculadas = Object.fromEntries(
+      Object.keys(dados.resistencias).map(chave => [
+        chave,
+        (Number.parseInt(dados.resistencias[chave], 10) || 0)
+          + (resistenciasInventario[chave] || 0)
+          + (resistenciasOrigem[chave] || 0)
+          + rdPetrificado,
+      ]),
+    );
 
-    setCalculados({ 
+    let deslocamentoFinal = Math.max(
+      0,
+      (Number.parseFloat(dados.info.deslocamento) || 0)
+        + estadoCarga.penalidadeDeslocamento
+        - (condicoes.includes('caido') ? 3 : 0),
+    );
+    const lento = ['lento', 'cego', 'enredado', 'exausto'].some(condicao => condicoes.includes(condicao));
+    const imovel = ['imovel', 'agarrado', 'paralisado', 'petrificado', 'inconsciente']
+      .some(condicao => condicoes.includes(condicao));
+    if (lento) deslocamentoFinal = Math.floor(deslocamentoFinal / 2);
+    if (imovel) deslocamentoFinal = 0;
+
+    const patenteBase = getPatenteInfo(parseInt(dados.info.prestigio) || 0) || Patentes[0];
+    const creditos = ['Baixo', 'Médio', 'Alto', 'Ilimitado'];
+    const patente = dados.info.origem === 'magnata'
+      ? {
+          ...patenteBase,
+          credito: creditos[Math.min(creditos.indexOf(patenteBase.credito) + 1, creditos.length - 1)],
+        }
+      : patenteBase;
+
+    setCalculados({
         defesaTotal, 
+        equipamentoDefesa: equip,
+        modificadorCaido: condicoes.includes('caido') ? { corpoACorpo: -5, distancia: 5 } : null,
         atributosDetalhados,
-        cargaAtual: ficha.getPesoTotal(), 
-        cargaMax: ficha.getMaxPeso(), 
+        cargaAtual: estadoCarga.atual,
+        cargaMax: estadoCarga.maximo,
+        cargaLimiteAbsoluto: estadoCarga.limiteAbsoluto,
+        sobrecarregado: estadoCarga.sobrecarregado,
+        cargaAcimaDoLimite: estadoCarga.acimaDoLimite,
+        deslocamentoFinal,
+        resistenciasCalculadas,
         periciasTreinadas: Object.values(dados.pericias).filter(v => parseInt(v) >= 5).length, 
         periciasTotal: Object.keys(dados.pericias).length, 
         bonusPericia: bonusPericiaCalculado, 
         canChangeTheme: nexNum >= 50, 
-        patente: getPatenteInfo(parseInt(dados.info.prestigio) || 0) || Patentes[0], 
+        patente,
         bloqueio_rd: (treino_fortitude >= 5 || bonusManualBloqueio !== 0) ? ((treino_fortitude >= 5 ? bonus_fortitude : 0) + bonusManualBloqueio) : '—', 
-        esquiva_bonus: (treino_reflexos >= 5 || bonusManualEsquiva !== 0) ? ((treino_reflexos >= 5 ? bonus_reflexos : 0) + bonusManualEsquiva) : '—', 
+        esquiva_bonus: (treino_reflexos >= 5 || bonusManualEsquiva !== 0) ? ((treino_reflexos >= 5 ? bonus_reflexos : 0) + bonusManualEsquiva) : '—',
+        defesa_esquiva: (treino_reflexos >= 5 || bonusManualEsquiva !== 0)
+          ? defesaTotal + (treino_reflexos >= 5 ? bonus_reflexos : 0) + bonusManualEsquiva
+          : '—',
         tem_contra_ataque: treino_luta >= 5, 
         limite_pe: ficha.calculosDetalhados?.limite_pe || 1
     });
@@ -139,43 +192,35 @@ export function FichaProvider({ children }) {
     if (secao === 'info') {
         if (campo === 'nex') { 
             let nex = parseInt(String(valor).replace(/[^0-9]/g, '')) || 0; 
-            if (nex > 100) nex = 100; 
+            if (nex > 99) nex = 99;
+            if (nex < 0) nex = 0;
             valor = `${nex}%`; 
             ficha.setInfo(campo, valor); 
         } else if (campo === 'origem') {
             const nova = valor; 
             const antiga = ficha.getDados().info.origem; 
             
-            // Remove perícias da origem antiga
-            if (antiga && database.periciasPorOrigem?.[antiga]?.fixas) {
-                database.periciasPorOrigem[antiga].fixas.forEach(p => { 
-                    if (ficha.getBonusTotalPericia(p) === 5) ficha.setTreinoPericia(p, 0); 
-                }); 
-            }
-            // Adiciona novas
-            if (database.periciasPorOrigem?.[nova]?.fixas) {
-                database.periciasPorOrigem[nova].fixas.forEach(p => { 
-                    if (ficha.getBonusTotalPericia(p) === 0) ficha.setTreinoPericia(p, 5); 
-                }); 
-            }
+            ficha.trocarPericiasOrigem(database.periciasPorOrigem?.[nova]?.fixas || []);
             
             // Remove poder de origem antigo
             if (antiga) ficha.poderes_aprendidos = ficha.poderes_aprendidos.filter(p => !p.isOrigemPower); 
             
-            // Adiciona novo poder
-            const dadosOrigem = database.periciasPorOrigem?.[nova]; 
-            if (dadosOrigem && dadosOrigem.poder) {
-                ficha.addPoder({ 
-                    key: `origem_${nova}`, 
-                    nome: dadosOrigem.poder.nome, 
-                    descricao: dadosOrigem.poder.descricao, 
-                    tipo: "Origem", 
-                    isOrigemPower: true 
-                }); 
-            }
             ficha.setInfo(campo, valor); 
-        } 
-        else {
+        } else if (campo === 'classe') {
+            const classeAnterior = ficha.getDados().info.classe;
+            ficha.setInfo(campo, valor);
+            if (valor === 'sobrevivente') {
+                ficha.setInfo('nex', '0%');
+                ficha.setInfo('estagio_sobrevivente', 1);
+                ficha.setInfo('trilha', 'nenhuma');
+            } else if (classeAnterior === 'sobrevivente') {
+                ficha.setInfo('nex', '5%');
+                ficha.setInfo('trilha', 'nenhuma');
+            }
+        } else if (campo === 'estagio_sobrevivente') {
+            ficha.setInfo(campo, Math.min(5, Math.max(1, parseInt(valor) || 1)));
+            ficha.setInfo('nex', '0%');
+        } else {
             ficha.setInfo(campo, valor);
         }
     } 
@@ -218,7 +263,13 @@ export function FichaProvider({ children }) {
       removeNota: (id) => { fichaRef.current.removeNotaDiario(id); atualizarCalculos(); },
       
       toggleCondicao: (id) => { fichaRef.current.toggleCondicao(id); atualizarCalculos(); },
-      aplicarInterludio: (opcoes) => { const res = fichaRef.current.aplicarInterludio(opcoes); atualizarCalculos(); return res; }
+      reaplicarCondicao: (id) => {
+        const condicao = database.condicoes?.find(item => item.id === id);
+        fichaRef.current.aplicarCondicao(id, condicao?.evolucao || null);
+        atualizarCalculos();
+      },
+      aplicarInterludio: (opcoes) => { const res = fichaRef.current.aplicarInterludio(opcoes); atualizarCalculos(); return res; },
+      consumirBuffTemporario: (tipo) => { const consumiu = fichaRef.current.consumirBuffTemporario(tipo); atualizarCalculos(); return consumiu; }
   }), [atualizarCalculos]);
 
   // --- Valor Final do Contexto ---

@@ -2,17 +2,12 @@
 // (PASSO 3 - CORREÇÃO DE SINTAXE '??' E '||')
 
 import React, { useState, useEffect } from 'react';
-import { 
-  modificacoesArmas, 
-  modificacoesProtecoes, 
-  modificacoesAcessorios 
-} from '../lib/database.js';
-
-const todasModificacoes = {
-  ...modificacoesArmas.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesProtecoes.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-  ...modificacoesAcessorios.reduce((acc, mod) => ({ ...acc, [mod.key]: mod }), {}),
-};
+import {
+  calcularStatsItem,
+  getModificacao,
+  getModificacoesCompativeis,
+  modificacoesSaoIncompativeis,
+} from '../lib/inventario.js';
 
 function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   
@@ -24,6 +19,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   const [bonusPericia, setBonusPericia] = useState(0);
   const [periciaSelect, setPericiaSelect] = useState('');
   const [modsSelecionadas, setModsSelecionadas] = useState([]);
+  const [quebrado, setQuebrado] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -40,6 +36,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
       setBonusPericia(item.valorBonus || 0);
       setPericiaSelect(item.periciaVinculada || '');
       setModsSelecionadas(item.modificacoes || []);
+      setQuebrado(Boolean(item.quebrado));
     }
   }, [item, isOpen]);
 
@@ -48,7 +45,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
       if (prevMods.includes(modKey)) {
         return prevMods.filter(m => m !== modKey);
       } else {
-        return [...prevMods, modKey];
+        return [...prevMods.filter(chave => !modificacoesSaoIncompativeis(chave, modKey)), modKey];
       }
     });
   };
@@ -77,19 +74,14 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   };
 
   const calcularStatsFinais = () => {
-    let categoriaFinal = parseInt(catBase) || 0;
-    let espacosFinal = parseFloat(espacosBase) || 0; 
-
-    modsSelecionadas.forEach(modKey => {
-      const modData = todasModificacoes[modKey];
-      if (modData) {
-        categoriaFinal += (modData.cat || 1); 
-        espacosFinal += (modData.espacos || 0);
-      }
+    const stats = calcularStatsItem({
+      ...item,
+      categoriaBase: catBase,
+      espacosBase,
+      modificacoes: modsSelecionadas,
+      quebrado,
     });
-    
-    espacosFinal = Math.max(0, espacosFinal);
-    return { categoriaFinal, espacosFinal };
+    return { categoriaFinal: stats.categoria, espacosFinal: stats.espacos };
   };
 
   const handleOverlayClick = (e) => {
@@ -103,6 +95,12 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   }
   
   const { categoriaFinal, espacosFinal } = calcularStatsFinais();
+  const modificacoesDisponiveis = [
+    ...getModificacoesCompativeis(item || {}),
+    ...modsSelecionadas.map(getModificacao).filter(Boolean),
+  ].filter((modificacao, indice, lista) =>
+    lista.findIndex(itemLista => itemLista.key === modificacao.key) === indice,
+  );
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -153,6 +151,11 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
                 <textarea id="edit-item-desc" rows="3" value={desc} onChange={(e) => setDesc(e.target.value)}></textarea>
               </div>
 
+              <label style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <input type="checkbox" checked={quebrado} onChange={(e) => setQuebrado(e.target.checked)} />
+                Item quebrado (não concede bônus até receber manutenção)
+              </label>
+
               <h4>Bônus Automáticos (Opcional)</h4>
               <div className="form-custom-grid">
                 <div className="campo-horizontal">
@@ -177,27 +180,7 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
               <h4>Modificações Mundanas (Cada uma aumenta a Categoria em +I)</h4>
               <div className="form-custom-grid mods-lista-custom mods-lista-custom-alta">
                 
-                {modificacoesArmas.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
-                    <input 
-                      type="checkbox"
-                      checked={modsSelecionadas.includes(mod.key)}
-                      onChange={() => handleModToggle(mod.key)}
-                    />
-                    {mod.nome}
-                  </label>
-                ))}
-                {modificacoesProtecoes.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
-                    <input 
-                      type="checkbox"
-                      checked={modsSelecionadas.includes(mod.key)}
-                      onChange={() => handleModToggle(mod.key)}
-                    />
-                    {mod.nome}
-                  </label>
-                ))}
-                {modificacoesAcessorios.map(mod => (
+                {modificacoesDisponiveis.map(mod => (
                   <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
                     <input 
                       type="checkbox"

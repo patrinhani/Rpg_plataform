@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { database } from '../lib/database.js'; // Caminho corrigido: volta uma pasta, entra em lib
 import { getIconePorCondicao } from './icons/Icones.jsx';
 
-function Condicoes({ ativas, onToggle }) {
+function Condicoes({ ativas, automaticas = [], onToggle, onReaplicar }) {
   const [expandido, setExpandido] = useState(false);
 
   // Pega a lista do database. Se não existir, usa array vazio.
@@ -31,11 +31,12 @@ function Condicoes({ ativas, onToggle }) {
       <div className={`condicoes-grid ${expandido ? 'expandido' : 'recolhido'}`}>
         {listaOrdenada.map((cond) => {
           const isAtiva = ativas.includes(cond.id);
+          const isAutomatica = automaticas.includes(cond.id);
           return (
             <div 
               key={cond.id} 
-              className={`condicao-card ${isAtiva ? 'ativa' : ''} ${cond.tipo}`}
-              onClick={() => onToggle(cond.id)}
+              className={`condicao-card ${isAtiva ? 'ativa' : ''} ${isAutomatica ? 'automatica' : ''} ${cond.tipo}`}
+              onClick={() => !isAutomatica && onToggle(cond.id)}
               title={cond.descricao}
             >
               <div className="condicao-icone">
@@ -44,11 +45,24 @@ function Condicoes({ ativas, onToggle }) {
               </div>
               <div className="condicao-info">
                 <span className="condicao-nome">{cond.nome}</span>
+                {isAutomatica && <span className="condicao-desc-curta">Automática pelos recursos atuais</span>}
                 {/* Mostra a descrição curta apenas se estiver ativa ou expandido */}
                 {(isAtiva || expandido) && (
                     <span className="condicao-desc-curta">
                         {cond.descricao.length > 50 && !isAtiva ? cond.descricao.substring(0, 50) + '...' : cond.descricao}
                     </span>
+                )}
+                {isAtiva && !isAutomatica && cond.evolucao && (
+                  <button
+                    type="button"
+                    onClick={(evento) => {
+                      evento.stopPropagation();
+                      onReaplicar?.(cond.id);
+                    }}
+                    style={{ marginTop: '6px', padding: '3px 7px', fontSize: '0.75em' }}
+                  >
+                    Aplicar novamente → {database.condicoes.find(item => item.id === cond.evolucao)?.nome || cond.evolucao}
+                  </button>
                 )}
               </div>
             </div>
