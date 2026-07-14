@@ -1,5 +1,10 @@
 // src/lib/personagem.js
-import { calcularDefesaItem, calcularStatsItem, normalizarModificacoes } from './inventario.js';
+import {
+  calcularBonusCapacidadeCargaItem,
+  calcularDefesaItem,
+  calcularStatsItem,
+  normalizarModificacoes,
+} from './inventario.js';
 class Personagem {
   constructor() {
     this.reset();
@@ -571,7 +576,10 @@ class Personagem {
     let maxPesoBase = forca > 0 ? forca * 5 : 2; 
     
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos && !item.quebrado);
-    if (inventarioAtivo.some((item) => item.id === "mochila_militar")) maxPesoBase += 2;
+    const bonusCapacidadeItens = inventarioAtivo
+      .map(calcularBonusCapacidadeCargaItem)
+      .reduce((maior, bonus) => Math.max(maior, bonus), 0);
+    maxPesoBase += bonusCapacidadeItens;
 
     if (this.info.trilha === "tecnico") {
       const intelecto = this.getAtributoFinal('int');

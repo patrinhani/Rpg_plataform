@@ -9,6 +9,7 @@ import {
   calcularStatsItem,
   getModificacoesCompativeis,
 } from '../src/lib/inventario.js';
+import { database } from '../src/lib/database.js';
 import Personagem from '../src/lib/personagem.js';
 
 test('calcula categoria e espaços finais das modificações', () => {
@@ -82,6 +83,36 @@ test('identifica carga normal, sobrecarga e limite absoluto', () => {
     penalidadePericias: -5,
     penalidadeDeslocamento: -3,
   });
+});
+
+test('Mochila Militar aumenta a capacidade em 2 sem ocupar espaço', () => {
+  const personagem = new Personagem();
+  personagem.atributos.for = 1;
+  const mochila = database.equipGeral.find(item => item.id === 'mochila_militar');
+
+  personagem.addItemInventario(mochila);
+
+  assert.equal(personagem.getPesoTotal(), 0);
+  assert.equal(personagem.getMaxPeso(), 7);
+  assert.equal(personagem.getEstadoCarga().limiteAbsoluto, 14);
+});
+
+test('reconhece Mochila Militar legada sem acumular bônus de itens', () => {
+  const personagem = new Personagem();
+  personagem.carregarDados({
+    atributos: { ...personagem.atributos, for: 1 },
+    info: personagem.info,
+    inventario: [
+      { inventarioId: 'mochila_militar', nome: 'Mochila Militar', espacos: 0 },
+      { id: 'mochila_militar', nome: 'Mochila Militar', espacos: 0, bonusCapacidadeCarga: 2 },
+    ],
+  });
+
+  assert.equal(personagem.getMaxPeso(), 7);
+
+  personagem.inventario[0].ignorarCalculos = true;
+  personagem.inventario[1].quebrado = true;
+  assert.equal(personagem.getMaxPeso(), 5);
 });
 
 test('filtra modificações pelo tipo do item', () => {

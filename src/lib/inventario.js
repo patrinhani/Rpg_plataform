@@ -95,6 +95,14 @@ export function normalizarModificacoes(modificacoes = []) {
   return [...new Set(modificacoes.filter(Boolean))];
 }
 
+export function calcularBonusCapacidadeCargaItem(item = {}) {
+  const bonusDeclarado = Number.parseFloat(item.bonusCapacidadeCarga);
+  if (Number.isFinite(bonusDeclarado)) return Math.max(0, bonusDeclarado);
+
+  const idLegado = typeof item.inventarioId === 'string' ? item.inventarioId : null;
+  return item.id === 'mochila_militar' || idLegado === 'mochila_militar' ? 2 : 0;
+}
+
 export function calcularStatsItem(item = {}) {
   const modificacoes = normalizarModificacoes(item.modificacoes);
   let categoria = Number.parseInt(item.categoriaBase ?? item.categoria, 10) || 0;

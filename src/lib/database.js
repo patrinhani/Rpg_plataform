@@ -1001,6 +1001,7 @@ const database = {
       nome: "Mochila Militar",
       categoria: 1,
       espacos: 0,
+      bonusCapacidadeCarga: 2,
       descricao: "Não usa espaço e aumenta sua capacidade de carga em 2 espaços.",
     },
     {
