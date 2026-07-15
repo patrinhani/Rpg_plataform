@@ -1,7 +1,7 @@
 // src/lib/mesas.js
 import { db } from './firebase';
 import { 
-  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc 
+  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, runTransaction
 } from 'firebase/firestore';
 
 // CORREÇÃO AQUI: Importa a classe default, não a instância nomeada
@@ -188,13 +188,46 @@ export async function atualizarNPCStatus(mesaId, uidNPC, campo, valor) {
 
 export async function removerDaIniciativa(mesaId, uidAlvo) {
     const mesaRef = doc(db, "mesas", mesaId);
-    const snap = await getDoc(mesaRef);
-    if (!snap.exists()) return;
 
-    const dados = snap.data();
-    const novaLista = (dados.iniciativas || []).filter(i => i.uid !== uidAlvo);
-    
-    await updateDoc(mesaRef, { iniciativas: novaLista });
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(mesaRef);
+        if (!snap.exists()) return;
+
+        const dados = snap.data();
+        const listaAtual = Array.isArray(dados.iniciativas) ? dados.iniciativas : [];
+        const novaLista = listaAtual.filter(i => i.uid !== uidAlvo);
+
+        if (novaLista.length === listaAtual.length) return;
+
+        let novoTurno = 0;
+
+        if (novaLista.length > 0 && listaAtual.length > 0) {
+            const indiceInformado = Number.isInteger(dados.turnoAtual) ? dados.turnoAtual : 0;
+            const indiceAtual = ((indiceInformado % listaAtual.length) + listaAtual.length) % listaAtual.length;
+            const participanteAtual = listaAtual[indiceAtual];
+
+            if (participanteAtual?.uid !== uidAlvo) {
+                const indiceDoMesmoParticipante = novaLista.findIndex(i => i.uid === participanteAtual.uid);
+                novoTurno = indiceDoMesmoParticipante >= 0 ? indiceDoMesmoParticipante : 0;
+            } else {
+                for (let deslocamento = 1; deslocamento < listaAtual.length; deslocamento++) {
+                    const sucessor = listaAtual[(indiceAtual + deslocamento) % listaAtual.length];
+                    if (sucessor.uid === uidAlvo) continue;
+
+                    const indiceDoSucessor = novaLista.findIndex(i => i.uid === sucessor.uid);
+                    if (indiceDoSucessor >= 0) {
+                        novoTurno = indiceDoSucessor;
+                        break;
+                    }
+                }
+            }
+        }
+
+        transaction.update(mesaRef, {
+            iniciativas: novaLista,
+            turnoAtual: novoTurno
+        });
+    });
 }
 
 // --- GERENCIAMENTO DE MESA ---

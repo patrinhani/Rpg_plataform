@@ -12,6 +12,7 @@ const FOCUSABLE_SELECTOR = [
 ].join(',');
 
 let openModalCount = 0;
+const openModalStack = [];
 
 function lockPageScroll() {
   openModalCount += 1;
@@ -32,12 +33,14 @@ export default function ModalBase({
   size = 'medium',
   className = '',
   bodyClassName = '',
+  panelStyle,
   closeLabel = 'Fechar modal',
   closeOnOverlay = true,
   initialFocusRef,
   describedBy,
 }) {
   const panelRef = useRef(null);
+  const modalIdRef = useRef(Symbol('caos-modal'));
   const onCloseRef = useRef(onClose);
   const generatedTitleId = useId();
 
@@ -50,6 +53,8 @@ export default function ModalBase({
 
     const previouslyFocused = document.activeElement;
     const panel = panelRef.current;
+    const modalId = modalIdRef.current;
+    openModalStack.push(modalId);
     lockPageScroll();
 
     const focusFrame = window.requestAnimationFrame(() => {
@@ -59,6 +64,8 @@ export default function ModalBase({
     });
 
     const handleKeyDown = (event) => {
+      if (openModalStack[openModalStack.length - 1] !== modalId) return;
+
       if (event.key === 'Escape' && onCloseRef.current) {
         event.preventDefault();
         onCloseRef.current();
@@ -92,6 +99,8 @@ export default function ModalBase({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', handleKeyDown, true);
+      const stackIndex = openModalStack.lastIndexOf(modalId);
+      if (stackIndex >= 0) openModalStack.splice(stackIndex, 1);
       unlockPageScroll();
       if (previouslyFocused instanceof HTMLElement && document.contains(previouslyFocused)) {
         previouslyFocused.focus();
@@ -102,7 +111,8 @@ export default function ModalBase({
   if (!isOpen) return null;
 
   const handleOverlayClick = (event) => {
-    if (closeOnOverlay && onClose && event.target === event.currentTarget) onClose();
+    const isTopModal = openModalStack[openModalStack.length - 1] === modalIdRef.current;
+    if (isTopModal && closeOnOverlay && onClose && event.target === event.currentTarget) onClose();
   };
 
   return createPortal(
@@ -110,6 +120,7 @@ export default function ModalBase({
       <section
         ref={panelRef}
         className={`caos-modal__panel caos-modal__panel--${size} ${className}`.trim()}
+        style={panelStyle}
         role="dialog"
         aria-modal="true"
         aria-labelledby={generatedTitleId}

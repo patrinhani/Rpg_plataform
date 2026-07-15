@@ -1,6 +1,7 @@
 // /src/components/ModalTrilhaCustom.jsx
 
 import React, { useState } from 'react';
+import ModalBase from './ModalBase.jsx';
 
 // Níveis fixos de progressão para as habilidades de trilha
 const NIVEIS_TRILHA = [10, 40, 65, 99];
@@ -56,12 +57,6 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
     setHabilidades(criarHabilidadesVazias('combatente'));
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   if (!isOpen) {
     return null;
   }
@@ -72,24 +67,39 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
 
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-conteudo modal-grande">
-        
-        <div className="modal-header">
-          <h3>Criar Trilha Personalizada</h3>
-          <button className="btn-fechar-modal" onClick={onClose}>
-            X
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Criar Trilha Personalizada"
+      size="wide"
+      closeLabel="Fechar criação de trilha"
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Cancelar
           </button>
-        </div>
-
-        <div className="modal-body">
-          <form className="form-custom-item" onSubmit={handleSubmit}>
+          <button
+            type="submit"
+            form="form-trilha-custom"
+            className="caos-modal__button caos-modal__button--primary"
+          >
+            Salvar Trilha Personalizada
+          </button>
+        </>
+      )}
+    >
+          <form id="form-trilha-custom" className="form-custom-item" onSubmit={handleSubmit}>
             
             {/* --- Detalhes Básicos --- */}
             <h4>Detalhes da Trilha</h4>
             <div className="campo-horizontal">
-              <label>Nome da Trilha (Ex: Arauto do Caos)</label>
+              <label htmlFor="trilha-custom-nome">Nome da Trilha (Ex: Arauto do Caos)</label>
               <input 
+                id="trilha-custom-nome"
                 type="text" 
                 required 
                 value={nome} 
@@ -99,8 +109,9 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
 
             <div className="form-custom-grid">
               <div className="campo-horizontal">
-                <label>Classe Associada</label>
+                <label htmlFor="trilha-custom-classe">Classe Associada</label>
                 <select 
+                  id="trilha-custom-classe"
                   value={classeAssociada} 
                   onChange={(e) => {
                     const novaClasse = e.target.value;
@@ -116,8 +127,9 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
                 </select>
               </div>
               <div className="campo-horizontal">
-                <label>Requer Escolha de Elemento?</label>
+                <label htmlFor="trilha-custom-elemento">Requer Escolha de Elemento?</label>
                 <select 
+                  id="trilha-custom-elemento"
                   value={requerElemento} 
                   onChange={(e) => setRequerElemento(e.target.value === 'true')}
                 >
@@ -135,8 +147,11 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
             <div className="form-custom-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'}}>
               {habilidades.map((hab, index) => (
                 <div key={hab.nex} className="campo-horizontal">
-                  <label>{classeAssociada === 'sobrevivente' ? `Estágio ${hab.nex}` : `NEX ${hab.nex}%`}</label>
+                  <label htmlFor={`trilha-custom-habilidade-${hab.nex}`}>
+                    {classeAssociada === 'sobrevivente' ? `Estágio ${hab.nex}` : `NEX ${hab.nex}%`}
+                  </label>
                   <textarea
+                    id={`trilha-custom-habilidade-${hab.nex}`}
                     rows="3"
                     placeholder={classeAssociada === 'sobrevivente' ? `Habilidade do Estágio ${hab.nex}` : `Habilidade de NEX ${hab.nex}%`}
                     value={hab.descricao}
@@ -146,14 +161,8 @@ function ModalTrilhaCustom({ isOpen, onClose, onAddTrilha, classesList }) {
               ))}
             </div>
             
-            <button type="submit" style={{marginTop: '20px'}}>
-              Salvar Trilha Personalizada
-            </button>
           </form>
-        </div>
-
-      </div>
-    </div>
+    </ModalBase>
   );
 }
 

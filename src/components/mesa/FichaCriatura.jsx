@@ -1,182 +1,144 @@
-// src/components/mesa/FichaCriatura.jsx
 import React, { memo } from 'react';
+import ModalBase from '../ModalBase.jsx';
+import '../../styles/mesa.css';
+
+const TEMAS_CRIATURA = {
+  Sangue: {
+    accent: '#ff6469',
+    rgb: '255 100 105',
+    symbol: '/assets/images/SimboloSangue.webp',
+  },
+  Morte: {
+    accent: '#d9e2e8',
+    rgb: '217 226 232',
+    symbol: '/assets/images/SimboloMorte.webp',
+  },
+  Conhecimento: {
+    accent: '#ffe45e',
+    rgb: '255 228 94',
+    symbol: '/assets/images/SimboloConhecimento.webp',
+  },
+  Energia: {
+    accent: '#d56cff',
+    rgb: '213 108 255',
+    symbol: '/assets/images/SimboloEnergia.webp',
+  },
+  Medo: {
+    accent: '#f3f7fa',
+    rgb: '243 247 250',
+    symbol: '/assets/images/SimboloSemafinidade.webp',
+  },
+};
 
 function FichaCriatura({ dados, onClose }) {
   if (!dados) return null;
 
-  // Cores baseadas no elemento
-  const cores = {
-    Sangue: '#d40000',
-    Morte: '#444',
-    Conhecimento: '#d4af37',
-    Energia: '#9c27b0',
-    Medo: '#fff'
-  };
-  
-  // Caminhos dos símbolos
-  const simbolos = {
-    Sangue: '/assets/images/SimboloSangue.webp',
-    Morte: '/assets/images/SimboloMorte.webp',
-    Conhecimento: '/assets/images/SimboloConhecimento.webp',
-    Energia: '/assets/images/SimboloEnergia.webp',
-    Medo: '/assets/images/SimboloSemafinidade.webp',
-    undefined: '/assets/images/SimboloSemafinidade.webp'
-  };
-  
-  const corTema = cores[dados.elemento] || '#fff';
-  const simboloFundo = simbolos[dados.elemento] || simbolos.Medo;
+  const theme = TEMAS_CRIATURA[dados.elemento] || TEMAS_CRIATURA.Medo;
+  const attributes = Object.entries(dados.atributos || {});
+  const actions = dados.acoes || [];
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+    <ModalBase
+      isOpen={Boolean(dados)}
+      onClose={onClose}
+      title={dados.nome || 'Criatura'}
+      size="large"
+      className="creature-sheet"
+      bodyClassName="creature-sheet__body"
+      closeLabel="Fechar ficha da criatura"
+      panelStyle={{
+        '--creature-accent': theme.accent,
+        '--creature-accent-rgb': theme.rgb,
+        '--modal-accent': theme.accent,
+        '--modal-accent-rgb': theme.rgb,
       }}
     >
-      <div
-        className="modal-conteudo"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="ficha-criatura-titulo"
-        style={{ maxWidth: '600px', border: `2px solid ${corTema}`, padding: '0', overflow: 'hidden', position: 'relative' }}
-      >
-        
-        {/* CABEÇALHO */}
-        <div style={{ background: corTema, padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-                <h2 id="ficha-criatura-titulo" style={{ margin: 0, color: '#000', fontFamily: '"Special Elite", monospace', fontSize: '1.8em' }}>{dados.nome.toUpperCase()}</h2>
-                <span style={{ color: '#000', fontWeight: 'bold', background:'rgba(255,255,255,0.3)', padding:'2px 6px', borderRadius:'4px' }}>{dados.elemento}</span>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-                <h1 style={{ margin: 0, color: '#000', fontSize: '2.5em', lineHeight: 1 }}>VD {dados.vd}</h1>
-            </div>
+      <div className="creature-sheet__overview">
+        <div className="creature-sheet__classification">
+          <span>{dados.elemento || 'Medo'}</span>
+          <span>{dados.tipo || 'Criatura paranormal'}</span>
         </div>
-
-        <div className="modal-body" style={{ padding: '20px', maxHeight: '80vh', overflowY: 'auto', background: '#111' }}>
-            
-            {/* --- ÁREA DA FOTO (ESTILIZADA COM SÍMBOLO) --- */}
-            {dados.foto && (
-                <div style={{ 
-                    width: '100%', 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    marginBottom: '20px',
-                    position: 'relative',       
-                    overflow: 'hidden',         
-                    borderRadius: '6px',
-                    border: `1px solid ${corTema}`,
-                    boxShadow: `0 0 20px ${corTema}30`, 
-                    backgroundColor: '#080808', 
-                    minHeight: '250px'          
-                }}>
-                    
-                    {/* 1. Símbolo de Fundo (Marca d'água) */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '-10%', left: '-10%', width: '120%', height: '120%', 
-                        backgroundImage: `url(${simboloFundo})`,
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundSize: 'contain',
-                        opacity: 0.15,          
-                        filter: 'grayscale(0.4)', 
-                        zIndex: 0
-                    }}></div>
-
-                    {/* 2. Vinheta (Sombra nas bordas) */}
-                    <div style={{
-                        position: 'absolute',
-                        top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'radial-gradient(circle, transparent 40%, #111 100%)',
-                        zIndex: 1
-                    }}></div>
-
-                    {/* 3. A Foto da Criatura (OTIMIZADA) */}
-                    <img 
-                        src={dados.foto} 
-                        alt={dados.nome} 
-                        loading="lazy"      // <-- Carregamento preguiçoso
-                        decoding="async"    // <-- Decodificação em paralelo
-                        style={{ 
-                            maxWidth: '100%', 
-                            maxHeight: '400px', 
-                            objectFit: 'contain', 
-                            zIndex: 2,             
-                            position: 'relative',
-                            filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.8))' 
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* Tipo e Presença */}
-            <div style={{ marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <p style={{ color: '#aaa', fontStyle: 'italic' }}>{dados.tipo}</p>
-                <div style={{ background: '#222', padding: '10px', borderLeft: `4px solid ${corTema}`, marginTop: '5px' }}>
-                    <strong style={{ color: corTema }}>PRESENÇA PERTURBADORA</strong><br/>
-                    {dados.presenca}
-                </div>
-            </div>
-
-            {/* Status Principais */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <div>
-                    <h4 style={{ color: corTema, borderBottom: `1px solid ${corTema}` }}>SENTIDOS</h4>
-                    <p style={{fontSize:'0.9em'}}>{dados.sentidos}</p>
-                    <p style={{fontSize:'0.9em'}}><strong>Iniciativa:</strong> {dados.iniciativa}</p>
-                </div>
-                <div>
-                    <h4 style={{ color: corTema, borderBottom: `1px solid ${corTema}` }}>DEFESA {dados.defesa}</h4>
-                    <p style={{fontSize:'0.9em'}}><strong>Fortitude:</strong> {dados.fortitude}</p>
-                    <p style={{fontSize:'0.9em'}}><strong>Reflexos:</strong> {dados.reflexos}</p>
-                    <p style={{fontSize:'0.9em'}}><strong>Vontade:</strong> {dados.vontade}</p>
-                </div>
-            </div>
-
-            {/* Vida e Resistências */}
-            <div style={{ background: '#1a1a1a', padding: '10px', borderRadius: '4px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span>PONTOS DE VIDA <strong>{dados.pv_max}</strong></span>
-                    <span style={{ color: '#666' }}>Machucado {dados.machucado}</span>
-                </div>
-                <p style={{ fontSize: '0.9em', color: '#ccc' }}><strong>Resistências:</strong> {dados.resistencias}</p>
-                <p style={{ fontSize: '0.9em', color: '#ccc' }}><strong>Vulnerabilidades:</strong> {dados.vulnerabilidades}</p>
-            </div>
-
-            {/* Atributos */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', background: '#000', padding: '10px' }}>
-                {Object.entries(dados.atributos).map(([attr, val]) => (
-                    <div key={attr} style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#666', fontSize: '0.8em' }}>{attr.toUpperCase()}</div>
-                        <div style={{ fontSize: '1.5em', color: corTema, fontWeight: 'bold' }}>{val}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Deslocamento e Ações */}
-            <div style={{ marginBottom: '20px' }}>
-                <p><strong>Deslocamento:</strong> {dados.deslocamento}</p>
-            </div>
-
-            <div>
-                <h3 style={{ color: corTema, borderBottom: '1px solid #333', paddingBottom: '5px' }}>AÇÕES</h3>
-                {dados.acoes.map((acao, idx) => (
-                    <div key={idx} style={{ marginBottom: '10px' }}>
-                        <strong style={{ color: '#fff' }}>◆ {acao.nome}</strong>
-                        <p style={{ color: '#bbb', fontSize: '0.9em', margin: 0 }}>{acao.descricao}</p>
-                    </div>
-                ))}
-            </div>
-
+        <div className="creature-sheet__vd">
+          <small>Valor de desafio</small>
+          <strong>{dados.vd ?? '—'}</strong>
         </div>
-
-        <button type="button" aria-label="Fechar ficha da criatura" className="btn-fechar-modal" onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', color: '#000', fontSize: '1.5em', background: 'none', border: 'none', cursor: 'pointer' }}>
-            &times;
-        </button>
       </div>
-    </div>
+
+      <div className={`creature-sheet__visual ${dados.foto ? '' : 'creature-sheet__visual--symbol'}`}>
+        <span className="creature-sheet__watermark" style={{ backgroundImage: `url(${theme.symbol})` }} aria-hidden="true" />
+        <img
+          src={dados.foto || theme.symbol}
+          alt={dados.foto ? dados.nome : ''}
+          aria-hidden={dados.foto ? undefined : 'true'}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+
+      <section className="creature-sheet__presence" aria-labelledby="creature-presence-title">
+        <h3 id="creature-presence-title">Presença perturbadora</h3>
+        <p>{dados.presenca || 'Sem informação registrada.'}</p>
+      </section>
+
+      <div className="creature-sheet__columns">
+        <section className="creature-sheet__section">
+          <h3>Sentidos</h3>
+          <p>{dados.sentidos || '—'}</p>
+          <p><strong>Iniciativa:</strong> {dados.iniciativa ?? '—'}</p>
+        </section>
+
+        <section className="creature-sheet__section">
+          <h3>Defesa <strong>{dados.defesa ?? '—'}</strong></h3>
+          <dl className="creature-sheet__compact-list">
+            <div><dt>Fortitude</dt><dd>{dados.fortitude ?? '—'}</dd></div>
+            <div><dt>Reflexos</dt><dd>{dados.reflexos ?? '—'}</dd></div>
+            <div><dt>Vontade</dt><dd>{dados.vontade ?? '—'}</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <section className="creature-sheet__vitals" aria-label="Vida e resistências">
+        <div className="creature-sheet__life">
+          <span>Pontos de vida</span>
+          <strong>{dados.pv_max ?? '—'}</strong>
+          <small>Machucado: {dados.machucado ?? '—'}</small>
+        </div>
+        <dl>
+          <div><dt>Resistências</dt><dd>{dados.resistencias || '—'}</dd></div>
+          <div><dt>Vulnerabilidades</dt><dd>{dados.vulnerabilidades || '—'}</dd></div>
+        </dl>
+      </section>
+
+      {attributes.length > 0 && (
+        <section className="creature-sheet__attributes" aria-label="Atributos da criatura">
+          {attributes.map(([attribute, value]) => (
+            <div key={attribute}>
+              <span>{attribute.toUpperCase()}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <p className="creature-sheet__movement"><strong>Deslocamento:</strong> {dados.deslocamento || '—'}</p>
+
+      <section className="creature-sheet__actions" aria-labelledby="creature-actions-title">
+        <h3 id="creature-actions-title">Ações</h3>
+        {actions.length > 0 ? (
+          <ul>
+            {actions.map((action, index) => (
+              <li key={`${action.nome || 'acao'}-${index}`}>
+                <strong>{action.nome || 'Ação'}</strong>
+                <p>{action.descricao || 'Sem descrição.'}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Nenhuma ação registrada.</p>
+        )}
+      </section>
+    </ModalBase>
   );
 }
 
-// OTIMIZAÇÃO: Exporta com memo para evitar re-render desnecessário
 export default memo(FichaCriatura);

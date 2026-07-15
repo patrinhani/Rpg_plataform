@@ -1,6 +1,7 @@
 // /src/components/ModalNota.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import ModalBase from './ModalBase.jsx';
 
 /**
  * Props esperadas do App.jsx (através do Diario.jsx):
@@ -14,6 +15,10 @@ function ModalNota({ isOpen, onClose, onSave, notaAtual }) {
   // Estados internos do formulário
   const [titulo, setTitulo] = useState('');
   const [conteudo, setConteudo] = useState('');
+  const formId = useId();
+  const tituloId = useId();
+  const conteudoId = useId();
+  const tituloRef = useRef(null);
 
   // Efeito para preencher o formulário se estivermos editando
   useEffect(() => {
@@ -43,64 +48,68 @@ function ModalNota({ isOpen, onClose, onSave, notaAtual }) {
     onClose(); // Fecha o modal
   };
 
-  // --- Handler para fechar o modal clicando no fundo ---
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-conteudo"> {/* Usa o tamanho padrão de modal */}
-        
-        <div className="modal-header">
-          <h3>{notaAtual ? "Editar Anotação" : "Nova Anotação"}</h3>
-          <button className="btn-fechar-modal" onClick={onClose}>
-            X
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title={notaAtual ? 'Editar Anotação' : 'Nova Anotação'}
+      size="medium"
+      closeLabel="Fechar anotação"
+      initialFocusRef={tituloRef}
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Cancelar
           </button>
+          <button
+            type="submit"
+            form={formId}
+            id="btn-salvar-nota"
+            className="caos-modal__button caos-modal__button--primary"
+          >
+            Salvar Anotação
+          </button>
+        </>
+      )}
+    >
+      <form id={formId} className="form-custom-item" onSubmit={handleSubmit}>
+        <div className="caos-modal__field">
+          <label htmlFor={tituloId}>Título</label>
+          <input
+            ref={tituloRef}
+            id={tituloId}
+            type="text"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            placeholder="Título da Pista, NPC ou Local"
+          />
         </div>
 
-        <div className="modal-body">
-          {/* Reutiliza o CSS do formulário de item customizado */ }
-          <form className="form-custom-item" onSubmit={handleSubmit}>
-              
-              <div className="campo-horizontal">
-                <label>Título</label>
-                <input 
-                  type="text" 
-                  value={titulo} 
-                  onChange={(e) => setTitulo(e.target.value)}
-                  placeholder="Título da Pista, NPC ou Local"
-                />
-              </div>
-
-              <div className="campo-horizontal">
-                <label>Conteúdo (Pode colar links de imagens aqui)</label>
-                <textarea
-                  value={conteudo}
-                  onChange={(e) => setConteudo(e.target.value)}
-                  placeholder="Descreva a pista"
-                  style={{
-                    minHeight: '250px', // Altura do campo de texto no modal
-                    resize: 'vertical',
-                    fontFamily: '"Roboto Condensed", sans-serif',
-                    fontSize: '1em'
-                  }}
-                />
-              </div>
-
-              <button type="submit" id="btn-salvar-nota">
-                Salvar Anotação
-              </button>
-            </form>
+        <div className="caos-modal__field">
+          <label htmlFor={conteudoId}>Conteúdo (Pode colar links de imagens aqui)</label>
+          <textarea
+            id={conteudoId}
+            value={conteudo}
+            onChange={(e) => setConteudo(e.target.value)}
+            placeholder="Descreva a pista"
+            style={{
+              minHeight: '250px',
+              resize: 'vertical',
+              fontFamily: '"Roboto Condensed", sans-serif',
+              fontSize: '1em'
+            }}
+          />
         </div>
-      </div>
-    </div>
+      </form>
+    </ModalBase>
   );
 }
 

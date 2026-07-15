@@ -1,8 +1,9 @@
 // /src/components/ModalRituais.jsx
 // (ATUALIZADO: Com Filtro por Círculo)
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { database } from '../lib/database.js';
+import ModalBase from './ModalBase.jsx';
 import RitualCard from './RitualCard.jsx';
 
 // --- Lógica de Filtragem ---
@@ -30,6 +31,8 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
   const [customAlvoArea, setCustomAlvoArea] = useState('Você');
   const [customDuracao, setCustomDuracao] = useState('Cena');
   const [customDescricao, setCustomDescricao] = useState('');
+  const tabsId = useId();
+  const fieldsId = useId();
 
   const handleSubmitCustomRitual = (e) => {
     e.preventDefault();
@@ -57,10 +60,6 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
     onClose();
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
   if (!isOpen) return null;
 
   // [ATUALIZADO] Helper de renderização com filtro
@@ -77,8 +76,11 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
             {/* Botões de Filtro de Círculo */}
             <div className="filtros-circulo" style={{display:'flex', gap:'10px', marginBottom:'15px', flexWrap: 'wrap'}}>
                 <button 
+                    type="button"
                     onClick={() => setFiltroCirculo('todos')} 
                     className={`btn-filtro ${filtroCirculo === 'todos' ? 'ativo' : ''}`}
+                    aria-pressed={filtroCirculo === 'todos'}
+                    aria-label="Exibir rituais de todos os círculos"
                     style={{
                         background: filtroCirculo === 'todos' ? 'var(--cor-destaque)' : 'transparent',
                         border: '1px solid var(--cor-destaque)',
@@ -92,7 +94,10 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
                 {[1, 2, 3, 4].map(c => (
                     <button 
                         key={c} 
+                        type="button"
                         onClick={() => setFiltroCirculo(c)}
+                        aria-pressed={filtroCirculo === c}
+                        aria-label={`Exibir rituais de ${c}º círculo`}
                         style={{
                             background: filtroCirculo === c ? 'var(--cor-destaque)' : 'transparent',
                             border: '1px solid var(--cor-destaque)',
@@ -124,48 +129,87 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
     );
   };
 
+  const tabs = [
+    { id: 'sangue', label: 'Sangue' },
+    { id: 'morte', label: 'Morte' },
+    { id: 'conhecimento', label: 'Conhecimento' },
+    { id: 'energia', label: 'Energia' },
+    { id: 'medo', label: 'Medo' },
+    { id: 'personalizado', label: 'Personalizado' },
+  ];
+  const handleTabKeyDown = (event, currentIndex) => {
+    let nextIndex;
+
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = tabs.length - 1;
+    if (nextIndex === undefined) return;
+
+    event.preventDefault();
+    const nextTab = tabs[nextIndex];
+    setAbaAtiva(nextTab.id);
+    window.requestAnimationFrame(() => document.getElementById(`${tabsId}-tab-${nextTab.id}`)?.focus());
+  };
+
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-conteudo">
-        
-        <div className="modal-header">
-          <h3>Biblioteca de Rituais</h3>
-          <button className="btn-fechar-modal" onClick={onClose}>X</button>
-        </div>
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Biblioteca de rituais"
+      size="large"
+      closeLabel="Fechar biblioteca de rituais"
+    >
+      <div className="modal-abas" role="tablist" aria-label="Elementos dos rituais">
+        {tabs.map((tab, index) => {
+          const isActive = abaAtiva === tab.id;
+          return (
+            <button
+              key={tab.id}
+              id={`${tabsId}-tab-${tab.id}`}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`${tabsId}-panel-${tab.id}`}
+              tabIndex={isActive ? 0 : -1}
+              className={`aba-link ${isActive ? 'active' : ''}`}
+              onClick={() => setAbaAtiva(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="modal-body">
-          <div className="modal-abas">
-            <button className={`aba-link ${abaAtiva === 'sangue' ? 'active' : ''}`} onClick={() => setAbaAtiva('sangue')}>Sangue</button>
-            <button className={`aba-link ${abaAtiva === 'morte' ? 'active' : ''}`} onClick={() => setAbaAtiva('morte')}>Morte</button>
-            <button className={`aba-link ${abaAtiva === 'conhecimento' ? 'active' : ''}`} onClick={() => setAbaAtiva('conhecimento')}>Conhecimento</button>
-            <button className={`aba-link ${abaAtiva === 'energia' ? 'active' : ''}`} onClick={() => setAbaAtiva('energia')}>Energia</button>
-            <button className={`aba-link ${abaAtiva === 'medo' ? 'active' : ''}`} onClick={() => setAbaAtiva('medo')}>Medo</button>
-            <button className={`aba-link ${abaAtiva === 'personalizado' ? 'active' : ''}`} onClick={() => setAbaAtiva('personalizado')}>Personalizado</button>
-          </div>
-
-          <div className={`aba-conteudo ${abaAtiva === 'sangue' ? 'active' : ''}`}>{renderListaRituais('sangue')}</div>
-          <div className={`aba-conteudo ${abaAtiva === 'morte' ? 'active' : ''}`}>{renderListaRituais('morte')}</div>
-          <div className={`aba-conteudo ${abaAtiva === 'conhecimento' ? 'active' : ''}`}>{renderListaRituais('conhecimento')}</div>
-          <div className={`aba-conteudo ${abaAtiva === 'energia' ? 'active' : ''}`}>{renderListaRituais('energia')}</div>
-          <div className={`aba-conteudo ${abaAtiva === 'medo' ? 'active' : ''}`}>{renderListaRituais('medo')}</div>
-
-          <div className={`aba-conteudo ${abaAtiva === 'personalizado' ? 'active' : ''}`}>
+      {tabs.map((tab) => {
+        const isActive = abaAtiva === tab.id;
+        return (
+          <div
+            key={tab.id}
+            id={`${tabsId}-panel-${tab.id}`}
+            className={`aba-conteudo ${isActive ? 'active' : ''}`}
+            role="tabpanel"
+            aria-labelledby={`${tabsId}-tab-${tab.id}`}
+            hidden={!isActive}
+          >
+            {isActive && (tab.id === 'personalizado' ? (
              <form className="form-custom-item" onSubmit={handleSubmitCustomRitual}>
               <h3>Criar Ritual Personalizado</h3>
               <div className="campo-horizontal">
-                <label>Nome do Ritual</label>
-                <input type="text" required value={customNome} onChange={(e) => setCustomNome(e.target.value)} />
+                <label htmlFor={`${fieldsId}-nome`}>Nome do Ritual</label>
+                <input id={`${fieldsId}-nome`} type="text" required value={customNome} onChange={(e) => setCustomNome(e.target.value)} />
               </div>
               
               <h4>Detalhes Básicos</h4>
               <div className="form-custom-grid">
                 <div className="campo-horizontal">
-                  <label>Círculo</label>
-                  <input type="number" required value={customCirculo} onChange={(e) => setCustomCirculo(e.target.value)} min="1" max="4" />
+                  <label htmlFor={`${fieldsId}-circulo`}>Círculo</label>
+                  <input id={`${fieldsId}-circulo`} type="number" required value={customCirculo} onChange={(e) => setCustomCirculo(e.target.value)} min="1" max="4" />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Elemento</label>
-                  <select value={customElemento} onChange={(e) => setCustomElemento(e.target.value)}>
+                  <label htmlFor={`${fieldsId}-elemento`}>Elemento</label>
+                  <select id={`${fieldsId}-elemento`} value={customElemento} onChange={(e) => setCustomElemento(e.target.value)}>
                     <option value="Sangue">Sangue</option>
                     <option value="Morte">Morte</option>
                     <option value="Conhecimento">Conhecimento</option>
@@ -174,35 +218,37 @@ function ModalRituais({ isOpen, onClose, onAddRitual }) {
                   </select>
                 </div>
                 <div className="campo-horizontal">
-                  <label>Execução</label>
-                  <input type="text" value={customExecucao} onChange={(e) => setCustomExecucao(e.target.value)} />
+                  <label htmlFor={`${fieldsId}-execucao`}>Execução</label>
+                  <input id={`${fieldsId}-execucao`} type="text" value={customExecucao} onChange={(e) => setCustomExecucao(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Alcance</label>
-                  <input type="text" value={customAlcance} onChange={(e) => setCustomAlcance(e.target.value)} />
+                  <label htmlFor={`${fieldsId}-alcance`}>Alcance</label>
+                  <input id={`${fieldsId}-alcance`} type="text" value={customAlcance} onChange={(e) => setCustomAlcance(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Alvo/Área</label>
-                  <input type="text" value={customAlvoArea} onChange={(e) => setCustomAlvoArea(e.target.value)} />
+                  <label htmlFor={`${fieldsId}-alvo-area`}>Alvo/Área</label>
+                  <input id={`${fieldsId}-alvo-area`} type="text" value={customAlvoArea} onChange={(e) => setCustomAlvoArea(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Duração</label>
-                  <input type="text" value={customDuracao} onChange={(e) => setCustomDuracao(e.target.value)} />
+                  <label htmlFor={`${fieldsId}-duracao`}>Duração</label>
+                  <input id={`${fieldsId}-duracao`} type="text" value={customDuracao} onChange={(e) => setCustomDuracao(e.target.value)} />
                 </div>
               </div>
 
               <div className="campo-horizontal">
-                <label>Descrição Completa</label>
-                <textarea rows="4" value={customDescricao} onChange={(e) => setCustomDescricao(e.target.value)}></textarea>
+                <label htmlFor={`${fieldsId}-descricao`}>Descrição Completa</label>
+                <textarea id={`${fieldsId}-descricao`} rows="4" value={customDescricao} onChange={(e) => setCustomDescricao(e.target.value)}></textarea>
               </div>
               
               <button type="submit">Adicionar Ritual Personalizado</button>
             </form>
+            ) : (
+              renderListaRituais(tab.id)
+            ))}
           </div>
-
-        </div>
-      </div>
-    </div>
+        );
+      })}
+    </ModalBase>
   );
 }
 

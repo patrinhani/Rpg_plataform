@@ -1,10 +1,11 @@
 // /src/components/ModalLoja.jsx
 // (ATUALIZADO PARA O PASSO 5 - MODIFICAÇÕES NO ITEM CUSTOM)
 
-import React, { useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 // 1. Importa database E as modificações (do Passo 1)
 import { database } from '../lib/database.js';
 import ItemCard from './ItemCard.jsx';
+import ModalBase from './ModalBase.jsx';
 import {
   calcularStatsItem,
   getModificacoesCompativeis,
@@ -14,6 +15,14 @@ import {
 
 const ordenarPorNome = (itens) => [...itens].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
+const ABAS_LOJA = [
+  { id: 'armas', label: 'Armas' },
+  { id: 'protecoes', label: 'Proteções' },
+  { id: 'geral', label: 'Geral' },
+  { id: 'paranormal', label: 'Paranormal' },
+  { id: 'personalizado', label: 'Personalizado' },
+];
+
 /**
  * Props:
  * - isOpen, onClose, onAddItem, pericias
@@ -21,6 +30,22 @@ const ordenarPorNome = (itens) => [...itens].sort((a, b) => a.nome.localeCompare
 function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
   
   const [abaAtiva, setAbaAtiva] = useState('armas');
+  const tabsId = useId();
+  const tabRefs = useRef([]);
+
+  const handleTabKeyDown = (event, index) => {
+    let nextIndex = index;
+
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % ABAS_LOJA.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + ABAS_LOJA.length) % ABAS_LOJA.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = ABAS_LOJA.length - 1;
+    else return;
+
+    event.preventDefault();
+    setAbaAtiva(ABAS_LOJA[nextIndex].id);
+    tabRefs.current[nextIndex]?.focus();
+  };
 
   // --- Estados do Formulário Customizado ---
   const [customNome, setCustomNome] = useState('');
@@ -100,12 +125,6 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
     onClose();
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   if (!isOpen) {
     return null;
   }
@@ -127,49 +146,76 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
     : getModificacoesCompativeis(itemCustomPreview);
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      {/* 7. Modal Grande para caber as modificações */}
-      <div className="modal-conteudo modal-grande"> 
-        
-        <div className="modal-header">
-          <h3>Adicionar Itens ao Inventário</h3>
-          <button id="btn-fechar-loja" className="btn-fechar-modal" onClick={onClose}>
-            X
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Adicionar Itens ao Inventário"
+      size="wide"
+      closeLabel="Fechar loja de itens"
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Fechar
           </button>
-        </div>
-
-        <div className="modal-body">
-          <div className="modal-abas">
-            <button className={`aba-link ${abaAtiva === 'armas' ? 'active' : ''}`} onClick={() => setAbaAtiva('armas')}>Armas</button>
-            <button className={`aba-link ${abaAtiva === 'protecoes' ? 'active' : ''}`} onClick={() => setAbaAtiva('protecoes')}>Proteções</button>
-            <button className={`aba-link ${abaAtiva === 'geral' ? 'active' : ''}`} onClick={() => setAbaAtiva('geral')}>Geral</button>
-            <button className={`aba-link ${abaAtiva === 'paranormal' ? 'active' : ''}`} onClick={() => setAbaAtiva('paranormal')}>Paranormal</button>
-            <button className={`aba-link ${abaAtiva === 'personalizado' ? 'active' : ''}`} onClick={() => setAbaAtiva('personalizado')}>Personalizado</button>
+          {abaAtiva === 'personalizado' && (
+            <button
+              type="submit"
+              form="form-custom-item"
+              className="caos-modal__button caos-modal__button--primary"
+            >
+              Adicionar Item Personalizado
+            </button>
+          )}
+        </>
+      )}
+    >
+          <div className="modal-abas" role="tablist" aria-label="Categorias da loja">
+            {ABAS_LOJA.map((aba, index) => (
+              <button
+                key={aba.id}
+                ref={(node) => { tabRefs.current[index] = node; }}
+                id={`${tabsId}-tab-${aba.id}`}
+                type="button"
+                role="tab"
+                aria-controls={`${tabsId}-panel-${aba.id}`}
+                aria-selected={abaAtiva === aba.id}
+                tabIndex={abaAtiva === aba.id ? 0 : -1}
+                className={`aba-link ${abaAtiva === aba.id ? 'active' : ''}`}
+                onClick={() => setAbaAtiva(aba.id)}
+                onKeyDown={(event) => handleTabKeyDown(event, index)}
+              >
+                {aba.label}
+              </button>
+            ))}
           </div>
 
           {/* ... (Abas da Loja - Armas, Proteções, Geral, Paranormal - sem alteração) ... */}
-          <div className={`aba-conteudo ${abaAtiva === 'armas' ? 'active' : ''}`}>
+          <div id={`${tabsId}-panel-armas`} role="tabpanel" aria-labelledby={`${tabsId}-tab-armas`} hidden={abaAtiva !== 'armas'} className={`aba-conteudo ${abaAtiva === 'armas' ? 'active' : ''}`}>
             <ul className="loja-lista-itens">
               {abasConteudo.armas.map(item => (
                 <ItemCard key={item.id} item={item} tipo="loja" onAdd={onAddItem} />
               ))}
             </ul>
           </div>
-          <div className={`aba-conteudo ${abaAtiva === 'protecoes' ? 'active' : ''}`}>
+          <div id={`${tabsId}-panel-protecoes`} role="tabpanel" aria-labelledby={`${tabsId}-tab-protecoes`} hidden={abaAtiva !== 'protecoes'} className={`aba-conteudo ${abaAtiva === 'protecoes' ? 'active' : ''}`}>
             <ul className="loja-lista-itens">
               {abasConteudo.protecoes.map(item => (
                 <ItemCard key={item.id} item={item} tipo="loja" onAdd={onAddItem} />
               ))}
             </ul>
           </div>
-          <div className={`aba-conteudo ${abaAtiva === 'geral' ? 'active' : ''}`}>
+          <div id={`${tabsId}-panel-geral`} role="tabpanel" aria-labelledby={`${tabsId}-tab-geral`} hidden={abaAtiva !== 'geral'} className={`aba-conteudo ${abaAtiva === 'geral' ? 'active' : ''}`}>
             <ul className="loja-lista-itens">
               {abasConteudo.geral.map(item => (
                 <ItemCard key={item.id} item={item} tipo="loja" onAdd={onAddItem} />
               ))}
             </ul>
           </div>
-          <div className={`aba-conteudo ${abaAtiva === 'paranormal' ? 'active' : ''}`}>
+          <div id={`${tabsId}-panel-paranormal`} role="tabpanel" aria-labelledby={`${tabsId}-tab-paranormal`} hidden={abaAtiva !== 'paranormal'} className={`aba-conteudo ${abaAtiva === 'paranormal' ? 'active' : ''}`}>
             <ul className="loja-lista-itens">
               {abasConteudo.paranormal.map(item => (
                 <ItemCard key={item.id} item={item} tipo="loja" onAdd={onAddItem} />
@@ -178,16 +224,16 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
           </div>
           
           {/* --- 8. Aba de Item Personalizado (ATUALIZADA) --- */}
-          <div className={`aba-conteudo ${abaAtiva === 'personalizado' ? 'active' : ''}`}>
+          <div id={`${tabsId}-panel-personalizado`} role="tabpanel" aria-labelledby={`${tabsId}-tab-personalizado`} hidden={abaAtiva !== 'personalizado'} className={`aba-conteudo ${abaAtiva === 'personalizado' ? 'active' : ''}`}>
             <form id="form-custom-item" className="form-custom-item" onSubmit={handleSubmitCustomItem}>
               <h3>Criar Item Personalizado</h3>
               <div className="campo-horizontal">
-                <label>Nome do Item</label>
+                <label htmlFor="custom-item-nome">Nome do Item</label>
                 <input type="text" id="custom-item-nome" required value={customNome} onChange={(e) => setCustomNome(e.target.value)} />
               </div>
               <div className="campo-horizontal">
-                <label>Tipo do Item</label>
-                <select value={customTipo} onChange={(e) => { setCustomTipo(e.target.value); setCustomMods([]); }}>
+                <label htmlFor="custom-item-tipo">Tipo do Item</label>
+                <select id="custom-item-tipo" value={customTipo} onChange={(e) => { setCustomTipo(e.target.value); setCustomMods([]); }}>
                   <option value="livre">Livre / regra da mesa</option>
                   <option value="arma-corpo-a-corpo">Arma corpo a corpo ou de disparo</option>
                   <option value="arma-fogo">Arma de fogo</option>
@@ -201,25 +247,25 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               {/* Inputs de Categoria e Espaços atualizados (Layout de 4 colunas) */}
               <div className="form-custom-grid form-custom-grid-stats">
                 <div className="campo-horizontal">
-                  <label>Cat. Base</label>
+                  <label htmlFor="custom-item-cat">Cat. Base</label>
                   <input type="number" id="custom-item-cat" value={customCat} onChange={(e) => setCustomCat(e.target.value)} min="0" max="4" />
                 </div>
                  <div className="campo-horizontal">
-                  <label>+ Mods (Cat.)</label>
-                  <input type="text" value={`+${customMods.length}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)'}} />
+                  <label htmlFor="custom-item-mods-total">+ Mods (Cat.)</label>
+                  <input id="custom-item-mods-total" type="text" value={`+${customMods.length}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)'}} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Esp. Base</label>
+                  <label htmlFor="custom-item-espacos">Esp. Base</label>
                   <input type="text" id="custom-item-espacos" value={customEspacos} onChange={(e) => setCustomEspacos(e.target.value)} placeholder="Ex: 1 ou 0.5" />
                 </div>
                  <div className="campo-horizontal">
-                  <label>Cat. Final / Esp. Final</label>
-                  <input type="text" value={`CAT ${catFinalCustom} / ESP ${espFinalCustom.toFixed(2)}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)', fontWeight: 'bold'}} />
+                  <label htmlFor="custom-item-stats-final">Cat. Final / Esp. Final</label>
+                  <input id="custom-item-stats-final" type="text" value={`CAT ${catFinalCustom} / ESP ${espFinalCustom.toFixed(2)}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)', fontWeight: 'bold'}} />
                 </div>
               </div>
 
               <div className="campo-horizontal">
-                <label>Descrição (Opcional)</label>
+                <label htmlFor="custom-item-desc">Descrição (Opcional)</label>
                 <textarea id="custom-item-desc" rows="2" value={customDesc} onChange={(e) => setCustomDesc(e.target.value)}></textarea>
               </div>
 
@@ -227,15 +273,15 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               {/* (Sem alteração aqui) */}
               <div className="form-custom-grid">
                 <div className="campo-horizontal">
-                  <label>Bônus de Defesa</label>
+                  <label htmlFor="custom-item-defesa">Bônus de Defesa</label>
                   <input type="number" id="custom-item-defesa" value={customDefesa} onChange={(e) => setCustomDefesa(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Bônus de Perícia</label>
+                  <label htmlFor="custom-item-bonus-pericia">Bônus de Perícia</label>
                   <input type="number" id="custom-item-bonus-pericia" value={customBonusPericia} onChange={(e) => setCustomBonusPericia(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Vincular Perícia</label>
+                  <label htmlFor="custom-item-pericia-select">Vincular Perícia</label>
                   <select id="custom-item-pericia-select" value={customPericiaSelect} onChange={(e) => setCustomPericiaSelect(e.target.value)}>
                     <option value="">Nenhuma</option>
                     {pericias.map(periciaKey => (
@@ -250,8 +296,9 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               <div className="form-custom-grid mods-lista-custom">
                 
                 {modificacoesCustomDisponiveis.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                  <label key={mod.key} htmlFor={`custom-item-mod-${mod.key}`} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
                     <input 
+                      id={`custom-item-mod-${mod.key}`}
                       type="checkbox"
                       checked={customMods.includes(mod.key)}
                       onChange={() => handleCustomModToggle(mod.key)}
@@ -261,15 +308,9 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
                 ))}
               </div>
 
-              <button type="submit" id="btn-add-custom-item" style={{marginTop: '20px'}}>
-                Adicionar Item Personalizado
-              </button>
             </form>
           </div>
-
-        </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }
 

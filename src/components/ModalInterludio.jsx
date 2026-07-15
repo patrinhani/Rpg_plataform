@@ -1,7 +1,8 @@
 // src/components/ModalInterludio.jsx
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { database } from '../lib/database.js';
 import { useDialog } from '../contexts/DialogContext'; // [NOVO]
+import ModalBase from './ModalBase.jsx';
 
 function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventario = [] }) {
   const [acoesSelecionadas, setAcoesSelecionadas] = useState([]);
@@ -9,6 +10,9 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
   const [prato, setPrato] = useState('simples');
   const [participantesRelaxando, setParticipantesRelaxando] = useState(1);
   const [itemManutencaoId, setItemManutencaoId] = useState('');
+  const descricaoId = useId();
+  const confortoId = useId();
+  const pratoId = useId();
   
   const { showAlert } = useDialog(); // [NOVO]
 
@@ -52,15 +56,35 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
   const bonusLeitura = origem === 'nerd_entusiasta' ? '+2d6' : '+1d6';
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-conteudo modal-grande" role="dialog" aria-modal="true" aria-labelledby="interludio-titulo" style={{ maxWidth: '700px', width: '95%' }}>
-        <div className="modal-header">
-            <h2 id="interludio-titulo">Cena de Interlúdio</h2>
-            <button type="button" className="btn-fechar-modal" aria-label="Fechar interlúdio" onClick={onClose}>&times;</button>
-        </div>
-        
-        <div style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-            <p style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '15px' }}>
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Cena de Interlúdio"
+      size="large"
+      closeLabel="Fechar interlúdio"
+      closeOnOverlay={false}
+      describedBy={descricaoId}
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--primary"
+            onClick={handleAplicar}
+            disabled={acoesSelecionadas.length === 0}
+          >
+            Concluir Interlúdio
+          </button>
+        </>
+      )}
+    >
+            <p id={descricaoId} style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '15px' }}>
                 Escolha até <strong>2 ações</strong>. Recuperação base: <strong>{limitePE}</strong> (Limite de PE).
             </p>
 
@@ -71,20 +95,27 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                 marginBottom: '20px' 
             }}>
                 {listaAcoes.map((acao) => (
-                    <div 
+                    <button
+                        type="button"
                         key={acao.id}
                         className={`item-card ${acoesSelecionadas.includes(acao.id) ? 'selecionado' : ''}`}
                         onClick={() => toggleAcao(acao.id)}
+                        aria-pressed={acoesSelecionadas.includes(acao.id)}
                         style={{ 
                             cursor: 'pointer', 
                             border: acoesSelecionadas.includes(acao.id) ? '2px solid var(--cor-destaque)' : '1px solid var(--cor-borda)', 
                             padding: '10px',
-                            backgroundColor: acoesSelecionadas.includes(acao.id) ? 'rgba(255, 255, 255, 0.1)' : 'transparent'
+                            backgroundColor: acoesSelecionadas.includes(acao.id) ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                            color: 'inherit',
+                            margin: 0,
+                            textAlign: 'left',
+                            textTransform: 'none',
+                            width: '100%'
                         }}
                     >
-                        <h3 style={{margin: '0 0 5px 0', fontSize: '1.1em'}}>{acao.icone} {acao.nome}</h3>
+                        <span style={{display: 'block', margin: '0 0 5px 0', fontSize: '1.1em', fontWeight: 700}}>{acao.icone} {acao.nome}</span>
                         <small style={{lineHeight: '1.2', display: 'block', color: '#ccc'}}>{acao.desc}</small>
-                    </div>
+                    </button>
                 ))}
             </div>
 
@@ -94,8 +125,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                     
                     {(acoesSelecionadas.includes('dormir') || acoesSelecionadas.includes('relaxar')) && (
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{display: 'block', marginBottom: '5px'}}>Nível de Conforto:</label>
-                            <select className="modal-input" value={conforto} onChange={(e) => setConforto(e.target.value)} style={{width: '100%'}}>
+                            <label htmlFor={confortoId} style={{display: 'block', marginBottom: '5px'}}>Nível de Conforto:</label>
+                            <select id={confortoId} className="modal-input" value={conforto} onChange={(e) => setConforto(e.target.value)} style={{width: '100%'}}>
                                 {database.interludio.conforto.map(c => (
                                     <option key={c.id} value={c.id}>{c.nome}</option>
                                 ))}
@@ -132,8 +163,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
 
                     {acoesSelecionadas.includes('alimentar') && (
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{display: 'block', marginBottom: '5px'}}>Prato Escolhido:</label>
-                            <select className="modal-input" value={prato} onChange={(e) => setPrato(e.target.value)} style={{width: '100%'}}>
+                            <label htmlFor={pratoId} style={{display: 'block', marginBottom: '5px'}}>Prato Escolhido:</label>
+                            <select id={pratoId} className="modal-input" value={prato} onChange={(e) => setPrato(e.target.value)} style={{width: '100%'}}>
                                 {database.interludio.pratos.map(p => (
                                     <option key={p.id} value={p.id}>{p.nome}</option>
                                 ))}
@@ -175,16 +206,7 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                     )}
                 </div>
             )}
-        </div>
-
-        <div className="modal-actions" style={{ marginTop: '10px', padding: '0 20px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button type="button" className="item-inventario-remover" onClick={onClose}>Cancelar</button>
-            <button type="button" className="loja-item-add" onClick={handleAplicar} disabled={acoesSelecionadas.length === 0}>
-                Concluir Interlúdio
-            </button>
-        </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }
 

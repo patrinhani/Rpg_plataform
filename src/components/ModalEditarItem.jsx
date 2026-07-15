@@ -2,6 +2,7 @@
 // (PASSO 3 - CORREÇÃO DE SINTAXE '??' E '||')
 
 import React, { useState, useEffect } from 'react';
+import ModalBase from './ModalBase.jsx';
 import {
   calcularStatsItem,
   getModificacao,
@@ -84,12 +85,6 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
     return { categoriaFinal: stats.categoria, espacosFinal: stats.espacos };
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   if (!isOpen) {
     return null;
   }
@@ -103,35 +98,49 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
   );
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-conteudo modal-grande"> 
-        
-        <div className="modal-header">
-          <h3>Editar Item: {item ? item.nome : ''}</h3>
-          <button className="btn-fechar-modal" onClick={onClose}>
-            X
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Editar Item: ${item ? item.nome : ''}`}
+      size="wide"
+      closeLabel="Fechar edição do item"
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Cancelar
           </button>
-        </div>
-
-        <div className="modal-body">
-          <form className="form-custom-item" onSubmit={handleSubmit}>
+          <button
+            type="submit"
+            form="form-edit-item"
+            className="caos-modal__button caos-modal__button--primary"
+          >
+            Salvar Alterações
+          </button>
+        </>
+      )}
+    >
+          <form id="form-edit-item" className="form-custom-item" onSubmit={handleSubmit}>
               
               <div className="campo-horizontal">
-                <label>Nome do Item</label>
+                <label htmlFor="edit-item-nome">Nome do Item</label>
                 <input type="text" id="edit-item-nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
               
               <div className="form-custom-grid form-custom-grid-stats">
                 <div className="campo-horizontal">
-                  <label>Cat. Base</label>
+                  <label htmlFor="edit-item-cat-base">Cat. Base</label>
                   <input type="number" id="edit-item-cat-base" value={catBase} onChange={(e) => setCatBase(e.target.value)} min="0" max="4" />
                 </div>
                 <div className="campo-horizontal">
-                  <label>+ Mods (Cat.)</label>
-                  <input type="text" value={`+${modsSelecionadas.length}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)'}} />
+                  <label htmlFor="edit-item-mods-total">+ Mods (Cat.)</label>
+                  <input id="edit-item-mods-total" type="text" value={`+${modsSelecionadas.length}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)'}} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Esp. Base</label>
+                  <label htmlFor="edit-item-espacos-base">Esp. Base</label>
                   <input 
                     type="text" 
                     id="edit-item-espacos-base" 
@@ -140,34 +149,34 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
                   />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Cat. Final / Esp. Final</label>
+                  <label htmlFor="edit-item-stats-final">Cat. Final / Esp. Final</label>
                   {/* Usando toFixed(2) para lidar com '0.5' ou '0.25' */}
-                  <input type="text" value={`CAT ${categoriaFinal} / ESP ${espacosFinal.toFixed(2)}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)', fontWeight: 'bold'}} />
+                  <input id="edit-item-stats-final" type="text" value={`CAT ${categoriaFinal} / ESP ${espacosFinal.toFixed(2)}`} readOnly style={{backgroundColor: '#111', cursor: 'default', color: 'var(--cor-destaque)', fontWeight: 'bold'}} />
                 </div>
               </div>
               
               <div className="campo-horizontal">
-                <label>Descrição</label>
+                <label htmlFor="edit-item-desc">Descrição</label>
                 <textarea id="edit-item-desc" rows="3" value={desc} onChange={(e) => setDesc(e.target.value)}></textarea>
               </div>
 
-              <label style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <input type="checkbox" checked={quebrado} onChange={(e) => setQuebrado(e.target.checked)} />
+              <label htmlFor="edit-item-quebrado" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <input id="edit-item-quebrado" type="checkbox" checked={quebrado} onChange={(e) => setQuebrado(e.target.checked)} />
                 Item quebrado (não concede bônus até receber manutenção)
               </label>
 
               <h4>Bônus Automáticos (Opcional)</h4>
               <div className="form-custom-grid">
                 <div className="campo-horizontal">
-                  <label>Bônus de Defesa</label>
+                  <label htmlFor="edit-item-defesa">Bônus de Defesa</label>
                   <input type="number" id="edit-item-defesa" value={defesa} onChange={(e) => setDefesa(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Bônus de Perícia</label>
+                  <label htmlFor="edit-item-bonus-pericia">Bônus de Perícia</label>
                   <input type="number" id="edit-item-bonus-pericia" value={bonusPericia} onChange={(e) => setBonusPericia(e.target.value)} />
                 </div>
                 <div className="campo-horizontal">
-                  <label>Vincular Perícia</label>
+                  <label htmlFor="edit-item-pericia-select">Vincular Perícia</label>
                   <select id="edit-item-pericia-select" value={periciaSelect} onChange={(e) => setPericiaSelect(e.target.value)}>
                     <option value="">Nenhuma</option>
                     {pericias.map(periciaKey => (
@@ -181,8 +190,9 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
               <div className="form-custom-grid mods-lista-custom mods-lista-custom-alta">
                 
                 {modificacoesDisponiveis.map(mod => (
-                  <label key={mod.key} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                  <label key={mod.key} htmlFor={`edit-item-mod-${mod.key}`} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
                     <input 
+                      id={`edit-item-mod-${mod.key}`}
                       type="checkbox"
                       checked={modsSelecionadas.includes(mod.key)}
                       onChange={() => handleModToggle(mod.key)}
@@ -192,13 +202,8 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
                 ))}
               </div>
               
-              <button type="submit" id="btn-salvar-item-editado" style={{marginTop: '20px'}}>
-                Salvar Alterações
-              </button>
             </form>
-        </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }
 
