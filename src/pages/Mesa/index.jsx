@@ -215,32 +215,13 @@ export default function Mesa() {
   if (isFichaOpen) {
       return (
         <FichaProvider>
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#050505' }}>
-                
-                {emCombate && (
-                    <button 
-                        onClick={() => setShowTrackerModal(true)} 
-                        className="btn-login primary"
-                        style={{ 
-                          position: 'fixed', top: '15px', right: '15px', zIndex: 2000, 
-                          padding: '10px 15px', fontSize: '1em', border: 'none', 
-                          borderRadius: '4px', cursor: 'pointer', margin: 0
-                        }} 
-                    >
-                        ⚔️ Tracker (Popup)
-                    </button>
-                )}
-                
-                <div style={{ position: 'relative', flexGrow: 1 }}>
-                    <button 
-                        onClick={() => setFichaAbertaId(null)} 
-                        className="btn-voltar-flutuante"
-                        style={{ top: '15px', left: '15px' }} 
-                    >
-                        ← VOLTAR PARA A MESA
-                    </button>
-                    <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} /> 
-                </div>
+            <div className="mesa-ficha-shell">
+                <Ficha
+                  fichaId={fichaAbertaId}
+                  mesaContexto={mesaId}
+                  onBack={() => setFichaAbertaId(null)}
+                  onOpenTracker={emCombate ? () => setShowTrackerModal(true) : undefined}
+                />
                 
                 {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
 

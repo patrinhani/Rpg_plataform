@@ -1,77 +1,147 @@
 // src/components/BackgroundDinamico.jsx
-import React, { useState, useEffect } from 'react';
-import '../styles/style.css'; // Importa estilos para pegar as variáveis de tema
+import React, { useEffect, useRef, useState } from 'react';
+import { getTemaConfig } from '../lib/temas.js';
+
+const TEMA_PADRAO = 'tema-ordem';
+
+function getTemaAtual() {
+  if (typeof document === 'undefined') return TEMA_PADRAO;
+  return document.documentElement.dataset.tema || TEMA_PADRAO;
+}
 
 export default function BackgroundDinamico() {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const backgroundRef = useRef(null);
+  const frameRef = useRef(null);
+  const offsetRef = useRef({ x: 0, y: 0 });
+  const [temaAtual, setTemaAtual] = useState(getTemaAtual);
+
+  const temaConfig = getTemaConfig(temaAtual);
+  const simboloId = `simbolo-${temaConfig.id.replace('tema-', '')}`;
 
   useEffect(() => {
-    // --- 1. LÓGICA PARA COMPUTADOR (Mouse) ---
-    const handleMouseMove = (e) => {
-      // Divide por um número maior para o movimento ser sutil e elegante
-      const x = (window.innerWidth - e.pageX * 2) / 35;
-      const y = (window.innerHeight - e.pageY * 2) / 35;
-      setOffset({ x, y });
+    const root = document.documentElement;
+    const sincronizarTema = () => {
+      setTemaAtual(root.dataset.tema || TEMA_PADRAO);
     };
 
-    // --- 2. LÓGICA PARA CELULAR (Giroscópio/Acelerômetro) ---
-    const handleOrientation = (e) => {
-      // e.gamma = Inclinação Esquerda/Direita (-90 a 90)
-      // e.beta  = Inclinação Frente/Trás (-180 a 180)
-      
-      let x = e.gamma; 
-      let y = e.beta;  
+    sincronizarTema();
 
-      // Limitadores para o fundo não "fugir" da tela se girar demais
-      if (x > 40) x = 40;
-      if (x < -40) x = -40;
-      if (y > 90) y = 90;
-      if (y < -90) y = -90;
+    const observer = new MutationObserver(sincronizarTema);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-tema'],
+    });
 
-      // Sensibilidade no mobile
-      const mobileSensibilidade = 1.2; 
-      
-      // Ajuste de "Ponto Zero": Consideramos 45 graus como a posição natural de segurar o celular
-      setOffset({ 
-        x: x * mobileSensibilidade, 
-        y: (y - 45) * mobileSensibilidade 
-      });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let movimentoDesativado = false;
+
+    const aplicarOffset = () => {
+      frameRef.current = null;
+      if (!backgroundRef.current || movimentoDesativado) return;
+
+      const { x, y } = offsetRef.current;
+      backgroundRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     };
 
-    // Adiciona os ouvintes de evento
-    window.addEventListener('mousemove', handleMouseMove);
-    
-    // Verifica se o navegador suporta orientação de dispositivo
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
+    const agendarOffset = (x, y) => {
+      if (movimentoDesativado) return;
 
-    // Limpeza ao desmontar
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (window.DeviceOrientationEvent) {
-        window.removeEventListener('deviceorientation', handleOrientation);
+      offsetRef.current = { x, y };
+      if (frameRef.current === null) {
+        frameRef.current = window.requestAnimationFrame(aplicarOffset);
       }
+    };
+
+    const atualizarPreferenciaDeMovimento = () => {
+      const deveDesativar = reducedMotionQuery.matches
+        || document.body.classList.contains('modo-economia');
+
+      if (deveDesativar === movimentoDesativado) return;
+      movimentoDesativado = deveDesativar;
+
+      if (!backgroundRef.current) return;
+
+      if (movimentoDesativado) {
+        if (frameRef.current !== null) {
+          window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+        offsetRef.current = { x: 0, y: 0 };
+        backgroundRef.current.style.transform = 'translate3d(0, 0, 0)';
+        backgroundRef.current.style.willChange = 'auto';
+      } else {
+        backgroundRef.current.style.willChange = 'transform';
+      }
+    };
+
+    const handleMouseMove = (event) => {
+      const x = (window.innerWidth - event.clientX * 2) / 35;
+      const y = (window.innerHeight - event.clientY * 2) / 35;
+      agendarOffset(x, y);
+    };
+
+    const handleOrientation = (event) => {
+      const gamma = Number.isFinite(event.gamma) ? event.gamma : 0;
+      const beta = Number.isFinite(event.beta) ? event.beta : 45;
+      const x = Math.max(-40, Math.min(40, gamma));
+      const y = Math.max(-90, Math.min(90, beta));
+
+      agendarOffset(x * 1.2, (y - 45) * 1.2);
+    };
+
+    const bodyObserver = new MutationObserver(atualizarPreferenciaDeMovimento);
+    bodyObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    if (reducedMotionQuery.addEventListener) {
+      reducedMotionQuery.addEventListener('change', atualizarPreferenciaDeMovimento);
+    } else {
+      reducedMotionQuery.addListener?.(atualizarPreferenciaDeMovimento);
+    }
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+
+    atualizarPreferenciaDeMovimento();
+
+    return () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      bodyObserver.disconnect();
+      if (reducedMotionQuery.removeEventListener) {
+        reducedMotionQuery.removeEventListener('change', atualizarPreferenciaDeMovimento);
+      } else {
+        reducedMotionQuery.removeListener?.(atualizarPreferenciaDeMovimento);
+      }
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
 
   return (
-    <div 
-        id="parallax-background" 
-        style={{ 
-            // Aplica o movimento calculado
-            transform: `translate(${offset.x}px, ${offset.y}px)`,
-            // Otimizações de performance para mobile
-            willChange: 'transform',
-            transition: 'transform 0.1s linear' 
-        }}
+    <div
+      ref={backgroundRef}
+      id="parallax-background"
+      style={{
+        willChange: 'transform',
+        transition: 'transform 0.1s linear',
+      }}
     >
-        {/* Carrega todos os símbolos; o CSS do tema decide qual aparece (opacity) */}
-        <img id="simbolo-ordem" className="simbolo-parallax" src="/assets/images/SimboloSemafinidade.webp" alt="" />
-        <img id="simbolo-sangue" className="simbolo-parallax" src="/assets/images/SimboloSangue.webp" alt="" />
-        <img id="simbolo-morte" className="simbolo-parallax" src="/assets/images/SimboloMorte.webp" alt="" />
-        <img id="simbolo-conhecimento" className="simbolo-parallax" src="/assets/images/SimboloConhecimento.webp" alt="" />
-        <img id="simbolo-energia" className="simbolo-parallax" src="/assets/images/SimboloEnergia.webp" alt="" />
+      <img
+        key={temaConfig.id}
+        id={simboloId}
+        className="simbolo-parallax simbolo-parallax-ativo"
+        src={temaConfig.simbolo}
+        alt=""
+        aria-hidden="true"
+      />
     </div>
   );
 }

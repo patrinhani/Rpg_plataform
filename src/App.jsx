@@ -1,8 +1,5 @@
 // src/App.jsx
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import './App.css'; 
-import './styles/style.css';
-import './styles/responsive.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 
@@ -11,6 +8,7 @@ import { FichaProvider } from './contexts/FichaContext.jsx';
 
 // Componentes Globais
 import BackgroundDinamico from './components/BackgroundDinamico.jsx'; 
+import AuthShell from './components/AuthShell.jsx';
 import BotaoEconomia from './components/BotaoEconomia.jsx'; // <--- IMPORTAÇÃO ADICIONADA
 
 // Páginas - IMPORTAÇÃO OTIMIZADA (Lazy)
@@ -27,10 +25,9 @@ import { updateProfile } from 'firebase/auth';
 
 // Componente de Carregamento Reutilizável
 const TelaCarregamento = () => (
-  <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#020406', color:'#fff', flexDirection: 'column', gap: '15px'}}>
-      <img src="/assets/images/SimboloSemafinidade.webp" style={{width:'50px', opacity:0.5, animation: 'spin 2s linear infinite'}} alt="Carregando" />
-      <span style={{fontFamily: 'monospace', fontSize: '0.8em', color: '#666'}}>CARREGANDO SISTEMA...</span>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+  <div className="app-loading-screen" role="status" aria-live="polite">
+      <img src="/assets/images/SimboloSemafinidade.webp" alt="" aria-hidden="true" />
+      <span>Carregando sistema...</span>
   </div>
 );
 
@@ -40,6 +37,8 @@ function App() {
   const [verificandoNome, setVerificandoNome] = useState(true);
   const [precisaNome, setPrecisaNome] = useState(false);
   const [novoNomeInput, setNovoNomeInput] = useState('');
+  const [salvandoNome, setSalvandoNome] = useState(false);
+  const [erroNome, setErroNome] = useState('');
 
   // --- EFEITO: VERIFICAR NOME ---
   useEffect(() => {
@@ -62,7 +61,7 @@ function App() {
             
             if (!docSnap.exists() || !docSnap.data()?.nomeDefinido) {
                 setPrecisaNome(true);
-                setNovoNomeInput('');
+                setNovoNomeInput(usuario.displayName || '');
             } else {
                 setPrecisaNome(false);
             }
@@ -78,19 +77,26 @@ function App() {
   // --- SALVAR NOME ---
   const salvarNomePerfil = async (e) => {
       e.preventDefault();
-      if (!novoNomeInput || !novoNomeInput.trim()) return alert("Nome inválido.");
-      
+      const nome = novoNomeInput.trim();
+      if (!nome) {
+          setErroNome('Digite o nome que será exibido nas suas fichas e mesas.');
+          return;
+      }
+
+      setSalvandoNome(true);
+      setErroNome('');
       try {
-          await updateProfile(usuario, { displayName: novoNomeInput.trim() });
+          await updateProfile(usuario, { displayName: nome });
           await setDoc(doc(db, "users", usuario.uid), { 
               nomeDefinido: true,
-              nome: novoNomeInput.trim(),
+              nome,
               email: usuario.email
           }, { merge: true });
           setPrecisaNome(false);
-          window.location.reload(); 
       } catch (err) {
-          alert("Erro: " + err.message);
+          setErroNome(`Não foi possível salvar o perfil: ${err.message}`);
+      } finally {
+          setSalvandoNome(false);
       }
   };
 
@@ -113,19 +119,37 @@ function App() {
   // 3. Bloqueio de Nome
   if (precisaNome) {
       return (
-        <div className="login-container">
+        <>
             <BotaoEconomia />
-            <div className="box login-box">
-                <h2 style={{color: 'var(--cor-destaque)'}}>CRIAÇÃO DE PERFIL</h2>
-                <p style={{marginBottom: '20px', color: '#ccc'}}>Defina seu <strong>Nome de Usuário</strong>.</p>
-                <form onSubmit={salvarNomePerfil} className="login-actions">
-                    <div className="input-group">
-                        <input type="text" placeholder="Seu apelido" value={novoNomeInput} onChange={e => setNovoNomeInput(e.target.value)} required autoFocus />
-                    </div>
-                    <button className="btn-login primary" type="submit">SALVAR</button>
+            <AuthShell
+              eyebrow="Configuração inicial"
+              title="Defina seu nome"
+              description="Esse nome identifica você para os demais agentes e mestres dentro do sistema."
+              variant="profile"
+              status={salvandoNome ? 'Gravando perfil...' : 'Perfil pendente'}
+            >
+                {erroNome && <p className="auth-message auth-message--error" role="alert">{erroNome}</p>}
+                <form onSubmit={salvarNomePerfil} className="auth-form">
+                    <label className="auth-field" htmlFor="profile-display-name">
+                        <span>Nome do agente</span>
+                        <input
+                          id="profile-display-name"
+                          type="text"
+                          placeholder="Seu nome ou apelido"
+                          value={novoNomeInput}
+                          onChange={(event) => setNovoNomeInput(event.target.value)}
+                          required
+                          autoFocus
+                          autoComplete="nickname"
+                        />
+                        <small className="auth-field__hint">Você poderá usar o nome adotado pela sua mesa.</small>
+                    </label>
+                    <button className="auth-button auth-button--primary" type="submit" disabled={salvandoNome}>
+                      {salvandoNome ? 'Salvando...' : 'Confirmar identidade'}
+                    </button>
                 </form>
-            </div>
-        </div>
+            </AuthShell>
+        </>
       );
   }
 

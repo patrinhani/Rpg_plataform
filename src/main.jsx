@@ -5,8 +5,10 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 
 // CSS
+import './App.css'
 import './styles/style.css'
 import './styles/responsive.css'
+import './styles/convergence.css'
 
 import { AuthProvider } from './contexts/AuthContext';
 import { DialogProvider } from './contexts/DialogContext'; // [NOVO] Importar Contexto

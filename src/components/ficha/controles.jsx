@@ -13,9 +13,12 @@ function Controles({
   onThemeChange,
   canChangeTheme // <--- Prop recebida
 }) {
+  const podeImportar = typeof onImport === 'function';
 
   // Handler local para o <input type="file">
   const handleFileChange = (e) => {
+    if (!podeImportar) return;
+
     const file = e.target.files[0];
     if (file) {
       onImport(file);
@@ -26,29 +29,35 @@ function Controles({
   return (
     <section className="box box-controles" id="grid-controles">
       
-      <button id="btn-salvar" onClick={onSave}>
+      <button type="button" id="btn-salvar" onClick={onSave}>
         Salvar
       </button>
-      <button id="btn-limpar" onClick={onClear}>
-        Limpar
-      </button>
-      <button id="btn-exportar" onClick={onExport}>
+      {typeof onClear === 'function' && (
+        <button type="button" id="btn-limpar" onClick={onClear}>
+          Limpar
+        </button>
+      )}
+      <button type="button" id="btn-exportar" onClick={onExport}>
         Exportar (JSON)
       </button>
       
-      <label htmlFor="input-importar" className="btn-importar-label">
-        Importar
-      </label>
-      <input 
-        type="file" 
-        id="input-importar" 
-        accept=".json" 
-        style={{ display: 'none' }} 
-        onChange={handleFileChange} 
-      />
+      {podeImportar && (
+        <>
+          <label htmlFor="input-importar" className="btn-importar-label">
+            Importar
+          </label>
+          <input
+            type="file"
+            id="input-importar"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+        </>
+      )}
 
       {/* LÓGICA DE OCULTAÇÃO: Só renderiza se canChangeTheme for true */}
-      {canChangeTheme ? (
+      {canChangeTheme && (
         <div className="seletor-tema">
           <label htmlFor="tema-elemento">Afinidade:</label>
           <select 
@@ -62,12 +71,6 @@ function Controles({
             <option value="tema-conhecimento">Conhecimento</option>
             <option value="tema-energia">Energia</option>
           </select>
-        </div>
-      ) : (
-        // Opcional: Pode mostrar uma mensagem ou apenas nada
-        <div className="seletor-tema" style={{opacity: 0.5, pointerEvents: 'none', display: 'none'}}>
-            {/* Seletor oculto/desativado para NEX < 50% */}
-             <label>Afinidade: (NEX 50%+)</label>
         </div>
       )}
       

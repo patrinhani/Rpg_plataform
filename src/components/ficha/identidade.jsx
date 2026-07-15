@@ -98,7 +98,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       
       {/* --- Campos de Identidade (Nome, Jogador, Origem, Classe, Trilha) --- */}
       <div className="campo-horizontal">
-        <label>PERSONAGEM</label>
+        <label htmlFor="nome">PERSONAGEM</label>
         <input 
           type="text" 
           id="nome" 
@@ -108,7 +108,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       </div>
 
       <div className="campo-horizontal">
-        <label>JOGADOR</label>
+        <label htmlFor="jogador">JOGADOR</label>
         <input 
           type="text" 
           id="jogador"
@@ -118,7 +118,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       </div>
 
       <div className="campo-horizontal">
-        <label>ORIGEM</label>
+        <label htmlFor="origem">ORIGEM</label>
         <select 
           id="origem"
           value={dados.origem}
@@ -133,7 +133,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       </div>
 
       <div className="campo-horizontal">
-        <label>CLASSE</label>
+        <label htmlFor="classe">CLASSE</label>
         <select 
           id="classe"
           value={dados.classe}
@@ -147,7 +147,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       </div>
 
       <div className="campo-horizontal">
-        <label>TRILHA</label>
+        <label htmlFor="trilha">TRILHA</label>
         <select 
           id="trilha"
           value={dados.trilha}
@@ -170,7 +170,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
             <span className="campo-valor">0%</span>
           </div>
           <div className="campo-horizontal">
-            <label>ESTÁGIO</label>
+            <label htmlFor="estagio_sobrevivente">ESTÁGIO</label>
             <input
               type="number"
               id="estagio_sobrevivente"
@@ -183,7 +183,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
         </>
       ) : (
         <div className="campo-horizontal">
-          <label>NEX (%)</label>
+          <label htmlFor="nex">NEX (%)</label>
           <input
             type="number"
             id="nex"
@@ -197,7 +197,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
 
       {(dados.trilha === 'monstruoso' || dados.trilha === 'possuido') && (
         <div className="campo-horizontal">
-          <label>ELEMENTO TRILHA</label>
+          <label htmlFor={`${dados.trilha}_elemento`}>ELEMENTO TRILHA</label>
           <select 
             id={`${dados.trilha}_elemento`}
             value={dados[`${dados.trilha}_elemento`]}
@@ -216,7 +216,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       {/* --- CAMPOS DE PRESTÍGIO E PATENTE --- */}
 
       <div className="campo-horizontal">
-        <label>PRESTÍGIO (PP)</label>
+        <label htmlFor="prestigio">PRESTÍGIO (PP)</label>
         <input 
           type="number"
           id="prestigio"
@@ -244,7 +244,7 @@ function Identidade({ dados, onFichaChange, trilhasPorClasse, patenteInfo }) {
       
       {/* --- NOVO CAMPO DE FOTO --- */}
       <div className="campo-horizontal" style={{ gridColumn: 'span 2' }}>
-        <label>FOTO DO PERSONAGEM (Upload)</label>
+        <label htmlFor="foto-upload">FOTO DO PERSONAGEM (Upload)</label>
         <input 
           type="file" 
           id="foto-upload" 

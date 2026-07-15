@@ -1,63 +1,102 @@
-// src/pages/Verificacao/index.jsx
-import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
+import AuthShell from '../../components/AuthShell.jsx';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 export default function Verificacao() {
   const { usuario, logout, checkVerification, resendEmail } = useAuth();
-  const [msg, setMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageTone, setMessageTone] = useState('success');
+  const [activeAction, setActiveAction] = useState('');
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = 'Verificar e-mail - C.A.O.S.';
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
 
   const handleCheck = async () => {
-    setLoading(true);
-    const verificado = await checkVerification();
-    setLoading(false);
-    if (verificado) {
-      // O App.jsx vai detectar a mudança e redirecionar automaticamente
-    } else {
-      setMsg("O e-mail ainda não foi verificado. Tente novamente.");
+    setActiveAction('check');
+    setMessage('');
+    try {
+      const verified = await checkVerification();
+      if (!verified) {
+        setMessageTone('error');
+        setMessage('O e-mail ainda não foi verificado. Abra o link recebido e tente novamente.');
+      }
+    } catch (error) {
+      setMessageTone('error');
+      setMessage(`Não foi possível consultar a verificação: ${error.message}`);
+    } finally {
+      setActiveAction('');
     }
   };
 
   const handleResend = async () => {
+    setActiveAction('resend');
+    setMessage('');
     try {
       await resendEmail();
-      setMsg("Novo e-mail enviado! Verifique sua caixa de entrada e SPAM.");
-    } catch (e) {
-      setMsg("Erro ao reenviar: " + e.message);
+      setMessageTone('success');
+      setMessage('Um novo e-mail foi enviado. Confira também a pasta de spam.');
+    } catch (error) {
+      setMessageTone('error');
+      setMessage(`Não foi possível reenviar: ${error.message}`);
+    } finally {
+      setActiveAction('');
     }
   };
 
   return (
-    <div className="login-container" style={{ flexDirection: 'column', color: '#fff' }}>
-      <div className="box login-box" style={{ textAlign: 'center' }}>
-        <h2 style={{ color: 'var(--cor-destaque)' }}>Verificação Pendente</h2>
-        <p>Um link de acesso foi enviado para:</p>
-        <h3 style={{ color: '#fff', margin: '10px 0' }}>{usuario?.email}</h3>
-        
-        <p style={{ fontSize: '0.9em', opacity: 0.8 }}>
-          O Firebase usa um <strong>LINK</strong>, não um código. <br/>
-          Clique no link recebido no e-mail e depois no botão abaixo.
-        </p>
+    <AuthShell
+      eyebrow="Confirmação de identidade"
+      title="Verifique seu e-mail"
+      description="A ativação protege suas fichas e confirma que este canal pertence a você."
+      variant="verification"
+      status={activeAction ? 'Consultando serviço...' : 'Aguardando confirmação'}
+    >
+      <span className="auth-email-chip">{usuario?.email}</span>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-          <button className="btn-login" onClick={handleCheck} disabled={loading}>
-            {loading ? 'Verificando...' : 'JÁ CLIQUEI NO LINK'}
-          </button>
-          
-          <button className="btn-login anon" onClick={handleResend}>
-            Reenviar E-mail
-          </button>
-          
-          <button 
-            onClick={logout} 
-            style={{ background: 'none', border: 'none', color: '#aaa', textDecoration: 'underline', cursor: 'pointer', marginTop: '10px' }}
-          >
-            Sair / Trocar Conta
-          </button>
-        </div>
-        
-        {msg && <p style={{ color: 'var(--cor-destaque)', marginTop: '15px' }}>{msg}</p>}
+      <ol className="auth-steps">
+        <li>Abra a mensagem enviada pelo sistema na sua caixa de entrada.</li>
+        <li>Clique no link de verificação fornecido pelo Firebase.</li>
+        <li>Retorne a esta tela e confirme a ativação.</li>
+      </ol>
+
+      {message && (
+        <p
+          className={`auth-message auth-message--${messageTone}`}
+          role={messageTone === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+        >
+          {message}
+        </p>
+      )}
+
+      <div className="auth-action-stack">
+        <button
+          type="button"
+          className="auth-button auth-button--primary"
+          onClick={handleCheck}
+          disabled={Boolean(activeAction)}
+        >
+          {activeAction === 'check' ? 'Verificando...' : 'Já verifiquei o e-mail'}
+        </button>
+
+        <button
+          type="button"
+          className="auth-button auth-button--secondary"
+          onClick={handleResend}
+          disabled={Boolean(activeAction)}
+        >
+          {activeAction === 'resend' ? 'Reenviando...' : 'Reenviar e-mail'}
+        </button>
+
+        <button type="button" className="auth-button auth-button--quiet" onClick={logout} disabled={Boolean(activeAction)}>
+          Sair e trocar de conta
+        </button>
       </div>
-    </div>
+    </AuthShell>
   );
 }

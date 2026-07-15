@@ -4,12 +4,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import { useDialog } from '../../contexts/DialogContext'; 
 import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, criarFichaPessoal, excluirFichaPessoal } from '../../lib/mesas';
-import '../Login/Login.css'; 
 
 // --- IMPORTS DO FIREBASE ---
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc } from 'firebase/firestore';
 import Personagem from '../../lib/personagem.js';
+import ElementRail from '../../components/ElementRail.jsx';
+import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 
 export default function Dashboard() {
   const { usuario, logout, devVisualMode } = useAuth();
@@ -19,49 +20,16 @@ export default function Dashboard() {
   const [mesas, setMesas] = useState([]);
   const [fichasPessoais, setFichasPessoais] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   
   const [showCriarMesa, setShowCriarMesa] = useState(false);
   const [showEntrarMesa, setShowEntrarMesa] = useState(false);
   const [inputNomeMesa, setInputNomeMesa] = useState('');
   const [inputCodigoMesa, setInputCodigoMesa] = useState('');
 
-  // --- EFEITO DE PARALAXE ---
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      const x = (window.innerWidth - e.pageX * 2) / 25;
-      const y = (window.innerHeight - e.pageY * 2) / 25;
-      setOffset({ x, y });
-    };
-
-    const handleOrientation = (e) => {
-      let x = e.gamma;
-      let y = e.beta;
-      if (y > 90) y = 90;
-      if (y < -90) y = -90;
-      const mobileSensibilidade = 1.5; 
-      setOffset({ 
-        x: x * mobileSensibilidade, 
-        y: (y - 45) * mobileSensibilidade 
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (window.DeviceOrientationEvent) {
-        window.removeEventListener('deviceorientation', handleOrientation);
-      }
-    };
-  }, []);
-
   const carregarDados = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
 
     if (devVisualMode) {
       setMesas([]);
@@ -85,6 +53,7 @@ export default function Dashboard() {
       setFichasPessoais(listaFichas);
     } catch (error) {
       console.error(error);
+      setLoadError('Não foi possível sincronizar suas mesas e fichas.');
     } finally {
       setLoading(false);
     }
@@ -94,6 +63,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (usuario) carregarDados();
   }, [usuario, carregarDados]);
+
+  useEffect(() => {
+    document.title = 'C.A.O.S — Painel do Agente';
+  }, []);
 
   // --- AÇÕES DE MESA ---
   const handleCriarMesa = async () => {
@@ -130,6 +103,7 @@ export default function Dashboard() {
       navigate(`/ficha/${novoId}`);
     } catch (error) {
       console.error(error);
+      showAlert(`Não foi possível criar a ficha: ${error.message}`, 'Erro');
       setLoading(false);
     }
   };
@@ -138,8 +112,13 @@ export default function Dashboard() {
     e.stopPropagation();
     const confirmado = await showConfirm("Excluir esta ficha permanentemente? Essa ação não pode ser desfeita.", "Excluir Ficha");
     if(confirmado) {
-        await excluirFichaPessoal(usuario.uid, id);
-        carregarDados();
+        try {
+          await excluirFichaPessoal(usuario.uid, id);
+          await carregarDados();
+        } catch (error) {
+          console.error(error);
+          showAlert(`Não foi possível excluir a ficha: ${error.message}`, 'Erro');
+        }
     }
   };
 
@@ -179,7 +158,7 @@ export default function Dashboard() {
         await addDoc(colecaoDestino, novaFicha);
 
         showAlert(`Ficha "${nomeLido}" importada com sucesso!`, "Sucesso");
-        window.location.reload(); 
+        await carregarDados();
 
       } catch (error) {
         console.error("Erro ao importar:", error);
@@ -187,122 +166,234 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
+
+    reader.onerror = () => {
+      showAlert("Não foi possível ler o arquivo selecionado.", "Erro");
+      setLoading(false);
+    };
     
     reader.readAsText(file);
     event.target.value = null; 
   };
 
+  const nomeAgente = usuario?.displayName || 'Agente';
+  const statusSincronizacao = loadError
+    ? 'Indisponível'
+    : (loading ? 'Sincronizando' : (devVisualMode ? 'Visual' : 'Online'));
+  const descricaoSincronizacao = loadError
+    ? 'Sincronização indisponível'
+    : (loading ? 'Sincronizando dados' : (devVisualMode ? 'Ambiente visual local' : 'Conexão segura ativa'));
+  const resumoOperacional = [
+    { label: 'Missões', valor: mesas.length },
+    { label: 'Fichas', valor: fichasPessoais.length },
+    { label: 'Sincronização', valor: statusSincronizacao },
+  ];
+
   return (
-    <div style={{ paddingTop: '50px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
-      
-      <div 
-        className="parallax-layer" 
-        style={{ 
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
-          position: 'fixed', 
-          zIndex: 0
-        }}
-      >
-        <img src="/assets/images/Character.webp" alt="Símbolo de Fundo" className="login-bg-symbol" />
+    <div className="convergence-page dashboard-page">
+      <div className="dashboard-ambient-art" aria-hidden="true">
+        <img src="/assets/images/Character.webp" alt="" />
       </div>
 
-      <div 
-        className="dashboard-container box" 
-        style={{ 
-          background: 'rgba(12, 18, 24, 0.75)', 
-          backdropFilter: 'blur(12px)',         
-          WebkitBackdropFilter: 'blur(12px)',   
-          border: '1px solid rgba(255, 255, 255, 0.1)', 
-          boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',     
-          position: 'relative', 
-          zIndex: 1 
-        }}
-      >
-        
-        <div className="dashboard-header">
-          <h1 style={{ margin: 0 }}>Painel do Agente: <span style={{color:'var(--cor-destaque)'}}>{usuario?.displayName}</span></h1>
-          <button onClick={logout} className="item-inventario-remover">SAIR DO SISTEMA</button>
-        </div>
+      <ElementRail variante="dashboard" temaAtual="tema-ordem" />
 
-        {/* SEÇÃO 1: MESAS */}
-        <div className="dashboard-section">
-          <h2 style={{ color: 'var(--cor-destaque)', borderBottom: 'none' }}>MISSÕES (MESAS)</h2>
-          
-          <div className="dashboard-actions">
-            <button onClick={() => setShowCriarMesa(!showCriarMesa)} className="btn-login primary" style={{width:'auto', fontSize:'0.9em'}}>+ Criar Mesa</button>
-            <button onClick={() => setShowEntrarMesa(!showEntrarMesa)} className="btn-login google" style={{width:'auto', fontSize:'0.9em'}}>Entrar com Código</button>
+      <main className="dashboard-workspace" aria-busy={loading}>
+        <header className="dashboard-topbar">
+          <div className="dashboard-heading">
+            <span className="convergence-eyebrow">Central de operações</span>
+            <h1>Painel do Agente</h1>
           </div>
 
-          {showCriarMesa && (
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-               <input type="text" placeholder="Nome da Campanha" value={inputNomeMesa} onChange={e => setInputNomeMesa(e.target.value)} style={{flex:1}} />
-               <button onClick={handleCriarMesa}>Confirmar</button>
+          <div className="dashboard-agent-profile">
+            <span className={`dashboard-online-dot ${loadError ? 'is-error' : ''} ${loading ? 'is-loading' : ''}`} aria-hidden="true"></span>
+            <div>
+              <strong>{nomeAgente}</strong>
+              <small>{descricaoSincronizacao}</small>
             </div>
-          )}
-          {showEntrarMesa && (
-             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-               <input type="text" placeholder="ID da Mesa" value={inputCodigoMesa} onChange={e => setInputCodigoMesa(e.target.value)} style={{flex:1}} />
-               <button onClick={handleEntrarMesa}>Entrar</button>
+            <button type="button" onClick={logout} className="convergence-icon-button dashboard-logout" aria-label="Sair">
+              <AppIcon name="logout" size={17} />
+              <span>Sair</span>
+            </button>
+          </div>
+        </header>
+
+        {loadError && (
+          <div className="dashboard-sync-error" role="alert">
+            <span>{loadError}</span>
+            <button type="button" onClick={carregarDados}>Tentar novamente</button>
+          </div>
+        )}
+
+        <section className="dashboard-overview" aria-label="Resumo operacional">
+          <article className="convergence-panel dashboard-hero-panel">
+            <div className="dashboard-hero-copy">
+              <span className="convergence-eyebrow">Agente conectado</span>
+              <h2>{nomeAgente}</h2>
+              <p>Gerencie suas missões, agentes e registros a partir de um único núcleo operacional.</p>
+              <div className="dashboard-metrics">
+                {resumoOperacional.map(item => (
+                  <div className="dashboard-metric" key={item.label}>
+                    <strong>{item.valor}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+            <div className="dashboard-hero-emblem" aria-hidden="true">
+              <span className="dashboard-orbit dashboard-orbit--outer"></span>
+              <span className="dashboard-orbit dashboard-orbit--inner"></span>
+              <img src="/assets/images/SimboloSemafinidade.webp" alt="" />
+            </div>
+          </article>
 
-          <div className="dashboard-grid">
-             {mesas.map(mesa => (
-               <div 
-                 key={mesa.id} 
-                 className="dashboard-card"
-                 style={{ borderLeft: mesa.papel === 'mestre' ? '4px solid gold' : '4px solid var(--cor-destaque)' }} 
-                 onClick={() => navigate(`/mesa/${mesa.id}`)} 
-               >
-                 <h3 style={{ color: mesa.papel === 'mestre' ? 'gold' : 'var(--cor-destaque)' }}>{mesa.nome}</h3>
-                 <small>{mesa.papel === 'mestre' ? 'VOCÊ É O MESTRE' : 'AGENTE DE CAMPO'}</small>
-               </div>
-             ))}
-             {mesas.length === 0 && !loading && <div className="estado-vazio">Nenhuma missão em andamento.</div>}
-          </div>
-        </div>
+          <aside className="convergence-panel dashboard-quick-panel">
+            <div className="convergence-section-heading">
+              <div>
+                <span className="convergence-eyebrow">Comandos</span>
+                <h2>Ações rápidas</h2>
+              </div>
+            </div>
+            <div className="dashboard-quick-grid">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCriarMesa(prev => !prev);
+                  setShowEntrarMesa(false);
+                }}
+                className={showCriarMesa ? 'active' : ''}
+              >
+                <AppIcon name="mission" size={22} />
+                <span>Criar mesa</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEntrarMesa(prev => !prev);
+                  setShowCriarMesa(false);
+                }}
+                className={showEntrarMesa ? 'active' : ''}
+              >
+                <AppIcon name="code" size={22} />
+                <span>Entrar com código</span>
+              </button>
+              <button type="button" onClick={handleCriarFicha}>
+                <AppIcon name="user" size={22} />
+                <span>Nova ficha</span>
+              </button>
+              <label className="dashboard-quick-upload">
+                <AppIcon name="export" size={22} />
+                <span>Importar JSON</span>
+                <input type="file" accept=".json" onChange={handleImportarFicha} />
+              </label>
+            </div>
+          </aside>
+        </section>
 
-        {/* SEÇÃO 2: FICHAS PESSOAIS */}
-        <div className="dashboard-section" style={{ borderTop: '1px solid #333', paddingTop: '30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-             <h2 style={{ color: '#aaa', fontSize: '1.2em', borderBottom: 'none', margin: 0 }}>FICHAS PESSOAIS (OFFLINE)</h2>
-             
-             <div style={{display: 'flex', gap: '10px'}}>
-               <label className="btn-login google" style={{width:'auto', fontSize:'0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0}}>
-                 Importar JSON
-                 <input 
-                    type="file" 
-                    accept=".json" 
-                    onChange={handleImportarFicha} 
-                    style={{display: 'none'}} 
-                 />
-               </label>
+        {(showCriarMesa || showEntrarMesa) && (
+          <section className="convergence-panel dashboard-command-panel" aria-label="Comando de mesa">
+            {showCriarMesa && (
+              <form onSubmit={(event) => { event.preventDefault(); handleCriarMesa(); }}>
+                <label htmlFor="dashboard-nome-mesa">Nome da nova missão</label>
+                <input id="dashboard-nome-mesa" type="text" placeholder="Ex.: Ecos do Abismo" value={inputNomeMesa} onChange={event => setInputNomeMesa(event.target.value)} />
+                <button type="submit">Criar mesa</button>
+              </form>
+            )}
+            {showEntrarMesa && (
+              <form onSubmit={(event) => { event.preventDefault(); handleEntrarMesa(); }}>
+                <label htmlFor="dashboard-codigo-mesa">Código da mesa</label>
+                <input id="dashboard-codigo-mesa" type="text" placeholder="Informe o código recebido" value={inputCodigoMesa} onChange={event => setInputCodigoMesa(event.target.value)} />
+                <button type="submit">Entrar na mesa</button>
+              </form>
+            )}
+          </section>
+        )}
 
-               <button onClick={handleCriarFicha} className="btn-add-item" style={{fontSize: '1em'}}>+ Nova Ficha</button>
-             </div>
-          </div>
-          
-          <div className="dashboard-grid">
-             {fichasPessoais.map(ficha => {
-                // --- LÓGICA DE VISUALIZAÇÃO HÍBRIDA ---
-                // Tenta pegar de info.nome, se não existir, tenta ficha.nome, se não, "Sem Nome"
-                const nomePersonagem = ficha.info?.nome || ficha.nome || "Sem Nome";
-                const classePersonagem = ficha.info?.classe || ficha.classe || "Mundano";
-                const nexPersonagem = ficha.info?.nex || ficha.nex || "0%";
+        <section className="dashboard-content-grid">
+          <article className="convergence-panel dashboard-section dashboard-missions-panel">
+            <div className="convergence-section-heading">
+              <div>
+                <span className="convergence-eyebrow">Operações compartilhadas</span>
+                <h2>Missões</h2>
+              </div>
+              <span className="convergence-count">{mesas.length}</span>
+            </div>
+
+            <div className="dashboard-grid dashboard-mission-grid">
+              {mesas.map(mesa => (
+                <button
+                  type="button"
+                  key={mesa.id}
+                  className={`dashboard-card dashboard-mission-card ${mesa.papel === 'mestre' ? 'is-master' : ''}`}
+                  onClick={() => navigate(`/mesa/${mesa.id}`)}
+                >
+                  <span className="dashboard-card-icon"><AppIcon name="mission" size={22} /></span>
+                  <span className="dashboard-card-copy">
+                    <strong>{mesa.nome}</strong>
+                    <small>{mesa.papel === 'mestre' ? 'Mestre da operação' : 'Agente de campo'}</small>
+                  </span>
+                  <span className="dashboard-card-arrow" aria-hidden="true">›</span>
+                </button>
+              ))}
+              {mesas.length === 0 && !loading && !loadError && (
+                <div className="estado-vazio dashboard-empty-state">
+                  <AppIcon name="mission" size={26} />
+                  <strong>Nenhuma missão em andamento</strong>
+                  <span>Crie uma mesa ou entre usando um código.</span>
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="convergence-panel dashboard-section dashboard-sheets-panel">
+            <div className="convergence-section-heading">
+              <div>
+                <span className="convergence-eyebrow">Arquivo pessoal</span>
+                <h2>Fichas de agente</h2>
+              </div>
+              <span className="convergence-count">{fichasPessoais.length}</span>
+            </div>
+
+            <div className="dashboard-grid dashboard-agent-grid">
+              {fichasPessoais.map(ficha => {
+                const nomePersonagem = ficha.info?.nome || ficha.nome || 'Sem Nome';
+                const classePersonagem = ficha.info?.classe || ficha.classe || 'Mundano';
+                const nexPersonagem = ficha.info?.nex || ficha.nex || '0%';
+                const fotoPersonagem = ficha.info?.foto || ficha.dadosCompletos?.info?.foto || ficha.foto;
 
                 return (
-                  <div key={ficha.id} onClick={() => navigate(`/ficha/${ficha.id}`)} className="dashboard-card">
-                     <h4>{nomePersonagem}</h4>
-                     <p style={{ fontSize: '0.9em' }}>{classePersonagem} - {nexPersonagem}</p>
-                     <button className="btn-excluir-card" onClick={(e) => handleExcluirFicha(e, ficha.id)}>&times;</button>
-                  </div>
+                  <article key={ficha.id} className="dashboard-card dashboard-agent-card">
+                    <button type="button" className="dashboard-card-open" onClick={() => navigate(`/ficha/${ficha.id}`)}>
+                      <span className="dashboard-agent-avatar" style={fotoPersonagem ? { backgroundImage: `url(${fotoPersonagem})` } : undefined}>
+                        {!fotoPersonagem && <AppIcon name="user" size={22} />}
+                      </span>
+                      <span className="dashboard-card-copy">
+                        <strong>{nomePersonagem}</strong>
+                        <small>{classePersonagem} · NEX {nexPersonagem}</small>
+                      </span>
+                      <span className="dashboard-card-arrow" aria-hidden="true">›</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-excluir-card"
+                      onClick={(event) => handleExcluirFicha(event, ficha.id)}
+                      aria-label={`Excluir ficha de ${nomePersonagem}`}
+                    >
+                      &times;
+                    </button>
+                  </article>
                 );
-             })}
-             {fichasPessoais.length === 0 && !loading && <div className="estado-vazio">Nenhuma ficha pessoal criada.</div>}
-          </div>
-        </div>
-
-      </div>
+              })}
+              {fichasPessoais.length === 0 && !loading && !loadError && (
+                <div className="estado-vazio dashboard-empty-state">
+                  <AppIcon name="user" size={26} />
+                  <strong>Nenhuma ficha criada</strong>
+                  <span>Crie seu primeiro agente para iniciar.</span>
+                </div>
+              )}
+            </div>
+          </article>
+        </section>
+      </main>
     </div>
   );
 }

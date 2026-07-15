@@ -1,489 +1,493 @@
-// /src/lib/animacoes.js
-// (VERSÃO CORRIGIDA - Caminhos atualizados para .webp na pasta /images/)
-
 import { gsap } from "gsap";
+import { getTemaConfig } from "./temas.js";
 
-let activeTimeline = null;
-let particleInterval = null;
+const MEDIA_MOVIMENTO_REDUZIDO = "(prefers-reduced-motion: reduce)";
 
-/**
- * Pega o valor da variável de cor CSS para a transição.
- */
-function getCorTransicao(tema) {
-  const rootStyles = getComputedStyle(document.documentElement);
-  switch (tema) {
-    case "tema-ordem": return rootStyles.getPropertyValue("--cor-trans-ordem");
-    case "tema-sangue": return rootStyles.getPropertyValue("--cor-trans-sangue");
-    case "tema-morte": return rootStyles.getPropertyValue("--cor-trans-morte");
-    case "tema-conhecimento": return rootStyles.getPropertyValue("--cor-trans-conhecimento");
-    case "tema-energia": return rootStyles.getPropertyValue("--cor-trans-energia");
-    default: return "#000";
+const QUANTIDADE_PARTICULAS = Object.freeze({
+  sangueCortes: 8,
+  sangueRespingos: 10,
+  morte: 18,
+  conhecimento: 28,
+});
+
+let transicaoAtiva = null;
+
+function obterOverlay() {
+  if (typeof document === "undefined") return null;
+  return document.getElementById("transition-overlay");
+}
+
+function deveReduzirMovimento() {
+  if (typeof window === "undefined" || typeof document === "undefined") return true;
+
+  const prefereReducao = typeof window.matchMedia === "function"
+    && window.matchMedia(MEDIA_MOVIMENTO_REDUZIDO).matches;
+  const modoEconomia = document.body?.classList.contains("modo-economia");
+
+  return prefereReducao || modoEconomia;
+}
+
+function getCorTransicao(temaConfig) {
+  if (typeof document === "undefined" || typeof getComputedStyle !== "function") {
+    return temaConfig.cor || "#000000";
+  }
+
+  const nomeTema = temaConfig.id.replace("tema-", "");
+  const valorCss = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--cor-trans-${nomeTema}`)
+    .trim();
+
+  return valorCss || temaConfig.cor || "#000000";
+}
+
+function restaurarOverlay(overlay) {
+  if (!overlay) return;
+
+  overlay.replaceChildren();
+  overlay.className = "";
+  overlay.removeAttribute("style");
+}
+
+function cancelarTransicaoAtiva() {
+  const contexto = transicaoAtiva;
+  if (!contexto) return;
+
+  transicaoAtiva = null;
+  contexto.cancelada = true;
+  contexto.timeline?.kill();
+
+  gsap.killTweensOf([contexto.overlay, ...contexto.elementos]);
+  restaurarOverlay(contexto.overlay);
+}
+
+function definirTemaNoDocumento(temaConfig) {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.dataset.tema = temaConfig.id;
+
+  try {
+    window.localStorage.setItem("temaFichaOrdem", temaConfig.id);
+  } catch {
+    // O tema ainda funciona quando o navegador bloqueia armazenamento local.
   }
 }
 
-/**
- * Para e limpa qualquer animação de transição anterior.
- */
-function limparAnimacoesAtivas() {
-  const transitionOverlay = document.getElementById("transition-overlay");
+function chamarCallback(contexto) {
+  if (typeof contexto.onMidpoint !== "function") return;
 
-  if (activeTimeline) {
-    activeTimeline.kill();
-    activeTimeline = null;
-  }
-  if (particleInterval) {
-    clearInterval(particleInterval);
-    particleInterval = null;
-  }
-  
-  if (transitionOverlay) {
-    gsap.killTweensOf(transitionOverlay);
-    gsap.killTweensOf(transitionOverlay.children);
-    transitionOverlay.innerHTML = "";
-    transitionOverlay.style.backgroundColor = "transparent";
-    transitionOverlay.style.background = "transparent";
-    transitionOverlay.style.backgroundImage = "none";
-    transitionOverlay.style.opacity = "0"; // Garante que esteja invisível
-    transitionOverlay.className = "";
+  try {
+    contexto.onMidpoint();
+  } catch (error) {
+    console.error("Erro ao concluir a troca de tema:", error);
   }
 }
 
-/**
- * Cria e adiciona o símbolo do elemento ao overlay de transição.
- */
-function injecarSimboloTransicao(tema) {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!transitionOverlay) return null;
-  
+function aplicarTemaNoMidpoint(contexto) {
+  if (transicaoAtiva !== contexto || contexto.cancelada || contexto.temaAplicado) return;
+
+  contexto.temaAplicado = true;
+  definirTemaNoDocumento(contexto.temaConfig);
+  chamarCallback(contexto);
+}
+
+function finalizarTransicao(contexto) {
+  if (transicaoAtiva !== contexto) return;
+
+  aplicarTemaNoMidpoint(contexto);
+  transicaoAtiva = null;
+  gsap.killTweensOf([contexto.overlay, ...contexto.elementos]);
+  restaurarOverlay(contexto.overlay);
+}
+
+function criarContexto(overlay, temaConfig, onMidpoint) {
+  const contexto = {
+    overlay,
+    temaConfig,
+    onMidpoint,
+    elementos: [],
+    cancelada: false,
+    temaAplicado: false,
+    timeline: null,
+  };
+
+  contexto.timeline = gsap.timeline({
+    paused: true,
+    defaults: { overwrite: "auto" },
+    onComplete: () => finalizarTransicao(contexto),
+  });
+
+  transicaoAtiva = contexto;
+  return contexto;
+}
+
+function registrarElemento(contexto, elemento) {
+  contexto.elementos.push(elemento);
+  contexto.overlay.appendChild(elemento);
+  return elemento;
+}
+
+function injetarSimboloTransicao(contexto) {
   const img = document.createElement("img");
   img.className = "transition-symbol";
+  img.id = `simbolo-${contexto.temaConfig.id.replace("tema-", "")}-trans`;
+  img.src = contexto.temaConfig.simbolo;
+  img.alt = "";
+  img.setAttribute("aria-hidden", "true");
+  img.decoding = "async";
+  img.draggable = false;
 
-  // --- CORREÇÃO APLICADA AQUI (usando .webp da pasta /images/) ---
-  switch (tema) {
-    case "tema-ordem":
-      img.src = "/assets/images/SimboloSemafinidade.webp";
-      img.id = "simbolo-ordem-trans";
-      break;
-    case "tema-sangue":
-      img.src = "/assets/images/SimboloSangue.webp";
-      img.id = "simbolo-sangue-trans";
-      break;
-    case "tema-morte":
-      img.src = "/assets/images/SimboloMorte.webp";
-      img.id = "simbolo-morte-trans";
-      break;
-    case "tema-conhecimento":
-      img.src = "/assets/images/SimboloConhecimento.webp";
-      img.id = "simbolo-conhecimento-trans";
-      break;
-    case "tema-energia":
-      img.src = "/assets/images/SimboloEnergia.webp";
-      img.id = "simbolo-energia-trans";
-      break;
-  }
-  // --- FIM DA CORREÇÃO ---
-
-  transitionOverlay.appendChild(img);
-  return img;
+  return registrarElemento(contexto, img);
 }
 
-// --- Animações Específicas ---
+function prepararOverlay(contexto, className = "") {
+  const { overlay } = contexto;
+  restaurarOverlay(overlay);
+  overlay.className = className;
+  overlay.style.backgroundColor = "transparent";
+  overlay.style.backgroundImage = "none";
+  overlay.style.opacity = "0";
+}
 
-/**
- * Animação de Cortes Aleatórios e Splatter para SANGUE
- */
-function executarAnimacaoSangue(tema, onMidpoint) {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!transitionOverlay) return;
+function animarSimbolo(contexto, simbolo, {
+  inicio = 0.08,
+  entrada = 0.28,
+  saida = 0.58,
+  duracaoSaida = 0.28,
+  escalaInicial = 0.78,
+  escalaFinal = 1.08,
+  opacidade = 0.88,
+  rotacao = 0,
+} = {}) {
+  const { timeline } = contexto;
 
-  transitionOverlay.style.opacity = "1";
-  transitionOverlay.style.backgroundColor = "transparent"; 
-  const simbolo = injecarSimboloTransicao(tema); // <- Agora pega o .webp branco
+  timeline.fromTo(simbolo, {
+    opacity: 0,
+    scale: escalaInicial,
+    rotation: rotacao,
+    xPercent: -50,
+    yPercent: -50,
+  }, {
+    opacity: opacidade,
+    scale: 1,
+    rotation: 0,
+    xPercent: -50,
+    yPercent: -50,
+    duration: entrada,
+    ease: "power2.out",
+  }, inicio);
 
-  const numCortes = 15;
-  const numSplatters = 40;
-  const corSangue = getCorTransicao(tema); // <- Pega a cor vermelha de fundo
+  timeline.to(simbolo, {
+    opacity: 0,
+    scale: escalaFinal,
+    xPercent: -50,
+    yPercent: -50,
+    duration: duracaoSaida,
+    ease: "power1.in",
+  }, saida);
+}
 
-  activeTimeline = gsap.timeline({
-    onComplete: () => {
-      if (transitionOverlay) transitionOverlay.innerHTML = "";
-      if (transitionOverlay) transitionOverlay.style.opacity = "0";
-      if (transitionOverlay) transitionOverlay.style.background = "transparent";
-      activeTimeline = null;
-    },
+function executarAnimacaoOrdem(contexto) {
+  prepararOverlay(contexto, "anim-ordem");
+
+  const { timeline, overlay, temaConfig } = contexto;
+  const simbolo = injetarSimboloTransicao(contexto);
+  const cor = getCorTransicao(temaConfig);
+
+  overlay.style.background = `radial-gradient(circle, ${temaConfig.cor}33 0%, ${cor} 58%, #020406 100%)`;
+
+  timeline.fromTo(overlay, { opacity: 0 }, {
+    opacity: 1,
+    duration: 0.28,
+    ease: "power1.in",
+  }, 0);
+
+  animarSimbolo(contexto, simbolo, {
+    inicio: 0.04,
+    entrada: 0.3,
+    saida: 0.42,
+    duracaoSaida: 0.3,
+    escalaInicial: 0.72,
+    escalaFinal: 1.1,
+    rotacao: -5,
   });
-  
-  const totalDuration = 2.5; 
-  const staggerWindowCortes = totalDuration * 0.7; 
-  const staggerWindowSplatters = totalDuration * 0.6;
-  const fadeOutTime = totalDuration - 0.7; 
 
-  // 2. Animação dos CORTES (Linhas Pretas)
-  for (let i = 0; i < numCortes; i++) {
+  timeline.call(() => aplicarTemaNoMidpoint(contexto), null, 0.3);
+  timeline.to(overlay, { opacity: 0, duration: 0.34, ease: "power1.out" }, 0.4);
+}
+
+function executarAnimacaoSangue(contexto) {
+  prepararOverlay(contexto, "anim-sangue");
+
+  const { timeline, overlay, temaConfig } = contexto;
+  const simbolo = injetarSimboloTransicao(contexto);
+  const cor = getCorTransicao(temaConfig);
+
+  timeline.set(overlay, { opacity: 1 }, 0);
+
+  for (let i = 0; i < QUANTIDADE_PARTICULAS.sangueCortes; i += 1) {
     const corte = document.createElement("div");
     corte.className = "particula-corte";
-    const sangue = document.createElement("div");
-    sangue.className = "particula-sangue-splatter";
-    
-    transitionOverlay.appendChild(sangue);
-    transitionOverlay.appendChild(corte);
+    registrarElemento(contexto, corte);
 
-    const angulo = Math.random() * 180 - 90;
-    const isHorizontal = Math.abs(angulo) < 45 || Math.abs(angulo) > 135;
-    const comprimento = isHorizontal ? "150vw" : "150vh";
-    const espessura = Math.random() * 8 + 4; 
+    const delay = 0.03 + i * 0.045;
+    const horizontal = i % 3 !== 0;
 
-    gsap.set([corte, sangue], {
-        left: Math.random() * 100 + "vw",
-        top: Math.random() * 100 + "vh",
-        rotation: angulo,
-        width: comprimento,
-        height: espessura + "px",
-        xPercent: -50,
-        yPercent: -50,
-    });
-    
-    const clipStart = "polygon(0% 45%, 0% 55%, 100% 55%, 100% 45%)";
-    const clipEnd = `polygon(0% ${Math.random()*20}%, 100% ${Math.random()*20+10}%, 100% ${Math.random()*20+80}%, 0% ${Math.random()*20+70}%)`;
-    gsap.set(corte, { clipPath: clipStart });
-    
-    const sangueClipStart = "polygon(0% 50%, 0% 50%, 100% 50%, 100% 50%)";
-    const sangueClipEnd = "polygon(-50% -500%, 150% -500%, 150% 600%, -50% 600%)";
-    gsap.set(sangue, { 
-      clipPath: sangueClipStart,
-      backgroundColor: corSangue,
-      opacity: 0.8,
-    });
-    
-    const delay = (i / numCortes) * staggerWindowCortes;
-    const duration = 1.0 - (delay * 0.4);
-    
-    activeTimeline.to(corte, {
-        clipPath: clipEnd,
-        duration: duration,
-        ease: "power3.inOut"
-    }, delay);
-    
-    activeTimeline.to(sangue, {
-        clipPath: sangueClipEnd,
-        duration: duration * 0.8,
-        ease: "power2.out"
-    }, delay + 0.05);
-  }
-  
-  // 3. Animação dos SPLATTERS (Sangue Adicional)
-  for (let i = 0; i < numSplatters; i++) {
-    const splatter = document.createElement("div");
-    splatter.className = "particula-sangue-splatter";
-    transitionOverlay.appendChild(splatter);
-    
-    const startDelay = Math.random() * staggerWindowSplatters + 0.2;
-    
-    gsap.set(splatter, {
-      top: Math.random() * 100 + "vh",
-      left: Math.random() * 100 + "vw",
-      scale: 0,
-      opacity: 0,
+    gsap.set(corte, {
+      left: `${12 + Math.random() * 76}vw`,
+      top: `${8 + Math.random() * 84}vh`,
+      width: horizontal ? "125vw" : "125vh",
+      height: `${3 + Math.random() * 5}px`,
+      rotation: horizontal ? -35 + Math.random() * 70 : 55 + Math.random() * 70,
+      xPercent: -50,
+      yPercent: -50,
+      transformOrigin: "center",
     });
 
-    activeTimeline.to(splatter, {
-      scale: Math.random() * 6 + 4, 
-      opacity: Math.random() * 0.5 + 0.5,
-      duration: 0.4,
+    timeline.fromTo(corte, { scaleX: 0, opacity: 0 }, {
+      scaleX: 1,
+      opacity: 0.92,
+      duration: 0.2,
       ease: "power3.out",
-    }, startDelay);
-    
-    activeTimeline.to(splatter, {
-      opacity: 0, 
-      duration: 0.6,
+    }, delay);
+    timeline.to(corte, { opacity: 0, duration: 0.22, ease: "power1.out" }, delay + 0.2);
+  }
+
+  for (let i = 0; i < QUANTIDADE_PARTICULAS.sangueRespingos; i += 1) {
+    const respingo = document.createElement("div");
+    respingo.className = "particula-sangue-splatter";
+    registrarElemento(contexto, respingo);
+
+    const tamanho = 12 + Math.random() * 34;
+    const delay = 0.12 + Math.random() * 0.32;
+
+    gsap.set(respingo, {
+      left: `${Math.random() * 100}vw`,
+      top: `${Math.random() * 100}vh`,
+      width: tamanho,
+      height: tamanho,
+      backgroundColor: temaConfig.cor,
+    });
+
+    timeline.fromTo(respingo, { opacity: 0, scale: 0.15 }, {
+      opacity: 0.72,
+      scale: 1.4 + Math.random(),
+      duration: 0.2,
+      ease: "power2.out",
+    }, delay);
+    timeline.to(respingo, { opacity: 0, duration: 0.3 }, delay + 0.2);
+  }
+
+  timeline.to(overlay, { backgroundColor: cor, duration: 0.28, ease: "power1.in" }, 0.2);
+  animarSimbolo(contexto, simbolo, {
+    inicio: 0.2,
+    entrada: 0.24,
+    saida: 0.62,
+    duracaoSaida: 0.26,
+    escalaInicial: 0.7,
+    escalaFinal: 1.14,
+    opacidade: 0.9,
+  });
+  timeline.call(() => aplicarTemaNoMidpoint(contexto), null, 0.46);
+  timeline.to(overlay, { opacity: 0, duration: 0.4, ease: "power1.out" }, 0.68);
+}
+
+function executarAnimacaoMorte(contexto) {
+  prepararOverlay(contexto, "anim-morte");
+
+  const { timeline, overlay, temaConfig } = contexto;
+  const simbolo = injetarSimboloTransicao(contexto);
+  const cor = getCorTransicao(temaConfig);
+
+  timeline.set(overlay, { opacity: 1 }, 0);
+  timeline.to(overlay, { backgroundColor: cor, duration: 0.42, ease: "power1.in" }, 0);
+
+  for (let i = 0; i < QUANTIDADE_PARTICULAS.morte; i += 1) {
+    const particula = document.createElement("div");
+    particula.className = "particula-morte";
+    registrarElemento(contexto, particula);
+
+    const tamanho = 10 + Math.random() * 30;
+    const delay = Math.random() * 0.34;
+
+    gsap.set(particula, {
+      left: "-12vw",
+      top: `${Math.random() * 100}vh`,
+      width: tamanho,
+      height: tamanho,
+      backgroundColor: i % 3 === 0 ? "#6f6f6f" : "#050505",
+    });
+
+    timeline.fromTo(particula, {
+      x: 0,
+      y: 16,
+      opacity: 0,
+      rotation: 0,
+    }, {
+      x: "124vw",
+      y: -24 - Math.random() * 45,
+      opacity: 0.48,
+      rotation: 180 + Math.random() * 300,
+      duration: 0.62 + Math.random() * 0.32,
+      ease: "none",
+    }, delay);
+    timeline.to(particula, { opacity: 0, duration: 0.2 }, delay + 0.58);
+  }
+
+  animarSimbolo(contexto, simbolo, {
+    inicio: 0.16,
+    entrada: 0.34,
+    saida: 0.62,
+    duracaoSaida: 0.34,
+    escalaInicial: 0.86,
+    escalaFinal: 1.04,
+    opacidade: 0.55,
+    rotacao: -3,
+  });
+  timeline.call(() => aplicarTemaNoMidpoint(contexto), null, 0.48);
+  timeline.to(overlay, { opacity: 0, duration: 0.46, ease: "power1.out" }, 0.68);
+}
+
+function executarAnimacaoConhecimento(contexto) {
+  prepararOverlay(contexto, "anim-conhecimento");
+
+  const { timeline, overlay, temaConfig } = contexto;
+  const simbolo = injetarSimboloTransicao(contexto);
+  const cor = getCorTransicao(temaConfig);
+  const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  timeline.set(overlay, { opacity: 1, backgroundColor: cor }, 0);
+
+  for (let i = 0; i < QUANTIDADE_PARTICULAS.conhecimento; i += 1) {
+    const glifo = document.createElement("span");
+    glifo.className = "glitch-text";
+    glifo.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+    registrarElemento(contexto, glifo);
+
+    const delay = Math.random() * 0.3;
+    const deslocamento = 18 + Math.random() * 42;
+
+    gsap.set(glifo, {
+      left: `${4 + Math.random() * 92}vw`,
+      top: `${5 + Math.random() * 90}vh`,
+      fontSize: `${0.8 + Math.random() * 1.4}rem`,
+      rotation: -35 + Math.random() * 70,
+    });
+
+    timeline.fromTo(glifo, { opacity: 0, y: deslocamento }, {
+      opacity: 0.35 + Math.random() * 0.45,
+      y: 0,
+      duration: 0.26,
+      ease: "power2.out",
+    }, delay);
+    timeline.to(glifo, {
+      opacity: 0,
+      y: -deslocamento,
+      duration: 0.3,
       ease: "power1.in",
-    }, startDelay + 0.4); 
-  }
-  
-  // 4. Símbolo do Sangue (Centralizado)
-  // O símbolo .webp (branco) irá contrastar com o fundo vermelho
-  if (simbolo) {
-    activeTimeline.fromTo(simbolo, 
-      { 
-        opacity: 0, 
-        scale: 0.8, 
-        filter: "brightness(1)",
-        xPercent: -50,
-        yPercent: -50
-      },
-      { 
-        opacity: 0.8, // Opacidade do símbolo
-        scale: 1, 
-        filter: "brightness(2)",
-        xPercent: -50,
-        yPercent: -50,
-        duration: 0.4, 
-        ease: "power2.out" 
-      }, 
-      0.6 
-    );
-    activeTimeline.to(simbolo, 
-      { 
-        opacity: 0, 
-        scale: 1.2, 
-        duration: 0.5, 
-        ease: "power1.in",
-        xPercent: -50,
-        yPercent: -50
-      }, 
-      fadeOutTime 
-    );
+    }, delay + 0.3);
   }
 
-  // 5. O Midpoint e o Fade Out da Transição
-  activeTimeline.call(onMidpoint, null, fadeOutTime);
-  
-  activeTimeline.fromTo(transitionOverlay, 
-    { backgroundColor: "transparent" },
-    { backgroundColor: corSangue, duration: 0.5 }, // O "quadrado vermelho"
-    0.8
-  );
-  
-  activeTimeline.to(transitionOverlay, { 
-    opacity: 0, 
-    duration: 0.7,
-    ease: "power1.out" 
-  }, fadeOutTime);
-}
-
-
-/**
- * Animação de Glifos para CONHECIMENTO
- */
-function executarAnimacaoConhecimento(tema, onMidpoint) {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!transitionOverlay) return;
-
-  transitionOverlay.style.opacity = "1";
-  transitionOverlay.style.backgroundColor = getCorTransicao(tema);
-  const simbolo = injecarSimboloTransicao(tema);
-  const numSimbolos = 150;
-  const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-  for (let i = 0; i < numSimbolos; i++) {
-    const span = document.createElement("span");
-    span.className = "glitch-text";
-    span.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-    gsap.set(span, { position: "absolute", top: Math.random() * 100 + "vh", left: Math.random() * 100 + "vw", fontSize: Math.random() * 2 + 1 + "em", opacity: 0, rotation: Math.random() * 360 });
-    transitionOverlay.appendChild(span);
-    gsap.timeline({ repeat: -1, repeatDelay: Math.random() * 2 })
-      .to(span, { opacity: Math.random() * 0.8 + 0.2, y: "-=" + (Math.random() * 50 + 20), duration: Math.random() * 1.5 + 0.5, ease: "power2.out", delay: Math.random() * 0.8 })
-      .to(span, { opacity: 0, y: "+=" + (Math.random() * 30 + 10), duration: Math.random() * 1 + 0.5, ease: "power1.in" });
-  }
-  
-  activeTimeline = gsap.timeline({
-    onComplete: () => {
-      if (transitionOverlay) transitionOverlay.innerHTML = "";
-      if (transitionOverlay) transitionOverlay.style.backgroundColor = "transparent";
-      activeTimeline = null;
-    },
+  animarSimbolo(contexto, simbolo, {
+    inicio: 0.16,
+    entrada: 0.28,
+    saida: 0.54,
+    duracaoSaida: 0.26,
+    escalaInicial: 0.76,
+    escalaFinal: 1.12,
+    opacidade: 0.94,
   });
-  
-  activeTimeline.to(transitionOverlay, { duration: 0.2, opacity: 1 })
-  if (simbolo) {
-    activeTimeline.to(simbolo, { 
-      opacity: 1, 
-      scale: 1, 
-      duration: 0.3, 
-      ease: "power2.out",
-      xPercent: -50,
-      yPercent: -50
-    }, 0.5)
-    activeTimeline.to(simbolo, { 
-      opacity: 0, 
-      scale: 1.2, 
-      duration: 0.3, 
-      ease: "power2.in",
-      xPercent: -50,
-      yPercent: -50
-    }, 0.8)
-  }
-  activeTimeline.call(onMidpoint, null, 0.6) 
-  activeTimeline.to(transitionOverlay, { duration: 0.8, opacity: 0, delay: 0.8 });
+  timeline.call(() => aplicarTemaNoMidpoint(contexto), null, 0.42);
+  timeline.to(overlay, { opacity: 0, duration: 0.38, ease: "power1.out" }, 0.58);
 }
 
-/**
- * Helper para criar partículas de MORTE
- */
-function criarParticula() {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!particleInterval || !transitionOverlay) return;
-  const p = document.createElement("div");
-  p.className = "particula-morte";
-  transitionOverlay.appendChild(p);
-  const size = Math.random() * 40 + 10 + "px";
-  gsap.set(p, { top: () => Math.random() * 100 + "vh", left: "-50px", width: size, height: size, opacity: Math.random() * 0.4 + 0.1, rotation: () => Math.random() * 360 });
-  gsap.to(p, { duration: Math.random() * 2 + 1.5, x: "110vw", rotation: () => Math.random() * 720 - 360, ease: "none", onComplete: () => p.remove() });
-}
+function executarAnimacaoEnergia(contexto) {
+  prepararOverlay(contexto, "anim-energia");
 
-/**
- * Animação de Lodo/Cinzas para MORTE
- */
-function executarAnimacaoMorte(tema, onMidpoint) {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!transitionOverlay) return;
-  
-  transitionOverlay.style.opacity = "1";
-  transitionOverlay.className = "anim-morte";
-  const novaCorDeFundo = getCorTransicao(tema);
-  const simbolo = injecarSimboloTransicao(tema);
-  particleInterval = setInterval(criarParticula, 30);
-  
-  activeTimeline = gsap.timeline({
-    onComplete: () => {
-      if (transitionOverlay) transitionOverlay.innerHTML = "";
-      if (transitionOverlay) transitionOverlay.style.opacity = "0";
-      if (particleInterval) clearInterval(particleInterval);
-      if (transitionOverlay) transitionOverlay.style.backgroundColor = "transparent";
-      particleInterval = null;
-      activeTimeline = null;
-    },
+  const { timeline, overlay, temaConfig } = contexto;
+  const simbolo = injetarSimboloTransicao(contexto);
+  const cor = getCorTransicao(temaConfig);
+
+  overlay.style.backgroundColor = cor;
+  overlay.style.backgroundImage = "url('/assets/images/glitch.webp')";
+  overlay.style.backgroundPosition = "center";
+  overlay.style.backgroundRepeat = "no-repeat";
+  overlay.style.backgroundSize = "cover";
+
+  timeline.fromTo(overlay, { opacity: 0 }, {
+    opacity: 1,
+    duration: 0.2,
+    ease: "steps(3)",
+  }, 0);
+
+  animarSimbolo(contexto, simbolo, {
+    inicio: 0.08,
+    entrada: 0.2,
+    saida: 0.42,
+    duracaoSaida: 0.22,
+    escalaInicial: 0.66,
+    escalaFinal: 1.16,
+    opacidade: 0.92,
+    rotacao: 4,
   });
-  
-  activeTimeline.to(transitionOverlay, { backgroundColor: novaCorDeFundo, duration: 2.0, ease: "power1.in" })
-  if(simbolo) {
-    activeTimeline.to(simbolo, { 
-      opacity: 0.3, 
-      scale: 1, 
-      duration: 1.0, 
-      ease: "power1.inOut",
-      xPercent: -50,
-      yPercent: -50
-    }, 1.0)
-    activeTimeline.to(simbolo, { 
-      opacity: 0, 
-      duration: 0.5, 
-      ease: "power1.out",
-      xPercent: -50,
-      yPercent: -50
-    }, 2.0)
-  }
-  activeTimeline.call(onMidpoint, null, 1.0) 
-  activeTimeline.to(transitionOverlay, { opacity: 0, duration: 1.5, ease: "power1.out" });
+  timeline.call(() => aplicarTemaNoMidpoint(contexto), null, 0.32);
+  timeline.to(overlay, { opacity: 0, duration: 0.34, ease: "steps(4)" }, 0.46);
 }
 
-// --- Funções Principais (Exportadas) ---
+const animacoesPorTipo = Object.freeze({
+  radar: executarAnimacaoOrdem,
+  cortes: executarAnimacaoSangue,
+  cinzas: executarAnimacaoMorte,
+  sigilos: executarAnimacaoConhecimento,
+  glitch: executarAnimacaoEnergia,
+});
 
-/**
- * Função principal que decide qual animação tocar.
- */
+function aplicarImediatamente(temaConfig, onMidpointCallback) {
+  definirTemaNoDocumento(temaConfig);
+
+  if (typeof onMidpointCallback === "function") {
+    try {
+      onMidpointCallback();
+    } catch (error) {
+      console.error("Erro ao concluir a troca de tema:", error);
+    }
+  }
+}
+
 export function aplicarTemaComAnimacao(tema, temaAtual, onMidpointCallback) {
-  const transitionOverlay = document.getElementById("transition-overlay");
-  if (!transitionOverlay) {
-    aplicarTemaSemAnimacao(tema);
-    onMidpointCallback();
+  const temaConfig = getTemaConfig(tema);
+  const temaAtualConfig = getTemaConfig(temaAtual);
+  const temaNoDocumento = typeof document !== "undefined"
+    ? document.documentElement.dataset.tema
+    : "";
+  const temaOrigem = temaNoDocumento || temaAtualConfig.id;
+
+  cancelarTransicaoAtiva();
+
+  if (temaConfig.id === temaOrigem) {
+    definirTemaNoDocumento(temaConfig);
     return;
   }
-  
-  limparAnimacoesAtivas();
 
-  if (tema === temaAtual) {
+  const overlay = obterOverlay();
+  if (!overlay || deveReduzirMovimento()) {
+    aplicarImediatamente(temaConfig, onMidpointCallback);
     return;
   }
 
-  let animationTime = 1200;
-  const novaCorDeFundo = getCorTransicao(tema);
+  const contexto = criarContexto(overlay, temaConfig, onMidpointCallback);
+  const executarAnimacao = animacoesPorTipo[temaConfig.transicao] || executarAnimacaoOrdem;
 
-  // 1. Escolhe a animação
-  switch (tema) {
-    case "tema-sangue":
-      executarAnimacaoSangue(tema, onMidpointCallback);
-      return;
-    case "tema-morte":
-      executarAnimacaoMorte(tema, onMidpointCallback);
-      return;
-    case "tema-conhecimento":
-      executarAnimacaoConhecimento(tema, onMidpointCallback);
-      return;
-      
-    case "tema-ordem":
-      transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      animationTime = 1200;
-      break;
-    case "tema-energia":
-      transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      // --- CORREÇÃO APLICADA AQUI (Glitch .webp) ---
-      transitionOverlay.style.backgroundImage = "url('/assets/images/glitch.webp')"; 
-      // --- FIM DA CORREÇÃO ---
-      transitionOverlay.style.backgroundSize = "cover";
-      transitionOverlay.style.backgroundPosition = "center";
-      transitionOverlay.style.backgroundRepeat = "no-repeat";
-      transitionOverlay.className = "anim-energia"; 
-      animationTime = 1000;
-      break;
-    default:
-      transitionOverlay.style.backgroundColor = novaCorDeFundo;
-      animationTime = 1200;
-      break;
-  }
-
-  // --- 2. Animação Padrão (Usada por Ordem e Energia) ---
-  const simbolo = injecarSimboloTransicao(tema);
-  const animationTimeInSeconds = animationTime / 1000;
-  const halfTime = animationTimeInSeconds / 2;
-
-  transitionOverlay.style.opacity = ""; 
-
-  activeTimeline = gsap.timeline({
-    onComplete: () => {
-      transitionOverlay.className = "";
-      transitionOverlay.style.opacity = "0"; 
-      transitionOverlay.style.backgroundColor = "transparent";
-      transitionOverlay.style.backgroundImage = "none";
-      if (transitionOverlay.innerHTML) transitionOverlay.innerHTML = "";
-      activeTimeline = null;
-    },
-  });
-
-  // Fade-in
-  activeTimeline.to(transitionOverlay, { 
-    opacity: 1, 
-    duration: halfTime, 
-    ease: "power1.in" 
-  }, 0); 
-  
-  // Chama o callback no meio
-  activeTimeline.call(onMidpointCallback, null, halfTime); 
-  
-  // Fade-out
-  activeTimeline.to(transitionOverlay, { 
-    opacity: 0, 
-    duration: halfTime, 
-    ease: "power1.out" 
-  }, halfTime); 
-
-  // Animação do símbolo
-  if (simbolo) {
-    activeTimeline.to(simbolo, { 
-      opacity: 1, 
-      scale: 1, 
-      duration: animationTimeInSeconds * 0.3, 
-      ease: "power2.out",
-      xPercent: -50,
-      yPercent: -50
-    }, animationTimeInSeconds * 0.25);
-    
-    activeTimeline.to(simbolo, { 
-      opacity: 0, 
-      scale: 0.9, 
-      duration: animationTimeInSeconds * 0.3, 
-      ease: "power2.in",
-      xPercent: -50,
-      yPercent: -50
-    }, halfTime); 
+  try {
+    executarAnimacao(contexto);
+    contexto.timeline.play(0);
+  } catch (error) {
+    console.error("Não foi possível executar a animação de tema:", error);
+    cancelarTransicaoAtiva();
+    aplicarImediatamente(temaConfig, onMidpointCallback);
   }
 }
 
-/**
- * Aplica o tema instantaneamente (usado no carregamento da página).
- */
 export function aplicarTemaSemAnimacao(tema) {
-  const rootElement = document.documentElement;
-  rootElement.dataset.tema = tema;
-  localStorage.setItem("temaFichaOrdem", tema);
+  cancelarTransicaoAtiva();
+  definirTemaNoDocumento(getTemaConfig(tema));
 }

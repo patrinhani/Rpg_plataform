@@ -23,9 +23,11 @@ function Inventario({ inventario, calculados, onAbrirLoja, onRemoveItem, onToggl
           <h2>INVENTÁRIO</h2>
           {/* O botão "+" agora chama a função do App.jsx */}
           <button 
+            type="button"
             className="btn-add-item" 
             id="btn-abrir-loja-inv"
             onClick={onAbrirLoja}
+            aria-label="Adicionar item ao inventário"
           >
             +
           </button>

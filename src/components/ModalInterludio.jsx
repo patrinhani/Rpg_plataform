@@ -53,10 +53,10 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '700px', width: '95%' }}>
+      <div className="modal-conteudo modal-grande" role="dialog" aria-modal="true" aria-labelledby="interludio-titulo" style={{ maxWidth: '700px', width: '95%' }}>
         <div className="modal-header">
-            <h2>Cena de Interlúdio</h2>
-            <button className="modal-close" onClick={onClose}>&times;</button>
+            <h2 id="interludio-titulo">Cena de Interlúdio</h2>
+            <button type="button" className="btn-fechar-modal" aria-label="Fechar interlúdio" onClick={onClose}>&times;</button>
         </div>
         
         <div style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
@@ -178,8 +178,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
         </div>
 
         <div className="modal-actions" style={{ marginTop: '10px', padding: '0 20px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-            <button className="btn-confirm" onClick={handleAplicar} disabled={acoesSelecionadas.length === 0}>
+            <button type="button" className="item-inventario-remover" onClick={onClose}>Cancelar</button>
+            <button type="button" className="loja-item-add" onClick={handleAplicar} disabled={acoesSelecionadas.length === 0}>
                 Concluir Interlúdio
             </button>
         </div>

@@ -2,6 +2,8 @@
 // (ATUALIZADO: Adicionadas barras de status compactas + caminhos de imagem corrigidos)
 
 import React from 'react';
+import { AppIcon } from '../icons/NavigationIcons.jsx';
+import { getTemaConfig } from '../../lib/temas.js';
 
 function Recursos({ 
   dados, 
@@ -11,6 +13,8 @@ function Recursos({
   onFichaChange,
   buffsTemporarios = { exercicio: 0, leitura: 0 },
   onConsumirBuff,
+  onBack,
+  onOpenTracker,
 }) {
 
   const handleChange = (e) => {
@@ -44,142 +48,104 @@ function Recursos({
       );
     }
     return (
-      <div className="tracker-boxes" onClick={() => handleTrackerClick(tipo, contagem)}>
+      <button
+        type="button"
+        className="tracker-boxes"
+        onClick={() => handleTrackerClick(tipo, contagem)}
+        aria-label={`${tipo}: ${contagem} de 3. Avançar marcador`}
+      >
         {boxes}
-      </div>
+      </button>
     );
   };
 
   const visibilidadeAtual = dadosVisibilidade || 0;
   
-  // Define o caminho do símbolo do tema com base no tema do dataset (definido em App.jsx)
-  const getTemaIcon = () => {
-    const tema = document.documentElement.dataset.tema || 'tema-ordem';
-    
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Os caminhos agora apontam para os arquivos "Simbolo...webp" corretos
-    switch (tema) {
-      case "tema-sangue": return "/assets/images/SimboloSangue.webp";
-      case "tema-morte": return "/assets/images/SimboloMorte.webp";
-      case "tema-conhecimento": return "/assets/images/SimboloConhecimento.webp";
-      case "tema-energia": return "/assets/images/SimboloEnergia.webp";
-      case "tema-ordem":
-      default:
-        return "/assets/images/SimboloSemafinidade.webp";
-    }
-    // --- FIM DA CORREÇÃO ---
-  };
+  const temaConfig = getTemaConfig(info?.tema || 'tema-ordem');
   
   // --- CÁLCULO DE PORCENTAGEM PARA AS BARRAS ---
   const pvPerc = Math.max(0, Math.min(100, (dados.pv_atual / (dados.pv_max || 1)) * 100));
   const sanPerc = Math.max(0, Math.min(100, (dados.san_atual / (dados.san_max || 1)) * 100));
   const pePerc = Math.max(0, Math.min(100, (dados.pe_atual / (dados.pe_max || 1)) * 100));
-  // --- FIM DO CÁLCULO ---
+  const recursosHud = [
+    { id: 'pv', label: 'PV', atual: dados.pv_atual, maximo: dados.pv_max, percentual: pvPerc },
+    { id: 'san', label: 'SAN', atual: dados.san_atual, maximo: dados.san_max, percentual: sanPerc },
+    { id: 'pe', label: 'PE', atual: dados.pe_atual, maximo: dados.pe_max, percentual: pePerc },
+  ];
 
   return (
-    // O container fixo agora é o próprio componente
-    <div className="recursos-container-fixo">
-      
-      {/* --- HUD Compacta (PV, SAN, PE) --- */}
-      <div className="recursos-hud-itens">
-        
-        {/* PV */}
-        <div className="recurso-hud-item" id="hud-pv">
-          <label htmlFor="pv_atual">PV</label>
-          {/* --- BARRA DE PV ADICIONADA --- */}
-          <div className="hud-barra-container">
-            <div 
-              className="hud-barra-preenchimento" 
-              id="barra-pv-hud" 
-              style={{ width: `${pvPerc}%` }}
-            ></div>
-          </div>
-          {/* --- FIM DA BARRA --- */}
-          <div className="hud-numeros-container">
-            <input 
-              type="number" 
-              id="pv_atual" 
-              className="hud-input-atual" 
-              value={dados.pv_atual}
-              onChange={handleChange}
-            />
-            <span className="hud-separador">/</span>
-            <span className="hud-valor-max">{dados.pv_max}</span>
-          </div>
+    <header className="recursos-container-fixo">
+      <div className="hud-agent-card">
+        {onBack && (
+          <button type="button" className="hud-back-button" onClick={onBack} aria-label="Voltar">
+            <AppIcon name="back" size={18} />
+          </button>
+        )}
+
+        <div className="personagem-imagem-container">
+          <img src={temaConfig.simbolo} alt="" className="personagem-imagem-fundo" />
+          <div
+            className="personagem-imagem-foto"
+            style={{ backgroundImage: info?.foto ? `url(${info.foto})` : 'none' }}
+          ></div>
         </div>
-        
-        {/* SAN */}
-        <div className="recurso-hud-item" id="hud-san">
-          <label htmlFor="san_atual">SAN</label>
-          {/* --- BARRA DE SAN ADICIONADA --- */}
-          <div className="hud-barra-container">
-            <div 
-              className="hud-barra-preenchimento" 
-              id="barra-san-hud" 
-              style={{ width: `${sanPerc}%` }}
-            ></div>
-          </div>
-          {/* --- FIM DA BARRA --- */}
-          <div className="hud-numeros-container">
-            <input 
-              type="number" 
-              id="san_atual" 
-              className="hud-input-atual"
-              value={dados.san_atual}
-              onChange={handleChange}
-            />
-            <span className="hud-separador">/</span>
-            <span className="hud-valor-max">{dados.san_max}</span>
-          </div>
+
+        <div className="hud-agent-copy">
+          <span className="hud-kicker">Agente em operação</span>
+          <strong>{info?.nome || 'Agente sem identificação'}</strong>
+          <small>{info?.classe || 'Classe indefinida'} · NEX {info?.nex || '0%'}</small>
         </div>
-        
-        {/* PE */}
-        <div className="recurso-hud-item" id="hud-pe">
-          <label htmlFor="pe_atual">PE</label>
-          {/* --- BARRA DE PE ADICIONADA --- */}
-          <div className="hud-barra-container">
-            <div 
-              className="hud-barra-preenchimento" 
-              id="barra-pe-hud" 
-              style={{ width: `${pePerc}%` }}
-            ></div>
-          </div>
-          {/* --- FIM DA BARRA --- */}
-          <div className="hud-numeros-container">
-            <input 
-              type="number" 
-              id="pe_atual" 
-              className="hud-input-atual"
-              value={dados.pe_atual}
-              onChange={handleChange}
-            />
-            <span className="hud-separador">/</span>
-            <span className="hud-valor-max">{dados.pe_max}</span>
-          </div>
-        </div>
+
+        {onOpenTracker && (
+          <button type="button" className="hud-tracker-button" onClick={onOpenTracker} aria-label="Abrir iniciativa">
+            <AppIcon name="progress" size={17} />
+            <span>Iniciativa</span>
+          </button>
+        )}
       </div>
 
-      {/* --- Imagem do Personagem --- */}
-      <div className="personagem-imagem-container">
-        {/* Fundo Arcano (baseado no tema) */}
-        <img 
-          src={getTemaIcon()} 
-          alt="Símbolo do Tema" 
-          className="personagem-imagem-fundo" 
-        />
-        {/* Foto (retângulo central) */}
-        <div 
-          className="personagem-imagem-foto"
-          style={{ backgroundImage: info.foto ? `url(${info.foto})` : 'none' }}
-        ></div>
+      <div className="recursos-hud-itens" aria-label="Recursos do personagem">
+        {recursosHud.map(recurso => (
+          <div className="recurso-hud-item" id={`hud-${recurso.id}`} key={recurso.id}>
+            <div className="hud-recurso-topo">
+              <label htmlFor={`${recurso.id}_atual`}>{recurso.label}</label>
+              <span>{Math.round(recurso.percentual)}%</span>
+            </div>
+            <div
+              className="hud-barra-container"
+              role="progressbar"
+              aria-label={`${recurso.label}: ${recurso.atual} de ${recurso.maximo}`}
+              aria-valuemin="0"
+              aria-valuemax={recurso.maximo}
+              aria-valuenow={recurso.atual}
+            >
+              <div
+                className="hud-barra-preenchimento"
+                id={`barra-${recurso.id}-hud`}
+                style={{ width: `${recurso.percentual}%` }}
+              ></div>
+            </div>
+            <div className="hud-numeros-container">
+              <input
+                type="number"
+                id={`${recurso.id}_atual`}
+                className="hud-input-atual"
+                value={recurso.atual}
+                onChange={handleChange}
+                aria-label={`${recurso.label} atual`}
+              />
+              <span className="hud-separador">/</span>
+              <span className="hud-valor-max">{recurso.maximo}</span>
+            </div>
+          </div>
+        ))}
       </div>
-      
-      {/* --- Trackers de Furtividade / Perseguição --- */}
+
       <div className="recursos-hud-trackers">
         {(buffsTemporarios.exercicio > 0 || buffsTemporarios.leitura > 0) && (
           <div className="tracker-linha">
             <span>Bônus de interlúdio</span>
-            <div className="vis-tracker-container" style={{flexWrap: 'wrap'}}>
+            <div className="vis-tracker-container vis-tracker-container--wrap">
               {buffsTemporarios.exercicio > 0 && (
                 <button
                   type="button"
@@ -208,9 +174,9 @@ function Recursos({
         >
           <span>Visibilidade</span>
           <div className="vis-tracker-container">
-            <button className="vis-btn" onClick={() => handleVisibilidadeChange(-1)}>-</button>
-            <span className="vis-numero">{visibilidadeAtual}</span>
-            <button className="vis-btn" onClick={() => handleVisibilidadeChange(1)}>+</button>
+            <button type="button" className="vis-btn" onClick={() => handleVisibilidadeChange(-1)} aria-label="Reduzir visibilidade">-</button>
+            <span className="vis-numero" aria-live="polite">{visibilidadeAtual}</span>
+            <button type="button" className="vis-btn" onClick={() => handleVisibilidadeChange(1)} aria-label="Aumentar visibilidade">+</button>
           </div>
         </div>
         
@@ -229,14 +195,13 @@ function Recursos({
               <span>Falhas</span>
               {renderBoxes('falhas', dadosPerseguicao.falhas)}
             </div>
-            <button className="btn-reset-perseguicao" onClick={handleResetClick}>
+            <button type="button" className="btn-reset-perseguicao" onClick={handleResetClick}>
               Resetar
             </button>
           </div>
         )}
       </div>
-
-    </div>
+    </header>
   );
 }
 

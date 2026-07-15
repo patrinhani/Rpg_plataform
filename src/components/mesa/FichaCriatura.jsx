@@ -27,13 +27,24 @@ function FichaCriatura({ dados, onClose }) {
   const simboloFundo = simbolos[dados.elemento] || simbolos.Medo;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-conteudo" style={{ maxWidth: '600px', border: `2px solid ${corTema}`, padding: '0', overflow: 'hidden' }}>
+    <div
+      className="modal-overlay"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="modal-conteudo"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ficha-criatura-titulo"
+        style={{ maxWidth: '600px', border: `2px solid ${corTema}`, padding: '0', overflow: 'hidden', position: 'relative' }}
+      >
         
         {/* CABEÇALHO */}
         <div style={{ background: corTema, padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-                <h2 style={{ margin: 0, color: '#000', fontFamily: '"Special Elite", monospace', fontSize: '1.8em' }}>{dados.nome.toUpperCase()}</h2>
+                <h2 id="ficha-criatura-titulo" style={{ margin: 0, color: '#000', fontFamily: '"Special Elite", monospace', fontSize: '1.8em' }}>{dados.nome.toUpperCase()}</h2>
                 <span style={{ color: '#000', fontWeight: 'bold', background:'rgba(255,255,255,0.3)', padding:'2px 6px', borderRadius:'4px' }}>{dados.elemento}</span>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -159,7 +170,7 @@ function FichaCriatura({ dados, onClose }) {
 
         </div>
 
-        <button className="btn-fechar-modal" onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', color: '#000', fontSize: '1.5em', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <button type="button" aria-label="Fechar ficha da criatura" className="btn-fechar-modal" onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', color: '#000', fontSize: '1.5em', background: 'none', border: 'none', cursor: 'pointer' }}>
             &times;
         </button>
       </div>

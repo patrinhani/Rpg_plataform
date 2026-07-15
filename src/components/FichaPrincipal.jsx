@@ -25,12 +25,12 @@ function FichaPrincipal({
   onRemovePericiaCustom
 }) {
     // Extrai a prop 'canChangeTheme' diretamente do objeto 'calculados'
-    const { canChangeTheme } = calculados; 
+    const { canChangeTheme } = calculados;
 
     // Mescla a propriedade booleana nas props que vão para o componente Controles
     const controlesComNEX = {
         ...controlesProps,
-        canChangeTheme: canChangeTheme 
+        canChangeTheme: Boolean(controlesProps.canChangeTheme && canChangeTheme)
     };
 
   return (
@@ -46,7 +46,7 @@ function FichaPrincipal({
       {/* --- AGRUPAMENTO PARA EVITAR SOBREPOSIÇÃO --- 
           Criamos um container flex que ocupa a área 'controles' 
           e empilha os dois componentes verticalmente. */}
-      <div style={{ gridArea: 'controles', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="ficha-controls-stack">
         
         {/* Área de Controles (Botões de Salvar, Importar, Tema) */}
         <Controles {...controlesComNEX} /> 
