@@ -42,7 +42,7 @@ function Controles({
       </button>
       
       {podeImportar && (
-        <>
+        <div className="ficha-import-control">
           <label htmlFor="input-importar" className="btn-importar-label">
             Importar
           </label>
@@ -50,10 +50,10 @@ function Controles({
             type="file"
             id="input-importar"
             accept=".json"
-            style={{ display: 'none' }}
+            className="ficha-file-input"
             onChange={handleFileChange}
           />
-        </>
+        </div>
       )}
 
       {/* LÓGICA DE OCULTAÇÃO: Só renderiza se canChangeTheme for true */}

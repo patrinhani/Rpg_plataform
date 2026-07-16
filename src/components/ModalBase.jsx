@@ -13,15 +13,43 @@ const FOCUSABLE_SELECTOR = [
 
 let openModalCount = 0;
 const openModalStack = [];
+let appRootHadInert = false;
+let appRootAriaHidden = null;
+
+function isVisibleFocusable(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element.closest('[hidden], [aria-hidden="true"]')) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none'
+    && style.visibility !== 'hidden'
+    && element.getClientRects().length > 0;
+}
 
 function lockPageScroll() {
+  if (openModalCount === 0) {
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRootHadInert = appRoot.hasAttribute('inert');
+      appRootAriaHidden = appRoot.getAttribute('aria-hidden');
+      appRoot.setAttribute('inert', '');
+      appRoot.setAttribute('aria-hidden', 'true');
+    }
+  }
   openModalCount += 1;
   document.body.classList.add('caos-modal-open');
 }
 
 function unlockPageScroll() {
   openModalCount = Math.max(0, openModalCount - 1);
-  if (openModalCount === 0) document.body.classList.remove('caos-modal-open');
+  if (openModalCount === 0) {
+    document.body.classList.remove('caos-modal-open');
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      if (!appRootHadInert) appRoot.removeAttribute('inert');
+      if (appRootAriaHidden === null) appRoot.removeAttribute('aria-hidden');
+      else appRoot.setAttribute('aria-hidden', appRootAriaHidden);
+    }
+  }
 }
 
 export default function ModalBase({
@@ -38,6 +66,7 @@ export default function ModalBase({
   closeOnOverlay = true,
   initialFocusRef,
   describedBy,
+  role = 'dialog',
 }) {
   const panelRef = useRef(null);
   const modalIdRef = useRef(Symbol('caos-modal'));
@@ -54,12 +83,15 @@ export default function ModalBase({
     const previouslyFocused = document.activeElement;
     const panel = panelRef.current;
     const modalId = modalIdRef.current;
+    panel?.focus();
     openModalStack.push(modalId);
     lockPageScroll();
 
     const focusFrame = window.requestAnimationFrame(() => {
-      const preferredTarget = initialFocusRef?.current;
-      const firstFocusable = panel?.querySelector(FOCUSABLE_SELECTOR);
+      const preferredTarget = isVisibleFocusable(initialFocusRef?.current) ? initialFocusRef.current : null;
+      const firstFocusable = panel
+        ? Array.from(panel.querySelectorAll(FOCUSABLE_SELECTOR)).find(isVisibleFocusable)
+        : null;
       (preferredTarget || firstFocusable || panel)?.focus();
     });
 
@@ -75,7 +107,7 @@ export default function ModalBase({
       if (event.key !== 'Tab' || !panel) return;
 
       const focusable = Array.from(panel.querySelectorAll(FOCUSABLE_SELECTOR))
-        .filter((element) => !element.hasAttribute('hidden') && element.getAttribute('aria-hidden') !== 'true');
+        .filter(isVisibleFocusable);
 
       if (focusable.length === 0) {
         event.preventDefault();
@@ -121,7 +153,7 @@ export default function ModalBase({
         ref={panelRef}
         className={`caos-modal__panel caos-modal__panel--${size} ${className}`.trim()}
         style={panelStyle}
-        role="dialog"
+        role={role}
         aria-modal="true"
         aria-labelledby={generatedTitleId}
         aria-describedby={describedBy}

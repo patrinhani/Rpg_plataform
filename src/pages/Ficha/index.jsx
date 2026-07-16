@@ -629,7 +629,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   if (loading) {
       return (
           <div className="ficha-loading" role="status" aria-live="polite">
-              <img src="/assets/images/SimboloSemafinidade.webp" alt="Carregando" />
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="Carregando" />
               <h1>Sincronizando Ficha...</h1>
               <button type="button" className="ficha-loading-back" onClick={voltarDaFicha}>
                   <AppIcon name="back" size={17} />
@@ -642,7 +642,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   if (loadError) {
       return (
           <div className="ficha-load-error" role="alert">
-              <img src="/assets/images/SimboloSemafinidade.webp" alt="" aria-hidden="true" />
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" aria-hidden="true" />
               <h1>Falha de sincronização</h1>
               <p>{loadError}</p>
               <div>

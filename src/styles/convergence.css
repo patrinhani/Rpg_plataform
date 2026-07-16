@@ -3,7 +3,7 @@
 
 :root {
   --conv-accent: var(--cor-destaque, #0091ff);
-  --conv-accent-text: var(--cor-destaque, #0091ff);
+  --conv-accent-text: var(--cor-destaque-texto, var(--cor-destaque, #0091ff));
   --conv-accent-rgb: var(--cor-destaque-rgb, 0 145 255);
   --conv-bg: #02070b;
   --conv-surface: rgba(7, 15, 22, 0.88);
@@ -112,6 +112,7 @@
 
 :where(.convergence-page, .ficha-convergence-shell) {
   --conv-accent: var(--cor-destaque, #0091ff);
+  --conv-accent-text: var(--cor-destaque-texto, var(--cor-destaque, #0091ff));
   --conv-accent-rgb: var(--cor-destaque-rgb, 0 145 255);
   --conv-bg: #02070b;
   --conv-surface: rgba(7, 15, 22, 0.88);
@@ -818,8 +819,8 @@
 
 .ficha-convergence-shell .hud-input-atual {
   font-size: 1rem;
-  height: 36px;
-  min-height: 36px;
+  height: 44px;
+  min-height: 44px;
   padding: 2px 4px;
   width: 48px;
 }
@@ -1031,6 +1032,173 @@
   min-height: 44px;
 }
 
+.ficha-convergence-shell .ficha-import-control {
+  position: relative;
+}
+
+.ficha-convergence-shell .ficha-import-control .btn-importar-label {
+  width: 100%;
+}
+
+.ficha-convergence-shell .ficha-file-input {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.ficha-convergence-shell .ficha-import-control:focus-within .btn-importar-label {
+  outline: 2px solid var(--conv-accent-text);
+  outline-offset: 3px;
+}
+
+.ficha-convergence-shell .calc-linha input[type="number"],
+.ficha-convergence-shell .pericia-manual-row input {
+  font-size: 1rem;
+  min-height: 44px;
+}
+
+.ficha-convergence-shell .toggle-item-calculo {
+  min-height: 24px;
+  min-width: 24px;
+}
+
+.ficha-convergence-shell .item-inventario-toggle label {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.ficha-convergence-shell .item-inventario-toggle label small {
+  color: var(--conv-muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.ficha-convergence-shell .item-mod-details {
+  border-top: 1px dashed var(--conv-border);
+  color: var(--conv-muted);
+  margin-top: 5px;
+}
+
+.ficha-convergence-shell .item-mod-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.82rem;
+  font-style: italic;
+  gap: 4px;
+  min-height: 44px;
+  padding: 6px 0;
+}
+
+.ficha-convergence-shell .item-mod-details summary::before {
+  content: '▸';
+  color: var(--conv-accent-text);
+}
+
+.ficha-convergence-shell .item-mod-details[open] summary::before {
+  content: '▾';
+}
+
+.ficha-convergence-shell .item-mod-details ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0 0 0 18px;
+}
+
+.ficha-convergence-shell .item-mod-details li {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.ficha-convergence-shell .box-condicoes {
+  margin-top: 20px;
+  padding: 15px;
+}
+
+.ficha-convergence-shell .condicoes-header {
+  align-items: center;
+  border-bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ficha-convergence-shell .condicoes-header h2 {
+  margin: 0;
+}
+
+.ficha-convergence-shell .condicao-card {
+  align-items: stretch;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ficha-convergence-shell .condicao-card__toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  min-height: 50px;
+  padding: 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.ficha-convergence-shell .condicao-card__toggle--automatic {
+  cursor: default;
+}
+
+.ficha-convergence-shell .condicao-card__toggle:focus-visible,
+.ficha-convergence-shell .condicao-reaplicar:focus-visible,
+.ficha-convergence-shell .item-mod-details summary:focus-visible {
+  outline: 2px solid var(--conv-accent-text);
+  outline-offset: -3px;
+}
+
+.ficha-convergence-shell .condicao-info {
+  min-width: 0;
+}
+
+.ficha-convergence-shell .condicao-desc-curta--sr-only {
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.ficha-convergence-shell .condicao-reaplicar {
+  align-self: stretch;
+  border-radius: 0;
+  font-size: 0.76rem;
+  margin: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+}
+
 .ficha-convergence-shell .box-atributos {
   align-self: center;
   max-width: 340px;
@@ -1057,6 +1225,31 @@
 .ficha-convergence-shell .pericia-item {
   background: rgba(0, 0, 0, 0.22);
   min-width: 0 !important;
+}
+
+.ficha-convergence-shell .pericia-condicao-details {
+  border: 1px solid rgba(255, 139, 143, 0.24);
+  border-radius: 7px;
+  color: #ffb1b4;
+  font-size: 0.72rem;
+  width: 100%;
+}
+
+.ficha-convergence-shell .pericia-condicao-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  min-height: 44px;
+  padding: 6px 8px;
+}
+
+.ficha-convergence-shell .pericia-condicao-details p {
+  border-top: 1px solid rgba(255, 139, 143, 0.18);
+  color: var(--conv-muted);
+  line-height: 1.4;
+  margin: 0;
+  padding: 8px;
+  white-space: pre-line;
 }
 
 .ficha-convergence-shell .btn-remover-pericia-custom {
@@ -1401,6 +1594,7 @@
   .ficha-convergence-shell .pericia-bonus-texto { font-size: 1.45rem; }
   .ficha-convergence-shell .pericia-manual-row { grid-area: manual; margin: 0; }
   .ficha-convergence-shell .pericia-item select { grid-area: treino; margin: 0; min-height: 44px; }
+  .ficha-convergence-shell .pericia-condicao-details { grid-column: 1 / -1; }
 
   .ficha-convergence-shell .ficha-container-inventario,
   .ficha-progressao-view,
@@ -1435,7 +1629,7 @@
   .hud-tracker-button span { display: none; }
   .ficha-convergence-shell .hud-recurso-topo span { display: none; }
   .ficha-convergence-shell .recurso-hud-item label { font-size: 0.66rem; }
-  .ficha-convergence-shell .hud-input-atual { font-size: 0.9rem; width: 36px; }
+  .ficha-convergence-shell .hud-input-atual { font-size: 1rem; width: 44px; }
   .ficha-convergence-shell .hud-separador,
   .ficha-convergence-shell .hud-valor-max { font-size: 0.8rem; }
 
@@ -1461,21 +1655,19 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .app-loading-screen img,
-  .ficha-loading img {
-    animation: none !important;
-  }
+body.modo-economia .app-loading-screen img,
+body.modo-economia .ficha-loading img {
+  animation: none !important;
+}
 
-  :where(.convergence-page, .ficha-convergence-shell),
-  :where(.convergence-page, .ficha-convergence-shell) *,
-  :where(.convergence-page, .ficha-convergence-shell) *::before,
-  :where(.convergence-page, .ficha-convergence-shell) *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
+body.modo-economia :where(.convergence-page, .ficha-convergence-shell),
+body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *,
+body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *::before,
+body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
 }
 
 body.modo-economia .dashboard-ambient-art,
@@ -1494,4 +1686,44 @@ body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *::before
 body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *::after {
   animation: none !important;
   transition: none !important;
+}
+
+/* Exportação da ficha: controles locais, sem dependência visual da tela de login. */
+.export-ficha-container .export-ficha-action {
+  min-height: 44px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  font-family: "Special Elite", monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, background-color 180ms ease;
+}
+
+.export-ficha-container .export-ficha-action--primary {
+  border-color: var(--conv-accent, var(--cor-destaque));
+  background: var(--conv-accent, var(--cor-destaque));
+  color: #050a10;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--conv-accent, var(--cor-destaque)) 24%, transparent);
+}
+
+.export-ficha-container .export-ficha-action--secondary {
+  background: transparent;
+  color: var(--conv-accent-text, var(--cor-destaque));
+}
+
+.export-ficha-container .export-ficha-action:focus-visible {
+  outline: 2px solid var(--conv-accent-text, var(--cor-destaque));
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .export-ficha-container .export-ficha-action:hover {
+    border-color: var(--conv-accent-text, var(--cor-destaque));
+    box-shadow: 0 0 22px color-mix(in srgb, var(--conv-accent, var(--cor-destaque)) 30%, transparent);
+  }
+
+  .export-ficha-container .export-ficha-action--primary:hover {
+    background: var(--conv-accent-text, var(--cor-destaque));
+  }
 }

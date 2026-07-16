@@ -15,7 +15,8 @@ html, body {
 
 #root {
   width: 100%;
-  height: 100vh; /* Ocupa exatamente a tela toda */
+  height: 100vh;
+  height: 100dvh;
   
   /* A rolagem acontece AQUI DENTRO, e não na página */
   overflow-y: auto; 

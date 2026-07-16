@@ -1,5 +1,56 @@
 body.caos-modal-open {
+  overflow: hidden;
   overscroll-behavior: none;
+}
+
+.item-mod-option {
+  align-items: flex-start;
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  min-height: 44px;
+}
+
+.item-mod-option input {
+  flex: 0 0 auto;
+  height: 22px;
+  margin: 2px 0 0;
+  width: 22px;
+}
+
+.item-mod-option__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  text-transform: none;
+}
+
+.item-mod-option__copy strong {
+  color: var(--modal-text, #edf5fb);
+  font-size: 0.8rem;
+}
+
+.item-mod-option__copy small {
+  color: var(--modal-muted, #8da2b2);
+  font-family: "Roboto Condensed", system-ui, sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.interludio-action-count {
+  align-items: center;
+  background: var(--modal-accent, #0091ff);
+  border-radius: 999px;
+  color: #050a10;
+  display: inline-flex;
+  font-family: "Roboto Condensed", system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 24px;
+  min-width: 30px;
+  padding: 2px 7px;
 }
 
 .caos-modal {
@@ -20,8 +71,14 @@ body.caos-modal-open {
   box-sizing: border-box;
 }
 
+.caos-modal :where(button, [role="button"], [role="tab"]) {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
 .caos-modal__panel {
   --modal-accent: var(--conv-accent, var(--cor-destaque, #0091ff));
+  --modal-accent-text: var(--conv-accent-text, var(--modal-accent));
   --modal-accent-rgb: var(--conv-accent-rgb, var(--cor-destaque-rgb, 0 145 255));
   animation: caos-modal-enter 190ms ease-out both;
   background:
@@ -69,7 +126,7 @@ body.caos-modal-open {
 }
 
 .caos-modal__eyebrow {
-  color: var(--modal-accent);
+  color: var(--modal-accent-text);
   display: block;
   font-size: 0.64rem;
   font-weight: 700;
@@ -118,7 +175,7 @@ body.caos-modal-open {
 .caos-modal__button:focus-visible,
 .caos-choice-list button:focus-visible,
 .caos-modal :where(input, select, textarea):focus-visible {
-  outline: 2px solid var(--modal-accent);
+  outline: 2px solid var(--modal-accent-text);
   outline-offset: 3px;
 }
 
@@ -164,8 +221,8 @@ body.caos-modal-open {
 }
 
 .caos-modal__button--primary {
-  background: var(--modal-accent);
-  border-color: var(--modal-accent);
+  background: var(--modal-accent-text);
+  border-color: var(--modal-accent-text);
   box-shadow: 0 10px 24px rgb(var(--modal-accent-rgb) / 0.2);
   color: #02070b;
 }

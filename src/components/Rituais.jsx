@@ -22,7 +22,9 @@ function Rituais({ rituais, onAbrirModal, onRemoveRitual }) {
           <h2>RITUAIS APRENDIDOS</h2>
           {/* 3. Adiciona o botão '+' que chama a prop */}
           <button 
+            type="button"
             className="btn-add-item" 
+            aria-label="Adicionar ritual"
             onClick={onAbrirModal} // Chama a função do App.jsx
           >
             +

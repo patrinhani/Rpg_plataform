@@ -8,6 +8,7 @@ export default function SystemDialog() {
   const confirmButtonRef = useRef(null);
   const formId = useId();
   const inputLabelId = useId();
+  const messageId = useId();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -23,6 +24,8 @@ export default function SystemDialog() {
       size="small"
       closeLabel="Cancelar e fechar diálogo"
       initialFocusRef={dialog.type === 'prompt' ? inputRef : confirmButtonRef}
+      describedBy={messageId}
+      role={dialog.type === 'alert' ? 'alertdialog' : 'dialog'}
       footer={(
         <>
           {dialog.type !== 'alert' && (
@@ -42,7 +45,7 @@ export default function SystemDialog() {
       )}
     >
       <form id={formId} onSubmit={handleSubmit}>
-        <p className="caos-modal__message">{dialog.message}</p>
+        <p id={messageId} className="caos-modal__message">{dialog.message}</p>
 
         {dialog.type === 'prompt' && (
           <div className="caos-modal__field">

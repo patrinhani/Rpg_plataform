@@ -43,7 +43,7 @@ function Inventario({ inventario, calculados, onAbrirLoja, onRemoveItem, onToggl
             <span style={{ color: '#ffb020' }}>Sobrecarregado: DEF –5, perícias de carga –5 e deslocamento –3m.</span>
           )}
           {calculados?.cargaAcimaDoLimite && (
-            <span style={{ color: '#ff4d4d' }}>Carga inválida: remova itens até atingir o dobro da capacidade.</span>
+            <span style={{ color: '#ff8b8f' }}>Acima do limite recomendado: confira a carga com as regras da mesa.</span>
           )}
         </div>
         

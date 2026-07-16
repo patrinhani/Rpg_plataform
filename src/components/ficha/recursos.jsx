@@ -23,9 +23,13 @@ function Recursos({
     onFichaChange('recursos', campo, valor);
   };
   
-  const handleTrackerClick = (tipo, valorAtual) => {
-    const novoValor = (valorAtual >= 3) ? 0 : valorAtual + 1;
+  const handleTrackerClick = (tipo, valorAtual, meta) => {
+    const novoValor = (valorAtual >= meta) ? 0 : valorAtual + 1;
     onFichaChange('perseguicao', tipo, novoValor);
+  };
+
+  const handleMetaPerseguicaoChange = (tipo, valor) => {
+    onFichaChange('perseguicao', tipo, valor);
   };
 
   const handleVisibilidadeChange = (delta) => {
@@ -37,9 +41,9 @@ function Recursos({
     onFichaChange('perseguicao', 'reset', 0);
   };
 
-  const renderBoxes = (tipo, contagem) => {
+  const renderBoxes = (tipo, contagem, meta) => {
     let boxes = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= meta; i++) {
       boxes.push(
         <div 
           key={i} 
@@ -51,8 +55,8 @@ function Recursos({
       <button
         type="button"
         className="tracker-boxes"
-        onClick={() => handleTrackerClick(tipo, contagem)}
-        aria-label={`${tipo}: ${contagem} de 3. Avançar marcador`}
+        onClick={() => handleTrackerClick(tipo, contagem, meta)}
+        aria-label={`${tipo}: ${contagem} de ${meta}. Avançar marcador`}
       >
         {boxes}
       </button>
@@ -60,6 +64,8 @@ function Recursos({
   };
 
   const visibilidadeAtual = dadosVisibilidade || 0;
+  const metaSucessos = Math.min(20, Math.max(1, Number(dadosPerseguicao?.metaSucessos) || 3));
+  const metaFalhas = Math.min(20, Math.max(1, Number(dadosPerseguicao?.metaFalhas) || 3));
   
   const temaConfig = getTemaConfig(info?.tema || 'tema-ordem');
   
@@ -180,26 +186,48 @@ function Recursos({
           </div>
         </div>
         
-        {/* Mostra perseguição se visibilidade for 3+ */}
-        {visibilidadeAtual >= 3 && (
-          <div className="perseguicao-container">
-            <div 
-              className={`tracker-linha sucesso ${dadosPerseguicao.sucessos >= 3 ? 'full' : ''}`}
-            >
+        {/* Perseguição e visibilidade são rastreadores independentes. */}
+        <details className="perseguicao-container">
+          <summary>
+            <span>Perseguição</span>
+            <small>{dadosPerseguicao.sucessos}/{metaSucessos} · {dadosPerseguicao.falhas}/{metaFalhas}</small>
+          </summary>
+          <div className="perseguicao-conteudo">
+            <div className={`tracker-linha sucesso ${dadosPerseguicao.sucessos >= metaSucessos ? 'full' : ''}`}>
               <span>Sucessos</span>
-              {renderBoxes('sucessos', dadosPerseguicao.sucessos)}
+              {renderBoxes('sucessos', dadosPerseguicao.sucessos, metaSucessos)}
+              <label className="perseguicao-meta">
+                <span>Meta</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={metaSucessos}
+                  onChange={(evento) => handleMetaPerseguicaoChange('metaSucessos', evento.target.value)}
+                  aria-label="Meta de sucessos da perseguição"
+                />
+              </label>
             </div>
-            <div 
-              className={`tracker-linha falha ${dadosPerseguicao.falhas >= 3 ? 'full' : ''}`}
-            >
+            <div className={`tracker-linha falha ${dadosPerseguicao.falhas >= metaFalhas ? 'full' : ''}`}>
               <span>Falhas</span>
-              {renderBoxes('falhas', dadosPerseguicao.falhas)}
+              {renderBoxes('falhas', dadosPerseguicao.falhas, metaFalhas)}
+              <label className="perseguicao-meta">
+                <span>Meta</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={metaFalhas}
+                  onChange={(evento) => handleMetaPerseguicaoChange('metaFalhas', evento.target.value)}
+                  aria-label="Meta de falhas da perseguição"
+                />
+              </label>
             </div>
             <button type="button" className="btn-reset-perseguicao" onClick={handleResetClick}>
               Resetar
             </button>
           </div>
-        )}
+        </details>
       </div>
     </header>
   );

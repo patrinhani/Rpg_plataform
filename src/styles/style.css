@@ -86,6 +86,7 @@ input, button, select, textarea, a {
   --cor-caixa: rgba(26, 47, 64, 0.65); 
   --cor-caixa-rgb: 26 47 64;
   --cor-destaque: #0091ff;
+  --cor-destaque-texto: #0091ff;
   --cor-destaque-rgb: 0 145 255;
   --cor-borda: #0091ff;
 }
@@ -93,8 +94,9 @@ input, button, select, textarea, a {
   --cor-fundo: #1a0505;
   --cor-caixa: rgba(58, 26, 26, 0.65);
   --cor-caixa-rgb: 58 26 26;
-  --cor-destaque: #d40000;
-  --cor-destaque-rgb: 212 0 0;
+  --cor-destaque: #ef3f49;
+  --cor-destaque-texto: #ff6b70;
+  --cor-destaque-rgb: 239 63 73;
   --cor-borda: #d40000;
 }
 :root[data-tema="tema-morte"] {
@@ -102,6 +104,7 @@ input, button, select, textarea, a {
   --cor-caixa: rgba(47, 47, 47, 0.65);
   --cor-caixa-rgb: 47 47 47;
   --cor-destaque: #e0e0e0;
+  --cor-destaque-texto: #e0e0e0;
   --cor-destaque-rgb: 224 224 224;
   --cor-borda: #888888;
 }
@@ -110,6 +113,7 @@ input, button, select, textarea, a {
   --cor-caixa: rgba(59, 55, 26, 0.65);
   --cor-caixa-rgb: 59 55 26;
   --cor-destaque: #ffeb3b;
+  --cor-destaque-texto: #ffeb3b;
   --cor-destaque-rgb: 255 235 59;
   --cor-borda: #ffeb3b;
 }
@@ -117,8 +121,9 @@ input, button, select, textarea, a {
   --cor-fundo: #100014;
   --cor-caixa: rgba(58, 26, 62, 0.65);
   --cor-caixa-rgb: 58 26 62;
-  --cor-destaque: #be29ec;
-  --cor-destaque-rgb: 190 41 236;
+  --cor-destaque: #ca43ef;
+  --cor-destaque-texto: #d96bf8;
+  --cor-destaque-rgb: 202 67 239;
   --cor-borda: #be29ec;
 }
 
@@ -130,7 +135,7 @@ h1, h2, label, button, .pericia-item .pericia-nome, .titulo-bloco {
   letter-spacing: 0.5px;
 }
 h2 {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   border-bottom: 2px solid var(--cor-borda);
   padding-bottom: 10px;
   margin-bottom: 15px;
@@ -482,12 +487,12 @@ input[type="number"].input-hex {
 .calc-linha.total label {
   font-family: "Special Elite", monospace;
   text-transform: uppercase;
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   font-size: 1.1em;
 }
 .calc-linha.total span {
   font-size: 1.5em;
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
 }
 .calc-bloco-coluna {
   flex: 1;
@@ -1201,15 +1206,15 @@ input[type="number"].input-hex {
 
 /* --- 19. Estilo para Bônus de Origem Automático --- */
 .calc-linha.origem-bonus {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
 }
 .calc-linha.origem-bonus label {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   font-style: italic;
   font-size: 0.85em;
 }
 .calc-linha.origem-bonus span {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   font-size: 1.2em;
 }
 
@@ -2267,7 +2272,7 @@ input[type="number"].input-hex {
 .item-header h3 {
   font-family: "Special Elite", monospace;
   font-size: 1.1em;
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   margin: 0;
   text-transform: uppercase;
   white-space: normal;
@@ -2307,7 +2312,7 @@ input[type="number"].input-hex {
 }
 
 .item-detalhe.bonus {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   border: none;
   margin-top: 5px;
   font-style: italic;
@@ -2332,7 +2337,7 @@ input[type="number"].input-hex {
 }
 
 .poderes-section-title {
-  color: var(--cor-destaque);
+  color: var(--cor-destaque-texto);
   border-bottom: 1px solid var(--cor-destaque);
   margin: 20px 0 10px;
   padding-bottom: 5px;
@@ -2390,15 +2395,13 @@ input[type="number"].input-hex {
 }
 
 /* Rodapé do Card (Botões) */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
+body.modo-economia *,
+body.modo-economia *::before,
+body.modo-economia *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
 }
 
 .item-footer {

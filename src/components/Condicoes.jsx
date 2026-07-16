@@ -1,71 +1,95 @@
 import React, { useState } from 'react';
-import { database } from '../lib/database.js'; // Caminho corrigido: volta uma pasta, entra em lib
+import { database } from '../lib/database.js';
 import { getIconePorCondicao } from './icons/Icones.jsx';
 
-function Condicoes({ ativas, automaticas = [], onToggle, onReaplicar }) {
+function Condicoes({ ativas = [], automaticas = [], onToggle, onReaplicar }) {
   const [expandido, setExpandido] = useState(false);
 
-  // Pega a lista do database. Se não existir, usa array vazio.
-  // Ordena colocando as ativas primeiro para facilitar a visualização.
-  const listaOrdenada = database.condicoes ? [...database.condicoes].sort((a, b) => {
-    const aAtiva = ativas.includes(a.id);
-    const bAtiva = ativas.includes(b.id);
-    if (aAtiva && !bAtiva) return -1;
-    if (!aAtiva && bAtiva) return 1;
-    return a.nome.localeCompare(b.nome);
-  }) : [];
+  const listaOrdenada = database.condicoes
+    ? [...database.condicoes].sort((a, b) => {
+        const aAtiva = ativas.includes(a.id);
+        const bAtiva = ativas.includes(b.id);
+        if (aAtiva && !bAtiva) return -1;
+        if (!aAtiva && bAtiva) return 1;
+        return a.nome.localeCompare(b.nome);
+      })
+    : [];
 
   return (
-    <section className="box box-condicoes" id="grid-condicoes" style={{ marginTop: '20px', padding: '15px' }}>
-      <div className="inventario-header" style={{ marginBottom: '10px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0, fontSize: '1.2em', color: 'var(--cor-destaque)' }}>CONDIÇÕES E ESTADOS</h2>
-        <button 
-          className="btn-add-item" 
-          onClick={() => setExpandido(!expandido)}
-          style={{ fontSize: '0.9em', padding: '5px 10px' }}
+    <section className="box box-condicoes" id="grid-condicoes">
+      <div className="inventario-header condicoes-header">
+        <h2>CONDIÇÕES E ESTADOS</h2>
+        <button
+          type="button"
+          className="btn-add-item"
+          onClick={() => setExpandido((valorAtual) => !valorAtual)}
+          aria-expanded={expandido}
+          aria-controls="lista-condicoes"
         >
           {expandido ? '▲ Recolher' : '▼ Expandir'}
         </button>
       </div>
 
-      <div className={`condicoes-grid ${expandido ? 'expandido' : 'recolhido'}`}>
-        {listaOrdenada.map((cond) => {
-          const isAtiva = ativas.includes(cond.id);
-          const isAutomatica = automaticas.includes(cond.id);
+      <div id="lista-condicoes" className={`condicoes-grid ${expandido ? 'expandido' : 'recolhido'}`}>
+        {listaOrdenada.map((condicao) => {
+          const isAtiva = ativas.includes(condicao.id);
+          const isAutomatica = automaticas.includes(condicao.id);
+          const descricaoId = `condicao-desc-${condicao.id}`;
+          const descricaoResumida = condicao.descricao.length > 50 && !isAtiva
+            ? `${condicao.descricao.substring(0, 50)}...`
+            : condicao.descricao;
+
+          const conteudo = (
+            <>
+              <span className="condicao-icone" aria-hidden="true">
+                {getIconePorCondicao(condicao.id)}
+              </span>
+              <span className="condicao-info">
+                <span className="condicao-nome">{condicao.nome}</span>
+                {isAutomatica && (
+                  <span className="condicao-desc-curta">Automática pelos recursos atuais</span>
+                )}
+                <span
+                  id={descricaoId}
+                  className={`condicao-desc-curta ${!isAtiva && !expandido ? 'condicao-desc-curta--sr-only' : ''}`}
+                >
+                  {descricaoResumida}
+                </span>
+              </span>
+            </>
+          );
+
           return (
-            <div 
-              key={cond.id} 
-              className={`condicao-card ${isAtiva ? 'ativa' : ''} ${isAutomatica ? 'automatica' : ''} ${cond.tipo}`}
-              onClick={() => !isAutomatica && onToggle(cond.id)}
-              title={cond.descricao}
+            <article
+              key={condicao.id}
+              className={`condicao-card ${isAtiva ? 'ativa' : ''} ${isAutomatica ? 'automatica' : ''} ${condicao.tipo}`}
             >
-              <div className="condicao-icone">
-                {/* Usa o ícone específico baseado no ID */}
-                {getIconePorCondicao(cond.id)}
-              </div>
-              <div className="condicao-info">
-                <span className="condicao-nome">{cond.nome}</span>
-                {isAutomatica && <span className="condicao-desc-curta">Automática pelos recursos atuais</span>}
-                {/* Mostra a descrição curta apenas se estiver ativa ou expandido */}
-                {(isAtiva || expandido) && (
-                    <span className="condicao-desc-curta">
-                        {cond.descricao.length > 50 && !isAtiva ? cond.descricao.substring(0, 50) + '...' : cond.descricao}
-                    </span>
-                )}
-                {isAtiva && !isAutomatica && cond.evolucao && (
-                  <button
-                    type="button"
-                    onClick={(evento) => {
-                      evento.stopPropagation();
-                      onReaplicar?.(cond.id);
-                    }}
-                    style={{ marginTop: '6px', padding: '3px 7px', fontSize: '0.75em' }}
-                  >
-                    Aplicar novamente → {database.condicoes.find(item => item.id === cond.evolucao)?.nome || cond.evolucao}
-                  </button>
-                )}
-              </div>
-            </div>
+              {isAutomatica ? (
+                <div className="condicao-card__toggle condicao-card__toggle--automatic" aria-describedby={descricaoId}>
+                  {conteudo}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="condicao-card__toggle"
+                  onClick={() => onToggle(condicao.id)}
+                  aria-pressed={isAtiva}
+                  aria-describedby={descricaoId}
+                >
+                  {conteudo}
+                </button>
+              )}
+
+              {isAtiva && !isAutomatica && condicao.evolucao && (
+                <button
+                  type="button"
+                  className="condicao-reaplicar"
+                  onClick={() => onReaplicar?.(condicao.id)}
+                >
+                  Aplicar novamente → {database.condicoes.find((item) => item.id === condicao.evolucao)?.nome || condicao.evolucao}
+                </button>
+              )}
+            </article>
           );
         })}
       </div>

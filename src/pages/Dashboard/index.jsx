@@ -9,6 +9,7 @@ import { criarMesa, buscarMinhasMesas, entrarNaMesa, listarPersonagensPessoais, 
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc } from 'firebase/firestore';
 import Personagem from '../../lib/personagem.js';
+import { parsearFichaJson, validarTamanhoArquivoFicha } from '../../lib/importacaoFicha.js';
 import ElementRail from '../../components/ElementRail.jsx';
 import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 
@@ -124,56 +125,44 @@ export default function Dashboard() {
 
   // --- FUNÇÃO DE IMPORTAR JSON ---
   const handleImportarFicha = async (event) => {
-    const file = event.target.files[0];
+    const inputArquivo = event.currentTarget;
+    const file = inputArquivo.files?.[0];
+    inputArquivo.value = '';
     if (!file) return;
 
-    setLoading(true);
-    const reader = new FileReader();
-    
-    reader.onload = async (e) => {
-      try {
-        const jsonContent = JSON.parse(e.target.result);
-        
-        const objetoValido = valor => valor && typeof valor === 'object' && !Array.isArray(valor);
-        if (!objetoValido(jsonContent) || !objetoValido(jsonContent.info) || !objetoValido(jsonContent.atributos)) {
-            throw new Error("Arquivo inválido. O JSON não parece ser uma ficha.");
-        }
+    try {
+      validarTamanhoArquivoFicha(file.size);
+      setLoading(true);
 
-        const nomeLido = jsonContent.info.nome || "Sem Nome";
-        
-        const personagemImportado = new Personagem();
-        personagemImportado.carregarDados(jsonContent);
-        personagemImportado.calcularValoresMaximos();
+      const jsonContent = parsearFichaJson(await file.text());
+      const nomeLido = typeof jsonContent.info.nome === 'string' && jsonContent.info.nome.trim()
+        ? jsonContent.info.nome.trim()
+        : 'Sem Nome';
 
-        // Normaliza versões antigas sem descartar campos atuais da ficha.
-        const novaFicha = {
-            ...personagemImportado.getDados(),
-            uid: usuario.uid,
-            dono: usuario.displayName,
-            dataCriacao: new Date().toISOString(),
-        };
+      const personagemImportado = new Personagem();
+      personagemImportado.carregarDados(jsonContent);
+      personagemImportado.calcularValoresMaximos();
 
-        // Salva na subcoleção do usuário para aparecer na lista correta
-        const colecaoDestino = collection(db, "users", usuario.uid, "personagens");
-        await addDoc(colecaoDestino, novaFicha);
+      // Normaliza versões antigas sem descartar campos atuais da ficha.
+      const novaFicha = {
+          ...personagemImportado.getDados(),
+          uid: usuario.uid,
+          dono: usuario.displayName,
+          dataCriacao: new Date().toISOString(),
+      };
 
-        showAlert(`Ficha "${nomeLido}" importada com sucesso!`, "Sucesso");
-        await carregarDados();
+      // Salva na subcoleção do usuário para aparecer na lista correta
+      const colecaoDestino = collection(db, "users", usuario.uid, "personagens");
+      await addDoc(colecaoDestino, novaFicha);
 
-      } catch (error) {
-        console.error("Erro ao importar:", error);
-        showAlert("Erro ao processar o arquivo: " + error.message, "Erro");
-        setLoading(false);
-      }
-    };
-
-    reader.onerror = () => {
-      showAlert("Não foi possível ler o arquivo selecionado.", "Erro");
+      showAlert(`Ficha "${nomeLido}" importada com sucesso!`, "Sucesso");
+      await carregarDados();
+    } catch (error) {
+      console.error("Erro ao importar:", error);
+      showAlert("Erro ao processar o arquivo: " + error.message, "Erro");
+    } finally {
       setLoading(false);
-    };
-    
-    reader.readAsText(file);
-    event.target.value = null; 
+    }
   };
 
   const nomeAgente = usuario?.displayName || 'Agente';
@@ -192,7 +181,7 @@ export default function Dashboard() {
   return (
     <div className="convergence-page dashboard-page">
       <div className="dashboard-ambient-art" aria-hidden="true">
-        <img src="/assets/images/Character.webp" alt="" />
+        <img src="/assets/images/optimized/Character-1280.webp" alt="" decoding="async" />
       </div>
 
       <ElementRail variante="dashboard" temaAtual="tema-ordem" />
@@ -242,7 +231,7 @@ export default function Dashboard() {
             <div className="dashboard-hero-emblem" aria-hidden="true">
               <span className="dashboard-orbit dashboard-orbit--outer"></span>
               <span className="dashboard-orbit dashboard-orbit--inner"></span>
-              <img src="/assets/images/SimboloSemafinidade.webp" alt="" />
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" />
             </div>
           </article>
 

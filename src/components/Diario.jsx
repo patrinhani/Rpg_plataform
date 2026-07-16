@@ -19,8 +19,10 @@ function Diario({ diarioData, onAbrirModal, onRemoveNota }) {
         <div className="inventario-header">
           <h2>DIÁRIO DE INVESTIGAÇÃO</h2>
           <button 
+            type="button"
             className="btn-add-item" 
             id="btn-add-nota"
+            aria-label="Adicionar anotação ao diário"
             onClick={() => onAbrirModal(null)} // 'null' significa criar nota nova
           >
             +

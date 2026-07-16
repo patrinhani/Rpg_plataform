@@ -6,27 +6,27 @@ const TEMAS_CRIATURA = {
   Sangue: {
     accent: '#ff6469',
     rgb: '255 100 105',
-    symbol: '/assets/images/SimboloSangue.webp',
+    symbol: '/assets/images/optimized/SimboloSangue-320.webp',
   },
   Morte: {
     accent: '#d9e2e8',
     rgb: '217 226 232',
-    symbol: '/assets/images/SimboloMorte.webp',
+    symbol: '/assets/images/optimized/SimboloMorte-320.webp',
   },
   Conhecimento: {
     accent: '#ffe45e',
     rgb: '255 228 94',
-    symbol: '/assets/images/SimboloConhecimento.webp',
+    symbol: '/assets/images/optimized/SimboloConhecimento-320.webp',
   },
   Energia: {
     accent: '#d56cff',
     rgb: '213 108 255',
-    symbol: '/assets/images/SimboloEnergia.webp',
+    symbol: '/assets/images/optimized/SimboloEnergia-320.webp',
   },
   Medo: {
     accent: '#f3f7fa',
     rgb: '243 247 250',
-    symbol: '/assets/images/SimboloSemafinidade.webp',
+    symbol: '/assets/images/optimized/SimboloSemafinidade-320.webp',
   },
 };
 

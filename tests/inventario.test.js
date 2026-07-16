@@ -115,6 +115,38 @@ test('reconhece Mochila Militar legada sem acumular bônus de itens', () => {
   assert.equal(personagem.getMaxPeso(), 5);
 });
 
+test('aplica bônus de carga de Mochileiro e Mascate sem perder a Mochila Militar', () => {
+  const personagem = new Personagem();
+  personagem.atributos.for = 1;
+  personagem.setInfo('trilha', 'muambeiro');
+  personagem.addPoder({ key: 'mochileiro', nome: 'Mochileiro' });
+  personagem.addItemInventario(database.equipGeral.find(item => item.id === 'mochila_militar'));
+
+  assert.equal(personagem.getMaxPeso(), 17);
+});
+
+test('Inventário Organizado soma INT e reduz itens de 0,5 para 0,25 espaço', () => {
+  const personagem = new Personagem();
+  personagem.atributos.for = 1;
+  personagem.atributos.int = 3;
+  personagem.addPoder({ key: 'inventario_organizado', nome: 'Inventário Organizado' });
+  personagem.addItemInventario({ id: 'item-meio-1', categoria: 0, espacos: 0.5 });
+  personagem.addItemInventario({ id: 'item-meio-2', categoria: 0, espacos: 0.5 });
+  personagem.addItemInventario({ id: 'item-outro', categoria: 0, espacos: 0.75 });
+
+  assert.equal(personagem.getPesoTotal(), 1.25);
+  assert.equal(personagem.getMaxPeso(), 8);
+});
+
+test('Técnico com FOR 0 e INT 3 calcula (FOR + INT) x 5', () => {
+  const personagem = new Personagem();
+  personagem.atributos.for = 0;
+  personagem.atributos.int = 3;
+  personagem.setInfo('trilha', 'tecnico');
+
+  assert.equal(personagem.getMaxPeso(), 15);
+});
+
 test('filtra modificações pelo tipo do item', () => {
   const protecao = { id: 'protecao_leve' };
   const chaves = getModificacoesCompativeis(protecao).map(modificacao => modificacao.key);

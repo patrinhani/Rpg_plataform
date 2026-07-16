@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import AppIcon from './icons/NavigationIcons.jsx';
 
+const obterPreferenciaInicial = () => {
+  try {
+    const preferenciaSalva = localStorage.getItem('modoEconomia');
+    if (preferenciaSalva !== null) return preferenciaSalva === 'true';
+  } catch {
+    // Continua com a preferência do sistema operacional.
+  }
+
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
 const BotaoEconomia = () => {
-  // Lê do localStorage ou inicia como falso
-  const [economia, setEconomia] = useState(() => {
-    try {
-      return localStorage.getItem('modoEconomia') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [economia, setEconomia] = useState(obterPreferenciaInicial);
 
   useEffect(() => {
     // Aplica a classe ao body

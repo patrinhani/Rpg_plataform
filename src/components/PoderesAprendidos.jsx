@@ -179,7 +179,9 @@ function PoderesAprendidos({
                 <div className="inventario-header">
                     <h2>PODERES</h2>
                     <button
+                        type="button"
                         className="btn-add-item"
+                        aria-label="Adicionar poder"
                         onClick={onAbrirModal}
                         style={{ padding: '0 12px' }}
                     >

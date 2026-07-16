@@ -1,7 +1,6 @@
 // src/components/ModalInterludio.jsx
 import React, { useId, useState } from 'react';
 import { database } from '../lib/database.js';
-import { useDialog } from '../contexts/DialogContext'; // [NOVO]
 import ModalBase from './ModalBase.jsx';
 
 function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventario = [] }) {
@@ -14,21 +13,16 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
   const confortoId = useId();
   const pratoId = useId();
   
-  const { showAlert } = useDialog(); // [NOVO]
-
   if (!isOpen) return null;
 
   const toggleAcao = (acao) => {
-    if (acoesSelecionadas.includes(acao)) {
-      setAcoesSelecionadas(acoesSelecionadas.filter(a => a !== acao));
-    } else {
-      if (acoesSelecionadas.length < 2) {
-        setAcoesSelecionadas([...acoesSelecionadas, acao]);
-      } else {
-        // [ATUALIZADO]
-        showAlert("Você só pode realizar até 2 ações por Interlúdio.", "Limite Atingido");
+    setAcoesSelecionadas((atuais) => {
+      const quantidade = atuais.filter((item) => item === acao).length;
+      if (acao === 'revisar') {
+        return quantidade >= 2 ? atuais.filter((item) => item !== acao) : [...atuais, acao];
       }
-    }
+      return quantidade > 0 ? atuais.filter((item) => item !== acao) : [...atuais, acao];
+    });
   };
 
   const handleAplicar = () => {
@@ -85,7 +79,7 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
       )}
     >
             <p id={descricaoId} style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '15px' }}>
-                Escolha até <strong>2 ações</strong>. Recuperação base: <strong>{limitePE}</strong> (Limite de PE).
+                Referência do livro: até <strong>2 ações</strong>, ajustáveis pela mesa. Revisar Caso pode ser escolhido duas vezes. Recuperação base: <strong>{limitePE}</strong> (Limite de PE).
             </p>
 
             <div className="interludio-grid" style={{ 
@@ -94,13 +88,16 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                 gap: '10px', 
                 marginBottom: '20px' 
             }}>
-                {listaAcoes.map((acao) => (
+                {listaAcoes.map((acao) => {
+                  const quantidadeSelecionada = acoesSelecionadas.filter((item) => item === acao.id).length;
+                  return (
                     <button
                         type="button"
                         key={acao.id}
-                        className={`item-card ${acoesSelecionadas.includes(acao.id) ? 'selecionado' : ''}`}
+                        className={`item-card ${quantidadeSelecionada > 0 ? 'selecionado' : ''}`}
                         onClick={() => toggleAcao(acao.id)}
-                        aria-pressed={acoesSelecionadas.includes(acao.id)}
+                        aria-pressed={quantidadeSelecionada > 0}
+                        aria-label={`${acao.nome}${acao.id === 'revisar' ? `, selecionado ${quantidadeSelecionada} de 2 vezes` : ''}`}
                         style={{ 
                             cursor: 'pointer', 
                             border: acoesSelecionadas.includes(acao.id) ? '2px solid var(--cor-destaque)' : '1px solid var(--cor-borda)', 
@@ -114,9 +111,13 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                         }}
                     >
                         <span style={{display: 'block', margin: '0 0 5px 0', fontSize: '1.1em', fontWeight: 700}}>{acao.icone} {acao.nome}</span>
+                        {acao.id === 'revisar' && quantidadeSelecionada > 0 && (
+                          <span className="interludio-action-count">×{quantidadeSelecionada}</span>
+                        )}
                         <small style={{lineHeight: '1.2', display: 'block', color: '#ccc'}}>{acao.desc}</small>
                     </button>
-                ))}
+                  );
+                })}
             </div>
 
             {(acoesSelecionadas.length > 0) && (

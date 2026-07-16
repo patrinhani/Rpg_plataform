@@ -71,9 +71,6 @@ function ProgressaoHabilidades({
          texto = texto.replace(/Elemento/g, elemento);
          texto = texto.replace(/\[ESCOLHA ELEMENTO\]/g, `(${elemento})`);
          
-         // Limpa os placeholders de bônus/penalidades que são tratados em outro lugar (ex: +O ou -O)
-         texto = texto.replace(/\+\s*\d?O/g, ''); 
-         texto = texto.replace(/-\s*\d?O/g, '');
       }
 
       return texto;

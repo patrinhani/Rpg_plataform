@@ -38,13 +38,17 @@ export function FichaProvider({ children }) {
     periciasTreinadas: 0, 
     periciasTotal: 0, 
     bonusPericia: {}, 
-    canChangeTheme: false, 
+    canChangeTheme: false,
     patente: Patentes[0], 
     bloqueio_rd: '—', 
     esquiva_bonus: '—', 
     defesa_esquiva: '—',
     equipamentoDefesa: 0,
     modificadorCaido: null,
+    efeitosOrientativosCondicoes: {
+      naoPodeObservar: false,
+      falhaAutomaticaReflexos: false,
+    },
     tem_contra_ataque: false,
     atributosDetalhados: { 
         for: { valorFinal: 1 }, agi: { valorFinal: 1 }, int: { valorFinal: 1 }, 
@@ -126,17 +130,7 @@ export function FichaProvider({ children }) {
       ]),
     );
 
-    let deslocamentoFinal = Math.max(
-      0,
-      (Number.parseFloat(dados.info.deslocamento) || 0)
-        + estadoCarga.penalidadeDeslocamento
-        - (condicoes.includes('caido') ? 3 : 0),
-    );
-    const lento = ['lento', 'cego', 'enredado', 'exausto'].some(condicao => condicoes.includes(condicao));
-    const imovel = ['imovel', 'agarrado', 'paralisado', 'petrificado', 'inconsciente']
-      .some(condicao => condicoes.includes(condicao));
-    if (lento) deslocamentoFinal = Math.floor(deslocamentoFinal / 2);
-    if (imovel) deslocamentoFinal = 0;
+    const deslocamentoFinal = ficha.getDeslocamentoFinal();
 
     const patenteBase = getPatenteInfo(parseInt(dados.info.prestigio) || 0) || Patentes[0];
     const creditos = ['Baixo', 'Médio', 'Alto', 'Ilimitado'];
@@ -151,6 +145,10 @@ export function FichaProvider({ children }) {
         defesaTotal, 
         equipamentoDefesa: equip,
         modificadorCaido: condicoes.includes('caido') ? { corpoACorpo: -5, distancia: 5 } : null,
+        efeitosOrientativosCondicoes: {
+          naoPodeObservar: condicoes.includes('cego'),
+          falhaAutomaticaReflexos: indefeso,
+        },
         atributosDetalhados,
         cargaAtual: estadoCarga.atual,
         cargaMax: estadoCarga.maximo,
@@ -162,7 +160,7 @@ export function FichaProvider({ children }) {
         periciasTreinadas: Object.values(dados.pericias).filter(v => parseInt(v) >= 5).length, 
         periciasTotal: Object.keys(dados.pericias).length, 
         bonusPericia: bonusPericiaCalculado, 
-        canChangeTheme: nexNum >= 50, 
+        canChangeTheme: nexNum >= 50,
         patente,
         bloqueio_rd: (treino_fortitude >= 5 || bonusManualBloqueio !== 0) ? ((treino_fortitude >= 5 ? bonus_fortitude : 0) + bonusManualBloqueio) : '—', 
         esquiva_bonus: (treino_reflexos >= 5 || bonusManualEsquiva !== 0) ? ((treino_reflexos >= 5 ? bonus_reflexos : 0) + bonusManualEsquiva) : '—',

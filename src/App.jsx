@@ -26,7 +26,7 @@ import { updateProfile } from 'firebase/auth';
 // Componente de Carregamento Reutilizável
 const TelaCarregamento = () => (
   <div className="app-loading-screen" role="status" aria-live="polite">
-      <img src="/assets/images/SimboloSemafinidade.webp" alt="" aria-hidden="true" />
+      <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" aria-hidden="true" />
       <span>Carregando sistema...</span>
   </div>
 );

@@ -296,14 +296,17 @@ function ModalLoja({ isOpen, onClose, onAddItem, pericias }) {
               <div className="form-custom-grid mods-lista-custom">
                 
                 {modificacoesCustomDisponiveis.map(mod => (
-                  <label key={mod.key} htmlFor={`custom-item-mod-${mod.key}`} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                  <label key={mod.key} htmlFor={`custom-item-mod-${mod.key}`} className="item-mod-option">
                     <input 
                       id={`custom-item-mod-${mod.key}`}
                       type="checkbox"
                       checked={customMods.includes(mod.key)}
                       onChange={() => handleCustomModToggle(mod.key)}
                     />
-                    {mod.nome}
+                    <span className="item-mod-option__copy">
+                      <strong>{mod.nome}</strong>
+                      <small>{mod.descricao}</small>
+                    </span>
                   </label>
                 ))}
               </div>

@@ -128,7 +128,7 @@ const estilos = `
   }
 
   .element-rail__item--active .element-rail__label {
-    color: var(--tema-cor);
+    color: var(--tema-cor-texto);
   }
 
   @media (max-width: 768px) {
@@ -184,7 +184,7 @@ function ElementItem({ tema, ativo, interativo, habilitado, onSelect }) {
     <>
       <img
         className="element-rail__symbol"
-        src={tema.simbolo}
+        src={tema.simboloMini || tema.simbolo}
         alt=""
         aria-hidden="true"
         decoding="async"
@@ -194,7 +194,7 @@ function ElementItem({ tema, ativo, interativo, habilitado, onSelect }) {
   );
 
   return (
-    <div className={itemClassName} style={{ "--tema-cor": tema.cor }}>
+    <div className={itemClassName} style={{ "--tema-cor": tema.cor, "--tema-cor-texto": tema.corTexto || tema.cor }}>
       {interativo ? (
         <button
           type="button"

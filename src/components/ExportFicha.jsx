@@ -10,6 +10,7 @@ import {
   calcularDefesaItem,
   calcularStatsItem,
 } from '../lib/inventario.js';
+import { sanitizarParaHTML, sanitizarURLImagem } from '../lib/htmlSeguro.js';
 
 // ------------------------------------------------------------------
 // Helpers
@@ -29,27 +30,6 @@ function formatarProgressao(info = {}) {
     return { valor: String(info.estagio_sobrevivente || 1), escala: 'ESTÁGIO' };
   }
   return { valor: formatarNex(info.nex), escala: 'NEX' };
-}
-
-function escaparHTML(valor) {
-  return valor.replace(/[&<>"']/g, (caractere) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  })[caractere]);
-}
-
-function sanitizarParaHTML(valor) {
-  if (typeof valor === 'string') return escaparHTML(valor);
-  if (Array.isArray(valor)) return valor.map(sanitizarParaHTML);
-  if (valor && typeof valor === 'object') {
-    return Object.fromEntries(
-      Object.entries(valor).map(([chave, conteudo]) => [chave, sanitizarParaHTML(conteudo)]),
-    );
-  }
-  return valor;
 }
 
 function normalizarNomeArquivo(nome) {
@@ -128,6 +108,7 @@ function gerarHTMLImpressao(personagem, calculados) {
     condicoesAtivas = [],
     condicoesEfetivas = [],
   } = dadosSeguros;
+  const fotoSegura = sanitizarURLImagem(personagem?.info?.foto);
   const progressao = formatarProgressao(info);
   const condicoesExibidas = condicoesEfetivas.length > 0 ? condicoesEfetivas : condicoesAtivas;
 
@@ -156,6 +137,7 @@ function gerarHTMLImpressao(personagem, calculados) {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: blob: https:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; script-src 'none'; base-uri 'none'; form-action 'none'"/>
 <title>Ficha — ${info.nome || 'Agente'}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Special+Elite&display=swap');
@@ -398,8 +380,8 @@ function gerarHTMLImpressao(personagem, calculados) {
 
   <!-- HEADER -->
   <div class="header">
-    ${info.foto
-      ? `<img class="header-foto" src="${info.foto}" alt="Foto"/>`
+    ${fotoSegura
+      ? `<img class="header-foto" src="${fotoSegura}" alt="Foto" referrerpolicy="no-referrer"/>`
       : `<div class="header-foto-placeholder">👤</div>`}
     <div>
       <div class="header-nome">${info.nome || 'Sem Nome'}</div>
@@ -571,7 +553,7 @@ function gerarHTMLImpressao(personagem, calculados) {
 // Componente principal
 // ------------------------------------------------------------------
 export default function ExportFicha({ personagem, calculados }) {
-  const [status, setStatus] = useState(null); // null | 'json' | 'pdf' | 'erro'
+  const [status, setStatus] = useState(null); // null | 'json' | 'pdf' | 'popup' | 'erro'
 
   const handleExportJSON = useCallback(() => {
     try {
@@ -591,18 +573,21 @@ export default function ExportFicha({ personagem, calculados }) {
       const html = gerarHTMLImpressao(personagem, calculados);
       const janela = window.open('', '_blank', 'width=900,height=700');
       if (!janela) {
-        alert('Permita pop-ups para gerar o PDF.');
+        setStatus('popup');
+        setTimeout(() => setStatus(null), 4000);
         return;
       }
-      janela.document.write(html);
-      janela.document.close();
+      const documento = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const urlDocumento = URL.createObjectURL(documento);
       // Aguarda fontes e imagens carregarem antes de chamar print
-      janela.onload = () => {
+      janela.addEventListener('load', () => {
+        URL.revokeObjectURL(urlDocumento);
         setTimeout(() => {
           janela.focus();
           janela.print();
         }, 800);
-      };
+      }, { once: true });
+      janela.location.replace(urlDocumento);
       setStatus('pdf');
       setTimeout(() => setStatus(null), 3000);
     } catch (e) {
@@ -630,8 +615,9 @@ export default function ExportFicha({ personagem, calculados }) {
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         {/* Botão JSON */}
         <button
+          type="button"
           onClick={handleExportJSON}
-          className="btn-login primary"
+          className="export-ficha-action export-ficha-action--primary"
           style={{
             flex: 1,
             minWidth: '180px',
@@ -643,14 +629,15 @@ export default function ExportFicha({ personagem, calculados }) {
             fontSize: '0.95em',
           }}
         >
-          <span style={{ fontSize: '1.2em' }}>📦</span>
+          <span aria-hidden="true" style={{ fontSize: '1.2em' }}>📦</span>
           Baixar JSON
         </button>
 
         {/* Botão PDF */}
         <button
+          type="button"
           onClick={handleExportPDF}
-          className="btn-login"
+          className="export-ficha-action export-ficha-action--secondary"
           style={{
             flex: 1,
             minWidth: '180px',
@@ -665,24 +652,30 @@ export default function ExportFicha({ personagem, calculados }) {
             background: 'transparent',
           }}
         >
-          <span style={{ fontSize: '1.2em' }}>🖨️</span>
+          <span aria-hidden="true" style={{ fontSize: '1.2em' }}>🖨️</span>
           Imprimir / Salvar PDF
         </button>
       </div>
 
       {/* Feedback */}
       {status && (
-        <div style={{
+        <div
+          role={status === 'erro' || status === 'popup' ? 'alert' : 'status'}
+          aria-live={status === 'erro' || status === 'popup' ? 'assertive' : 'polite'}
+          aria-atomic="true"
+          style={{
           marginTop: '14px',
           padding: '10px 14px',
           borderRadius: '6px',
           fontSize: '0.88em',
-          background: status === 'erro' ? 'rgba(180,0,0,0.15)' : 'rgba(0,145,80,0.12)',
-          border: `1px solid ${status === 'erro' ? '#d40000' : '#22c55e'}`,
-          color: status === 'erro' ? '#ff6b6b' : '#4ade80',
-        }}>
+          background: status === 'erro' || status === 'popup' ? 'rgba(180,0,0,0.15)' : 'rgba(0,145,80,0.12)',
+          border: `1px solid ${status === 'erro' || status === 'popup' ? '#d40000' : '#22c55e'}`,
+          color: status === 'erro' || status === 'popup' ? '#ff6b6b' : '#4ade80',
+        }}
+        >
           {status === 'json' && '✅ JSON baixado com sucesso! Guarde o arquivo para backup.'}
           {status === 'pdf' && '🖨️ Janela de impressão aberta. Use "Salvar como PDF" no seu navegador.'}
+          {status === 'popup' && 'Permita pop-ups para este site e tente gerar o PDF novamente.'}
           {status === 'erro' && '❌ Erro ao exportar. Tente novamente ou verifique o console.'}
         </div>
       )}

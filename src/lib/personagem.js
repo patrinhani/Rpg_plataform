@@ -24,7 +24,7 @@ class Personagem {
     this._recursosInicializados = false;
     this.defesa = { equip: 0, outros: 0 };
     this.resistencias = { balistico: 0, corte: 0, impacto: 0, perfuracao: 0, eletricidade: 0, fogo: 0, frio: 0, quimico: 0, mental: 0, sangue: 0, morte: 0, conhecimento: 0, energia: 0 };
-    this.perseguicao = { sucessos: 0, falhas: 0 };
+    this.perseguicao = { sucessos: 0, falhas: 0, metaSucessos: 3, metaFalhas: 3 };
     this.visibilidade = 0; 
     this.inventario = []; 
     this.rituais = []; 
@@ -44,13 +44,20 @@ class Personagem {
 
   // --- SETTERS ---
   setPerseguicao(tipo, valor) {
-    if (tipo === 'sucessos' || tipo === 'falhas') {
+    if (tipo === 'metaSucessos' || tipo === 'metaFalhas') {
+      const meta = Math.min(20, Math.max(1, parseInt(valor) || 3));
+      this.perseguicao[tipo] = meta;
+      const campoContagem = tipo === 'metaSucessos' ? 'sucessos' : 'falhas';
+      this.perseguicao[campoContagem] = Math.min(this.perseguicao[campoContagem], meta);
+    } else if (tipo === 'sucessos' || tipo === 'falhas') {
       let num = parseInt(valor) || 0;
-      if (num < 0) num = 0; if (num > 3) num = 3; 
+      const campoMeta = tipo === 'sucessos' ? 'metaSucessos' : 'metaFalhas';
+      const meta = Math.min(20, Math.max(1, parseInt(this.perseguicao[campoMeta]) || 3));
+      if (num < 0) num = 0;
+      if (num > meta) num = meta;
       this.perseguicao[tipo] = num;
     } else if (tipo === 'reset') {
-      this.perseguicao = { sucessos: 0, falhas: 0 };
-      this.visibilidade = 0; 
+      this.perseguicao = { ...this.perseguicao, sucessos: 0, falhas: 0 };
     }
   }
   
@@ -179,7 +186,14 @@ class Personagem {
       let dadosAtuais = attrDet.valorFinal;
       const condicoes = this.getCondicoesEfetivas();
       const mensagens = [];
+      const orientacoes = [];
       let temPenalidade = false;
+
+      const aplicarPenalidadeDados = (valor, mensagem) => {
+        dadosAtuais -= valor;
+        mensagens.push(mensagem);
+        temPenalidade = true;
+      };
 
       if (['for', 'agi', 'vig'].includes(atributoBase)) {
         if (condicoes.includes('debilitado') || condicoes.includes('exausto')) {
@@ -235,21 +249,35 @@ class Personagem {
 
       const treino = this.pericias[periciaKey] || 0;
       let bonusTotal = (Number.parseInt(treino, 10) || 0) + (Number.parseInt(bonusInventario, 10) || 0);
-      const aplicarPenalidade = (valor, mensagem) => {
-        bonusTotal += valor;
-        mensagens.push(mensagem);
-        temPenalidade = true;
-      };
 
-      if (condicoes.includes('surdo') && periciaKey === 'iniciativa') aplicarPenalidade(-5, 'Surdo (-5)');
+      if (condicoes.includes('surdo') && periciaKey === 'iniciativa') {
+        aplicarPenalidadeDados(2, 'Surdo (-2d20 em Iniciativa)');
+      }
       const desprevenido = ['desprevenido', 'cego', 'atordoado', 'surpreendido']
         .some(condicao => condicoes.includes(condicao));
-      if (desprevenido && periciaKey === 'reflexos') aplicarPenalidade(-5, 'Desprevenido (-5)');
-      if (condicoes.includes('cego') && periciaKey === 'percepcao') aplicarPenalidade(-10, 'Cego (-10)');
-      if (condicoes.includes('fascinado') && periciaKey === 'percepcao') aplicarPenalidade(-10, 'Fascinado (-10)');
-      if (condicoes.includes('caido') && periciaKey === 'luta') aplicarPenalidade(-5, 'Caído (-5 em ataque corpo a corpo)');
+      if (desprevenido && periciaKey === 'reflexos') {
+        aplicarPenalidadeDados(1, 'Desprevenido (-1d20 em Reflexos)');
+      }
+      if (condicoes.includes('fascinado') && periciaKey === 'percepcao') {
+        aplicarPenalidadeDados(2, 'Fascinado (-2d20 em Percepção)');
+      }
+      if (condicoes.includes('caido') && periciaKey === 'luta') {
+        aplicarPenalidadeDados(2, 'Caído (-2d20 em ataques corpo a corpo)');
+      }
       if ((condicoes.includes('agarrado') || condicoes.includes('enredado')) && ['luta', 'pontaria'].includes(periciaKey)) {
-        aplicarPenalidade(-2, 'Agarrado/Enredado (-2 em ataque)');
+        aplicarPenalidadeDados(1, 'Agarrado/Enredado (-1d20 em ataques)');
+      }
+
+      const indefeso = ['indefeso', 'inconsciente', 'paralisado', 'petrificado']
+        .some(condicao => condicoes.includes(condicao));
+      const naoPodeObservar = condicoes.includes('cego') && periciaKey === 'percepcao';
+      const falhaAutomaticaReflexos = indefeso && periciaKey === 'reflexos';
+
+      if (naoPodeObservar) {
+        orientacoes.push('Cego: não pode observar; aplique a decisão da mesa sem bloquear o teste.');
+      }
+      if (falhaAutomaticaReflexos) {
+        orientacoes.push('Indefeso: falha automaticamente em Reflexos; orientação para a mesa, sem bloquear o teste.');
       }
 
       if (['acrobacia', 'crime', 'furtividade'].includes(periciaKey)) {
@@ -277,12 +305,19 @@ class Personagem {
           descricaoDados,
           bonus: bonusTotal,
           temPenalidade,
-          msgCondicao: mensagens.join('\n'),
+          msgCondicao: [...mensagens, ...orientacoes].join('\n'),
+          orientacoes,
+          efeitosOrientativos: {
+            naoPodeObservar,
+            falhaAutomaticaReflexos,
+          },
       };
   }
   
   aplicarInterludio(opcoes = {}) {
-    const acoes = [...new Set(Array.isArray(opcoes.acoes) ? opcoes.acoes : [])].slice(0, 2);
+    const acoes = Array.isArray(opcoes.acoes)
+      ? opcoes.acoes.filter((acao) => typeof acao === 'string')
+      : [];
     const conforto = opcoes.conforto || 'normal';
     const prato = opcoes.prato || 'simples';
     const participantesRelaxando = Math.max(1, parseInt(opcoes.participantesRelaxando) || (opcoes.emGrupo ? 2 : 1));
@@ -353,7 +388,8 @@ class Personagem {
       }
     }
 
-    if (acoes.includes('revisar')) {
+    const quantidadeRevisoes = Math.min(2, acoes.filter((acao) => acao === 'revisar').length);
+    for (let revisao = 0; revisao < quantidadeRevisoes; revisao += 1) {
       const bonusRevisar = acoes.includes('alimentar') && prato === 'rapido' ? 5 : 0;
       const msgBonus = bonusRevisar > 0 ? ` (Bônus +${bonusRevisar} por Prato Rápido)` : "";
       msgExtras.push(`Faça um teste de perícia${msgBonus} para encontrar pistas perdidas.`);
@@ -566,14 +602,28 @@ class Personagem {
   }
   
   getPesoTotal() {
+    const temInventarioOrganizado = this.temPoderAprendido('inventario_organizado');
     return this.inventario
       .filter(item => !item.ignorarCalculos)
-      .reduce((total, item) => total + calcularStatsItem(item).espacos, 0);
+      .reduce((total, item) => {
+        const espacos = calcularStatsItem(item).espacos;
+        const espacosAjustados = temInventarioOrganizado && espacos === 0.5 ? 0.25 : espacos;
+        return total + espacosAjustados;
+      }, 0);
+  }
+
+  temPoderAprendido(chave) {
+    return this.poderes_aprendidos.some((poder) => {
+      const poderKey = typeof poder === 'string' ? poder : poder?.key;
+      return poderKey === chave || poderKey?.startsWith(`${chave}_`);
+    });
   }
   
   getMaxPeso() {
     const forca = this.getAtributoFinal('for');
-    let maxPesoBase = forca > 0 ? forca * 5 : 2; 
+    const intelecto = this.getAtributoFinal('int');
+    const forcaCarga = this.info.trilha === 'tecnico' ? forca + intelecto : forca;
+    let maxPesoBase = forcaCarga > 0 ? forcaCarga * 5 : 2;
     
     const inventarioAtivo = this.inventario.filter((item) => !item.ignorarCalculos && !item.quebrado);
     const bonusCapacidadeItens = inventarioAtivo
@@ -581,11 +631,31 @@ class Personagem {
       .reduce((maior, bonus) => Math.max(maior, bonus), 0);
     maxPesoBase += bonusCapacidadeItens;
 
-    if (this.info.trilha === "tecnico") {
-      const intelecto = this.getAtributoFinal('int');
-      maxPesoBase += (intelecto * 5); 
-    }
+    if (this.temPoderAprendido('mochileiro')) maxPesoBase += 5;
+    if (['muambeiro', 'mascate'].includes(this.info.trilha) || this.temPoderAprendido('mascate')) maxPesoBase += 5;
+    if (this.temPoderAprendido('inventario_organizado')) maxPesoBase += Math.max(0, intelecto);
+
     return Math.max(0, maxPesoBase);
+  }
+
+  getDeslocamentoFinal() {
+    const condicoes = this.getCondicoesEfetivas();
+    const estadoCarga = this.getEstadoCarga();
+    let deslocamento = Math.max(
+      0,
+      (Number.parseFloat(this.info.deslocamento) || 0) + estadoCarga.penalidadeDeslocamento,
+    );
+
+    const lento = ['lento', 'cego', 'enredado', 'exausto']
+      .some(condicao => condicoes.includes(condicao));
+    const imovel = ['imovel', 'agarrado', 'paralisado', 'petrificado', 'inconsciente']
+      .some(condicao => condicoes.includes(condicao));
+
+    if (lento) deslocamento = Math.floor((deslocamento / 2) / 1.5) * 1.5;
+    if (condicoes.includes('caido')) deslocamento = 1.5;
+    if (imovel) deslocamento = 0;
+
+    return deslocamento;
   }
 
   getEstadoCarga() {
@@ -630,16 +700,22 @@ class Personagem {
   }
   
   carregarDados(dados) {
-    if (dados) {
+    const objetoSimples = valor => {
+      if (valor === null || typeof valor !== 'object' || Array.isArray(valor)) return false;
+      const prototipo = Object.getPrototypeOf(valor);
+      return prototipo === Object.prototype || prototipo === null;
+    };
+
+    if (objetoSimples(dados)) {
       this.reset();
-      this.atributos = dados.atributos || this.atributos;
-      this.pericias = { ...this.pericias, ...(dados.pericias || {}) };
-      this.info = { ...this.info, ...dados.info };
-      this.recursos = { ...this.recursos, ...(dados.recursos || {}) };
-      this._recursosInicializados = Boolean(dados.recursos);
-      this.defesa = dados.defesa || this.defesa;
-      this.resistencias = dados.resistencias || this.resistencias;
-      this.perseguicao = dados.perseguicao || { sucessos: 0, falhas: 0 }; 
+      this.atributos = { ...this.atributos, ...(objetoSimples(dados.atributos) ? dados.atributos : {}) };
+      this.pericias = { ...this.pericias, ...(objetoSimples(dados.pericias) ? dados.pericias : {}) };
+      this.info = { ...this.info, ...(objetoSimples(dados.info) ? dados.info : {}) };
+      this.recursos = { ...this.recursos, ...(objetoSimples(dados.recursos) ? dados.recursos : {}) };
+      this._recursosInicializados = objetoSimples(dados.recursos);
+      this.defesa = { ...this.defesa, ...(objetoSimples(dados.defesa) ? dados.defesa : {}) };
+      this.resistencias = { ...this.resistencias, ...(objetoSimples(dados.resistencias) ? dados.resistencias : {}) };
+      this.perseguicao = { ...this.perseguicao, ...(objetoSimples(dados.perseguicao) ? dados.perseguicao : {}) };
       this.visibilidade = dados.visibilidade ?? 0;
       this.inventario = Array.isArray(dados.inventario)
         ? dados.inventario.map(item => ({
@@ -648,8 +724,8 @@ class Personagem {
           }))
         : [];
       this.rituais = Array.isArray(dados.rituais) ? dados.rituais : [];
-      this.bonusManuais = { ...this.bonusManuais, ...(dados.bonusManuais || {}) };
-      this.bonusPericiasManuais = { ...(dados.bonusPericiasManuais || {}) };
+      this.bonusManuais = { ...this.bonusManuais, ...(objetoSimples(dados.bonusManuais) ? dados.bonusManuais : {}) };
+      this.bonusPericiasManuais = objetoSimples(dados.bonusPericiasManuais) ? { ...dados.bonusPericiasManuais } : {};
       this.periciasCustom = Array.isArray(dados.periciasCustom) ? dados.periciasCustom : [];
       this.periciasOrigemAplicadas = Array.isArray(dados.periciasOrigemAplicadas)
         ? dados.periciasOrigemAplicadas.filter(pericia => Object.prototype.hasOwnProperty.call(this.pericias, pericia))

@@ -66,8 +66,9 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
       defesa: parseInt(defesa) || 0,
       valorBonus: bonusValor,
       periciaVinculada: bonusValor > 0 && periciaNome ? periciaNome : null,
-      tipoBonus: (bonusValor > 0 && periciaNome) ? (item.id.startsWith('custom_') ? 'custom' : 'generico') : null,
+      tipoBonus: (bonusValor > 0 && periciaNome) ? (String(item?.id || '').startsWith('custom_') ? 'custom' : 'generico') : null,
       modificacoes: modsSelecionadas,
+      quebrado,
     };
 
     onSave(itemAtualizado); 
@@ -190,14 +191,17 @@ function ModalEditarItem({ isOpen, onClose, onSave, item, pericias }) {
               <div className="form-custom-grid mods-lista-custom mods-lista-custom-alta">
                 
                 {modificacoesDisponiveis.map(mod => (
-                  <label key={mod.key} htmlFor={`edit-item-mod-${mod.key}`} title={mod.descricao} style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'help'}}>
+                  <label key={mod.key} htmlFor={`edit-item-mod-${mod.key}`} className="item-mod-option">
                     <input 
                       id={`edit-item-mod-${mod.key}`}
                       type="checkbox"
                       checked={modsSelecionadas.includes(mod.key)}
                       onChange={() => handleModToggle(mod.key)}
                     />
-                    {mod.nome}
+                    <span className="item-mod-option__copy">
+                      <strong>{mod.nome}</strong>
+                      <small>{mod.descricao}</small>
+                    </span>
                   </label>
                 ))}
               </div>
