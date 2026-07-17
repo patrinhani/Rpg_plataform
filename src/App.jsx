@@ -17,6 +17,7 @@ const Verificacao = lazy(() => import('./pages/Verificacao/index.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard/index.jsx'));
 const Ficha = lazy(() => import('./pages/Ficha/index.jsx'));
 const Mesa = lazy(() => import('./pages/Mesa/index.jsx'));
+const VttLab = lazy(() => import('./features/vtt-lab/index.js'));
 
 // Firebase
 import { db } from './lib/firebase.js';
@@ -176,6 +177,7 @@ function App() {
         <Suspense fallback={<TelaCarregamento />}>
             <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/vtt-lab" element={<VttLab />} />
                 <Route path="/mesa/:mesaId" element={<Mesa />} />
                 <Route path="/ficha/:fichaId" element={
                 <FichaProvider>
