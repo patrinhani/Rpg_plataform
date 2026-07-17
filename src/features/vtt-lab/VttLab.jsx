@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './vtt-lab.css';
 
 const SERVER_URL_STORAGE_KEY = 'caos.vttLab.serverUrl';
-const DEFAULT_SERVER_URL = 'http://127.0.0.1:8765';
+const LOCAL_DEVELOPMENT_SERVER_URL = 'http://127.0.0.1:8765';
 const DEMO_TOKEN_ID = 'demo-token';
 const LOG_LIMIT = 80;
 const SOCKET_CONNECTION_TIMEOUT_MS = 12_000;
@@ -28,11 +28,23 @@ function createCommandId() {
   return `cmd-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getRuntimeDefaultServerUrl() {
+  const location = globalThis.location;
+  if (
+    location
+    && ['http:', 'https:'].includes(location.protocol)
+    && location.port !== '5173'
+  ) {
+    return location.origin;
+  }
+  return LOCAL_DEVELOPMENT_SERVER_URL;
+}
+
 function getInitialServerUrl() {
   try {
-    return localStorage.getItem(SERVER_URL_STORAGE_KEY) || DEFAULT_SERVER_URL;
+    return localStorage.getItem(SERVER_URL_STORAGE_KEY) || getRuntimeDefaultServerUrl();
   } catch {
-    return DEFAULT_SERVER_URL;
+    return getRuntimeDefaultServerUrl();
   }
 }
 
@@ -704,7 +716,7 @@ export default function VttLab() {
                 value={serverUrl}
                 onChange={(event) => setServerUrl(event.target.value)}
                 onBlur={persistServerUrl}
-                placeholder={DEFAULT_SERVER_URL}
+                placeholder={getRuntimeDefaultServerUrl()}
                 autoComplete="url"
                 spellCheck="false"
                 disabled={controlsLocked}

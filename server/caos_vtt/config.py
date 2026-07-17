@@ -18,7 +18,20 @@ def _normalise_origin(value: str) -> str:
         or parsed.password
     ):
         raise ValueError(f"Origem invalida: {value!r}")
-    return origin
+    try:
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError as error:
+        raise ValueError(f"Origem invalida: {value!r}") from error
+    if not hostname:
+        raise ValueError(f"Origem invalida: {value!r}")
+
+    scheme = parsed.scheme.lower()
+    ascii_hostname = hostname.encode("idna").decode("ascii").lower()
+    rendered_host = f"[{ascii_hostname}]" if ":" in ascii_hostname else ascii_hostname
+    default_port = (scheme == "http" and port == 80) or (scheme == "https" and port == 443)
+    rendered_port = "" if port is None or default_port else f":{port}"
+    return f"{scheme}://{rendered_host}{rendered_port}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,4 +85,7 @@ class Settings:
     def allows_origin(self, origin: str | None) -> bool:
         if not origin:
             return False
-        return origin.rstrip("/") in self.allowed_origins
+        try:
+            return _normalise_origin(origin) in self.allowed_origins
+        except ValueError:
+            return False
