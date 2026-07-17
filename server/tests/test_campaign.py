@@ -69,6 +69,13 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
         ("gm_map", "assets/mapas/guia-mestre/salão-vazio-guia-mestre-v1.bin", b"mapa-gm", "map", "gm"),
         ("overlay", "assets/mapas/overlays/salão-vazio-névoa-overlay-vtt-v1.bin", b"overlay", "overlay", "players"),
         ("token_player", "assets/tokens/agente-é-v1.bin", b"token-player", "token", "players"),
+        (
+            "token_public_gm",
+            "assets/tokens/testemunha-controlada-v1.bin",
+            b"token-public-gm",
+            "token",
+            "players",
+        ),
         ("token_gm", "assets/tokens/ameaça-v1.bin", b"token-gm", "token", "gm"),
         ("token_unspecified", "assets/tokens/incógnita-v1.bin", b"token-unknown", "token", "unspecified"),
         ("prop", "assets/objetos/âncora-ativa-objeto-vtt-v1.bin", b"prop", "prop", "players"),
@@ -83,6 +90,8 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
             kind=kind,
             audience=audience,
         )
+        if name == "token_player":
+            item["controlledBy"] = "players"
         assets.append(item)
         ids[name] = item["id"]
 
@@ -130,6 +139,7 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
             ],
             "tokenAssetIds": [
                 ids["token_player"],
+                ids["token_public_gm"],
                 ids["token_gm"],
                 ids["token_unspecified"],
             ],
@@ -162,12 +172,18 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     assert master_scene.gm_guide_maps[0].asset_id == ids["gm_map"]
     assert master_scene.active_gm_guide_map == ids["gm_map"]
 
-    assert [item.asset_id for item in catalog.list_tokens("player")] == [ids["token_player"]]
+    assert [item.asset_id for item in catalog.list_tokens("player")] == [
+        ids["token_player"],
+        ids["token_public_gm"],
+    ]
     assert {item.asset_id for item in catalog.list_tokens("master")} == {
         ids["token_player"],
+        ids["token_public_gm"],
         ids["token_gm"],
         ids["token_unspecified"],
     }
+    assert catalog.get_asset(ids["token_player"], "player").controlled_by == "players"
+    assert catalog.get_asset(ids["token_public_gm"], "player").controlled_by == "gm"
     assert "agente-é" in ids["token_player"]
     assert str(source_root) not in repr(player_scenes)
     assert str(source_root) not in repr(catalog.list_tokens("master"))
@@ -423,25 +439,43 @@ def test_catalog_asset_endpoint_grants_are_role_room_bound_reusable_and_close_st
         first = _asset_request(
             client,
             room["roomId"],
-            ids["token_player"],
+            ids["map_v2"],
             player["mediaToken"],
         )
         assert first.status_code == 200
-        assert first.content == b"token-player"
+        assert first.content == b"mapa-v2"
         assert first.headers["content-type"] == "application/octet-stream"
-        assert first.headers["content-length"] == str(len(b"token-player"))
+        assert first.headers["content-length"] == str(len(b"mapa-v2"))
         assert first.headers["cache-control"] == "no-store, private"
         assert first.headers["x-content-type-options"] == "nosniff"
 
         reused = _asset_request(
             client,
             room["roomId"],
-            ids["token_player"],
+            ids["map_v2"],
             player["mediaToken"],
         )
         assert reused.status_code == 200
 
         denied_responses = [
+            _asset_request(
+                client,
+                room["roomId"],
+                ids["token_player"],
+                player["mediaToken"],
+            ),
+            _asset_request(
+                client,
+                room["roomId"],
+                ids["overlay"],
+                player["mediaToken"],
+            ),
+            _asset_request(
+                client,
+                room["roomId"],
+                ids["map_v1"],
+                player["mediaToken"],
+            ),
             _asset_request(
                 client,
                 room["roomId"],
@@ -496,7 +530,7 @@ def test_catalog_asset_endpoint_grants_are_role_room_bound_reusable_and_close_st
         expired = _asset_request(
             client,
             room["roomId"],
-            ids["token_player"],
+            ids["map_v2"],
             player["mediaToken"],
         )
         assert expired.status_code == 404
@@ -553,11 +587,14 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 item["assetId"] for item in master_initial["state"]["catalog"]["tokenAssets"]
             } == {
                 ids["token_player"],
+                ids["token_public_gm"],
                 ids["token_gm"],
                 ids["token_unspecified"],
             }
             assert "catalog" not in player_initial["state"]
+            assert player_initial["state"]["scene"]["overlays"] == []
             player_serialized = json.dumps(player_initial, ensure_ascii=False)
+            assert ids["overlay"] not in player_serialized
             assert ids["gm_map"] not in player_serialized
             assert ids["token_gm"] not in player_serialized
             assert ids["token_unspecified"] not in player_serialized
@@ -580,6 +617,12 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             assert master_public["revision"] == player_public["revision"] == 1
             public_token_id = next(iter(master_public["state"]["tokens"]))
             assert player_public["state"]["tokens"][public_token_id]["label"] == "Agente"
+            assert _asset_request(
+                client,
+                room["roomId"],
+                ids["token_player"],
+                player_access["mediaToken"],
+            ).status_code == 200
 
             master.send_json(
                 {
@@ -646,6 +689,12 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             player_overlay = player.receive_json()
             assert master_overlay["revision"] == player_overlay["revision"] == 3
             assert player_overlay["state"]["scene"]["overlays"][0]["enabled"] is True
+            assert _asset_request(
+                client,
+                room["roomId"],
+                ids["overlay"],
+                player_access["mediaToken"],
+            ).status_code == 200
 
             move = {
                 "type": "token.move",
@@ -751,6 +800,12 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             player_second = player.receive_json()
             assert master_second["state"]["scene"]["id"] == "scene:salão-memória"
             assert player_second["state"]["tokens"] == {}
+            assert _asset_request(
+                client,
+                room["roomId"],
+                ids["overlay"],
+                player_access["mediaToken"],
+            ).status_code == 404
 
             master.send_json(
                 {
@@ -842,3 +897,50 @@ def test_catalog_room_enforces_global_token_limit(tmp_path: Path) -> None:
             assert error["error"]["code"] == "token_limit"
             assert runtime_room.revision == 0
             assert len(scene_tokens) == 256
+
+
+def test_public_gm_controlled_token_is_visible_but_not_player_movable(
+    tmp_path: Path,
+) -> None:
+    app, _catalog, ids = _catalog_app(tmp_path)
+    with TestClient(app) as client:
+        room = _create_room(client)
+        master_access = _issue_access(client, room, "masterInviteToken")
+        player_access = _issue_access(client, room, "playerInviteToken")
+        socket_path = f"/ws/vtt/rooms/{room['roomId']}"
+
+        with client.websocket_connect(
+            f"{socket_path}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master, client.websocket_connect(
+            f"{socket_path}?ticket={player_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player:
+            master.receive_json()
+            player.receive_json()
+            master.send_json(
+                {
+                    "type": "token.spawn",
+                    "commandId": "spawn-public-gm-controlled",
+                    "payload": {
+                        "assetId": ids["token_public_gm"],
+                        "label": "Testemunha",
+                        "x": 0.5,
+                        "y": 0.5,
+                    },
+                }
+            )
+            master_snapshot = master.receive_json()
+            player_snapshot = player.receive_json()
+            token_id = next(iter(player_snapshot["state"]["tokens"]))
+            assert master_snapshot["state"]["tokens"][token_id]["movable"] is False
+            assert player_snapshot["state"]["tokens"][token_id]["movable"] is False
+
+            player.send_json(
+                {
+                    "type": "token.move",
+                    "commandId": "move-public-gm-controlled",
+                    "payload": {"tokenId": token_id, "x": 0.6, "y": 0.6},
+                }
+            )
+            assert player.receive_json()["error"]["code"] == "token_forbidden"

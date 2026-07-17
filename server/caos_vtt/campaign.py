@@ -79,6 +79,7 @@ class AssetView:
     asset_id: str
     kind: str
     audience: str
+    controlled_by: str
     media_type: str
     bytes: int
     image: ImageView | None
@@ -352,7 +353,15 @@ def _parse_assets(manifest: dict[str, Any]) -> dict[str, _AssetRecord]:
             raise ManifestValidationError(f"{context}.sha256 invalido")
         media_type = _expect_string(asset.get("mediaType"), f"{context}.mediaType")
         image = _parse_image(asset.get("image"), f"{context}.image")
-        view = AssetView(asset_id, kind, audience, media_type, expected_bytes, image)
+        view = AssetView(
+            asset_id,
+            kind,
+            audience,
+            controlled_by,
+            media_type,
+            expected_bytes,
+            image,
+        )
         records[asset_id] = _AssetRecord(view, relative_path, expected_bytes, expected_hash)
     return records
 

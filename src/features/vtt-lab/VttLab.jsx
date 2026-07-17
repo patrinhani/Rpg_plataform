@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import VttBoard from '../vtt-table/index.js';
 import './vtt-lab.css';
 
 const SERVER_URL_STORAGE_KEY = 'caos.vttLab.serverUrl';
@@ -6,6 +7,14 @@ const LOCAL_DEVELOPMENT_SERVER_URL = 'http://127.0.0.1:8765';
 const DEMO_TOKEN_ID = 'demo-token';
 const LOG_LIMIT = 80;
 const SOCKET_CONNECTION_TIMEOUT_MS = 12_000;
+const REST_REQUEST_TIMEOUT_MS = 12_000;
+const BOARD_COMMAND_TYPES = new Set([
+  'scene.select',
+  'overlay.set',
+  'token.spawn',
+  'token.move',
+  'token.remove',
+]);
 
 const STATUS_LABELS = {
   disconnected: 'Desconectado',
@@ -33,7 +42,7 @@ function getRuntimeDefaultServerUrl() {
   if (
     location
     && ['http:', 'https:'].includes(location.protocol)
-    && location.port !== '5173'
+    && !import.meta.env.DEV
   ) {
     return location.origin;
   }
@@ -73,6 +82,24 @@ function buildHttpUrl(serverUrl, path) {
   return `${normalizeServerUrl(serverUrl)}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+async function fetchWithTimeout(url, options, controller) {
+  let timedOut = false;
+  const timeoutId = globalThis.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REST_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    if (timedOut) {
+      throw new Error('O servidor não respondeu em 12 segundos.');
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
 function buildWebSocketUrl(serverUrl, roomId, ticket) {
   const url = new URL(buildHttpUrl(
     serverUrl,
@@ -81,6 +108,81 @@ function buildWebSocketUrl(serverUrl, roomId, ticket) {
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   url.searchParams.set('ticket', ticket);
   return url.toString();
+}
+
+function buildAssetUrl(serverUrl, roomId, mediaToken, assetId) {
+  if (!mediaToken || !assetId) return '';
+  const url = new URL(buildHttpUrl(
+    serverUrl,
+    `/api/vtt/rooms/${encodeURIComponent(roomId)}/assets`,
+  ));
+  url.searchParams.set('assetId', String(assetId));
+  url.searchParams.set('access', String(mediaToken));
+  return url.toString();
+}
+
+function readPlayerInviteFragment() {
+  const location = globalThis.location;
+  if (!location?.hash) return { roomId: '', inviteToken: '', present: false };
+  const params = new URLSearchParams(location.hash.slice(1));
+  if (params.get('join') !== 'player') {
+    return { roomId: '', inviteToken: '', present: false };
+  }
+  const roomId = String(params.get('room') || '').trim();
+  const inviteToken = String(params.get('invite') || '').trim();
+  if (!roomId || !inviteToken) return { roomId: '', inviteToken: '', present: false };
+  return { roomId, inviteToken, present: true };
+}
+
+function buildPlayerInviteUrl(serverUrl, roomId, inviteToken) {
+  const url = new URL('/vtt-lab', `${normalizeServerUrl(serverUrl)}/`);
+  url.hash = new URLSearchParams({
+    join: 'player',
+    room: String(roomId).trim(),
+    invite: String(inviteToken).trim(),
+  }).toString();
+  return url.toString();
+}
+
+function hydrateCampaignState(rawState, revision, grant) {
+  if (!rawState?.scene || !grant?.token) return null;
+  const assetUrl = (assetId) => buildAssetUrl(
+    grant.serverUrl,
+    grant.roomId,
+    grant.token,
+    assetId,
+  );
+  const rawScene = rawState.scene;
+  const rawTokens = rawState.tokens && typeof rawState.tokens === 'object'
+    ? rawState.tokens
+    : {};
+
+  return {
+    ...rawState,
+    revision: Number.isFinite(Number(revision)) ? Number(revision) : 0,
+    scene: {
+      ...rawScene,
+      map: rawScene.map ? {
+        ...rawScene.map,
+        url: assetUrl(rawScene.map.assetId),
+      } : null,
+      overlays: Array.isArray(rawScene.overlays)
+        ? rawScene.overlays.map((overlay) => ({
+          ...overlay,
+          url: assetUrl(overlay.assetId),
+        }))
+        : [],
+    },
+    tokens: Object.fromEntries(Object.entries(rawTokens).map(([key, tokenValue]) => {
+      const token = tokenValue && typeof tokenValue === 'object' ? tokenValue : {};
+      const id = String(token.id || key);
+      return [id, {
+        ...token,
+        id,
+        assetUrl: assetUrl(token.assetId),
+      }];
+    })),
+  };
 }
 
 async function readJsonResponse(response) {
@@ -131,12 +233,13 @@ function directionLabel(direction) {
 }
 
 export default function VttLab() {
+  const [initialPlayerInvite] = useState(readPlayerInviteFragment);
   const [serverUrl, setServerUrl] = useState(getInitialServerUrl);
   const [hostToken, setHostToken] = useState('');
-  const [roomName, setRoomName] = useState('Laboratório C.A.O.S.');
-  const [roomId, setRoomId] = useState('');
+  const [roomName, setRoomName] = useState('Mesa C.A.O.S.');
+  const [roomId, setRoomId] = useState(initialPlayerInvite.roomId);
   const [masterInviteToken, setMasterInviteToken] = useState('');
-  const [playerInviteToken, setPlayerInviteToken] = useState('');
+  const [playerInviteToken, setPlayerInviteToken] = useState(initialPlayerInvite.inviteToken);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [connectedRole, setConnectedRole] = useState('');
   const [revision, setRevision] = useState(0);
@@ -148,6 +251,7 @@ export default function VttLab() {
       label: 'Token de demonstração',
     },
   }));
+  const [campaignState, setCampaignState] = useState(null);
   const [logs, setLogs] = useState([]);
   const [lastError, setLastError] = useState('');
   const [busyAction, setBusyAction] = useState('');
@@ -159,6 +263,7 @@ export default function VttLab() {
   const mountedRef = useRef(true);
   const requestControllerRef = useRef(null);
   const connectionTimerRef = useRef(null);
+  const mediaGrantRef = useRef(null);
 
   const appendLog = useCallback((direction, type, message = '') => {
     logSequenceRef.current += 1;
@@ -185,6 +290,7 @@ export default function VttLab() {
     const socket = socketRef.current;
     socketRef.current = null;
     dragRef.current = null;
+    mediaGrantRef.current = null;
 
     if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
       socket.close(1000, reason);
@@ -193,6 +299,7 @@ export default function VttLab() {
     if (!mountedRef.current) return;
     setConnectionStatus('disconnected');
     setConnectedRole('');
+    setCampaignState(null);
     if (log) appendLog('system', 'socket.disconnect', 'Desconexão local solicitada.');
   }, [appendLog, clearConnectionTimer]);
 
@@ -232,9 +339,21 @@ export default function VttLab() {
 
       if (message.roomId) setRoomId(String(message.roomId));
       if (message.role) setConnectedRole(String(message.role));
-      if (Number.isFinite(Number(message.revision))) setRevision(Number(message.revision));
+      const snapshotRevision = Number.isFinite(Number(message.revision))
+        ? Number(message.revision)
+        : 0;
+      setRevision(snapshotRevision);
       setBoardTokens(normalizeBoardTokens(message.state?.tokens));
-      appendLog('in', messageType, 'Snapshot aplicado ao laboratório.');
+      setCampaignState(hydrateCampaignState(
+        message.state,
+        snapshotRevision,
+        mediaGrantRef.current,
+      ));
+      appendLog(
+        'in',
+        messageType,
+        message.state?.scene ? 'Cena da campanha sincronizada.' : 'Snapshot aplicado à mesa.',
+      );
       return;
     }
 
@@ -260,6 +379,24 @@ export default function VttLab() {
         };
       });
       if (Number.isFinite(Number(message.revision))) setRevision(Number(message.revision));
+      setCampaignState((currentState) => {
+        if (!currentState?.tokens?.[tokenId]) return currentState;
+        const nextRevision = Number.isFinite(Number(message.revision))
+          ? Number(message.revision)
+          : currentState.revision;
+        return {
+          ...currentState,
+          revision: nextRevision,
+          tokens: {
+            ...currentState.tokens,
+            [tokenId]: {
+              ...currentState.tokens[tokenId],
+              x: clampCoordinate(message.payload?.x),
+              y: clampCoordinate(message.payload?.y),
+            },
+          },
+        };
+      });
       appendLog('in', messageType, `Posição de ${tokenId} atualizada.`);
       return;
     }
@@ -323,11 +460,13 @@ export default function VttLab() {
       clearConnectionTimer();
       socketRef.current = null;
       dragRef.current = null;
+      mediaGrantRef.current = null;
       if (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
       const errorMessage = 'A conexão WebSocket encontrou um erro.';
       setConnectedRole('');
+      setCampaignState(null);
       setConnectionStatus('error');
       setLastError(errorMessage);
       appendLog('error', 'socket.error', errorMessage);
@@ -338,7 +477,9 @@ export default function VttLab() {
       clearConnectionTimer();
       socketRef.current = null;
       dragRef.current = null;
+      mediaGrantRef.current = null;
       setConnectedRole('');
+      setCampaignState(null);
       setConnectionStatus(event.code === 1000 ? 'disconnected' : 'error');
       appendLog(
         event.code === 1000 ? 'system' : 'error',
@@ -354,10 +495,12 @@ export default function VttLab() {
 
       socketRef.current = null;
       dragRef.current = null;
+      mediaGrantRef.current = null;
       connectionTimerRef.current = null;
       socket.close(1000, 'Tempo limite de conexão');
       const errorMessage = 'O servidor não concluiu a conexão em 12 segundos.';
       setConnectedRole('');
+      setCampaignState(null);
       setConnectionStatus('error');
       setLastError(errorMessage);
       appendLog('error', 'socket.timeout', errorMessage);
@@ -387,7 +530,7 @@ export default function VttLab() {
     setLastError('');
 
     try {
-      const response = await fetch(buildHttpUrl(normalizedServerUrl, '/api/vtt/rooms'), {
+      const response = await fetchWithTimeout(buildHttpUrl(normalizedServerUrl, '/api/vtt/rooms'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${hostToken.trim()}`,
@@ -395,7 +538,7 @@ export default function VttLab() {
         },
         body: JSON.stringify({ name: roomName.trim() }),
         signal: requestController.signal,
-      });
+      }, requestController);
       const data = await readJsonResponse(response);
 
       if (
@@ -454,7 +597,7 @@ export default function VttLab() {
     setLastError('');
 
     try {
-      const response = await fetch(buildHttpUrl(
+      const response = await fetchWithTimeout(buildHttpUrl(
         normalizedServerUrl,
         `/api/vtt/rooms/${encodeURIComponent(roomId.trim())}/tickets`,
       ), {
@@ -463,7 +606,7 @@ export default function VttLab() {
           Authorization: `Bearer ${inviteToken}`,
         },
         signal: requestController.signal,
-      });
+      }, requestController);
       const data = await readJsonResponse(response);
 
       if (
@@ -484,6 +627,11 @@ export default function VttLab() {
         'ticket.issued',
         `Ticket efêmero emitido para ${roleLabel(data.role)} (${data.expiresIn ?? '?'} s).`,
       );
+      mediaGrantRef.current = data.mediaToken ? {
+        token: String(data.mediaToken),
+        roomId: roomId.trim(),
+        serverUrl: normalizedServerUrl,
+      } : null;
       openSocket(normalizedServerUrl, roomId.trim(), String(data.ticket), String(data.role));
     } catch (error) {
       if (error.name === 'AbortError' || !mountedRef.current) return;
@@ -526,6 +674,21 @@ export default function VttLab() {
     }
   };
 
+  const handleCopyPlayerLink = async () => {
+    if (!roomId.trim() || !playerInviteToken.trim()) return;
+    try {
+      const inviteUrl = buildPlayerInviteUrl(serverUrl, roomId, playerInviteToken);
+      await navigator.clipboard.writeText(inviteUrl);
+      appendLog('system', 'invite.link.copied', 'Link completo de jogador copiado.');
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Não foi possível copiar o link do jogador.';
+      setLastError(errorMessage);
+      appendLog('error', 'invite.link.error', errorMessage);
+    }
+  };
+
   const updateTokenLocally = useCallback((tokenId, x, y) => {
     setBoardTokens((currentTokens) => {
       const currentToken = currentTokens[tokenId];
@@ -559,6 +722,30 @@ export default function VttLab() {
     };
     socket.send(JSON.stringify(payload));
     appendLog('out', payload.type, `Movimento de ${tokenId} enviado.`);
+    return true;
+  }, [appendLog]);
+
+  const sendBoardCommand = useCallback((command) => {
+    const type = String(command?.type || '');
+    const socket = socketRef.current;
+    if (!BOARD_COMMAND_TYPES.has(type)) {
+      setLastError('A mesa tentou enviar um comando desconhecido.');
+      return false;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      setLastError('Conecte a sessão antes de controlar a mesa.');
+      return false;
+    }
+
+    const payload = {
+      type,
+      commandId: createCommandId(),
+      payload: command?.payload && typeof command.payload === 'object'
+        ? command.payload
+        : {},
+    };
+    socket.send(JSON.stringify(payload));
+    appendLog('out', type, 'Comando da mesa enviado.');
     return true;
   }, [appendLog]);
 
@@ -647,11 +834,22 @@ export default function VttLab() {
       clearConnectionTimer();
       const socket = socketRef.current;
       socketRef.current = null;
+      mediaGrantRef.current = null;
       if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
-        socket.close(1000, 'Laboratório desmontado');
+        socket.close(1000, 'Mesa encerrada');
       }
     };
   }, [clearConnectionTimer]);
+
+  useEffect(() => {
+    if (!initialPlayerInvite.present || !globalThis.location?.hash) return;
+    globalThis.history?.replaceState(
+      globalThis.history.state,
+      '',
+      `${globalThis.location.pathname}${globalThis.location.search}`,
+    );
+    appendLog('system', 'invite.link.loaded', 'Convite de jogador preenchido pelo link seguro.');
+  }, [appendLog, initialPlayerInvite]);
 
   const isConnected = connectionStatus === 'connected';
   const canDisconnect = isConnected || connectionStatus === 'connecting';
@@ -663,12 +861,15 @@ export default function VttLab() {
   const statusVisualState = operationLabel ? 'working' : connectionStatus;
 
   return (
-    <main className="vtt-lab" aria-labelledby="vtt-lab-title">
+    <main
+      className={`vtt-lab ${isConnected ? 'is-session-active' : ''}`}
+      aria-labelledby="vtt-lab-title"
+    >
       <header className="vtt-lab__header">
         <div>
-          <span className="vtt-lab__eyebrow">C.A.O.S. · experimento isolado</span>
-          <h1 id="vtt-lab-title">Laboratório VTT portátil</h1>
-          <p>Validação REST + WebSocket sem canvas, Firebase ou rolagens automáticas.</p>
+          <span className="vtt-lab__eyebrow">C.A.O.S. · mesa portátil</span>
+          <h1 id="vtt-lab-title">Mesa virtual C.A.O.S.</h1>
+          <p>Mapas, tokens e efeitos sincronizados. As rolagens continuam nos dados físicos.</p>
         </div>
 
         <div className="vtt-lab__connection-summary" aria-live="polite">
@@ -698,12 +899,12 @@ export default function VttLab() {
       )}
 
       <div className="vtt-lab__layout">
-        <aside className="vtt-lab__control-column" aria-label="Conexão do laboratório">
-          <section className="vtt-lab__panel">
+        <aside className="vtt-lab__control-column" aria-label="Conexão da mesa">
+          <section className="vtt-lab__panel vtt-lab__server-panel">
             <div className="vtt-lab__panel-heading">
               <div>
-                <span>Endpoint</span>
-                <h2>Servidor Python</h2>
+                <span>Conexão</span>
+                <h2>Servidor da mesa</h2>
               </div>
               <span className="vtt-lab__safe-chip">URL local</span>
             </div>
@@ -725,10 +926,10 @@ export default function VttLab() {
             </label>
           </section>
 
-          <section className="vtt-lab__panel">
+          <section className="vtt-lab__panel vtt-lab__create-panel">
             <div className="vtt-lab__panel-heading">
               <div>
-                <span>Etapa 1</span>
+                <span>Hospedar</span>
                 <h2>Criar sala</h2>
               </div>
             </div>
@@ -764,14 +965,14 @@ export default function VttLab() {
             </form>
           </section>
 
-          <section className="vtt-lab__panel">
+          <section className="vtt-lab__panel vtt-lab__join-panel">
             <div className="vtt-lab__panel-heading">
               <div>
-                <span>Etapa 2</span>
+                <span>Acesso</span>
                 <h2>Entrar na sala</h2>
               </div>
               <button type="button" className="vtt-lab__text-button" onClick={handleClearSecrets}>
-                Limpar segredos
+                {canDisconnect ? 'Desconectar e limpar' : 'Limpar segredos'}
               </button>
             </div>
 
@@ -849,73 +1050,93 @@ export default function VttLab() {
               >
                 {busyAction === 'connect-player' ? 'Conectando...' : 'Conectar como jogador'}
               </button>
+              <button
+                type="button"
+                className="vtt-lab__share-button"
+                onClick={handleCopyPlayerLink}
+                disabled={!roomId.trim() || !playerInviteToken.trim()}
+              >
+                Copiar link completo para o jogador
+              </button>
             </div>
 
             <p className="vtt-lab__security-note">
               O aplicativo não persiste host token, convites ou tickets. O navegador ainda pode
-              oferecer recursos próprios de preenchimento.
+              oferecer recursos próprios de preenchimento. Links de jogador usam um fragmento que
+              não é enviado ao servidor e é removido da barra após preencher o convite.
             </p>
           </section>
         </aside>
 
-        <section className="vtt-lab__workspace" aria-label="Área de teste do tabuleiro">
+        <section className="vtt-lab__workspace" aria-label="Mesa sincronizada">
           <div className="vtt-lab__panel vtt-lab__board-panel">
             <div className="vtt-lab__panel-heading vtt-lab__board-heading">
               <div>
-                <span>Etapa 3</span>
-                <h2>Área 2D normalizada</h2>
+                <span>Sessão ativa</span>
+                <h2>{campaignState ? 'Mesa Mnemosyne' : 'Aguardando cena'}</h2>
               </div>
               <div className="vtt-lab__board-actions">
-                <button type="button" onClick={handlePing} disabled={!isConnected}>Ping</button>
+                <button type="button" onClick={handlePing} disabled={!isConnected}>Verificar</button>
                 <button type="button" onClick={handleDisconnect} disabled={!canDisconnect}>Desconectar</button>
               </div>
             </div>
 
-            <div
-              ref={boardRef}
-              className={`vtt-lab__board ${isConnected ? 'is-connected' : 'is-locked'}`}
-              aria-label="Tabuleiro de teste"
-            >
-              <div className="vtt-lab__board-axis is-x" aria-hidden="true">0 → 1</div>
-              <div className="vtt-lab__board-axis is-y" aria-hidden="true">0 → 1</div>
-
-              {Object.values(boardTokens).map((token) => (
-                <button
-                  key={token.id}
-                  type="button"
-                  className="vtt-lab__token"
-                  style={{
-                    '--vtt-token-x': `${token.x * 100}%`,
-                    '--vtt-token-y': `${token.y * 100}%`,
-                  }}
-                  onPointerDown={(event) => handleTokenPointerDown(event, token.id)}
-                  onPointerMove={(event) => handleTokenPointerMove(event, token.id)}
-                  onPointerUp={(event) => handleTokenPointerUp(event, token.id)}
-                  onPointerCancel={(event) => handleTokenPointerCancel(event, token.id)}
-                  onKeyDown={(event) => handleTokenKeyDown(event, token)}
-                  disabled={!isConnected}
-                  aria-label={`${token.label}. Posição X ${token.x.toFixed(2)}, Y ${token.y.toFixed(2)}. Use as setas para mover.`}
+            {campaignState ? (
+              <VttBoard
+                state={campaignState}
+                role={connectedRole || 'player'}
+                connected={isConnected}
+                onCommand={sendBoardCommand}
+              />
+            ) : (
+              <>
+                <div
+                  ref={boardRef}
+                  className={`vtt-lab__board ${isConnected ? 'is-connected' : 'is-locked'}`}
+                  aria-label="Tabuleiro de teste"
                 >
-                  <span aria-hidden="true">C</span>
-                  <small>{token.label}</small>
-                </button>
-              ))}
+                  <div className="vtt-lab__board-axis is-x" aria-hidden="true">0 → 1</div>
+                  <div className="vtt-lab__board-axis is-y" aria-hidden="true">0 → 1</div>
 
-              {Object.keys(boardTokens).length === 0 && (
-                <p className="vtt-lab__board-empty">O snapshot não contém tokens.</p>
-              )}
+                  {Object.values(boardTokens).map((token) => (
+                    <button
+                      key={token.id}
+                      type="button"
+                      className="vtt-lab__token"
+                      style={{
+                        '--vtt-token-x': `${token.x * 100}%`,
+                        '--vtt-token-y': `${token.y * 100}%`,
+                      }}
+                      onPointerDown={(event) => handleTokenPointerDown(event, token.id)}
+                      onPointerMove={(event) => handleTokenPointerMove(event, token.id)}
+                      onPointerUp={(event) => handleTokenPointerUp(event, token.id)}
+                      onPointerCancel={(event) => handleTokenPointerCancel(event, token.id)}
+                      onKeyDown={(event) => handleTokenKeyDown(event, token)}
+                      disabled={!isConnected}
+                      aria-label={`${token.label}. Posição X ${token.x.toFixed(2)}, Y ${token.y.toFixed(2)}. Use as setas para mover.`}
+                    >
+                      <span aria-hidden="true">C</span>
+                      <small>{token.label}</small>
+                    </button>
+                  ))}
 
-              {!isConnected && (
-                <div className="vtt-lab__board-lock" aria-hidden="true">
-                  Conecte uma sessão WebSocket para mover o token
+                  {Object.keys(boardTokens).length === 0 && (
+                    <p className="vtt-lab__board-empty">O snapshot não contém tokens.</p>
+                  )}
+
+                  {!isConnected && (
+                    <div className="vtt-lab__board-lock" aria-hidden="true">
+                      Conecte uma sessão WebSocket para mover o token
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <footer className="vtt-lab__board-footer">
-              <span>Sala: <strong>{roomId || '—'}</strong></span>
-              <span>Arraste o token ou use as setas. Shift aumenta o passo.</span>
-            </footer>
+                <footer className="vtt-lab__board-footer">
+                  <span>Sala: <strong>{roomId || '—'}</strong></span>
+                  <span>Arraste o token ou use as setas. Shift aumenta o passo.</span>
+                </footer>
+              </>
+            )}
           </div>
 
           <section className="vtt-lab__panel vtt-lab__log-panel" aria-labelledby="vtt-lab-log-title">

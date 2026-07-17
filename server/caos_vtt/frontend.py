@@ -20,6 +20,7 @@ class SPAStaticFiles(StaticFiles):
             is_spa_navigation = (
                 exc.status_code == 404
                 and scope.get("method") in {"GET", "HEAD"}
+                and route_path not in {"api", "ws"}
                 and not route_path.startswith(("api/", "ws/"))
                 and not Path(route_path).suffix
             )

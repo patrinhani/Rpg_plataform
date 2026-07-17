@@ -1,30 +1,28 @@
 // src/main.jsx
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
 
 // CSS
 import './App.css'
-import './styles/style.css'
-import './styles/responsive.css'
-import './styles/convergence.css'
-import './styles/theme-transitions.css'
 
-import { AuthProvider } from './contexts/AuthContext';
-import { DialogProvider } from './contexts/DialogContext'; // [NOVO] Importar Contexto
-import SystemDialog from './components/SystemDialog';       // [NOVO] Importar Componente Visual
+const AuthenticatedAppShell = lazy(() => import('./AuthenticatedAppShell.jsx'))
+const StandaloneVtt = lazy(() => import('./features/vtt-lab/index.js'))
+const isStandaloneVtt = /^\/vtt-lab\/?$/.test(window.location.pathname)
+
+const entryLoading = (
+  <div className="app-loading-screen" role="status" aria-live="polite">
+    <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" aria-hidden="true" />
+    <span>Carregando sistema...</span>
+  </div>
+)
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        {/* O DialogProvider envolve o App inteiro agora */}
-        <DialogProvider>
-          <SystemDialog /> {/* O diálogo fica disponível globalmente */}
-          <App />
-        </DialogProvider>
-      </AuthProvider>
+      <Suspense fallback={entryLoading}>
+        {isStandaloneVtt ? <StandaloneVtt /> : <AuthenticatedAppShell />}
+      </Suspense>
     </BrowserRouter>
   </React.StrictMode>
 )

@@ -29,6 +29,7 @@ ROOM_ALPHABET = string.ascii_uppercase + string.digits
 MEDIA_TOKEN_TTL_SECONDS = 12 * 60 * 60
 MAX_ROOM_TOKENS = 256
 PROCESSED_COMMAND_LIMIT = 256
+CLIENT_SEND_TIMEOUT_SECONDS = 5.0
 
 CatalogCommand = (
     MoveCommand
@@ -240,6 +241,45 @@ class VTTService:
             return None
         return grant
 
+    async def can_access_asset(self, room_id: str, role: Role, asset_id: str) -> bool:
+        """Restrict player media to assets currently revealed in the active scene."""
+        catalog = self.catalog
+        room = self._rooms.get(room_id)
+        if catalog is None or room is None:
+            return False
+        if role == "master":
+            return True
+
+        async with room.lock:
+            active_scene_id = room.active_scene_id
+            if active_scene_id is None:
+                return False
+            scene = next(
+                (
+                    item
+                    for item in catalog.list_scenes("player")
+                    if item.scene_id == active_scene_id
+                ),
+                None,
+            )
+            if scene is None:
+                return False
+            if scene.active_player_map == asset_id:
+                return True
+
+            overlay_states = room.scene_overlays.get(active_scene_id, {})
+            if any(
+                overlay.asset_id == asset_id
+                and overlay_states.get(overlay.asset_id, False)
+                for overlay in scene.overlays
+            ):
+                return True
+
+            return any(
+                token.visible and token.asset_id == asset_id
+                for token in room.scene_tokens.get(active_scene_id, {}).values()
+            )
+
     async def connect(
         self, room_id: str, websocket: WebSocket, role: Role
     ) -> ClientConnection | None:
@@ -405,7 +445,10 @@ class VTTService:
                 y=command.payload.y,
                 label=command.payload.label,
                 size=command.payload.size,
-                movable=command.payload.movable,
+                movable=(
+                    command.payload.movable
+                    and asset.controlled_by == "players"
+                ),
                 visible=command.payload.visible,
             )
             return None
@@ -466,12 +509,28 @@ class VTTService:
         room: Room,
         payloads: Any,
     ) -> None:
-        stale: list[ClientConnection] = []
-        for client, payload in payloads:
+        deliveries = tuple(payloads)
+
+        async def deliver(
+            client: ClientConnection,
+            payload: dict[str, Any],
+        ) -> ClientConnection | None:
             try:
-                await client.send(payload)
+                await asyncio.wait_for(
+                    client.send(payload),
+                    timeout=CLIENT_SEND_TIMEOUT_SECONDS,
+                )
             except Exception:
-                stale.append(client)
+                return client
+            return None
+
+        stale = [
+            client
+            for client in await asyncio.gather(
+                *(deliver(client, payload) for client, payload in deliveries)
+            )
+            if client is not None
+        ]
         if stale:
             async with room.lock:
                 for client in stale:
@@ -595,6 +654,7 @@ class VTTService:
                     "enabled": states.get(item.asset_id, False),
                 }
                 for item in scene.overlays
+                if role == "master" or states.get(item.asset_id, False)
             ],
             "gridHint": (
                 {

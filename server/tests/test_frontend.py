@@ -29,6 +29,8 @@ def test_frontend_and_spa_routes_are_served(tmp_path: Path) -> None:
         assert client.get("/assets/app.js").text == "export {};"
         assert client.get("/assets/missing.js").status_code == 404
         assert client.get("/api/vtt/health").json()["status"] == "ok"
+        assert client.get("/api").status_code == 404
+        assert client.get("/ws").status_code == 404
         assert client.get("/api/vtt/inexistente").status_code == 404
 
 

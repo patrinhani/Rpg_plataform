@@ -171,6 +171,8 @@ def create_router() -> APIRouter:
         grant = await service.validate_media_grant(room_id, access)
         if catalog is None or grant is None:
             raise _asset_not_found()
+        if not await service.can_access_asset(room_id, grant.role, asset_id):
+            raise _asset_not_found()
         try:
             opened = await run_in_threadpool(catalog.open_asset, asset_id, grant.role)
         except CampaignCatalogError:
