@@ -1,49 +1,39 @@
-// /src/components/NotaCard.jsx
-// (OTIMIZADO COM React.memo)
+import React, { memo } from 'react';
 
-import React, { memo } from 'react'; // 1. Importar 'memo'
+function formatarData(data) {
+  if (!data) return null;
+  const valor = new Date(data);
+  if (Number.isNaN(valor.getTime())) return null;
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(valor);
+}
 
-/**
- * Props esperadas do App.jsx (através do Diario.jsx):
- * - nota: O objeto da anotação (ex: { id: '...', titulo: '...', conteudo: '...' })
- * - onEdit: (função) Chamada ao clicar em 'Editar'
- * - onRemove: (função) Chamada ao clicar em 'Remover'
- */
 function NotaCard({ nota, onEdit, onRemove }) {
+  const conteudo = nota.conteudo || nota.texto || '...';
+  const dataFormatada = formatarData(nota.atualizadoEm || nota.data || nota.criadoEm);
 
   return (
-    <li className="item-card">
-      
-      {/* --- CABEÇALHO (Título da Nota) --- */}
+    <li className="item-card item-card--journal note-card">
       <div className="item-header">
-        <h3>{nota.titulo || "Nota sem Título"}</h3>
-      </div>
-
-      {/* --- CORPO (Conteúdo da Nota) --- */}
-      <div className="item-body">
-        <div 
-            className="item-descricao"
-            style={{ 
-              fontStyle: 'normal', // Remove o itálico padrão da descrição
-              color: 'var(--cor-texto-principal)', // Usa a cor de texto normal
-              whiteSpace: 'pre-wrap' // Faz com que quebras de linha (Enter) sejam respeitadas
-            }}
-        >
-            {nota.conteudo || "..."}
+        <div className="item-title-stack">
+          <span className="note-card__index" aria-hidden="true">REG</span>
+          <h3>{nota.titulo || 'Nota sem título'}</h3>
         </div>
+        {dataFormatada && <time dateTime={nota.atualizadoEm || nota.data || nota.criadoEm}>{dataFormatada}</time>}
       </div>
 
-      {/* --- RODAPÉ (Botões de Ação) --- */}
+      <div className="item-body">
+        <div className="item-descricao note-card__content">{conteudo}</div>
+      </div>
+
       <div className="item-footer">
-        <button 
-          className="item-inventario-editar"
-          onClick={() => onEdit(nota)} // Passa o objeto 'nota' inteiro para edição
-        >
+        <button type="button" className="item-inventario-editar" onClick={onEdit} aria-label={`Editar ${nota.titulo || 'nota'}`}>
           Editar
         </button>
-        <button 
-          className="item-inventario-remover" 
-          onClick={() => onRemove(nota.id)} // Passa apenas o ID para remoção
+        <button
+          type="button"
+          className="item-inventario-remover"
+          onClick={() => onRemove(nota.id)}
+          aria-label={`Remover ${nota.titulo || 'nota'}`}
         >
           Remover
         </button>
@@ -52,5 +42,4 @@ function NotaCard({ nota, onEdit, onRemove }) {
   );
 }
 
-// 3. Exportar a versão "memorizada"
 export default memo(NotaCard);

@@ -58,6 +58,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
           type="button"
           className="item-inventario-editar"
           onClick={() => onEdit(item.inventarioId)} 
+          aria-label={`Editar ${item.nome}`}
         >
           Editar
         </button>
@@ -65,6 +66,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
           type="button"
           className="item-inventario-remover" 
           onClick={() => onRemove(item.inventarioId)}
+          aria-label={`Remover ${item.nome}`}
         >
           Remover
         </button>
@@ -73,11 +75,12 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   }
 
   // --- 2. Classes de Estilo (ex: cor da borda para itens paranormais) ---
-  let cardClasses = "item-card";
+  let cardClasses = `item-card item-card--${tipo || 'catalogo'}`;
   if (item.elemento) {
     cardClasses += ` ritual-card ${item.elemento.toLowerCase()}`;
   }
   if (item.quebrado) cardClasses += ' item-quebrado';
+  if (item.ignorarCalculos) cardClasses += ' is-calculation-disabled';
 
   // --- 3. Cálculos de Stats (Categoria e Espaços) ---
   const { categoria: categoriaFinal, espacos: espacosFinal, modificacoes: modsAplicadas } = calcularStatsItem(item);
@@ -107,7 +110,13 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
     <li className={cardClasses}>
       
       <div className="item-header">
-        <h3>{item.nome}{item.quebrado ? ' (Quebrado)' : ''}</h3>
+        <div className="item-title-stack">
+          <h3>{item.nome}</h3>
+          <div className="item-status-list">
+            {item.quebrado && <span className="item-status item-status--danger">Quebrado</span>}
+            {item.ignorarCalculos && <span className="item-status">Fora dos cálculos</span>}
+          </div>
+        </div>
         <div className="item-header-info">
           <div><strong>CAT:</strong> {categoriaFinal}</div>
           <div><strong>ESP:</strong> {Number.isInteger(espacosFinal) ? espacosFinal : espacosFinal.toFixed(1)}</div>
@@ -121,11 +130,11 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             <div className="item-detalhe">
                 <strong>Dano:</strong> 
                 {danoExibido !== item.dano ? (
-                    <span>
-                        <span style={{textDecoration: 'line-through', opacity: 0.6, marginRight: '6px', fontSize: '0.9em'}}>
+                    <span className="item-damage-comparison">
+                        <span className="item-damage-original">
                             {item.dano}
                         </span>
-                        <span style={{color: 'var(--cor-destaque)', fontWeight: 'bold'}}>
+                        <span className="item-damage-final">
                             {danoExibido}
                         </span>
                     </span>
@@ -147,7 +156,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             <strong>Bônus:</strong> +{item.valorBonus} em {item.periciaVinculada}
           </div>
         )}
-        {item.tipoBonus === 'generico' && (
+        {item.tipoBonus === 'generico' && !item.periciaVinculada && (
           <div className="item-detalhe bonus">
             <strong>Bônus:</strong> +{item.valorBonus} (Vincular Perícia)
           </div>

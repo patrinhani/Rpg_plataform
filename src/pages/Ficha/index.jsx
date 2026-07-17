@@ -29,7 +29,7 @@ const ModalRituais = lazy(() => import('../../components/ModalRituais.jsx'));
 const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.jsx'));
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
-const ExportFicha = lazy(() => import('../../components/ExportFicha.jsx'));
+const ConfiguracoesFicha = lazy(() => import('../../components/ConfiguracoesFicha.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
 import ElementRail from '../../components/ElementRail.jsx';
@@ -54,7 +54,7 @@ const ABAS_FICHA = [
     { id: 'poderes', label: 'Poderes', icon: 'powers' },
     { id: 'progressao', label: 'Progressão', icon: 'progress' },
     { id: 'diario', label: 'Diário', icon: 'journal' },
-    { id: 'exportar', label: 'Exportar', icon: 'export' },
+    { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
 ];
 
 function criarDadosVisualDev(base) {
@@ -87,9 +87,23 @@ function criarDadosVisualDev(base) {
     dados.defesa = { ...dados.defesa, equip: 2, outros: 1 };
     dados.bonusManuais = { ...dados.bonusManuais, defesa: 2, esquiva: 1, limite_pe: 1 };
     dados.recursos = { pv_atual: 24, pv_max: 24, pe_atual: 18, pe_max: 18, san_atual: 20, san_max: 20 };
+    const itemDemo = (fonte, inventarioId, extras = {}) => fonte
+        ? { ...fonte, inventarioId, ...extras }
+        : null;
+    dados.inventario = [
+        itemDemo(database.armasSimples?.find(item => item.id === 'pistola'), 'dev-item-pistola', { modificacoes: ['certeira'] }),
+        itemDemo(database.equipGeral?.find(item => item.id === 'mochila_militar'), 'dev-item-mochila'),
+        itemDemo(database.protecoes?.find(item => item.id === 'protecao_leve'), 'dev-item-protecao'),
+        itemDemo(database.equipGeral?.find(item => item.id === 'lanterna_tatica'), 'dev-item-lanterna', { quebrado: true }),
+    ].filter(Boolean);
+    dados.rituais = (database.rituais || []).slice(0, 3).map((ritual, index) => ({
+        ...ritual,
+        inventarioId: `dev-ritual-${index + 1}`,
+    }));
     dados.poderes_aprendidos = poderesGerais[0] ? [poderesGerais[0]] : [];
     dados.diario = [
-        { id: 'dev-nota-1', titulo: 'Nota visual', texto: 'Registro local para revisar espacamento e cards.', data: new Date().toISOString() },
+        { id: 'dev-nota-1', titulo: 'Eco no subsolo', conteudo: 'O padrão de interferência reaparece sempre que o grupo se aproxima do arquivo central.', data: new Date().toISOString() },
+        { id: 'dev-nota-2', titulo: 'Pessoas de interesse', conteudo: 'Verificar o depoimento do vigia e cruzar o horário com as imagens da entrada lateral.', data: new Date(Date.now() - 86400000).toISOString() },
     ];
 
     return dados;
@@ -198,6 +212,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   const localRevisionRef = useRef(0);
   const savedRevisionRef = useRef(0);
   const inFlightSaveRef = useRef(null);
+  const inFlightSavesRef = useRef(new Set());
+  const isDeletingRef = useRef(false);
   
   // Controle de Atualização Remota (IMPORTANTE PARA EVITAR LOOPS)
   const isRemoteUpdate = useRef(false);
@@ -216,6 +232,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
   const saveToFirestore = useCallback(async (dadosCompletos, destino = docRef.current) => {
+    if (isDeletingRef.current) return { ok: false, cancelado: true };
     if (!destino) return { ok: false, semDestino: true };
     try {
         await setDoc(destino, dadosCompletos, { merge: true });
@@ -227,9 +244,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   }, []);
   
   const debouncedSave = useRef(debounce(async (dadosCompletos, destino, revision) => {
+      if (isDeletingRef.current) return { ok: false, cancelado: true };
       const salvamento = saveToFirestore(dadosCompletos, destino);
       inFlightSaveRef.current = salvamento;
+      inFlightSavesRef.current.add(salvamento);
       const resultado = await salvamento;
+      inFlightSavesRef.current.delete(salvamento);
       if (inFlightSaveRef.current === salvamento) inFlightSaveRef.current = null;
       if (resultado.ok && docRef.current === destino) {
           savedRevisionRef.current = Math.max(savedRevisionRef.current, revision);
@@ -275,6 +295,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
     
     const unsubscribe = onSnapshot(destinoAtual, async (docSnap) => {
         if (!assinaturaAtiva) return;
+        if (isDeletingRef.current) return;
 
         try {
             if (docSnap.exists()) {
@@ -334,7 +355,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
 
     return () => {
         assinaturaAtiva = false;
-        const salvamentoPendente = debouncedSave.flush();
+        const salvamentoPendente = isDeletingRef.current ? undefined : debouncedSave.flush();
         salvamentoPendente?.then((resultado) => {
             if (resultado && !resultado.ok && !resultado.semDestino) {
                 console.error("A última alteração da ficha não pôde ser sincronizada.", resultado.error);
@@ -348,6 +369,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   // --- 2. SALVAMENTO OTIMIZADO ---
   useEffect(() => {
       if (devVisualMode) return;
+      if (isDeletingRef.current) return;
       if (!loading && !isInitializing.current) {
           // Se for update remoto, ignora o salvamento
           if (isRemoteUpdate.current) {
@@ -495,25 +517,22 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   }, [aplicarInterludio, showAlert]);
 
   const salvarFichaLocal = useCallback(async () => {
+      if (isDeletingRef.current) return { ok: false, cancelado: true };
       debouncedSave.cancel();
       const destinoAtual = docRef.current;
       const revision = localRevisionRef.current + 1;
       localRevisionRef.current = revision;
       const salvamento = saveToFirestore(personagem, destinoAtual);
       inFlightSaveRef.current = salvamento;
+      inFlightSavesRef.current.add(salvamento);
       const resultado = await salvamento;
+      inFlightSavesRef.current.delete(salvamento);
       if (inFlightSaveRef.current === salvamento) inFlightSaveRef.current = null;
       if (resultado.ok && docRef.current === destinoAtual) {
           savedRevisionRef.current = Math.max(savedRevisionRef.current, revision);
       }
-      if (resultado.ok) {
-        showAlert("Ficha sincronizada com sucesso.", "Salvo");
-      } else if (resultado.semDestino) {
-        showAlert("Esta ficha está em modo local e não possui um destino de sincronização.", "Modo local");
-      } else {
-        showAlert(`Não foi possível sincronizar a ficha: ${resultado.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
-      }
-  }, [saveToFirestore, personagem, showAlert, debouncedSave]);
+      return resultado;
+  }, [saveToFirestore, personagem, debouncedSave]);
 
   const voltarDaFicha = useCallback(async () => {
       const salvamento = debouncedSave.flush() || inFlightSaveRef.current;
@@ -564,52 +583,73 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
       else navigate('/');
   }, [debouncedSave, navigate, onBack, personagem, saveToFirestore, showAlert, showConfirm]);
   
-  const limparFicha = useCallback(async () => { 
+  const excluirFicha = useCallback(async () => {
       if (!podeExcluirFicha) {
           showAlert("Somente o dono pode excluir esta ficha da mesa.", "Ação não permitida");
-          return;
+          return { ok: false, naoPermitido: true };
       }
 
-      const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
+      const destinoExcluido = docRef.current;
+      if (!destinoExcluido) {
+          showAlert("Esta ficha não possui um destino de sincronização disponível para exclusão.", "Exclusão indisponível");
+          return { ok: false, semDestino: true };
+      }
+
+      const confirmado = await showConfirm(
+          "Esta ação exclui permanentemente a ficha. Gere um backup JSON antes de continuar.",
+          "Excluir ficha",
+          "Excluir permanentemente",
+          "Cancelar",
+      );
+      if (!confirmado) return { ok: false, cancelado: true };
+
       if(confirmado) { 
-          const destinoExcluido = docRef.current;
           try {
+            isDeletingRef.current = true;
             debouncedSave.cancel();
-            if (destinoExcluido) await deleteDoc(destinoExcluido);
+            const salvamentosEmAndamento = [...inFlightSavesRef.current];
+            if (salvamentosEmAndamento.length > 0) {
+              const esperaSalvamentos = await aguardarComLimite(
+                Promise.allSettled(salvamentosEmAndamento).then(() => ({ ok: true })),
+              );
+              if (esperaSalvamentos.timeout) {
+                docRef.current = destinoExcluido;
+                isDeletingRef.current = false;
+                showAlert("A exclusão foi cancelada porque uma sincronização anterior ainda não terminou. Aguarde alguns segundos e tente novamente.", "Sincronização pendente");
+                return { ok: false, timeout: true };
+              }
+            }
+            inFlightSaveRef.current = null;
             docRef.current = null;
+            const exclusao = await aguardarComLimite(
+              deleteDoc(destinoExcluido).then(() => ({ ok: true })),
+            );
+            if (exclusao.timeout) {
+              showAlert("A exclusão foi enviada, mas a confirmação está demorando. A ficha permanecerá bloqueada para evitar que seja recriada.", "Exclusão pendente");
+              if (onBack) onBack();
+              else navigate('/');
+              return { ok: false, timeout: true, pendente: true };
+            }
+            if (!exclusao.ok) throw exclusao.error || new Error('Falha ao excluir a ficha.');
             if (onBack) onBack();
             else navigate('/');
+            return { ok: true };
           } catch (error) {
             docRef.current = destinoExcluido;
+            isDeletingRef.current = false;
             showAlert(`Não foi possível confirmar a exclusão: ${error.message}. Recarregue a ficha antes de continuar editando.`, "Erro");
+            return { ok: false, error };
           }
-      } 
+      }
+      return { ok: false, cancelado: true };
   }, [podeExcluirFicha, showConfirm, navigate, showAlert, debouncedSave, onBack]);
-  
-  const exportarFicha = useCallback(() => { 
-      const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); 
-      const url = URL.createObjectURL(blob); 
-      const a = document.createElement("a"); 
-      a.href = url;
-      a.download = `ficha_${personagem.info.nome || "agente"}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [personagem]);
-  
-  // REMOVI A FUNÇÃO 'importarFicha' PARA USAR APENAS O DASHBOARD
 
   // Props de Controles Memoizadas
   const controlesProps = useMemo(() => ({
     temaAtual: tema, 
-    onSave: salvarFichaLocal, 
-    onClear: podeExcluirFicha ? limparFicha : undefined,
-    onExport: exportarFicha, 
-    // onImport removido para evitar conflitos com o Dashboard
     onThemeChange: handleThemeChange, 
     canChangeTheme: isModoMesa && calculados.canChangeTheme
-  }), [tema, salvarFichaLocal, limparFicha, exportarFicha, handleThemeChange, calculados.canChangeTheme, isModoMesa, podeExcluirFicha]);
+  }), [tema, handleThemeChange, calculados.canChangeTheme, isModoMesa]);
 
   // Funções de Abrir Modais Memoizadas
   const openLoja = useCallback(() => setIsLojaOpen(true), []);
@@ -723,19 +763,21 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
           <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} info={personagem.info} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} onAbrirModal={openPoderes} />
         )}
         {abaAtiva === 'progressao' && (
-          <div className="ficha-aba-conteudo active ficha-progressao-view">
-            <button className="btn-add-item btn-criar-trilha" onClick={openTrilha}>+ Criar Trilha</button>
-            <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} />
-          </div>
+          <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} onCriarTrilha={openTrilha} />
         )}
         {abaAtiva === 'diario' && (
           <Diario diarioData={personagem.diario || []} onAbrirModal={openEditNota} onRemoveNota={removeNota} />
         )}
 
-        {abaAtiva === 'exportar' && (
-          <div className="ficha-aba-conteudo active ficha-exportar-view">
-            <ExportFicha personagem={personagem} calculados={calculados} />
-          </div>
+        {abaAtiva === 'configuracoes' && (
+          <ConfiguracoesFicha
+            personagem={personagem}
+            calculados={calculados}
+            onSync={!devVisualMode && usuario && idAlvo ? salvarFichaLocal : undefined}
+            onDelete={!devVisualMode && usuario && idAlvo && podeExcluirFicha ? excluirFicha : undefined}
+            syncEnabled={!devVisualMode && Boolean(usuario && idAlvo)}
+            isModoMesa={isModoMesa}
+          />
         )}
         
         {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={periciasParaLoja} />}

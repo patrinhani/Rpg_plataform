@@ -11,6 +11,7 @@ import {
   calcularStatsItem,
 } from '../lib/inventario.js';
 import { sanitizarParaHTML, sanitizarURLImagem } from '../lib/htmlSeguro.js';
+import { AppIcon } from './icons/NavigationIcons.jsx';
 
 // ------------------------------------------------------------------
 // Helpers
@@ -112,13 +113,15 @@ function gerarHTMLImpressao(personagem, calculados) {
   const progressao = formatarProgressao(info);
   const condicoesExibidas = condicoesEfetivas.length > 0 ? condicoesEfetivas : condicoesAtivas;
 
-  const corTema = {
-    'tema-ordem': '#0091ff',
-    'tema-sangue': '#d40000',
-    'tema-morte': '#e0e0e0',
-    'tema-conhecimento': '#ffeb3b',
-    'tema-energia': '#be29ec',
-  }[info.tema || 'tema-ordem'] || '#0091ff';
+  const paletaImpressao = {
+    'tema-ordem': { clara: '#36a8ff', escura: '#006fbd' },
+    'tema-sangue': { clara: '#ff6b70', escura: '#b4232b' },
+    'tema-morte': { clara: '#e0e0e0', escura: '#3f3f46' },
+    'tema-conhecimento': { clara: '#ffeb3b', escura: '#7a6800' },
+    'tema-energia': { clara: '#dc78f8', escura: '#8b1bb3' },
+  }[info.tema || 'tema-ordem'] || { clara: '#36a8ff', escura: '#006fbd' };
+  const corTema = paletaImpressao.escura;
+  const corTemaClara = paletaImpressao.clara;
 
   const periciasTreinadas = Object.entries(pericias)
     .filter(([, v]) => parseInt(v) >= 5)
@@ -172,7 +175,7 @@ function gerarHTMLImpressao(personagem, calculados) {
     gap: 14px;
     padding: 10px 14px;
     background: #111;
-    border-left: 6px solid ${corTema};
+    border-left: 6px solid ${corTemaClara};
     border-radius: 4px;
     margin-bottom: 12px;
   }
@@ -180,14 +183,14 @@ function gerarHTMLImpressao(personagem, calculados) {
     width: 64px; height: 64px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid ${corTema};
+    border: 3px solid ${corTemaClara};
     flex-shrink: 0;
   }
   .header-foto-placeholder {
     width: 64px; height: 64px;
     border-radius: 50%;
     background: #333;
-    border: 3px solid ${corTema};
+    border: 3px solid ${corTemaClara};
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
     flex-shrink: 0;
@@ -195,7 +198,7 @@ function gerarHTMLImpressao(personagem, calculados) {
   .header-nome {
     font-family: 'Special Elite', monospace;
     font-size: 20pt;
-    color: ${corTema};
+    color: ${corTemaClara};
     letter-spacing: 1px;
     line-height: 1;
   }
@@ -209,7 +212,7 @@ function gerarHTMLImpressao(personagem, calculados) {
     margin-left: auto;
     font-family: 'Special Elite', monospace;
     font-size: 24pt;
-    color: ${corTema};
+    color: ${corTemaClara};
     text-align: right;
     line-height: 1;
   }
@@ -264,7 +267,7 @@ function gerarHTMLImpressao(personagem, calculados) {
   /* ---- Atributo ---- */
   .attr-card {
     background: #111;
-    border-left: 4px solid ${corTema};
+    border-left: 4px solid ${corTemaClara};
     border-radius: 4px;
     padding: 5px 8px;
     display: flex;
@@ -272,7 +275,7 @@ function gerarHTMLImpressao(personagem, calculados) {
     align-items: center;
   }
   .attr-nome { font-family: 'Special Elite', monospace; color: #aaa; font-size: 8.5pt; }
-  .attr-val { font-size: 14pt; font-weight: 700; color: ${corTema}; }
+  .attr-val { font-size: 14pt; font-weight: 700; color: ${corTemaClara}; }
 
   /* ---- Tabela de perícias ---- */
   .tabela-pericias {
@@ -283,7 +286,7 @@ function gerarHTMLImpressao(personagem, calculados) {
   .tabela-pericias th {
     font-family: 'Special Elite', monospace;
     background: #111;
-    color: ${corTema};
+    color: ${corTemaClara};
     padding: 3px 6px;
     text-align: left;
     font-size: 8pt;
@@ -317,7 +320,7 @@ function gerarHTMLImpressao(personagem, calculados) {
   .item-detalhe { color: #555; font-size: 8pt; }
   .item-tag {
     background: ${corTema}22;
-    color: ${corTema === '#ffeb3b' ? '#7a6800' : corTema};
+    color: ${corTema};
     border-radius: 3px;
     padding: 0 4px;
     font-size: 7.5pt;
@@ -600,98 +603,43 @@ export default function ExportFicha({ personagem, calculados }) {
   const nome = personagem?.info?.nome || 'Agente';
 
   return (
-    <div className="export-ficha-container" style={{
-      background: 'var(--cor-caixa)',
-      border: '1px solid var(--cor-borda)',
-      borderRadius: '8px',
-      padding: '20px',
-    }}>
-      <h2 style={{ marginBottom: '8px' }}>Exportar Ficha</h2>
-
-      <p style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '20px' }}>
-        Baixe a ficha de <strong style={{ color: 'var(--cor-destaque)' }}>{nome}</strong> como arquivo JSON para backup ou como PDF para impressão.
-      </p>
-
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        {/* Botão JSON */}
+    <div className="settings-backup-controls">
+      <div className="settings-action-stack">
         <button
           type="button"
           onClick={handleExportJSON}
-          className="export-ficha-action export-ficha-action--primary"
-          style={{
-            flex: 1,
-            minWidth: '180px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            fontSize: '0.95em',
-          }}
+          className="settings-action settings-action--primary"
         >
-          <span aria-hidden="true" style={{ fontSize: '1.2em' }}>📦</span>
-          Baixar JSON
+          <AppIcon name="export" size={18} />
+          Baixar backup JSON
         </button>
-
-        {/* Botão PDF */}
         <button
           type="button"
           onClick={handleExportPDF}
-          className="export-ficha-action export-ficha-action--secondary"
-          style={{
-            flex: 1,
-            minWidth: '180px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            fontSize: '0.95em',
-            border: '1px solid var(--cor-borda)',
-            color: 'var(--cor-destaque)',
-            background: 'transparent',
-          }}
+          className="settings-action"
         >
-          <span aria-hidden="true" style={{ fontSize: '1.2em' }}>🖨️</span>
+          <AppIcon name="print" size={18} />
           Imprimir / Salvar PDF
         </button>
       </div>
 
-      {/* Feedback */}
       {status && (
         <div
+          className={`settings-backup-feedback settings-backup-feedback--${status}`}
           role={status === 'erro' || status === 'popup' ? 'alert' : 'status'}
           aria-live={status === 'erro' || status === 'popup' ? 'assertive' : 'polite'}
           aria-atomic="true"
-          style={{
-          marginTop: '14px',
-          padding: '10px 14px',
-          borderRadius: '6px',
-          fontSize: '0.88em',
-          background: status === 'erro' || status === 'popup' ? 'rgba(180,0,0,0.15)' : 'rgba(0,145,80,0.12)',
-          border: `1px solid ${status === 'erro' || status === 'popup' ? '#d40000' : '#22c55e'}`,
-          color: status === 'erro' || status === 'popup' ? '#ff6b6b' : '#4ade80',
-        }}
         >
-          {status === 'json' && '✅ JSON baixado com sucesso! Guarde o arquivo para backup.'}
-          {status === 'pdf' && '🖨️ Janela de impressão aberta. Use "Salvar como PDF" no seu navegador.'}
+          {status === 'json' && `Backup de ${nome} baixado com sucesso.`}
+          {status === 'pdf' && 'Janela de impressão aberta. Use “Salvar como PDF” no navegador.'}
           {status === 'popup' && 'Permita pop-ups para este site e tente gerar o PDF novamente.'}
-          {status === 'erro' && '❌ Erro ao exportar. Tente novamente ou verifique o console.'}
+          {status === 'erro' && 'Erro ao exportar. Tente novamente.'}
         </div>
       )}
 
-      {/* Dica PDF */}
-      <div style={{
-        marginTop: '16px',
-        padding: '10px 14px',
-        background: 'rgba(255,255,255,0.04)',
-        borderRadius: '6px',
-        fontSize: '0.82em',
-        color: '#888',
-        lineHeight: '1.5',
-      }}>
-        <strong style={{ color: '#aaa' }}>💡 Dica para PDF:</strong> Na janela de impressão, selecione <em>"Salvar como PDF"</em> como destino, ative <em>"Gráficos em segundo plano"</em> para manter as cores do tema e escolha papel A4.
-      </div>
+      <span className="settings-inline-note">
+        Na impressão, ative “Gráficos em segundo plano” para preservar as cores do tema.
+      </span>
     </div>
   );
 }
