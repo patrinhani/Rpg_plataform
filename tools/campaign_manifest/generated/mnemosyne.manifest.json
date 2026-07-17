@@ -1,0 +1,1364 @@
+{
+  "schemaVersion": 2,
+  "generator": {
+    "name": "caos-campaign-manifest",
+    "version": "1.1.0"
+  },
+  "campaign": {
+    "id": "mnemosyne",
+    "title": "Projeto Mnemosyne",
+    "sourceRef": "mnemosyne",
+    "sourceMode": "external-read-only"
+  },
+  "summary": {
+    "assetCount": 49,
+    "documentCount": 21,
+    "sceneCount": 4,
+    "stateGroupCount": 4,
+    "totalAssetBytes": 98044340,
+    "warningCount": 18,
+    "sourceFingerprint": "dd7309fd22266d729389f87cf61da1066fe31d080d1f0e93162359864aeefa14"
+  },
+  "assets": [
+    {
+      "id": "asset:assets/conceitos-visuais/eco-indexador-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/eco-indexador-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1709920,
+      "sha256": "dd086ab5ff45c24bdbeedd85db50f0bbf101958679f23c5be89afed8a2b8b401",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1024,
+        "height": 1536,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/helena-vasconcelos-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/helena-vasconcelos-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3178152,
+      "sha256": "61ba42f204ab30f2502f73939d7bf01ceabb0331fd734cfb98fea6d46c25cb8b",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 941,
+        "height": 1672,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/helix-9/helix-9-camara-palindromo-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/helix-9/helix-9-camara-palindromo-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3351536,
+      "sha256": "621afb53f24de08619387231224a1527f10acf749d276e5a1f260cdaf3b26515",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/helix-9/helix-9-exterior-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/helix-9/helix-9-exterior-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3405700,
+      "sha256": "e7884b8200f1fb475b23c917011c98c4bbcd37ce5ee68a510c9a373975c73d57",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/helix-9/helix-9-interiores-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/helix-9/helix-9-interiores-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2874432,
+      "sha256": "520a2be76d0623ce239a2e690ff6f8c2e17cececa0c8492377e9ca100ab3e116",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1635,
+        "height": 962,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/otavio-leme-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/otavio-leme-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3182132,
+      "sha256": "4747476510f8c18ec06b766ef4b2006e1e4da21551ecfcfa475fc4f3ddc9df57",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 941,
+        "height": 1672,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/raul-moreira-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/raul-moreira-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3164696,
+      "sha256": "26dff2a7706c10a82ba463bdb05b096304febf1b750f2724c82372c1d6a242d9",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 941,
+        "height": 1672,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/repetente-palindromo-concept-v1.png",
+      "relativePath": "assets/conceitos-visuais/repetente-palindromo-concept-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1971195,
+      "sha256": "6cfdfde22c263e98f8a89f1ddf841161726fdebc0699e5b0183f7037c2536546",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 864,
+        "height": 1821,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/salao-vazio-v1.png",
+      "relativePath": "assets/conceitos-visuais/salao-vazio-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2499089,
+      "sha256": "7920252d3f2be59e67bc41b9efc0b119521fb17f70f02b1f1f541ccdd3bd00c2",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/salao-vazio-v2.png",
+      "relativePath": "assets/conceitos-visuais/salao-vazio-v2.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3050416,
+      "sha256": "f07d16976a54fe8ef2714f0bbc99360b89e25ed3130145a305db9fd062c41a5d",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/salao-vazio-v3.png",
+      "relativePath": "assets/conceitos-visuais/salao-vazio-v3.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3246609,
+      "sha256": "0321c11a10179bbe231a3d53f03622cd4c8bb45cff0a25de856e1b66ae7e0f7f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/salao-vazio-v4.png",
+      "relativePath": "assets/conceitos-visuais/salao-vazio-v4.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 3701113,
+      "sha256": "51d8a4eaa3cf5b081041bd781de3602cbfded67dce158761b62e512591e3731f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/vertice-simbolos-corporativo-v1.png",
+      "relativePath": "assets/conceitos-visuais/vertice-simbolos-corporativo-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1542539,
+      "sha256": "e20d12efc5b799ddc6338c718eeafd2061a1e82309ac1bdf58f87405e90901fe",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/conceitos-visuais/vertice-simbolos-ritual-v1.png",
+      "relativePath": "assets/conceitos-visuais/vertice-simbolos-ritual-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1040200,
+      "sha256": "76c556cd269c64203fe328ccc865d1c19eedcf0c0c58c02eb5ec66b5a0250922",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2513320,
+      "sha256": "d75e36618da28089f0286b2f4700397ad3995da11d2636e7b29b003d2ac85548",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2394633,
+      "sha256": "dbc5bde43e310f1470aea5b1f56560a36c4a6aebfcb90ad7eef775e55a1a93bb",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2881729,
+      "sha256": "c52f28a6ff644b3d3de7c10777fe81b06de81ef0cf2b150f657082249570fc22",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 571908,
+      "sha256": "45e5802ef031cb17b0894c130200ff78d39a59718bf696f2e7787e5488a4b8ef",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v1.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 96719,
+      "sha256": "2b6168b29b444e9d02cc693670b51d0157a82f6f5e659cc143c4c463585e6c96",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 962744,
+      "sha256": "397ea6f1626205c48369c1c7da78a3266a5b0b7245e037350eb24091d32e8392",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v1.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 270467,
+      "sha256": "6ef8dfdb536c8912eaa63ea51cfba9d7728fd8080f0ec89ad3e6443c8fdc03f0",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2867703,
+      "sha256": "f6f2249adfbabd7e0f9d7546b6d0093ff9372d2b5a7861e61576a6e9827ecfe9",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2500886,
+      "sha256": "cf389474f0b83ecce49db17933dd6be3905a4c848265b3f5591af9c7692cc6f0",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2998616,
+      "sha256": "146b214548273fb50068e92e193aaf3982701a0bf024cbd09cc1321104a7e9cd",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v1.png",
+      "relativePath": "assets/mapas/salao-vazio-battlemap-vtt-v1.png",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 3161776,
+      "sha256": "b9746610600f6ecf4452813b654e6c3ee2e7b9ff7697b5aeb6f3527218333eee",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v2.png",
+      "relativePath": "assets/mapas/salao-vazio-battlemap-vtt-v2.png",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 3084576,
+      "sha256": "118691b8143d23ec8d6f00ea59d7cd974fe74c5cf4b33523a0530edf62c98889",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1268308,
+      "sha256": "d3bbc119ad99c73c9847eae9b2933b33d8a18586f3908c7e9ffffcf13b9f3848",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1492476,
+      "sha256": "e0d82fc39bae8c274df1f55c9711c9a968333e012b6a519b8bddc1098721a235",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2229059,
+      "sha256": "8cd8b9df5c7ba307477e54a2d1e9c0358b4d90b8e54cc351b7a00da5271cd0da",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1952942,
+      "sha256": "96981c006458f6b8c08a990d36bf070d37169c727c35a9ec69cbf7353a557e8f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1664499,
+      "sha256": "43477682117afdf9810d6eaf8c09593c0257756cb7266d05e065f4cfe573d6db",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1459483,
+      "sha256": "7259b4f46ad350095f0686f500974bc19a56d86c16381b3f2022aac50d3ac257",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1569902,
+      "sha256": "f072a58c72af8808ad1a7c615de4982f88b4be5d59b4dafc82a7683742d5ee79",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1438908,
+      "sha256": "986999abcc0753ce4fde975b7e5fede6a7f7f3deff7837206f6a9eec2835c603",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/Imagem 1 gerada.png",
+      "relativePath": "assets/simbolos/Imagem 1 gerada.png",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 2343299,
+      "sha256": "d30e4fa327f739c65f1bda4493cab6a22a2cbf03cdf8d582530746ff8af7a9ef",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1661,
+        "height": 947,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-quinta-peca-geracao-v1.png",
+      "relativePath": "assets/simbolos/vertice-quinta-peca-geracao-v1.png",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 1585764,
+      "sha256": "548d73c36cc1500e98277263e2e9ce23f8b20c1a9a426a224fa9aada0e2218af",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1536,
+        "height": 1024,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-elemental-v4.png",
+      "relativePath": "assets/simbolos/vertice-sistema-elemental-v4.png",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 638089,
+      "sha256": "e9e8d0eafd4a68d8118ee3a9915b56fa46b3ce8aed62abf7462887751c871e8a",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1600,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-elemental-v4.svg",
+      "relativePath": "assets/simbolos/vertice-sistema-elemental-v4.svg",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 11184,
+      "sha256": "9cb3ac1db416304e15530340b1f261c9a4fda91a96e0a768451a9ff6f5a33aa4",
+      "mediaType": "image/svg+xml",
+      "image": {
+        "format": "svg",
+        "viewBox": "0 0 1800 1600",
+        "title": "Sistema elemental v4 dos simbolos da Vertice",
+        "description": "Estudo dos quatro simbolos hibridos da Vertice baseado nos gestos visuais de Sangue, Morte, Energia e Conhecimento. As quatro marcas formam uma Sintese circular, incompleta e marcada por falhas de confluencia.",
+        "hasAlpha": true
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-fratura-v2.png",
+      "relativePath": "assets/simbolos/vertice-sistema-fratura-v2.png",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 95537,
+      "sha256": "aade4795346981c5b662bf12f0809b188018c1526ffd3cde3292f5919f585827",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1100,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-fratura-v2.svg",
+      "relativePath": "assets/simbolos/vertice-sistema-fratura-v2.svg",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 4335,
+      "sha256": "b9a045ca3a4ac9410e057d14afebc8d02c07ca4da201acf849da97629de4cc14",
+      "mediaType": "image/svg+xml",
+      "image": {
+        "format": "svg",
+        "viewBox": "0 0 1600 1100",
+        "title": "Sistema de fratura dos símbolos da Vértice",
+        "description": "Uma marca integral de Síntese dividida em quatro fragmentos exatos: Túmulo, Oráculo, Colapso e Sigilo.",
+        "hasAlpha": true
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-fratura-v3.png",
+      "relativePath": "assets/simbolos/vertice-sistema-fratura-v3.png",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 99572,
+      "sha256": "b09caad42ce784f0c7cb552a5fde59c2f20db72dd9ad0ba57b77c0eca787f9df",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1100,
+        "hasAlpha": false,
+        "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/simbolos/vertice-sistema-fratura-v3.svg",
+      "relativePath": "assets/simbolos/vertice-sistema-fratura-v3.svg",
+      "kind": "symbol",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5154,
+      "sha256": "5a127b5b3d6fc3d93886040d5d72c14c89ea2b1b899e357ab5e70929afd7547c",
+      "mediaType": "image/svg+xml",
+      "image": {
+        "format": "svg",
+        "viewBox": "0 0 1600 1100",
+        "title": "Sistema assimétrico dos símbolos da Vértice",
+        "description": "Uma única marca de Síntese cortada em quatro fragmentos diferentes que se recompõem sem alterações.",
+        "hasAlpha": true
+      }
+    },
+    {
+      "id": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "relativePath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1220682,
+      "sha256": "b6e278f27b275c7b1116513ca6a7487cc9f7c16a8c321a6a3401530e2c9d7017",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
+      "relativePath": "assets/tokens/eco-indexador-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2806749,
+      "sha256": "ec539dc309e659753735aac1735dbbd4d274ea4db751d41e4fa9fca69c5b7437",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
+      "relativePath": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2899253,
+      "sha256": "2531e74ff2b60cba99a22ab9e95737bc55ed37bcdef375ab529ae6d749021c22",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "relativePath": "assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2711684,
+      "sha256": "12fdda8fabf3ad163f3e03f99b727af9257c49c2f7f542a31c2ef07ae0fbd82b",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
+      "relativePath": "assets/tokens/otavio-leme-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2756430,
+      "sha256": "62ea214ee2396b49fb851f49af3d8b1cbe72d527c21f18241a7af561b3ffd4b9",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
+      "relativePath": "assets/tokens/raul-moreira-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2936207,
+      "sha256": "dc16290cc313e619560b01d58f162131fd27750431abb23e381996e4689a9960",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png",
+      "relativePath": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2632018,
+      "sha256": "1a1b2c26870248c3e87e1b0e51df727e3e0971376a8725a888f84955aa5bdac1",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    }
+  ],
+  "documents": [
+    {
+      "id": "document:CONTEXTO_CODEX",
+      "relativePath": "CONTEXTO_CODEX.md",
+      "title": "Contexto para continuar com Codex",
+      "audienceHint": "gm",
+      "bytes": 7722,
+      "sha256": "79a79c3737a83d74fcf723db71e0e87f890f8adf144254c7513cc2e73578d71f",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:README",
+      "relativePath": "README.md",
+      "title": "Projeto Mnemosyne",
+      "audienceHint": "unspecified",
+      "bytes": 3452,
+      "sha256": "c2d27a75bdef927a2ff5d81804ac1915a67493bc57536a7df7296533a36ff31f",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/arcos-futuros",
+      "relativePath": "docs/arcos-futuros.md",
+      "title": "Arcos futuros",
+      "audienceHint": "gm",
+      "bytes": 2942,
+      "sha256": "9cdf35568e5ad1695e5a269ecc0bd4e6d13903236dc9d1c29c6180b4e6a2eb59",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/biblia-da-campanha",
+      "relativePath": "docs/biblia-da-campanha.md",
+      "title": "Bíblia da campanha",
+      "audienceHint": "gm",
+      "bytes": 6307,
+      "sha256": "fd49c2cc4ec457f1ceb9ee456fde8c502ffe6506874fc28cec5c949a9da0da0b",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/direcao-de-arte",
+      "relativePath": "docs/direcao-de-arte.md",
+      "title": "Direção de arte",
+      "audienceHint": "unspecified",
+      "bytes": 7252,
+      "sha256": "16f9c78fa1de81f15e7b8bedc469a764109708b982b4e83baf226cf18dedefd5",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/faccoes",
+      "relativePath": "docs/faccoes.md",
+      "title": "Facções",
+      "audienceHint": "gm",
+      "bytes": 5263,
+      "sha256": "3fb0124cc5d46c538ba2097549e2237a134da47432b7a49f42957df12656a560",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/identidade-visual-vertice",
+      "relativePath": "docs/identidade-visual-vertice.md",
+      "title": "Identidade visual da Vértice",
+      "audienceHint": "unspecified",
+      "bytes": 11898,
+      "sha256": "cd1b402625821a5d310eca7330e97a4b29b4e32d13e4ed1758b05324f8865115",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/linhas-da-vertice",
+      "relativePath": "docs/linhas-da-vertice.md",
+      "title": "As Linhas da Vértice",
+      "audienceHint": "unspecified",
+      "bytes": 6974,
+      "sha256": "a1730717a0ba6e418430cb5dabe94d313666dd196fb3920f50d8b5e08d23a654",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/mecanicas-ponte",
+      "relativePath": "docs/mecanicas-ponte.md",
+      "title": "Mecânicas ponte",
+      "audienceHint": "unspecified",
+      "bytes": 3901,
+      "sha256": "3976fd462990f388109c2f47f0e624f5bb88e3c9fed53e09dfb618be93969772",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/one-shot-01-criaturas-e-encontros",
+      "relativePath": "docs/one-shot-01-criaturas-e-encontros.md",
+      "title": "One-shot 01: criaturas e encontros",
+      "audienceHint": "gm",
+      "bytes": 15698,
+      "sha256": "0ed49b6d4aa5fcde294ef4f5b1448070edff093f73b7be95e8b6beca47d5fa1a",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/one-shot-01-memoria-corrompida",
+      "relativePath": "docs/one-shot-01-memoria-corrompida.md",
+      "title": "One-shot 01: Memória Corrompida",
+      "audienceHint": "gm",
+      "bytes": 17466,
+      "sha256": "e74d9ca2b998ecc3aa5b7da96ce233f0907cbc8fa232adb1ae60a9973a91bd88",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/one-shot-01-npcs-e-locais",
+      "relativePath": "docs/one-shot-01-npcs-e-locais.md",
+      "title": "One-shot 01: NPCs e locais",
+      "audienceHint": "gm",
+      "bytes": 18125,
+      "sha256": "f340aa04eb6bb1d7ac99f2a18dfa92fbaaa97c64490cdb45d8db489b0548ee92",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/one-shot-01-pistas-e-handouts",
+      "relativePath": "docs/one-shot-01-pistas-e-handouts.md",
+      "title": "One-shot 01: pistas e handouts",
+      "audienceHint": "gm",
+      "bytes": 9403,
+      "sha256": "3d5b79bbacd1e93802175f46c8281fe13501423c2ed4157ca7976516267eee00",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/opcoes-de-nomes",
+      "relativePath": "docs/opcoes-de-nomes.md",
+      "title": "Registro da escolha de nomes",
+      "audienceHint": "unspecified",
+      "bytes": 3663,
+      "sha256": "37527a632b3b12bef726ffa8749bcc5d9fc5dfc5ba01e4e7d20c12b3aa3509b7",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/personagens",
+      "relativePath": "docs/personagens.md",
+      "title": "Personagens",
+      "audienceHint": "gm",
+      "bytes": 2836,
+      "sha256": "d2db99e7b51dfe01c258f8423d55614f49a862a1b9041445e6a54de3b5b27bbb",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/prompts/salao-vazio",
+      "relativePath": "docs/prompts/salao-vazio.md",
+      "title": "Prompts do Salão Vazio",
+      "audienceHint": "gm",
+      "bytes": 5220,
+      "sha256": "f4322dfeeffbfae3e761641ac387464be4bfd1868c7e5f184595ae15ef04fbec",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/prompts/simbolos-vertice-quinta-peca",
+      "relativePath": "docs/prompts/simbolos-vertice-quinta-peca.md",
+      "title": "Prompt — símbolos da Vértice e a quinta peça",
+      "audienceHint": "gm",
+      "bytes": 6039,
+      "sha256": "4d42b4ec9c5ac351bbeabf4fd8dd87f5be4238f1e65d0dfb8f96be99304a3779",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/publicacao",
+      "relativePath": "docs/publicacao.md",
+      "title": "Publicação do repositório",
+      "audienceHint": "unspecified",
+      "bytes": 1495,
+      "sha256": "c3f28e20c398df97a47e75c14c762997de04ab6d7a64c05232566f448663e8eb",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/vertice",
+      "relativePath": "docs/vertice.md",
+      "title": "Vértice",
+      "audienceHint": "unspecified",
+      "bytes": 7690,
+      "sha256": "e38b2dc3c87882b9ee2e311a7921aeb9e0b19ddccadfd6d6deea93826cb91852",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:templates/memoria",
+      "relativePath": "templates/memoria.md",
+      "title": "Memória: Título",
+      "audienceHint": "unspecified",
+      "bytes": 749,
+      "sha256": "ec183bb32a3cc23d07b40f32d3088efb01084b5099ceb39f2c68371f5a3768cc",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:templates/sessao",
+      "relativePath": "templates/sessao.md",
+      "title": "Sessão X: Título",
+      "audienceHint": "unspecified",
+      "bytes": 853,
+      "sha256": "13ecef153b7343c58d7f78077405e52062306813ea43361c47ff0ebfa118c18c",
+      "encoding": "utf-8"
+    }
+  ],
+  "collections": {
+    "scenes": [
+      {
+        "id": "scene:helix-9-nivel-0",
+        "key": "helix-9-nivel-0",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
+        "gridHint": null
+      },
+      {
+        "id": "scene:helix-9-subsolo-1",
+        "key": "helix-9-subsolo-1",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
+        "gridHint": null
+      },
+      {
+        "id": "scene:helix-9-subsolo-2-camara",
+        "key": "helix-9-subsolo-2-camara",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
+            "version": 1
+          }
+        ],
+        "overlays": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
+            "name": "eletrificacao",
+            "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v1.png",
+            "name": "fragmento-removido",
+            "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
+            "name": "inundacao",
+            "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v1.png",
+            "name": "telas-quebradas",
+            "version": 1
+          }
+        ],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
+        "gridHint": null
+      },
+      {
+        "id": "scene:salao-vazio",
+        "key": "salao-vazio",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v1.png",
+            "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v2.png",
+            "version": 2
+          }
+        ],
+        "gmGuideMaps": [],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v2.png",
+        "activeGmGuideMap": null,
+        "gridHint": {
+          "type": "square",
+          "columns": 28,
+          "rows": 28,
+          "source": "campaign-documentation"
+        }
+      }
+    ],
+    "stateGroups": [
+      {
+        "id": "state-group:emissor-sincronia",
+        "key": "emissor-sincronia",
+        "states": {
+          "ativo": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          },
+          "desativado": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "state-group:fragmento-mnemosyne",
+        "key": "fragmento-mnemosyne",
+        "states": {
+          "recuperado": {
+            "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          },
+          "ritual": {
+            "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "state-group:malha-mnemonica",
+        "key": "malha-mnemonica",
+        "states": {
+          "ativo": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          },
+          "desativado": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "state-group:rele-hematico",
+        "key": "rele-hematico",
+        "states": {
+          "ativo": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          },
+          "desativado": {
+            "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+            "version": 1,
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "tokenAssetIds": [
+      "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
+      "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
+      "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
+      "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
+      "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
+    ]
+  },
+  "warnings": [
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/eco-indexador-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/otavio-leme-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/raul-moreira-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "runtime-derivative-recommended",
+      "path": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
+      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-nivel-0",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-subsolo-1",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-subsolo-2-camara",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    }
+  ]
+}
