@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python / backend VTT
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv-vtt/
+server/.env
+server/data/
+server/build/
+server/dist/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Binarios portateis obtidos durante o empacotamento
+tools/cloudflared.exe

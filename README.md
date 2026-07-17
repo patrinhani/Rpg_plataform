@@ -16,12 +16,27 @@ O projeto auxilia nos cálculos e no acompanhamento da ficha, mas as rolagens s�
 
 ## Desenvolvimento
 
-Requisitos: Node.js e npm.
+Requisitos: Node.js 20.19+ (ou 22.12+) com npm e Python 3.10+.
 
-```bash
-npm install
-npm run dev
+No Windows, o bootstrap instala as dependências do frontend, cria `.venv-vtt` e instala as dependências do backend sem exigir privilégios de administrador:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-dev.ps1
 ```
+
+Se o frontend já estiver instalado e em execução, use `-SkipFrontend` para preparar somente o ambiente Python sem interromper o Vite.
+
+Depois, abra dois terminais na raiz do projeto:
+
+```powershell
+# Terminal 1 — frontend em http://localhost:5173
+npm run dev
+
+# Terminal 2 — backend na porta 8765
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1
+```
+
+O script do backend executa `python -m caos_vtt` a partir de `server/`. Ele gera um host token temporário, mostra o valor no terminal e não grava o segredo em disco. Use `-Port 9000` para trocar a porta ou `-AllowedOrigins "https://seu-app.vercel.app"` para autorizar outro frontend.
 
 Comandos de verificação:
 
