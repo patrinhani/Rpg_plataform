@@ -36,7 +36,6 @@ export default function BackgroundDinamico() {
   }, []);
 
   useEffect(() => {
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let movimentoDesativado = false;
 
     const aplicarOffset = () => {
@@ -57,8 +56,7 @@ export default function BackgroundDinamico() {
     };
 
     const atualizarPreferenciaDeMovimento = () => {
-      const deveDesativar = reducedMotionQuery.matches
-        || document.body.classList.contains('modo-economia');
+      const deveDesativar = document.body.classList.contains('modo-economia');
 
       if (deveDesativar === movimentoDesativado) return;
       movimentoDesativado = deveDesativar;
@@ -99,11 +97,6 @@ export default function BackgroundDinamico() {
       attributeFilter: ['class'],
     });
 
-    if (reducedMotionQuery.addEventListener) {
-      reducedMotionQuery.addEventListener('change', atualizarPreferenciaDeMovimento);
-    } else {
-      reducedMotionQuery.addListener?.(atualizarPreferenciaDeMovimento);
-    }
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('deviceorientation', handleOrientation, { passive: true });
 
@@ -115,11 +108,6 @@ export default function BackgroundDinamico() {
         frameRef.current = null;
       }
       bodyObserver.disconnect();
-      if (reducedMotionQuery.removeEventListener) {
-        reducedMotionQuery.removeEventListener('change', atualizarPreferenciaDeMovimento);
-      } else {
-        reducedMotionQuery.removeListener?.(atualizarPreferenciaDeMovimento);
-      }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('deviceorientation', handleOrientation);
     };

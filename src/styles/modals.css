@@ -363,13 +363,6 @@ body.caos-modal-open {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .caos-modal,
-  .caos-modal__panel {
-    animation: none !important;
-  }
-}
-
 body.modo-economia .caos-modal {
   backdrop-filter: none;
 }

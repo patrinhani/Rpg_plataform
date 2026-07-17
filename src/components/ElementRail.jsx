@@ -165,12 +165,6 @@ const estilos = `
       max-width: 64px;
     }
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .element-rail__control {
-      transition: none;
-    }
-  }
 `;
 
 function ElementItem({ tema, ativo, interativo, habilitado, onSelect }) {
