@@ -2,17 +2,51 @@ from __future__ import annotations
 
 import json
 import secrets
+from collections.abc import Iterator
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    APIRouter,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from pydantic import ValidationError
+from starlette.concurrency import run_in_threadpool
+from starlette.responses import StreamingResponse
 
+from .campaign import CampaignCatalogError, OpenedAsset
 from .config import Settings
-from .models import CreateRoomRequest, CreateRoomResponse, MoveCommand, PingCommand, TicketResponse
+from .models import (
+    CreateRoomRequest,
+    CreateRoomResponse,
+    MoveCommand,
+    OverlaySetCommand,
+    PingCommand,
+    SceneSelectCommand,
+    TicketResponse,
+    TokenRemoveCommand,
+    TokenSpawnCommand,
+)
 from .service import PROTOCOL_VERSION, ClientConnection, VTTService
 
 
 MAX_WS_MESSAGE_BYTES = 16 * 1024
+ASSET_STREAM_CHUNK_BYTES = 64 * 1024
+SAFE_ASSET_MEDIA_TYPES = frozenset(
+    {
+        "image/avif",
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/svg+xml",
+        "image/webp",
+    }
+)
 
 
 def _bearer_token(authorization: str | None) -> str | None:
@@ -43,6 +77,18 @@ def _error(code: str, message: str, *, command_id: str | None = None) -> dict[st
     return payload
 
 
+def _asset_not_found() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset nao encontrado")
+
+
+def _stream_asset(opened: OpenedAsset) -> Iterator[bytes]:
+    try:
+        while chunk := opened.stream.read(ASSET_STREAM_CHUNK_BYTES):
+            yield chunk
+    finally:
+        opened.close()
+
+
 def create_router() -> APIRouter:
     router = APIRouter()
 
@@ -50,7 +96,11 @@ def create_router() -> APIRouter:
     async def health() -> dict[str, Any]:
         return {"status": "ok", "protocolVersion": PROTOCOL_VERSION}
 
-    @router.post("/api/vtt/rooms", response_model=CreateRoomResponse, status_code=status.HTTP_201_CREATED)
+    @router.post(
+        "/api/vtt/rooms",
+        response_model=CreateRoomResponse,
+        status_code=status.HTTP_201_CREATED,
+    )
     async def create_room(
         payload: CreateRoomRequest,
         request: Request,
@@ -89,15 +139,59 @@ def create_router() -> APIRouter:
         result = await service.issue_ticket(room_id, invite_token)
         if result is None:
             if not service.room_exists(room_id):
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sala nao encontrada")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Sala nao encontrada",
+                )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invite token invalido",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        ticket, role = result
-        settings: Settings = request.app.state.settings
-        return TicketResponse(ticket=ticket, role=role, expiresIn=settings.ticket_ttl_seconds)
+        return TicketResponse(
+            ticket=result.ticket,
+            role=result.role,
+            expiresIn=result.ticket_expires_in,
+            mediaToken=result.media_token,
+            mediaExpiresIn=result.media_expires_in,
+        )
+
+    @router.get("/api/vtt/rooms/{room_id}/assets")
+    async def get_asset(
+        room_id: str,
+        request: Request,
+        asset_id: Annotated[
+            str,
+            Query(alias="assetId", min_length=7, max_length=2048),
+        ],
+        access: Annotated[str, Query(min_length=16, max_length=256)],
+    ) -> StreamingResponse:
+        service: VTTService = request.app.state.vtt
+        catalog = service.catalog
+        grant = await service.validate_media_grant(room_id, access)
+        if catalog is None or grant is None:
+            raise _asset_not_found()
+        try:
+            opened = await run_in_threadpool(catalog.open_asset, asset_id, grant.role)
+        except CampaignCatalogError:
+            raise _asset_not_found() from None
+
+        declared_media_type = opened.asset.media_type.lower()
+        media_type = (
+            declared_media_type
+            if declared_media_type in SAFE_ASSET_MEDIA_TYPES
+            else "application/octet-stream"
+        )
+        return StreamingResponse(
+            _stream_asset(opened),
+            media_type=media_type,
+            headers={
+                "Cache-Control": "no-store, private",
+                "Content-Length": str(opened.size),
+                "Content-Security-Policy": "default-src 'none'; sandbox",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
 
     @router.websocket("/ws/vtt/rooms/{room_id}")
     async def room_socket(
@@ -177,11 +271,51 @@ async def _handle_socket_message(
                 _error("invalid_token_move", "Comando token.move invalido", command_id=command_id)
             )
             return
-        event = await service.move_token(room_id, connection, command)
-        if event is None:
+        if service.has_catalog:
+            failure = await service.execute_catalog_command(room_id, connection, command)
+            if failure is not None:
+                await connection.send(
+                    _error(failure.code, failure.message, command_id=command.commandId)
+                )
+        else:
+            event = await service.move_token(room_id, connection, command)
+            if event is None:
+                await connection.send(
+                    _error(
+                        "token_not_found",
+                        "Token nao encontrado",
+                        command_id=command.commandId,
+                    )
+                )
+        return
+
+    catalog_commands = {
+        "scene.select": (SceneSelectCommand, "invalid_scene_select"),
+        "overlay.set": (OverlaySetCommand, "invalid_overlay_set"),
+        "token.spawn": (TokenSpawnCommand, "invalid_token_spawn"),
+        "token.remove": (TokenRemoveCommand, "invalid_token_remove"),
+    }
+    command_definition = catalog_commands.get(message_type)
+    if command_definition is not None and service.has_catalog:
+        command_model, invalid_code = command_definition
+        try:
+            command = command_model.model_validate(data)
+        except ValidationError:
             await connection.send(
-                _error("token_not_found", "Token nao encontrado", command_id=command.commandId)
+                _error(invalid_code, f"Comando {message_type} invalido", command_id=command_id)
+            )
+            return
+        failure = await service.execute_catalog_command(room_id, connection, command)
+        if failure is not None:
+            await connection.send(
+                _error(failure.code, failure.message, command_id=command.commandId)
             )
         return
 
-    await connection.send(_error("unknown_message_type", "Tipo de mensagem desconhecido", command_id=command_id))
+    await connection.send(
+        _error(
+            "unknown_message_type",
+            "Tipo de mensagem desconhecido",
+            command_id=command_id,
+        )
+    )
