@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 .artifacts/
 .build/
+.cache/
 *.py[cod]
 *.sqlite
 *.sqlite-shm

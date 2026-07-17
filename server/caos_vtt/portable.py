@@ -17,6 +17,11 @@ import uvicorn
 
 from .config import Settings
 from .factory import create_app
+from .tunnel import (
+    DEFAULT_TUNNEL_TIMEOUT_SECONDS,
+    QuickTunnel,
+    find_cloudflared_executable,
+)
 
 
 DEFAULT_PORT = 8765
@@ -102,6 +107,18 @@ def _parser() -> argparse.ArgumentParser:
         metavar="URL",
         help="origem HTTPS explicita do tunel; pode ser repetida e nunca aceita wildcard",
     )
+    parser.add_argument(
+        "--tunnel",
+        action="store_true",
+        help="criar um Cloudflare Quick Tunnel temporario e gratuito",
+    )
+    parser.add_argument(
+        "--tunnel-timeout",
+        type=float,
+        default=DEFAULT_TUNNEL_TIMEOUT_SECONDS,
+        metavar="SEGUNDOS",
+        help=f"tempo para obter a URL publica (padrao: {DEFAULT_TUNNEL_TIMEOUT_SECONDS:g})",
+    )
     return parser
 
 
@@ -115,42 +132,99 @@ def run(argv: Sequence[str] | None = None) -> int:
             "outra porta com CAOS-VTT.exe --port PORTA."
         )
 
+    if args.tunnel and not 5 <= args.tunnel_timeout <= 180:
+        raise ValueError("--tunnel-timeout deve estar entre 5 e 180 segundos")
+
     frontend_dir = find_frontend_dir()
-    settings = build_portable_settings(args.port, args.public_origin)
     browser_url = f"http://127.0.0.1:{args.port}/vtt-lab"
     health_url = f"http://127.0.0.1:{args.port}/api/vtt/health"
+    tunnel: QuickTunnel | None = None
+    tunnel_origin: str | None = None
+    tunnel_monitor: threading.Thread | None = None
 
-    print("\nC.A.O.S. VTT PORTATIL")
-    print("=" * 64)
-    print(f"Endereco:  {browser_url}")
-    print(f"Host token temporario: {settings.host_token}")
-    if args.public_origin:
-        print(f"Origens publicas liberadas: {', '.join(args.public_origin)}")
-    print("Copie o token acima para o campo 'Host token' ao criar a sala.")
-    print("O token nao foi salvo em disco e muda a cada execucao.")
-    print("Fechar esta janela encerra o servidor e apaga o estado em memoria.")
-    print("Pressione Ctrl+C para encerrar.\n", flush=True)
+    try:
+        public_origins = list(args.public_origin)
+        if args.tunnel:
+            print("\nCriando Cloudflare Quick Tunnel...", flush=True)
+            tunnel = QuickTunnel(find_cloudflared_executable())
+            tunnel_origin = tunnel.start(
+                f"http://127.0.0.1:{args.port}",
+                timeout=args.tunnel_timeout,
+            )
+            public_origins.append(tunnel_origin)
 
-    if not args.no_browser:
-        threading.Thread(
-            target=_open_browser_when_ready,
-            args=(browser_url, health_url),
-            daemon=True,
-            name="caos-vtt-browser",
-        ).start()
+        # The public origin is known and canonical before the app/WS routes exist.
+        settings = build_portable_settings(args.port, public_origins)
 
-    uvicorn.run(
-        create_app(settings, frontend_dir=frontend_dir),
-        host=settings.bind_host,
-        port=settings.bind_port,
-        loop="asyncio",
-        http="h11",
-        ws="auto",
-        ws_max_size=16 * 1024,
-        workers=1,
-        log_level="warning",
-    )
-    return 0
+        print("\nC.A.O.S. VTT PORTATIL")
+        print("=" * 64)
+        print(f"Endereco local: {browser_url}")
+        if tunnel_origin:
+            print(f"URL PARA COMPARTILHAR: {tunnel_origin}/vtt-lab")
+            print("O endereco online e temporario e muda a cada execucao.")
+        print(f"Host token temporario: {settings.host_token}")
+        if args.public_origin:
+            print(f"Origens publicas adicionais: {', '.join(args.public_origin)}")
+        print("Copie o token acima para o campo 'Host token' ao criar a sala.")
+        print("O token nao foi salvo em disco e muda a cada execucao.")
+        print("Fechar esta janela encerra o servidor, o tunel e o estado em memoria.")
+        print("Pressione Ctrl+C para encerrar.\n", flush=True)
+
+        if not args.no_browser:
+            threading.Thread(
+                target=_open_browser_when_ready,
+                args=(browser_url, health_url),
+                daemon=True,
+                name="caos-vtt-browser",
+            ).start()
+
+        config = uvicorn.Config(
+            create_app(settings, frontend_dir=frontend_dir),
+            host=settings.bind_host,
+            port=settings.bind_port,
+            loop="asyncio",
+            http="h11",
+            ws="auto",
+            ws_max_size=16 * 1024,
+            workers=1,
+            log_level="warning",
+        )
+        server = uvicorn.Server(config)
+        server_finished = threading.Event()
+        tunnel_failure: list[str] = []
+
+        if tunnel is not None:
+            def stop_server_if_tunnel_exits() -> None:
+                exit_code = tunnel.wait_for_exit()
+                if tunnel.is_stopping or server_finished.is_set():
+                    return
+                message = (
+                    "O cloudflared encerrou durante a sessao online "
+                    f"(codigo {exit_code}). Verifique a rede e inicie a mesa novamente."
+                )
+                tunnel_failure.append(message)
+                print(f"\n{message}", file=sys.stderr, flush=True)
+                server.should_exit = True
+
+            tunnel_monitor = threading.Thread(
+                target=stop_server_if_tunnel_exits,
+                daemon=True,
+                name="caos-vtt-cloudflared-monitor",
+            )
+            tunnel_monitor.start()
+
+        try:
+            server.run()
+        finally:
+            server_finished.set()
+        if tunnel_failure:
+            raise RuntimeError(tunnel_failure[0])
+        return 0
+    finally:
+        if tunnel is not None:
+            tunnel.stop()
+        if tunnel_monitor is not None and tunnel_monitor.is_alive():
+            tunnel_monitor.join(timeout=1.0)
 
 
 def main() -> None:

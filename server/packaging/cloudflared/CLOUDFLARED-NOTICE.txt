@@ -1,0 +1,17 @@
+CLOUDFLARED THIRD-PARTY NOTICE
+
+The online C.A.O.S. VTT package includes an unmodified official cloudflared binary:
+
+  Project: cloudflare/cloudflared
+  Version: 2026.7.2 (Windows AMD64)
+  Source:  https://github.com/cloudflare/cloudflared
+  Binary:  https://github.com/cloudflare/cloudflared/releases/download/2026.7.2/cloudflared-windows-amd64.exe
+  SHA-256: cdb5d4432f6ae1595654a692a51308b69d2bf7af961f5578d9391837cf072df9
+  License: Apache License 2.0; see LICENSE-cloudflared.txt in this directory.
+
+cloudflared and Cloudflare are provided by Cloudflare, Inc. Their names and trademarks remain the
+property of their respective owner. This notice does not imply endorsement of C.A.O.S. VTT.
+
+Using the optional Quick Tunnel connects to Cloudflare's service and is also subject to
+Cloudflare's applicable terms and privacy policies. The local-only mode does not start
+cloudflared or contact the Quick Tunnel service.

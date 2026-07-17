@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [switch]$SkipFrontendBuild,
-    [switch]$SkipArchive
+    [switch]$SkipArchive,
+    [switch]$SkipTunnel
 )
 
 Set-StrictMode -Version Latest
@@ -135,6 +136,71 @@ function Assert-FrontendBuildIsFresh {
     }
 }
 
+function Get-VerifiedCloudflared {
+    param(
+        [Parameter(Mandatory = $true)][string]$DownloadUrl,
+        [Parameter(Mandatory = $true)][string]$CachePath,
+        [Parameter(Mandatory = $true)][string]$ExpectedSha256
+    )
+
+    $expectedHash = $ExpectedSha256.Trim().ToLowerInvariant()
+    if ($expectedHash -notmatch '^[a-f0-9]{64}$') {
+        throw 'O SHA-256 esperado do cloudflared e invalido.'
+    }
+
+    $cacheDirectory = Split-Path -Parent $CachePath
+    New-Item -ItemType Directory -Path $cacheDirectory -Force | Out-Null
+
+    if (Test-Path -LiteralPath $CachePath -PathType Leaf) {
+        $cachedHash = (Get-FileHash -LiteralPath $CachePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($cachedHash -eq $expectedHash) {
+            Write-Host "cloudflared verificado no cache: $CachePath" -ForegroundColor Green
+            return $CachePath
+        }
+        Write-Warning 'O cloudflared em cache possui hash incorreto e sera baixado novamente.'
+        Remove-Item -LiteralPath $CachePath -Force
+    }
+
+    $temporaryPath = "$CachePath.download-$([guid]::NewGuid().ToString('N')).tmp"
+    $previousProgressPreference = $ProgressPreference
+    try {
+        $ProgressPreference = 'SilentlyContinue'
+        if ([enum]::GetNames([Net.SecurityProtocolType]) -contains 'Tls12') {
+            [Net.ServicePointManager]::SecurityProtocol = (
+                [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+            )
+        }
+        Write-Host "Baixando cloudflared oficial de $DownloadUrl"
+        Invoke-WebRequest `
+            -Uri $DownloadUrl `
+            -OutFile $temporaryPath `
+            -UseBasicParsing `
+            -TimeoutSec 300 `
+            -Headers @{ 'User-Agent' = 'CAOS-VTT-portable-builder' } |
+            Out-Null
+
+        $downloadedHash = (Get-FileHash -LiteralPath $temporaryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($downloadedHash -ne $expectedHash) {
+            throw (
+                "SHA-256 do cloudflared baixado nao confere. " +
+                "Esperado: $expectedHash; recebido: $downloadedHash. O arquivo nao sera usado."
+            )
+        }
+        Move-Item -LiteralPath $temporaryPath -Destination $CachePath -Force
+    }
+    finally {
+        $ProgressPreference = $previousProgressPreference
+        Remove-Item -LiteralPath $temporaryPath -Force -ErrorAction SilentlyContinue
+    }
+
+    $finalHash = (Get-FileHash -LiteralPath $CachePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($finalHash -ne $expectedHash) {
+        throw 'O cloudflared mudou depois da verificacao e o build foi interrompido.'
+    }
+    Write-Host "cloudflared baixado e verificado: $CachePath" -ForegroundColor Green
+    return $CachePath
+}
+
 try {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $serverDirectory = Join-Path $repoRoot 'server'
@@ -143,12 +209,20 @@ try {
     $frontendDist = Join-Path $repoRoot 'dist'
     $frontendIndex = Join-Path $frontendDist 'index.html'
     $launcherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT.cmd'
+    $onlineLauncherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT Online.cmd'
+    $cloudflaredLicenseSource = Join-Path $serverDirectory 'packaging\cloudflared\LICENSE-cloudflared.txt'
+    $cloudflaredNoticeSource = Join-Path $serverDirectory 'packaging\cloudflared\CLOUDFLARED-NOTICE.txt'
     $readmeSource = Join-Path $serverDirectory 'README-PORTABLE.md'
     $buildRoot = Join-Path $serverDirectory '.build'
     $artifactRoot = Join-Path $serverDirectory '.artifacts'
     $portableDist = Join-Path $artifactRoot 'portable'
     $portableDirectory = Join-Path $portableDist 'CAOS-VTT'
-    $zipPath = Join-Path $artifactRoot 'CAOS-VTT-portable-win.zip'
+    $cloudflaredVersion = '2026.7.2'
+    $cloudflaredUrl = 'https://github.com/cloudflare/cloudflared/releases/download/2026.7.2/cloudflared-windows-amd64.exe'
+    $cloudflaredSha256 = 'cdb5d4432f6ae1595654a692a51308b69d2bf7af961f5578d9391837cf072df9'
+    $cloudflaredCache = Join-Path $serverDirectory ".cache\cloudflared\$cloudflaredVersion\cloudflared.exe"
+    $zipName = if ($SkipTunnel) { 'CAOS-VTT-portable-local-win.zip' } else { 'CAOS-VTT-portable-win.zip' }
+    $zipPath = Join-Path $artifactRoot $zipName
     $hashPath = "$zipPath.sha256"
 
     Write-Step 'Validando ambiente de build'
@@ -163,6 +237,25 @@ try {
     }
     if (-not (Test-Path -LiteralPath $readmeSource -PathType Leaf)) {
         throw "Documentacao portatil nao encontrada: '$readmeSource'."
+    }
+    if (-not $SkipTunnel) {
+        foreach ($requiredTunnelFile in @(
+            $onlineLauncherSource,
+            $cloudflaredLicenseSource,
+            $cloudflaredNoticeSource
+        )) {
+            if (-not (Test-Path -LiteralPath $requiredTunnelFile -PathType Leaf)) {
+                throw "Arquivo necessario para o pacote online nao encontrado: '$requiredTunnelFile'."
+            }
+        }
+        if (-not [Environment]::Is64BitOperatingSystem) {
+            throw 'O pacote online usa cloudflared Windows AMD64 e precisa ser gerado em Windows x64.'
+        }
+        $pythonBitsOutput = & $venvPython -c 'import struct; print(struct.calcsize("P") * 8)' 2>$null | Select-Object -First 1
+        $pythonBits = if ($pythonBitsOutput) { $pythonBitsOutput.Trim() } else { '' }
+        if ($LASTEXITCODE -ne 0 -or $pythonBits -ne '64') {
+            throw 'O pacote online precisa de um ambiente .venv-vtt Python 64-bit.'
+        }
     }
 
     & $venvPython -c 'import PyInstaller' 2>$null
@@ -194,12 +287,25 @@ try {
     Write-Step 'Validando se o frontend compilado corresponde as fontes atuais'
     Assert-FrontendBuildIsFresh -RepoRoot $repoRoot -FrontendDist $frontendDist
 
+    $cloudflaredBinary = $null
+    if ($SkipTunnel) {
+        Write-Step 'Gerando variante local menor, sem cloudflared'
+    }
+    else {
+        Write-Step "Preparando cloudflared oficial $cloudflaredVersion"
+        $cloudflaredBinary = Get-VerifiedCloudflared `
+            -DownloadUrl $cloudflaredUrl `
+            -CachePath $cloudflaredCache `
+            -ExpectedSha256 $cloudflaredSha256
+    }
+
     Write-Step 'Limpando apenas os artefatos portateis anteriores'
     Remove-SafeDirectory -Path $buildRoot -ExpectedParent $serverDirectory
     Remove-SafeDirectory -Path $portableDist -ExpectedParent $artifactRoot
     New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
     New-Item -ItemType Directory -Path $portableDist -Force | Out-Null
     New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
+    # Preserve the other variant so the online and local ZIPs can coexist.
     Remove-Item -LiteralPath $zipPath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $hashPath -Force -ErrorAction SilentlyContinue
 
@@ -230,6 +336,19 @@ try {
     }
     Copy-Item -LiteralPath $launcherSource -Destination $portableDirectory -Force
     Copy-Item -LiteralPath $readmeSource -Destination $portableDirectory -Force
+    if (-not $SkipTunnel) {
+        Copy-Item -LiteralPath $cloudflaredBinary -Destination (Join-Path $portableDirectory 'cloudflared.exe') -Force
+        Copy-Item -LiteralPath $onlineLauncherSource -Destination $portableDirectory -Force
+        Copy-Item -LiteralPath $cloudflaredLicenseSource -Destination $portableDirectory -Force
+        Copy-Item -LiteralPath $cloudflaredNoticeSource -Destination $portableDirectory -Force
+
+        $packagedCloudflaredHash = (
+            Get-FileHash -LiteralPath (Join-Path $portableDirectory 'cloudflared.exe') -Algorithm SHA256
+        ).Hash.ToLowerInvariant()
+        if ($packagedCloudflaredHash -ne $cloudflaredSha256) {
+            throw 'A copia empacotada do cloudflared falhou na verificacao SHA-256.'
+        }
+    }
 
     if (-not $SkipArchive) {
         Write-Step 'Criando ZIP e hash SHA-256'
@@ -241,7 +360,12 @@ try {
     }
 
     Write-Host "`nPacote portatil pronto: $portableDirectory" -ForegroundColor Green
-    Write-Host 'No computador de destino, extraia o ZIP e abra Iniciar C.A.O.S. VTT.cmd.'
+    if ($SkipTunnel) {
+        Write-Host 'Variante local: abra Iniciar C.A.O.S. VTT.cmd.'
+    }
+    else {
+        Write-Host 'Variante online: abra Iniciar C.A.O.S. VTT Online.cmd.'
+    }
 }
 catch {
     Write-Host "`nBuild portatil interrompido: $($_.Exception.Message)" -ForegroundColor Red
