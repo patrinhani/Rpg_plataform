@@ -39,7 +39,7 @@
   
   /* 1. CORREÇÃO DE ESCALA E TRANSBORDO */
   html, body {
-    font-size: 85%; /* Reduz fontes para caber melhor */
+    font-size: 100%;
     overflow-x: hidden; /* Impede rolagem lateral */
     width: 100vw;
     max-width: 100%;

@@ -1,13 +1,14 @@
 // src/components/ModalPoderes.jsx
 // (ARQUIVO COMPLETO CORRIGIDO)
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { 
     poderesCombatente, 
     poderesEspecialista, 
     poderesOcultista,
     poderesParanormais
 } from '../lib/database.js';
+import ModalBase from './ModalBase.jsx';
 // A linha 'import { trilhas }' foi removida
 
 // Cria conjuntos de chaves para lookup rápido para evitar confusão entre listas
@@ -29,6 +30,7 @@ function ModalPoderes({
 }) {
     const [activeTab, setActiveTab] = useState('classe');
     const [poderesDeClasse, setPoderesDeClasse] = useState([]);
+    const tabsId = useId();
     
     // Função para obter os poderes de classe com base na classe do personagem
     useEffect(() => {
@@ -55,7 +57,11 @@ function ModalPoderes({
     const renderListaPoderes = (lista) => {
         // CORREÇÃO: Verifica se a lista não é undefined antes de tentar usar .length
         if (!lista || lista.length === 0) {
-            return <li className="item-placeholder">Nenhum poder disponível nesta categoria.</li>;
+            return (
+                <ul className="loja-lista-itens" style={{ gridTemplateColumns: '1fr' }}>
+                    <li className="item-placeholder">Nenhum poder disponível nesta categoria.</li>
+                </ul>
+            );
         }
 
         return (
@@ -111,6 +117,7 @@ function ModalPoderes({
                             </div>
                             <div className="item-footer">
                                 <button 
+                                    type="button"
                                     className="loja-item-add"
                                     // --- INÍCIO DA CORREÇÃO DO BOTÃO ILEGÍVEL ---
                                     style={{ 
@@ -119,6 +126,7 @@ function ModalPoderes({
                                     }}
                                     // --- FIM DA CORREÇÃO DO BOTÃO ILEGÍVEL ---
                                     onClick={handleToggle}
+                                    aria-label={`${isAprendido ? 'Remover' : poder.requiresChoice ? 'Selecionar e adicionar' : 'Adicionar'} poder ${poder.nome}`}
                                 >
                                     {isAprendido ? 'Remover Poder' : (poder.requiresChoice ? 'Selecionar e Adicionar' : 'Adicionar Poder')}
                                 </button>
@@ -130,48 +138,73 @@ function ModalPoderes({
         );
     };
 
-    // --- INÍCIO DAS CORREÇÕES DE LAYOUT ---
+    const tabs = [
+        { id: 'classe', label: 'PODERES DE CLASSE', lista: poderesDeClasse },
+        { id: 'geral', label: 'PODERES GERAIS', lista: poderesGerais },
+        { id: 'paranormal', label: 'PODERES PARANORMAIS', lista: poderesParanormais },
+    ];
+    const handleTabKeyDown = (event, currentIndex) => {
+        let nextIndex;
 
-    // 1. Adiciona o handler de clique no overlay
-    const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (nextIndex === undefined) return;
+
+        event.preventDefault();
+        const nextTab = tabs[nextIndex];
+        setActiveTab(nextTab.id);
+        window.requestAnimationFrame(() => document.getElementById(`${tabsId}-tab-${nextTab.id}`)?.focus());
     };
 
-    // 2. Corrige o JSX do 'return' para usar as classes corretas do style.css
     return (
-        <div className="modal-overlay" onClick={handleOverlayClick}> {/* Classe CSS corrigida */}
-            <div className="modal-conteudo modal-grande"> {/* Classe CSS corrigida */}
-                <div className="modal-header">
-                    <h2>SELECIONAR PODERES</h2>
-                    <button className="btn-fechar-modal" onClick={onClose}>X</button> {/* Classe CSS corrigida */}
-                </div>
-
-                <div className="modal-body">
-                    <div className="modal-abas"> {/* Classe CSS corrigida */}
-                        <button onClick={() => setActiveTab('classe')} className={`aba-link ${activeTab === 'classe' ? 'active' : ''}`}>
-                            PODERES DE CLASSE
+        <ModalBase
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Selecionar poderes"
+            size="large"
+            closeLabel="Fechar seleção de poderes"
+        >
+            <div className="modal-abas" role="tablist" aria-label="Categorias de poderes">
+                {tabs.map((tab, index) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            id={`${tabsId}-tab-${tab.id}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            aria-controls={`${tabsId}-panel-${tab.id}`}
+                            tabIndex={isActive ? 0 : -1}
+                            onClick={() => setActiveTab(tab.id)}
+                            onKeyDown={(event) => handleTabKeyDown(event, index)}
+                            className={`aba-link ${isActive ? 'active' : ''}`}
+                        >
+                            {tab.label}
                         </button>
-                        <button onClick={() => setActiveTab('geral')} className={`aba-link ${activeTab === 'geral' ? 'active' : ''}`}>
-                            PODERES GERAIS
-                        </button>
-                        <button onClick={() => setActiveTab('paranormal')} className={`aba-link ${activeTab === 'paranormal' ? 'active' : ''}`}>
-                            PODERES PARANORMAIS
-                        </button>
-                    </div>
-
-                    {/* Conteúdo das abas é renderizado dentro de um 'aba-conteudo' */}
-                    <div className="aba-conteudo active"> {/* Classe CSS corrigida */}
-                        {activeTab === 'classe' && renderListaPoderes(poderesDeClasse)}
-                        {activeTab === 'geral' && renderListaPoderes(poderesGerais)}
-                        {activeTab === 'paranormal' && renderListaPoderes(poderesParanormais)}
-                    </div>
-                </div>
+                    );
+                })}
             </div>
-        </div>
+
+            {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                    <div
+                        key={tab.id}
+                        id={`${tabsId}-panel-${tab.id}`}
+                        className={`aba-conteudo ${isActive ? 'active' : ''}`}
+                        role="tabpanel"
+                        aria-labelledby={`${tabsId}-tab-${tab.id}`}
+                        hidden={!isActive}
+                    >
+                        {isActive && renderListaPoderes(tab.lista)}
+                    </div>
+                );
+            })}
+        </ModalBase>
     );
-    // --- FIM DAS CORREÇÕES DE LAYOUT ---
 }
 
 export default ModalPoderes;

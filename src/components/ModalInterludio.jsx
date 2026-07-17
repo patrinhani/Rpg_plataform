@@ -1,7 +1,7 @@
 // src/components/ModalInterludio.jsx
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { database } from '../lib/database.js';
-import { useDialog } from '../contexts/DialogContext'; // [NOVO]
+import ModalBase from './ModalBase.jsx';
 
 function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventario = [] }) {
   const [acoesSelecionadas, setAcoesSelecionadas] = useState([]);
@@ -9,22 +9,20 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
   const [prato, setPrato] = useState('simples');
   const [participantesRelaxando, setParticipantesRelaxando] = useState(1);
   const [itemManutencaoId, setItemManutencaoId] = useState('');
+  const descricaoId = useId();
+  const confortoId = useId();
+  const pratoId = useId();
   
-  const { showAlert } = useDialog(); // [NOVO]
-
   if (!isOpen) return null;
 
   const toggleAcao = (acao) => {
-    if (acoesSelecionadas.includes(acao)) {
-      setAcoesSelecionadas(acoesSelecionadas.filter(a => a !== acao));
-    } else {
-      if (acoesSelecionadas.length < 2) {
-        setAcoesSelecionadas([...acoesSelecionadas, acao]);
-      } else {
-        // [ATUALIZADO]
-        showAlert("Você só pode realizar até 2 ações por Interlúdio.", "Limite Atingido");
+    setAcoesSelecionadas((atuais) => {
+      const quantidade = atuais.filter((item) => item === acao).length;
+      if (acao === 'revisar') {
+        return quantidade >= 2 ? atuais.filter((item) => item !== acao) : [...atuais, acao];
       }
-    }
+      return quantidade > 0 ? atuais.filter((item) => item !== acao) : [...atuais, acao];
+    });
   };
 
   const handleAplicar = () => {
@@ -52,16 +50,36 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
   const bonusLeitura = origem === 'nerd_entusiasta' ? '+2d6' : '+1d6';
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '700px', width: '95%' }}>
-        <div className="modal-header">
-            <h2>Cena de Interlúdio</h2>
-            <button className="modal-close" onClick={onClose}>&times;</button>
-        </div>
-        
-        <div style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-            <p style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '15px' }}>
-                Escolha até <strong>2 ações</strong>. Recuperação base: <strong>{limitePE}</strong> (Limite de PE).
+    <ModalBase
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Cena de Interlúdio"
+      size="large"
+      closeLabel="Fechar interlúdio"
+      closeOnOverlay={false}
+      describedBy={descricaoId}
+      footer={(
+        <>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--secondary"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="caos-modal__button caos-modal__button--primary"
+            onClick={handleAplicar}
+            disabled={acoesSelecionadas.length === 0}
+          >
+            Concluir Interlúdio
+          </button>
+        </>
+      )}
+    >
+            <p id={descricaoId} style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '15px' }}>
+                Referência do livro: até <strong>2 ações</strong>, ajustáveis pela mesa. Revisar Caso pode ser escolhido duas vezes. Recuperação base: <strong>{limitePE}</strong> (Limite de PE).
             </p>
 
             <div className="interludio-grid" style={{ 
@@ -70,22 +88,36 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                 gap: '10px', 
                 marginBottom: '20px' 
             }}>
-                {listaAcoes.map((acao) => (
-                    <div 
+                {listaAcoes.map((acao) => {
+                  const quantidadeSelecionada = acoesSelecionadas.filter((item) => item === acao.id).length;
+                  return (
+                    <button
+                        type="button"
                         key={acao.id}
-                        className={`item-card ${acoesSelecionadas.includes(acao.id) ? 'selecionado' : ''}`}
+                        className={`item-card ${quantidadeSelecionada > 0 ? 'selecionado' : ''}`}
                         onClick={() => toggleAcao(acao.id)}
+                        aria-pressed={quantidadeSelecionada > 0}
+                        aria-label={`${acao.nome}${acao.id === 'revisar' ? `, selecionado ${quantidadeSelecionada} de 2 vezes` : ''}`}
                         style={{ 
                             cursor: 'pointer', 
                             border: acoesSelecionadas.includes(acao.id) ? '2px solid var(--cor-destaque)' : '1px solid var(--cor-borda)', 
                             padding: '10px',
-                            backgroundColor: acoesSelecionadas.includes(acao.id) ? 'rgba(255, 255, 255, 0.1)' : 'transparent'
+                            backgroundColor: acoesSelecionadas.includes(acao.id) ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                            color: 'inherit',
+                            margin: 0,
+                            textAlign: 'left',
+                            textTransform: 'none',
+                            width: '100%'
                         }}
                     >
-                        <h3 style={{margin: '0 0 5px 0', fontSize: '1.1em'}}>{acao.icone} {acao.nome}</h3>
+                        <span style={{display: 'block', margin: '0 0 5px 0', fontSize: '1.1em', fontWeight: 700}}>{acao.icone} {acao.nome}</span>
+                        {acao.id === 'revisar' && quantidadeSelecionada > 0 && (
+                          <span className="interludio-action-count">×{quantidadeSelecionada}</span>
+                        )}
                         <small style={{lineHeight: '1.2', display: 'block', color: '#ccc'}}>{acao.desc}</small>
-                    </div>
-                ))}
+                    </button>
+                  );
+                })}
             </div>
 
             {(acoesSelecionadas.length > 0) && (
@@ -94,8 +126,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                     
                     {(acoesSelecionadas.includes('dormir') || acoesSelecionadas.includes('relaxar')) && (
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{display: 'block', marginBottom: '5px'}}>Nível de Conforto:</label>
-                            <select className="modal-input" value={conforto} onChange={(e) => setConforto(e.target.value)} style={{width: '100%'}}>
+                            <label htmlFor={confortoId} style={{display: 'block', marginBottom: '5px'}}>Nível de Conforto:</label>
+                            <select id={confortoId} className="modal-input" value={conforto} onChange={(e) => setConforto(e.target.value)} style={{width: '100%'}}>
                                 {database.interludio.conforto.map(c => (
                                     <option key={c.id} value={c.id}>{c.nome}</option>
                                 ))}
@@ -132,8 +164,8 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
 
                     {acoesSelecionadas.includes('alimentar') && (
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{display: 'block', marginBottom: '5px'}}>Prato Escolhido:</label>
-                            <select className="modal-input" value={prato} onChange={(e) => setPrato(e.target.value)} style={{width: '100%'}}>
+                            <label htmlFor={pratoId} style={{display: 'block', marginBottom: '5px'}}>Prato Escolhido:</label>
+                            <select id={pratoId} className="modal-input" value={prato} onChange={(e) => setPrato(e.target.value)} style={{width: '100%'}}>
                                 {database.interludio.pratos.map(p => (
                                     <option key={p.id} value={p.id}>{p.nome}</option>
                                 ))}
@@ -175,16 +207,7 @@ function ModalInterludio({ isOpen, onClose, onAplicar, limitePE, origem, inventa
                     )}
                 </div>
             )}
-        </div>
-
-        <div className="modal-actions" style={{ marginTop: '10px', padding: '0 20px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-            <button className="btn-confirm" onClick={handleAplicar} disabled={acoesSelecionadas.length === 0}>
-                Concluir Interlúdio
-            </button>
-        </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }
 

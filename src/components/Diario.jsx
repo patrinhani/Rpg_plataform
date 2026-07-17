@@ -1,54 +1,63 @@
-// /src/components/Diario.jsx
-// (ATUALIZADO para o layout de cards)
-
 import React from 'react';
-import NotaCard from './NotaCard.jsx'; // Importa o card de anotação
+import NotaCard from './NotaCard.jsx';
+import FichaSectionFrame from './ficha/FichaSectionFrame.jsx';
+import { AppIcon } from './icons/NavigationIcons.jsx';
 
-/**
- * Props esperadas do App.jsx:
- * - diarioData: (array) O array personagem.diario
- * - onAbrirModal: (função) Para abrir o modal de criação/edição
- * - onRemoveNota: (função) Para remover uma nota
- */
 function Diario({ diarioData, onAbrirModal, onRemoveNota }) {
+  const notas = diarioData || [];
+  const palavras = notas.reduce((total, nota) => {
+    const conteudo = String(nota.conteudo || nota.texto || '').trim();
+    return total + (conteudo ? conteudo.split(/\s+/).length : 0);
+  }, 0);
 
   return (
-    <main className="ficha-container-inventario">
-      <section className="box box-inventario" id="grid-diario">
-        
-        <div className="inventario-header">
-          <h2>DIÁRIO DE INVESTIGAÇÃO</h2>
-          <button 
-            className="btn-add-item" 
-            id="btn-add-nota"
-            onClick={() => onAbrirModal(null)} // 'null' significa criar nota nova
-          >
-            +
-          </button>
-        </div>
-        
-        {/* Reutiliza o layout de lista do inventário */ }
-        <ul id="lista-diario" className="loja-lista-itens">
-          {diarioData && diarioData.length > 0 ? (
-            
-            diarioData.map((nota) => (
-              <NotaCard 
+    <FichaSectionFrame
+      variant="journal"
+      icon="journal"
+      eyebrow="REGISTRO DE INVESTIGAÇÃO"
+      title="Diário"
+      description="Hipóteses, pistas e registros de campo organizados sem interferir nas regras da ficha."
+      metrics={[
+        { label: 'Entradas', value: notas.length },
+        { label: 'Palavras', value: palavras },
+        { label: 'Última revisão', value: notas.length > 0 ? 'Registrada' : '—' },
+      ]}
+      action={(
+        <button type="button" className="ficha-section-action" onClick={() => onAbrirModal(null)}>
+          <AppIcon name="plus" size={18} />
+          Nova anotação
+        </button>
+      )}
+    >
+      <section className="ficha-record-panel journal-record-panel" id="grid-diario" aria-labelledby="journal-record-title">
+        <header className="ficha-record-heading">
+          <div>
+            <span className="ficha-record-kicker">ARQUIVO DE CAMPO</span>
+            <h2 id="journal-record-title">Anotações da investigação</h2>
+          </div>
+          <span className="ficha-record-count">{notas.length.toString().padStart(2, '0')}</span>
+        </header>
+
+        <ul id="lista-diario" className="loja-lista-itens journal-grid">
+          {notas.length > 0 ? (
+            notas.map(nota => (
+              <NotaCard
                 key={nota.id}
                 nota={nota}
-                onEdit={() => onAbrirModal(nota)} // Passa a nota para edição
+                onEdit={() => onAbrirModal(nota)}
                 onRemove={onRemoveNota}
               />
             ))
-            
           ) : (
-            <li className="item-placeholder">
-              Nenhuma anotação adicionada. Clique no '+' para criar seu diário.
+            <li className="item-placeholder ficha-section-empty-state">
+              <AppIcon name="journal" size={28} />
+              <strong>O diário ainda está em branco</strong>
+              <span>Registre pistas, suspeitas ou decisões importantes da mesa.</span>
             </li>
           )}
         </ul>
-
       </section>
-    </main>
+    </FichaSectionFrame>
   );
 }
 

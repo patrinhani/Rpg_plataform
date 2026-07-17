@@ -2,7 +2,6 @@
 import React, { useState, useEffect, Suspense, lazy, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import '../../App.css'; 
 import { aplicarTemaComAnimacao, aplicarTemaSemAnimacao } from '../../lib/animacoes.js'; 
 import { 
     poderesCombatente, poderesEspecialista, poderesOcultista, 
@@ -17,7 +16,6 @@ import { db } from '../../lib/firebase';
 import { doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 
 // Lazy Loading de Componentes
-const AnimacaoSangue = lazy(() => import('../../components/AnimacaoSangue.jsx')); 
 const Inventario = lazy(() => import('../../components/Inventario.jsx'));
 const PoderesAprendidos = lazy(() => import('../../components/PoderesAprendidos.jsx'));
 const Rituais = lazy(() => import('../../components/Rituais.jsx'));
@@ -31,9 +29,11 @@ const ModalRituais = lazy(() => import('../../components/ModalRituais.jsx'));
 const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.jsx'));
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
-const ExportFicha = lazy(() => import('../../components/ExportFicha.jsx'));
+const ConfiguracoesFicha = lazy(() => import('../../components/ConfiguracoesFicha.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
+import ElementRail from '../../components/ElementRail.jsx';
+import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
@@ -46,6 +46,16 @@ const listaTodasPericias = ['acrobacia', 'adestramento', 'artes', 'atletismo', '
 const opcoesPericia = listaTodasPericias
   .filter(p => p !== 'luta' && p !== 'pontaria') 
   .map(p => ({ nome: p.charAt(0).toUpperCase() + p.slice(1), valor: p }));
+
+const ABAS_FICHA = [
+    { id: 'principal', label: 'Resumo', icon: 'overview' },
+    { id: 'inventario', label: 'Inventário', icon: 'inventory' },
+    { id: 'rituais', label: 'Rituais', icon: 'rituals' },
+    { id: 'poderes', label: 'Poderes', icon: 'powers' },
+    { id: 'progressao', label: 'Progressão', icon: 'progress' },
+    { id: 'diario', label: 'Diário', icon: 'journal' },
+    { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
+];
 
 function criarDadosVisualDev(base) {
     const dados = JSON.parse(JSON.stringify(base));
@@ -77,9 +87,23 @@ function criarDadosVisualDev(base) {
     dados.defesa = { ...dados.defesa, equip: 2, outros: 1 };
     dados.bonusManuais = { ...dados.bonusManuais, defesa: 2, esquiva: 1, limite_pe: 1 };
     dados.recursos = { pv_atual: 24, pv_max: 24, pe_atual: 18, pe_max: 18, san_atual: 20, san_max: 20 };
+    const itemDemo = (fonte, inventarioId, extras = {}) => fonte
+        ? { ...fonte, inventarioId, ...extras }
+        : null;
+    dados.inventario = [
+        itemDemo(database.armasSimples?.find(item => item.id === 'pistola'), 'dev-item-pistola', { modificacoes: ['certeira'] }),
+        itemDemo(database.equipGeral?.find(item => item.id === 'mochila_militar'), 'dev-item-mochila'),
+        itemDemo(database.protecoes?.find(item => item.id === 'protecao_leve'), 'dev-item-protecao'),
+        itemDemo(database.equipGeral?.find(item => item.id === 'lanterna_tatica'), 'dev-item-lanterna', { quebrado: true }),
+    ].filter(Boolean);
+    dados.rituais = (database.rituais || []).slice(0, 3).map((ritual, index) => ({
+        ...ritual,
+        inventarioId: `dev-ritual-${index + 1}`,
+    }));
     dados.poderes_aprendidos = poderesGerais[0] ? [poderesGerais[0]] : [];
     dados.diario = [
-        { id: 'dev-nota-1', titulo: 'Nota visual', texto: 'Registro local para revisar espacamento e cards.', data: new Date().toISOString() },
+        { id: 'dev-nota-1', titulo: 'Eco no subsolo', conteudo: 'O padrão de interferência reaparece sempre que o grupo se aproxima do arquivo central.', data: new Date().toISOString() },
+        { id: 'dev-nota-2', titulo: 'Pessoas de interesse', conteudo: 'Verificar o depoimento do vigia e cruzar o horário com as imagens da entrada lateral.', data: new Date(Date.now() - 86400000).toISOString() },
     ];
 
     return dados;
@@ -87,13 +111,64 @@ function criarDadosVisualDev(base) {
 
 function debounce(func, delay) {
     let timeoutId;
-    return function(...args) {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    let lastArgs;
+    let lastThis;
+
+    const invoke = () => {
+        const args = lastArgs;
+        const context = lastThis;
+        timeoutId = undefined;
+        lastArgs = undefined;
+        lastThis = undefined;
+        return func.apply(context, args);
     };
+
+    const debounced = function(...args) {
+        if (timeoutId) clearTimeout(timeoutId);
+        lastArgs = args;
+        lastThis = this;
+        timeoutId = setTimeout(invoke, delay);
+    };
+
+    debounced.cancel = () => {
+        if (!timeoutId) return;
+        clearTimeout(timeoutId);
+        timeoutId = undefined;
+        lastArgs = undefined;
+        lastThis = undefined;
+    };
+
+    debounced.flush = () => {
+        if (!timeoutId) return undefined;
+        clearTimeout(timeoutId);
+        return invoke();
+    };
+
+    return debounced;
 }
 
-export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
+const TEMPO_LIMITE_SALVAMENTO = 8000;
+
+function aguardarComLimite(promessa, limite = TEMPO_LIMITE_SALVAMENTO) {
+    return new Promise((resolve) => {
+        const timeoutId = window.setTimeout(() => {
+            resolve({ ok: false, timeout: true });
+        }, limite);
+
+        Promise.resolve(promessa).then(
+            (resultado) => {
+                window.clearTimeout(timeoutId);
+                resolve(resultado);
+            },
+            (error) => {
+                window.clearTimeout(timeoutId);
+                resolve({ ok: false, error });
+            },
+        );
+    });
+}
+
+export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOpenTracker }) {
   const { fichaId: paramFichaId } = useParams();
   const navigate = useNavigate();
   const { usuario, devVisualMode } = useAuth(); 
@@ -112,6 +187,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   
   const idAlvo = propFichaId || paramFichaId || usuario?.uid;
   const isModoMesa = !!mesaContexto;
+  const podeExcluirFicha = !isModoMesa || propFichaId === usuario?.uid;
 
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
@@ -128,9 +204,16 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   ], [personagem.periciasCustom]);
   
   const [loading, setLoading] = useState(true); 
+  const [loadError, setLoadError] = useState('');
+  const [reloadToken, setReloadToken] = useState(0);
   const docRef = useRef(null); 
   const isInitializing = useRef(true); 
   const devVisualLoaded = useRef(false);
+  const localRevisionRef = useRef(0);
+  const savedRevisionRef = useRef(0);
+  const inFlightSaveRef = useRef(null);
+  const inFlightSavesRef = useRef(new Set());
+  const isDeletingRef = useRef(false);
   
   // Controle de Atualização Remota (IMPORTANTE PARA EVITAR LOOPS)
   const isRemoteUpdate = useRef(false);
@@ -146,13 +229,13 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   const [itemParaEditar, setItemParaEditar] = useState(null); 
   const [isDiarioModalOpen, setIsDiarioModalOpen] = useState(false);
   const [notaParaEditar, setNotaParaEditar] = useState(null); 
-  const [isSangueAnimVisible, setIsSangueAnimVisible] = useState(false);
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
 
-  const saveToFirestore = useCallback(async (dadosCompletos) => {
-    if (!docRef.current) return { ok: false, semDestino: true };
+  const saveToFirestore = useCallback(async (dadosCompletos, destino = docRef.current) => {
+    if (isDeletingRef.current) return { ok: false, cancelado: true };
+    if (!destino) return { ok: false, semDestino: true };
     try {
-        await setDoc(docRef.current, dadosCompletos, { merge: true });
+        await setDoc(destino, dadosCompletos, { merge: true });
         return { ok: true };
     } catch (error) {
         console.error("Erro ao salvar no Firestore:", error);
@@ -160,11 +243,26 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }
   }, []);
   
-  const debouncedSave = useRef(debounce(saveToFirestore, 1000)).current; 
+  const debouncedSave = useRef(debounce(async (dadosCompletos, destino, revision) => {
+      if (isDeletingRef.current) return { ok: false, cancelado: true };
+      const salvamento = saveToFirestore(dadosCompletos, destino);
+      inFlightSaveRef.current = salvamento;
+      inFlightSavesRef.current.add(salvamento);
+      const resultado = await salvamento;
+      inFlightSavesRef.current.delete(salvamento);
+      if (inFlightSaveRef.current === salvamento) inFlightSaveRef.current = null;
+      if (resultado.ok && docRef.current === destino) {
+          savedRevisionRef.current = Math.max(savedRevisionRef.current, revision);
+      }
+      return resultado;
+  }, 1000)).current;
 
   // --- 1. SINCRONIZAÇÃO EM TEMPO REAL ---
   useEffect(() => {
+    debouncedSave.cancel();
+
     if (devVisualMode) {
+        setLoadError('');
         docRef.current = null;
         if (!devVisualLoaded.current) {
             carregarFicha(criarDadosVisualDev(fichaInstance.getDados()));
@@ -176,44 +274,113 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     }
 
     if (!usuario || !idAlvo) {
+        docRef.current = null;
         setLoading(false);
-        return;
+        return undefined;
     }
-    
-    if (isModoMesa) {
-        docRef.current = doc(db, "mesas", mesaContexto, "personagens", idAlvo);
-    } else {
-        // CORREÇÃO DE CAMINHO: Agora busca na subcoleção correta
-        docRef.current = doc(db, "users", usuario.uid, "personagens", idAlvo);
-    }
-    
-    const unsubscribe = onSnapshot(docRef.current, async (docSnap) => {
-        if (docSnap.exists()) {
-            const dadosFirestore = docSnap.data();
-            isRemoteUpdate.current = true; // Marca que veio do banco
-            carregarFicha(dadosFirestore); 
-        } else if (isInitializing.current) {
-             if (!isModoMesa || propFichaId === usuario.uid) {
-                await setDoc(docRef.current, fichaInstance.getDados()); 
-             }
-        }
-        if (isInitializing.current) isInitializing.current = false;
-        setLoading(false);
-    }, (error) => { console.error("Erro Firestore:", error); setLoading(false); });
 
-    return () => unsubscribe();
-  }, [usuario, mesaContexto, idAlvo, carregarFicha, isModoMesa, propFichaId, fichaInstance, devVisualMode]);
+    isInitializing.current = true;
+    isRemoteUpdate.current = false;
+    localRevisionRef.current = 0;
+    savedRevisionRef.current = 0;
+    setLoading(true);
+    setLoadError('');
+    
+    const destinoAtual = isModoMesa
+      ? doc(db, "mesas", mesaContexto, "personagens", idAlvo)
+      : doc(db, "users", usuario.uid, "personagens", idAlvo);
+
+    docRef.current = destinoAtual;
+    let assinaturaAtiva = true;
+    
+    const unsubscribe = onSnapshot(destinoAtual, async (docSnap) => {
+        if (!assinaturaAtiva) return;
+        if (isDeletingRef.current) return;
+
+        try {
+            if (docSnap.exists()) {
+                docRef.current = destinoAtual;
+                const possuiEdicaoLocalPendente = localRevisionRef.current > savedRevisionRef.current;
+                const ecoDeEscritaLocal = docSnap.metadata.hasPendingWrites;
+
+                if (!isInitializing.current && (possuiEdicaoLocalPendente || ecoDeEscritaLocal)) {
+                    return;
+                }
+
+                debouncedSave.cancel();
+                isRemoteUpdate.current = true;
+                carregarFicha(docSnap.data());
+            } else if (isInitializing.current) {
+                const podeCriarDocumento = !isModoMesa || propFichaId === usuario.uid;
+
+                if (!podeCriarDocumento) {
+                    debouncedSave.cancel();
+                    docRef.current = null;
+                    setLoadError('Esta ficha não existe ou ainda não foi vinculada a este jogador.');
+                    setLoading(false);
+                    return;
+                }
+
+                await setDoc(destinoAtual, fichaInstance.getDados());
+                if (!assinaturaAtiva) return;
+                isRemoteUpdate.current = true;
+            } else {
+                debouncedSave.cancel();
+                docRef.current = null;
+                setLoadError('Esta ficha foi removida enquanto estava aberta.');
+                setLoading(false);
+                return;
+            }
+
+            if (!assinaturaAtiva) return;
+            if (isInitializing.current) isInitializing.current = false;
+            setLoadError('');
+            setLoading(false);
+        } catch (error) {
+            if (!assinaturaAtiva) return;
+            console.error("Erro ao inicializar ficha no Firestore:", error);
+            debouncedSave.cancel();
+            docRef.current = null;
+            setLoadError('Não foi possível preparar esta ficha. Verifique sua conexão e tente novamente.');
+            setLoading(false);
+        }
+    }, (error) => {
+        if (!assinaturaAtiva) return;
+        console.error("Erro Firestore:", error);
+        debouncedSave.cancel();
+        docRef.current = null;
+        setLoadError('Não foi possível sincronizar esta ficha. Verifique sua conexão e tente novamente.');
+        setLoading(false);
+    });
+
+    return () => {
+        assinaturaAtiva = false;
+        const salvamentoPendente = isDeletingRef.current ? undefined : debouncedSave.flush();
+        salvamentoPendente?.then((resultado) => {
+            if (resultado && !resultado.ok && !resultado.semDestino) {
+                console.error("A última alteração da ficha não pôde ser sincronizada.", resultado.error);
+            }
+        });
+        unsubscribe();
+        if (docRef.current === destinoAtual) docRef.current = null;
+    };
+  }, [usuario, mesaContexto, idAlvo, carregarFicha, isModoMesa, propFichaId, fichaInstance, devVisualMode, debouncedSave, reloadToken]);
 
   // --- 2. SALVAMENTO OTIMIZADO ---
   useEffect(() => {
       if (devVisualMode) return;
+      if (isDeletingRef.current) return;
       if (!loading && !isInitializing.current) {
           // Se for update remoto, ignora o salvamento
           if (isRemoteUpdate.current) {
               isRemoteUpdate.current = false;
               return;
           }
-          debouncedSave(personagem);
+          const destinoAtual = docRef.current;
+          if (!destinoAtual) return;
+          const revision = localRevisionRef.current + 1;
+          localRevisionRef.current = revision;
+          debouncedSave(personagem, destinoAtual, revision);
       }
   }, [personagem, loading, debouncedSave, devVisualMode]);
 
@@ -229,13 +396,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     if (tema !== temaNoDOM) {
         if (!temaNoDOM) {
             aplicarTemaSemAnimacao(tema);
-        } else {
-            if (tema === "tema-sangue") setIsSangueAnimVisible(true);
-            else aplicarTemaComAnimacao(tema, temaNoDOM, () => {
-                document.documentElement.dataset.tema = tema;
-                localStorage.setItem("temaFichaOrdem", tema);
-            });
-        }
+        } else aplicarTemaComAnimacao(tema, temaNoDOM);
     }
   }, [tema]); 
 
@@ -243,6 +404,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
     return () => {
         aplicarTemaSemAnimacao('tema-ordem');
         document.documentElement.dataset.tema = 'tema-ordem';
+        document.title = 'C.A.O.S';
     };
   }, []);
 
@@ -355,47 +517,139 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
   }, [aplicarInterludio, showAlert]);
 
   const salvarFichaLocal = useCallback(async () => {
-      const resultado = await saveToFirestore(personagem);
-      if (resultado.ok) {
-        showAlert("Ficha sincronizada com sucesso.", "Salvo");
-      } else if (resultado.semDestino) {
-        showAlert("Esta ficha está em modo local e não possui um destino de sincronização.", "Modo local");
-      } else {
-        showAlert(`Não foi possível sincronizar a ficha: ${resultado.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
+      if (isDeletingRef.current) return { ok: false, cancelado: true };
+      debouncedSave.cancel();
+      const destinoAtual = docRef.current;
+      const revision = localRevisionRef.current + 1;
+      localRevisionRef.current = revision;
+      const salvamento = saveToFirestore(personagem, destinoAtual);
+      inFlightSaveRef.current = salvamento;
+      inFlightSavesRef.current.add(salvamento);
+      const resultado = await salvamento;
+      inFlightSavesRef.current.delete(salvamento);
+      if (inFlightSaveRef.current === salvamento) inFlightSaveRef.current = null;
+      if (resultado.ok && docRef.current === destinoAtual) {
+          savedRevisionRef.current = Math.max(savedRevisionRef.current, revision);
       }
-  }, [saveToFirestore, personagem, showAlert]);
+      return resultado;
+  }, [saveToFirestore, personagem, debouncedSave]);
+
+  const voltarDaFicha = useCallback(async () => {
+      const salvamento = debouncedSave.flush() || inFlightSaveRef.current;
+      if (salvamento) {
+          const resultado = await aguardarComLimite(salvamento);
+          if (resultado.timeout) {
+              const sairMesmoAssim = await showConfirm(
+                  "A sincronização está demorando mais que o esperado. Deseja voltar mesmo assim? As alterações ainda podem estar pendentes neste dispositivo.",
+                  "Sincronização demorada",
+                  "Voltar mesmo assim",
+                  "Continuar na ficha",
+              );
+              if (!sairMesmoAssim) return;
+              if (onBack) onBack();
+              else navigate('/');
+              return;
+          }
+          if (!resultado.ok && !resultado.semDestino) {
+              showAlert(`Não foi possível salvar a última alteração: ${resultado.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
+              return;
+          }
+      }
+
+      if (localRevisionRef.current > savedRevisionRef.current && docRef.current) {
+          const destinoAtual = docRef.current;
+          const revision = localRevisionRef.current;
+          const resultado = await aguardarComLimite(saveToFirestore(personagem, destinoAtual));
+          if (resultado.timeout) {
+              const sairMesmoAssim = await showConfirm(
+                  "Não foi possível confirmar o salvamento agora. Deseja voltar mesmo assim?",
+                  "Sincronização demorada",
+                  "Voltar mesmo assim",
+                  "Continuar na ficha",
+              );
+              if (!sairMesmoAssim) return;
+              if (onBack) onBack();
+              else navigate('/');
+              return;
+          }
+          if (!resultado.ok) {
+              showAlert(`Não foi possível salvar a última alteração: ${resultado.error?.message || 'erro desconhecido'}`, "Erro ao salvar");
+              return;
+          }
+          savedRevisionRef.current = revision;
+      }
+
+      if (onBack) onBack();
+      else navigate('/');
+  }, [debouncedSave, navigate, onBack, personagem, saveToFirestore, showAlert, showConfirm]);
   
-  const limparFicha = useCallback(async () => { 
-      const confirmado = await showConfirm("Apagar ficha permanentemente?", "Limpar");
+  const excluirFicha = useCallback(async () => {
+      if (!podeExcluirFicha) {
+          showAlert("Somente o dono pode excluir esta ficha da mesa.", "Ação não permitida");
+          return { ok: false, naoPermitido: true };
+      }
+
+      const destinoExcluido = docRef.current;
+      if (!destinoExcluido) {
+          showAlert("Esta ficha não possui um destino de sincronização disponível para exclusão.", "Exclusão indisponível");
+          return { ok: false, semDestino: true };
+      }
+
+      const confirmado = await showConfirm(
+          "Esta ação exclui permanentemente a ficha. Gere um backup JSON antes de continuar.",
+          "Excluir ficha",
+          "Excluir permanentemente",
+          "Cancelar",
+      );
+      if (!confirmado) return { ok: false, cancelado: true };
+
       if(confirmado) { 
           try {
-            if(docRef.current) await deleteDoc(docRef.current);
-            navigate('/');
+            isDeletingRef.current = true;
+            debouncedSave.cancel();
+            const salvamentosEmAndamento = [...inFlightSavesRef.current];
+            if (salvamentosEmAndamento.length > 0) {
+              const esperaSalvamentos = await aguardarComLimite(
+                Promise.allSettled(salvamentosEmAndamento).then(() => ({ ok: true })),
+              );
+              if (esperaSalvamentos.timeout) {
+                docRef.current = destinoExcluido;
+                isDeletingRef.current = false;
+                showAlert("A exclusão foi cancelada porque uma sincronização anterior ainda não terminou. Aguarde alguns segundos e tente novamente.", "Sincronização pendente");
+                return { ok: false, timeout: true };
+              }
+            }
+            inFlightSaveRef.current = null;
+            docRef.current = null;
+            const exclusao = await aguardarComLimite(
+              deleteDoc(destinoExcluido).then(() => ({ ok: true })),
+            );
+            if (exclusao.timeout) {
+              showAlert("A exclusão foi enviada, mas a confirmação está demorando. A ficha permanecerá bloqueada para evitar que seja recriada.", "Exclusão pendente");
+              if (onBack) onBack();
+              else navigate('/');
+              return { ok: false, timeout: true, pendente: true };
+            }
+            if (!exclusao.ok) throw exclusao.error || new Error('Falha ao excluir a ficha.');
+            if (onBack) onBack();
+            else navigate('/');
+            return { ok: true };
           } catch (error) {
-            showAlert(`Não foi possível apagar a ficha: ${error.message}`, "Erro");
+            docRef.current = destinoExcluido;
+            isDeletingRef.current = false;
+            showAlert(`Não foi possível confirmar a exclusão: ${error.message}. Recarregue a ficha antes de continuar editando.`, "Erro");
+            return { ok: false, error };
           }
-      } 
-  }, [showConfirm, navigate, showAlert]);
-  
-  const exportarFicha = useCallback(() => { 
-      const blob = new Blob([JSON.stringify(personagem, null, 2)], {type: "application/json"}); 
-      const url = URL.createObjectURL(blob); 
-      const a = document.createElement("a"); 
-      a.href = url; a.download = `ficha_${personagem.info.nome || "agente"}.json`; a.click(); 
-  }, [personagem]);
-  
-  // REMOVI A FUNÇÃO 'importarFicha' PARA USAR APENAS O DASHBOARD
+      }
+      return { ok: false, cancelado: true };
+  }, [podeExcluirFicha, showConfirm, navigate, showAlert, debouncedSave, onBack]);
 
   // Props de Controles Memoizadas
   const controlesProps = useMemo(() => ({
     temaAtual: tema, 
-    onSave: salvarFichaLocal, 
-    onClear: limparFicha, 
-    onExport: exportarFicha, 
-    // onImport removido para evitar conflitos com o Dashboard
     onThemeChange: handleThemeChange, 
-    canChangeTheme: calculados.canChangeTheme
-  }), [tema, salvarFichaLocal, limparFicha, exportarFicha, handleThemeChange, calculados.canChangeTheme]);
+    canChangeTheme: isModoMesa && calculados.canChangeTheme
+  }), [tema, handleThemeChange, calculados.canChangeTheme, isModoMesa]);
 
   // Funções de Abrir Modais Memoizadas
   const openLoja = useCallback(() => setIsLojaOpen(true), []);
@@ -412,43 +666,85 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
       setNotaParaEditar(nota); setIsDiarioModalOpen(true); 
   }, []);
 
-  const VoltarBtn = !isModoMesa ? <button onClick={() => navigate('/')} className="btn-voltar-flutuante" style={{ top: '15px' }}>← DASHBOARD</button> : null;
-
   if (loading) {
       return (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', color: 'var(--cor-destaque)', backgroundColor: '#050a10' }}>
-              <img src="/assets/images/SimboloSemafinidade.webp" style={{ width: '100px', filter: 'drop-shadow(0 0 10px var(--cor-destaque))' }} alt="Carregando" />
+          <div className="ficha-loading" role="status" aria-live="polite">
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="Carregando" />
               <h1>Sincronizando Ficha...</h1>
+              <button type="button" className="ficha-loading-back" onClick={voltarDaFicha}>
+                  <AppIcon name="back" size={17} />
+                  {isModoMesa ? 'Voltar à mesa' : 'Voltar ao painel'}
+              </button>
+          </div>
+      );
+  }
+
+  if (loadError) {
+      return (
+          <div className="ficha-load-error" role="alert">
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" aria-hidden="true" />
+              <h1>Falha de sincronização</h1>
+              <p>{loadError}</p>
+              <div>
+                  <button type="button" onClick={() => setReloadToken(token => token + 1)}>Tentar novamente</button>
+                  <button type="button" onClick={voltarDaFicha}>Voltar</button>
+              </div>
           </div>
       );
   }
   
-  const LoadingComponent = () => <div className="item-placeholder" style={{padding: '50px', textAlign: 'center'}}>Carregando Aba...</div>;
+  const LoadingComponent = () => <div className="item-placeholder ficha-view-loading">Carregando aba...</div>;
 
   return (
-    <>
-      {VoltarBtn}
-      
+    <div className={`ficha-convergence-shell ${isModoMesa ? 'ficha-convergence-shell--mesa' : ''}`}>
       <div id="transition-overlay"></div>
 
-      <Suspense fallback={null}>
-        {isSangueAnimVisible && <AnimacaoSangue isVisible={isSangueAnimVisible} onComplete={() => { setIsSangueAnimVisible(false); aplicarTemaSemAnimacao('tema-sangue'); }} />}
-      </Suspense>
+      {!isModoMesa && (
+        <ElementRail
+          variante="ficha"
+          temaAtual={tema}
+          onThemeChange={handleThemeChange}
+          canChangeTheme={calculados.canChangeTheme}
+        />
+      )}
 
-      <Recursos dados={personagem.recursos} dadosPerseguicao={personagem.perseguicao} dadosVisibilidade={personagem.visibilidade} info={personagem.info} onFichaChange={handleFichaChange} buffsTemporarios={personagem.buffsTemporarios} onConsumirBuff={consumirBuffTemporario} />
+      <div className="ficha-convergence-workspace">
+        <div className="ficha-sticky-stack">
+          <Recursos
+            dados={personagem.recursos}
+            dadosPerseguicao={personagem.perseguicao}
+            dadosVisibilidade={personagem.visibilidade}
+            info={personagem.info}
+            onFichaChange={handleFichaChange}
+            buffsTemporarios={personagem.buffsTemporarios}
+            onConsumirBuff={consumirBuffTemporario}
+            onBack={voltarDaFicha}
+            onOpenTracker={onOpenTracker}
+          />
 
-      <nav className="ficha-abas">
-        {['principal', 'inventario', 'rituais', 'poderes', 'progressao', 'diario', 'exportar'].map(aba => (
-            <button key={aba} className={`ficha-aba-link ${abaAtiva === aba ? 'active' : ''}`} onClick={() => setAbaAtiva(aba)}>
-                {aba.charAt(0).toUpperCase() + aba.slice(1)}
+          <nav className="ficha-abas" aria-label="Seções da ficha">
+            {ABAS_FICHA.map(aba => (
+                <button
+                  key={aba.id}
+                  type="button"
+                  className={`ficha-aba-link ${abaAtiva === aba.id ? 'active' : ''}`}
+                  onClick={() => setAbaAtiva(aba.id)}
+                  aria-current={abaAtiva === aba.id ? 'page' : undefined}
+                  data-aba={aba.id}
+                >
+                    <AppIcon name={aba.icon} size={19} />
+                    <span>{aba.label}</span>
+                </button>
+            ))}
+            <button type="button" className="ficha-aba-link ficha-aba-link--interludio" onClick={openInterludio}>
+                <AppIcon name="rest" size={19} />
+                <span>Interlúdio</span>
             </button>
-        ))}
-        <button className="ficha-aba-link" style={{ color: 'var(--cor-destaque)', fontWeight: 'bold', marginLeft: 'auto' }} onClick={openInterludio}>
-            💤 Interlúdio
-        </button>
-      </nav>
-      
-      <Suspense fallback={<LoadingComponent />}>
+          </nav>
+        </div>
+
+        <div className="ficha-content-surface" data-aba-ativa={abaAtiva}>
+          <Suspense fallback={<LoadingComponent />}>
         {abaAtiva === 'principal' && (
           <FichaPrincipal
             personagem={personagem} calculados={calculados} fichaInstance={fichaInstance} handleFichaChange={handleFichaChange}
@@ -467,32 +763,34 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto }) {
           <PoderesAprendidos poderesAprendidos={personagem.poderes_aprendidos} info={personagem.info} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} onAbrirModal={openPoderes} />
         )}
         {abaAtiva === 'progressao' && (
-          <div className="ficha-aba-conteudo active" style={{maxWidth: '1400px', margin: '0 auto'}}>
-            <button className="btn-add-item btn-criar-trilha" onClick={openTrilha}>+ Criar Trilha</button>
-            <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} />
-          </div>
+          <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} onCriarTrilha={openTrilha} />
         )}
         {abaAtiva === 'diario' && (
           <Diario diarioData={personagem.diario || []} onAbrirModal={openEditNota} onRemoveNota={removeNota} />
         )}
 
-        {abaAtiva === 'exportar' && (
-          <div className="ficha-aba-conteudo active" style={{ maxWidth: '700px', margin: '20px auto', padding: '0 10px' }}>
-            <ExportFicha personagem={personagem} calculados={calculados} />
-          </div>
+        {abaAtiva === 'configuracoes' && (
+          <ConfiguracoesFicha
+            personagem={personagem}
+            calculados={calculados}
+            onSync={!devVisualMode && usuario && idAlvo ? salvarFichaLocal : undefined}
+            onDelete={!devVisualMode && usuario && idAlvo && podeExcluirFicha ? excluirFicha : undefined}
+            syncEnabled={!devVisualMode && Boolean(usuario && idAlvo)}
+            isModoMesa={isModoMesa}
+          />
         )}
-
-        <footer><p></p></footer>
         
         {isLojaOpen && <ModalLoja isOpen={isLojaOpen} onClose={() => setIsLojaOpen(false)} onAddItem={handleAddItem} pericias={periciasParaLoja} />}
         {isSelecaoOpen && itemPendente && <ModalSelecao isOpen={isSelecaoOpen} onClose={() => { setIsSelecaoOpen(false); setItemPendente(null); }} item={itemPendente} onSelect={handleVincularItem} />}
         {isRitualModalOpen && <ModalRituais isOpen={isRitualModalOpen} onClose={() => setIsRitualModalOpen(false)} onAddRitual={addRitual} />}
         {isTrilhaModalOpen && <ModalTrilhaCustom isOpen={isTrilhaModalOpen} onClose={() => setIsTrilhaModalOpen(false)} onAddTrilha={handleAddTrilhaCustom} classesList={OpcoesClasse} />}
-        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={null} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
+        {isPoderesModalOpen && <ModalPoderes isOpen={isPoderesModalOpen} onClose={() => setIsPoderesModalOpen(false)} classe={personagem.info.classe} poderesDisponiveis={null} poderesAprendidos={personagem.poderes_aprendidos} onTogglePoder={handleTogglePoder} onAbrirSelecaoPoder={(p) => { setIsPoderesModalOpen(false); setItemPendente({ powerKey: p.key, nome: p.nome, tituloModal: `Elemento`, descricaoModal: 'Escolha:', opcoes: opcoesElemento, tipoVinculo: 'poderElemento' }); setIsSelecaoOpen(true); }} poderesGerais={poderesGerais} poderesParanormais={poderesParanormais} />}
         {isModalEditarItemOpen && <ModalEditarItem isOpen={isModalEditarItemOpen} onClose={() => setIsModalEditarItemOpen(false)} onSave={handleSalvarItemEditado} item={itemParaEditar} pericias={periciasParaLoja} />}
         {isDiarioModalOpen && <ModalNota isOpen={isDiarioModalOpen} onClose={() => setIsDiarioModalOpen(false)} onSave={handleSalvarNota} notaAtual={notaParaEditar} />}
         {isInterludioModalOpen && <ModalInterludio isOpen={isInterludioModalOpen} onClose={() => setIsInterludioModalOpen(false)} onAplicar={handleAplicarInterludioHandler} limitePE={calculados.limite_pe || 1} origem={personagem.info.origem} inventario={personagem.inventario} />}
-      </Suspense> 
-    </>
+          </Suspense>
+        </div>
+      </div>
+    </div>
   )
 }

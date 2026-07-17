@@ -1,11 +1,17 @@
 // src/lib/mesas.js
 import { db } from './firebase';
 import { 
-  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc 
+  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, runTransaction
 } from 'firebase/firestore';
 
 // CORREÇÃO AQUI: Importa a classe default, não a instância nomeada
 import Personagem from './personagem'; 
+import {
+  criarIdEntidadeMesa,
+  criarListaInicialIniciativa,
+  removerParticipanteDaIniciativa,
+  resolverNomeLegivelJogador,
+} from './mesa-utils.js';
 
 // ... (Funções de Combate permanecem iguais: alternarCombate, avancarTurno, etc.) ...
 // ... (Funções de Iniciativa permanecem iguais) ...
@@ -21,11 +27,15 @@ function normalizarDadosPersonagem(dadosPersonagem = null) {
   return personagem.getDados();
 }
 
-export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem) {
+export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPersonagem, jogadorNome = '') {
   const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
 
   const dadosFinais = normalizarDadosPersonagem(dadosPersonagem);
-  dadosFinais.info.jogador = jogadorUid;
+  dadosFinais.info.jogador = resolverNomeLegivelJogador(
+    jogadorUid,
+    jogadorNome,
+    dadosFinais.info.jogador,
+  );
   await setDoc(charRef, dadosFinais);
 }
 
@@ -70,13 +80,9 @@ export async function alternarCombate(mesaId, status, jogadoresAtuais = []) {
     };
 
     if (status === true) {
-        const listaInicial = jogadoresAtuais.map(j => ({
-            uid: j.uid,
-            nome: j.nome,
-            valor: 0,
-            isNPC: false
-        }));
-        updateData.iniciativas = listaInicial;
+        const snap = await getDoc(mesaRef);
+        if (!snap.exists()) throw new Error("Mesa não encontrada.");
+        updateData.iniciativas = criarListaInicialIniciativa(jogadoresAtuais, snap.data().mestre);
     } else {
         updateData.iniciativas = [];
     }
@@ -134,7 +140,7 @@ export async function adicionarNPCIniciativa(mesaId, nomeNPC, valor, pvMax = 10)
     let lista = dados.iniciativas || [];
 
     lista.push({ 
-        uid: `npc_${Date.now()}`, 
+        uid: criarIdEntidadeMesa('npc'),
         nome: nomeNPC, 
         valor: parseInt(valor), 
         isNPC: true,
@@ -157,7 +163,7 @@ export async function adicionarMonstroIniciativa(mesaId, monstroData, iniciativa
     let lista = dados.iniciativas || [];
 
     lista.push({
-        uid: `monster_${Date.now()}`, 
+        uid: criarIdEntidadeMesa('monster'),
         nome: monstroData.nome,
         valor: parseInt(iniciativaRolada) || 0,
         isNPC: true,
@@ -188,13 +194,26 @@ export async function atualizarNPCStatus(mesaId, uidNPC, campo, valor) {
 
 export async function removerDaIniciativa(mesaId, uidAlvo) {
     const mesaRef = doc(db, "mesas", mesaId);
-    const snap = await getDoc(mesaRef);
-    if (!snap.exists()) return;
 
-    const dados = snap.data();
-    const novaLista = (dados.iniciativas || []).filter(i => i.uid !== uidAlvo);
-    
-    await updateDoc(mesaRef, { iniciativas: novaLista });
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(mesaRef);
+        if (!snap.exists()) return;
+
+        const dados = snap.data();
+        const listaAtual = Array.isArray(dados.iniciativas) ? dados.iniciativas : [];
+        const resultado = removerParticipanteDaIniciativa(
+            listaAtual,
+            uidAlvo,
+            dados.turnoAtual,
+        );
+
+        if (resultado.iniciativas.length === listaAtual.length) return;
+
+        transaction.update(mesaRef, {
+            iniciativas: resultado.iniciativas,
+            turnoAtual: resultado.turnoAtual
+        });
+    });
 }
 
 // --- GERENCIAMENTO DE MESA ---
@@ -245,11 +264,31 @@ export async function entrarNaMesa(mesaId, jogadorUid, jogadorNome) {
 
 export async function removerJogadorDaMesa(mesaId, jogadorUid) {
     const mesaRef = doc(db, "mesas", mesaId);
-    const snap = await getDoc(mesaRef);
-    if (!snap.exists()) return;
-    const dados = snap.data();
-    const novaLista = dados.jogadores.filter(j => j.uid !== jogadorUid);
-    await updateDoc(mesaRef, { jogadores: novaLista });
+    const personagemRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
+
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(mesaRef);
+        if (!snap.exists()) return;
+
+        const dados = snap.data();
+        if (dados.mestre === jogadorUid) {
+            throw new Error("O mestre não pode ser removido da própria mesa.");
+        }
+
+        const jogadores = Array.isArray(dados.jogadores) ? dados.jogadores : [];
+        const resultado = removerParticipanteDaIniciativa(
+            dados.iniciativas,
+            jogadorUid,
+            dados.turnoAtual,
+        );
+
+        transaction.update(mesaRef, {
+            jogadores: jogadores.filter(jogador => jogador.uid !== jogadorUid),
+            iniciativas: resultado.iniciativas,
+            turnoAtual: resultado.turnoAtual
+        });
+        transaction.delete(personagemRef);
+    });
 }
 
 export async function excluirMesaCompleta(mesaId) {

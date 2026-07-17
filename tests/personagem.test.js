@@ -57,6 +57,31 @@ test('mantém a estrutura necessária ao exportar e recarregar uma ficha', () =>
   assert.ok(Array.isArray(recarregado.poderes_aprendidos));
 });
 
+test('importação parcial mescla mapas com os padrões e ignora mapas inválidos', () => {
+  const parcial = new Personagem();
+  parcial.carregarDados({
+    atributos: { for: 4 },
+    defesa: { outros: 3 },
+    resistencias: { fogo: 5 },
+  });
+
+  assert.deepEqual(parcial.atributos, { for: 4, agi: 1, int: 1, pre: 1, vig: 1 });
+  assert.deepEqual(parcial.defesa, { equip: 0, outros: 3 });
+  assert.equal(parcial.resistencias.fogo, 5);
+  assert.equal(parcial.resistencias.corte, 0);
+
+  const invalido = new Personagem();
+  invalido.carregarDados({
+    atributos: ['for', 10],
+    defesa: 'sem mapa',
+    resistencias: null,
+  });
+
+  assert.deepEqual(invalido.atributos, { for: 1, agi: 1, int: 1, pre: 1, vig: 1 });
+  assert.deepEqual(invalido.defesa, { equip: 0, outros: 0 });
+  assert.equal(invalido.resistencias.fogo, 0);
+});
+
 test('condições penalizam os dados sem alterar atributos ou recursos máximos', () => {
   const personagem = criarPersonagemBase('combatente');
   const pvMaximo = personagem.recursos.pv_max;
@@ -67,6 +92,63 @@ test('condições penalizam os dados sem alterar atributos ou recursos máximos'
   assert.equal(personagem.getAtributoFinal('vig'), 1);
   assert.equal(personagem.recursos.pv_max, pvMaximo);
   assert.equal(personagem.getDadosPericia('fortitude', 'vig', 0).descricaoDados, '2d20 (pior)');
+});
+
+test('condições de combate alteram dados, não bônus fixos', () => {
+  const casos = [
+    { condicao: 'surdo', pericia: 'iniciativa', atributo: 'agi', dados: 2, mensagem: 'Surdo (-2d20 em Iniciativa)' },
+    { condicao: 'desprevenido', pericia: 'reflexos', atributo: 'agi', dados: 3, mensagem: 'Desprevenido (-1d20 em Reflexos)' },
+    { condicao: 'fascinado', pericia: 'percepcao', atributo: 'pre', dados: 2, mensagem: 'Fascinado (-2d20 em Percepção)' },
+    { condicao: 'agarrado', pericia: 'pontaria', atributo: 'agi', dados: 3, mensagem: 'Agarrado/Enredado (-1d20 em ataques)' },
+    { condicao: 'enredado', pericia: 'luta', atributo: 'for', dados: 3, mensagem: 'Agarrado/Enredado (-1d20 em ataques)' },
+    { condicao: 'caido', pericia: 'luta', atributo: 'for', dados: 2, mensagem: 'Caído (-2d20 em ataques corpo a corpo)' },
+  ];
+
+  for (const caso of casos) {
+    const personagem = new Personagem();
+    personagem.setAtributo(caso.atributo, 4);
+    personagem.toggleCondicao(caso.condicao);
+
+    const resultado = personagem.getDadosPericia(caso.pericia, caso.atributo, 0);
+    assert.equal(resultado.dados, caso.dados, caso.condicao);
+    assert.equal(resultado.bonus, 0, `${caso.condicao} não deve aplicar penalidade fixa`);
+    assert.match(resultado.msgCondicao, new RegExp(caso.mensagem.replace(/[()]/g, '\\$&')));
+  }
+});
+
+test('restrições de Cego e Indefeso são orientativas e não bloqueiam testes', () => {
+  const cego = new Personagem();
+  cego.setAtributo('pre', 3);
+  cego.toggleCondicao('cego');
+  const percepcao = cego.getDadosPericia('percepcao', 'pre', 0);
+
+  assert.equal(percepcao.dados, 3);
+  assert.equal(percepcao.efeitosOrientativos.naoPodeObservar, true);
+  assert.match(percepcao.msgCondicao, /não pode observar/i);
+
+  const indefeso = new Personagem();
+  indefeso.setAtributo('agi', 3);
+  indefeso.toggleCondicao('indefeso');
+  const reflexos = indefeso.getDadosPericia('reflexos', 'agi', 0);
+
+  assert.equal(reflexos.dados, 3);
+  assert.equal(reflexos.efeitosOrientativos.falhaAutomaticaReflexos, true);
+  assert.match(reflexos.msgCondicao, /sem bloquear o teste/i);
+});
+
+test('deslocamento respeita Caído e arredonda Lento para a grade de 1,5m', () => {
+  const lento = new Personagem();
+  lento.setInfo('deslocamento', 10);
+  lento.toggleCondicao('lento');
+  assert.equal(lento.getDeslocamentoFinal(), 4.5);
+
+  const caido = new Personagem();
+  caido.setInfo('deslocamento', 12);
+  caido.toggleCondicao('caido');
+  assert.equal(caido.getDeslocamentoFinal(), 1.5);
+
+  caido.toggleCondicao('agarrado');
+  assert.equal(caido.getDeslocamentoFinal(), 0);
 });
 
 test('deriva condições de PV e SAN sem misturá-las às condições manuais', () => {
@@ -139,6 +221,19 @@ test('visibilidade pode ficar negativa conforme as regras de furtividade', () =>
   assert.equal(personagem.visibilidade, -1);
 });
 
+test('perseguição é independente da visibilidade e aceita metas da mesa', () => {
+  const personagem = new Personagem();
+  personagem.setVisibilidade('visibilidade', 4);
+  personagem.setPerseguicao('metaSucessos', 5);
+  personagem.setPerseguicao('metaFalhas', 4);
+  personagem.setPerseguicao('sucessos', 5);
+  personagem.setPerseguicao('falhas', 4);
+  personagem.setPerseguicao('reset');
+
+  assert.equal(personagem.visibilidade, 4);
+  assert.deepEqual(personagem.perseguicao, { sucessos: 0, falhas: 0, metaSucessos: 5, metaFalhas: 4 });
+});
+
 test('interlúdio respeita participantes e limites de exercício e leitura', () => {
   const personagem = criarPersonagemBase('especialista');
   personagem.recursos.san_atual = 1;
@@ -159,6 +254,16 @@ test('interlúdio respeita participantes e limites de exercício e leitura', () 
   assert.match(leitura.extras[0], /\+2d6/);
   assert.equal(personagem.consumirBuffTemporario('leitura'), true);
   assert.equal(personagem.buffsTemporarios.leitura, 0);
+});
+
+test('interlúdio aceita decisões flexíveis da mesa e Revisar Caso duas vezes', () => {
+  const personagem = criarPersonagemBase('especialista');
+  const resultado = personagem.aplicarInterludio({
+    acoes: ['revisar', 'revisar', 'ler'],
+  });
+
+  assert.equal(resultado.extras.filter((mensagem) => /pistas perdidas/i.test(mensagem)).length, 2);
+  assert.equal(personagem.buffsTemporarios.leitura, 1);
 });
 
 test('manutenção repara somente o item selecionado', () => {

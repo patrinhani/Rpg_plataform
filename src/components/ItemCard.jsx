@@ -2,7 +2,7 @@
 // (ATUALIZADO: Com Calculadora de Dano Dinâmica e Tooltips de Mods)
 // (OTIMIZADO COM React.memo)
 
-import React, { memo } from 'react';
+import React, { memo, useId } from 'react';
 import { calcularDanoArma } from '../lib/calculosCombate.js';
 import {
   calcularAlcanceItem,
@@ -20,6 +20,7 @@ import {
  * - onAdd, onRemove, onToggle, onEdit: Funções de callback
  */
 function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
+  const autoToggleId = useId();
 
   // --- 1. Lógica de Exibição do Footer ---
   let footerComponent;
@@ -27,6 +28,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   if (tipo === 'loja') {
     footerComponent = (
       <button 
+        type="button"
         className="loja-item-add" 
         onClick={() => onAdd(item)} 
       >
@@ -38,24 +40,33 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
 
     footerComponent = (
       <> 
-        <div className="item-inventario-toggle" title="Se marcado, o peso e penalidades contam na ficha">
+        <div className="item-inventario-toggle">
           <input 
+            id={autoToggleId}
             type="checkbox" 
             className="toggle-item-calculo" 
             checked={isChecked}
             onChange={() => onToggle(item.inventarioId)} 
+            aria-describedby={`${autoToggleId}-help`}
           />
-          <label>Auto</label>
+          <label htmlFor={autoToggleId}>
+            <span>Auto</span>
+            <small id={`${autoToggleId}-help`}>Inclui peso e penalidades</small>
+          </label>
         </div>
         <button 
+          type="button"
           className="item-inventario-editar"
           onClick={() => onEdit(item.inventarioId)} 
+          aria-label={`Editar ${item.nome}`}
         >
           Editar
         </button>
         <button 
+          type="button"
           className="item-inventario-remover" 
           onClick={() => onRemove(item.inventarioId)}
+          aria-label={`Remover ${item.nome}`}
         >
           Remover
         </button>
@@ -64,11 +75,12 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   }
 
   // --- 2. Classes de Estilo (ex: cor da borda para itens paranormais) ---
-  let cardClasses = "item-card";
+  let cardClasses = `item-card item-card--${tipo || 'catalogo'}`;
   if (item.elemento) {
     cardClasses += ` ritual-card ${item.elemento.toLowerCase()}`;
   }
   if (item.quebrado) cardClasses += ' item-quebrado';
+  if (item.ignorarCalculos) cardClasses += ' is-calculation-disabled';
 
   // --- 3. Cálculos de Stats (Categoria e Espaços) ---
   const { categoria: categoriaFinal, espacos: espacosFinal, modificacoes: modsAplicadas } = calcularStatsItem(item);
@@ -85,7 +97,6 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   
   // Strings para exibição
   const nomesModsString = listaModsDetalhada.map(mod => mod.nome).join(', ');
-  const descricoesModsString = listaModsDetalhada.map(mod => `${mod.nome}: ${mod.descricao}`).join('\n');
 
   // --- 4. Cálculo de Dano Dinâmico ---
   // Se o item tem dano, calcula o valor real considerando as mods
@@ -99,7 +110,13 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
     <li className={cardClasses}>
       
       <div className="item-header">
-        <h3>{item.nome}{item.quebrado ? ' (Quebrado)' : ''}</h3>
+        <div className="item-title-stack">
+          <h3>{item.nome}</h3>
+          <div className="item-status-list">
+            {item.quebrado && <span className="item-status item-status--danger">Quebrado</span>}
+            {item.ignorarCalculos && <span className="item-status">Fora dos cálculos</span>}
+          </div>
+        </div>
         <div className="item-header-info">
           <div><strong>CAT:</strong> {categoriaFinal}</div>
           <div><strong>ESP:</strong> {Number.isInteger(espacosFinal) ? espacosFinal : espacosFinal.toFixed(1)}</div>
@@ -113,11 +130,11 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             <div className="item-detalhe">
                 <strong>Dano:</strong> 
                 {danoExibido !== item.dano ? (
-                    <span>
-                        <span style={{textDecoration: 'line-through', opacity: 0.6, marginRight: '6px', fontSize: '0.9em'}}>
+                    <span className="item-damage-comparison">
+                        <span className="item-damage-original">
                             {item.dano}
                         </span>
-                        <span style={{color: 'var(--cor-destaque)', fontWeight: 'bold'}}>
+                        <span className="item-damage-final">
                             {danoExibido}
                         </span>
                     </span>
@@ -139,7 +156,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
             <strong>Bônus:</strong> +{item.valorBonus} em {item.periciaVinculada}
           </div>
         )}
-        {item.tipoBonus === 'generico' && (
+        {item.tipoBonus === 'generico' && !item.periciaVinculada && (
           <div className="item-detalhe bonus">
             <strong>Bônus:</strong> +{item.valorBonus} (Vincular Perícia)
           </div>
@@ -152,21 +169,16 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
 
         {/* Lista de Modificações (se houver) */}
         {listaModsDetalhada.length > 0 && (
-          <div 
-            className="item-detalhe bonus" 
-            style={{ 
-                marginTop: '5px',
-                fontStyle: 'italic', 
-                fontSize: '0.85em', 
-                color: 'var(--cor-texto-label)', 
-                cursor: 'help',
-                borderTop: '1px dashed #444',
-                paddingTop: '4px'
-            }}
-            title={descricoesModsString} // Tooltip nativo com as descrições
-          >
-            <strong>Mods:</strong> {nomesModsString}
-          </div>
+          <details className="item-mod-details">
+            <summary><strong>Mods:</strong> {nomesModsString}</summary>
+            <ul>
+              {listaModsDetalhada.map((modificacao) => (
+                <li key={modificacao.nome}>
+                  <strong>{modificacao.nome}:</strong> {modificacao.descricao}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
 
         <div className="item-descricao">{item.descricao || "Sem descrição."}</div>

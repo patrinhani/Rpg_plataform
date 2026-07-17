@@ -117,12 +117,13 @@ function Pericias({
         <form className="pericia-custom-form" onSubmit={handleAddCustom}>
           <input
             type="text"
+            aria-label="Nome da perícia personalizada"
             placeholder="Nome da pericia"
             value={customNome}
             onChange={(e) => setCustomNome(e.target.value)}
             autoFocus
           />
-          <select value={customAttr} onChange={(e) => setCustomAttr(e.target.value)}>
+          <select aria-label="Atributo da perícia personalizada" value={customAttr} onChange={(e) => setCustomAttr(e.target.value)}>
             {ATRIBUTOS.map(attr => (
               <option key={attr.valor} value={attr.valor}>{attr.nome}</option>
             ))}
@@ -145,7 +146,6 @@ function Pericias({
             <li
               key={periciaKey}
               className={`pericia-item treino-${treinoValor} ${isOrigem ? 'pericia-origem' : ''} ${isCustom ? 'pericia-custom' : ''}`}
-              title={infoDados.msgCondicao || ""}
             >
               <span className="pericia-nome">
                 {periciaInfo.nome} ({periciaInfo.attr.toUpperCase()})
@@ -158,6 +158,7 @@ function Pericias({
                   className="btn-remover-pericia-custom"
                   onClick={() => onRemovePericiaCustom?.(periciaKey)}
                   title="Remover pericia customizada"
+                  aria-label={`Remover perícia ${periciaInfo.nome}`}
                 >
                   &times;
                 </button>
@@ -176,6 +177,13 @@ function Pericias({
                 <span className="pericia-bonus-texto">{infoDados.bonus >= 0 ? "+" : ""}{infoDados.bonus}</span>
               </div>
 
+              {infoDados.msgCondicao && (
+                <details className="pericia-condicao-details">
+                  <summary>Ajustes da condição</summary>
+                  <p>{infoDados.msgCondicao}</p>
+                </details>
+              )}
+
               <div className="pericia-manual-row">
                 <label htmlFor={`bonus_pericia_${periciaKey}`}>Manual</label>
                 <input
@@ -189,6 +197,7 @@ function Pericias({
               <select
                 id={periciaKey}
                 className="treino-pericia"
+                aria-label={`Grau de treinamento em ${periciaInfo.nome}`}
                 value={treinoValor}
                 onChange={handleChange}
               >

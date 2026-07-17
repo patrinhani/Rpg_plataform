@@ -166,7 +166,7 @@ const AnimacaoSangue = memo(({ isVisible, onComplete }) => {
             // --- INÍCIO DA CORREÇÃO ---
             // O caminho foi corrigido de .png para .webp
             textureLoader.load(
-                '/assets/images/SimboloSangue.webp', 
+                '/assets/images/optimized/SimboloSangue-1024.webp',
             // --- FIM DA CORREÇÃO ---
                 (texture) => {
                     const symbolAspect = texture.image.width / texture.image.height;

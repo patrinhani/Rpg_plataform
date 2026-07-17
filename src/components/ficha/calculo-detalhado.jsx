@@ -40,7 +40,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <span id="calc-pv-origem">{calculos.pv_origem}</span>
         </div>
         <div className="calc-linha">
-          <label>Bônus Manual (+PV p/ {escala})</label>
+          <label htmlFor="bonus-pv-nex">Bônus Manual (+PV p/ {escala})</label>
           <input 
             type="number" 
             id="bonus-pv-nex" 
@@ -53,6 +53,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-pv-outros"
+            aria-label="Bônus manual de PV — outros"
             value={dados.pv_outros}
             onChange={handleChange}
           />
@@ -83,6 +84,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-pe-nex"
+            aria-label={`Bônus manual de PE por ${escala}`}
             value={dados.pe_nex}
             onChange={handleChange}
           />
@@ -92,6 +94,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-pe-outros"
+            aria-label="Bônus manual de PE — outros"
             value={dados.pe_outros}
             onChange={handleChange}
           />
@@ -101,6 +104,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-limite-pe"
+            aria-label="Ajuste manual do limite de PE por turno"
             value={dados.limite_pe || 0}
             onChange={handleChange}
           />
@@ -131,6 +135,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-san-nex"
+            aria-label={`Bônus manual de Sanidade por ${escala}`}
             value={dados.san_nex}
             onChange={handleChange}
           />
@@ -140,6 +145,7 @@ function CalculoDetalhado({ dados, calculos, onFichaChange, classe }) {
           <input 
             type="number" 
             id="bonus-san-outros"
+            aria-label="Bônus manual de Sanidade — outros"
             value={dados.san_outros}
             onChange={handleChange}
           />

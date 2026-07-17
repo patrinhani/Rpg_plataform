@@ -1,525 +1,1046 @@
-// src/pages/Mesa/index.jsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { db } from '../../lib/firebase';
-import { doc, collection, onSnapshot } from 'firebase/firestore';
-import { useAuth } from '../../contexts/AuthContext';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useDialog } from '../../contexts/DialogContext'; 
-import '../Login/Login.css'; 
-
-import { 
-    importarPersonagemParaMesa, 
-    listarPersonagensPessoais, 
-    removerJogadorDaMesa, 
-    atualizarNomeMesa, 
-    alternarCombate, 
-    atualizarIniciativa, 
-    adicionarNPCIniciativa, 
-    adicionarMonstroIniciativa
-} from '../../lib/mesas';
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { useNavigate, useParams } from 'react-router-dom';
+import { db } from '../../lib/firebase.js';
+import { criarIdEntidadeMesa, removerParticipanteDaIniciativa } from '../../lib/mesa-utils.js';
+import {
+  adicionarMonstroIniciativa,
+  adicionarNPCIniciativa,
+  alternarCombate,
+  atualizarIniciativa,
+  atualizarNomeMesa,
+  importarPersonagemParaMesa,
+  listarPersonagensPessoais,
+  removerJogadorDaMesa,
+} from '../../lib/mesas.js';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useDialog } from '../../contexts/DialogContext.jsx';
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
-
-import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
+import ElementRail from '../../components/ElementRail.jsx';
+import ModalBase from '../../components/ModalBase.jsx';
+import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
+import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
 import Ficha from '../Ficha/index.jsx';
+import '../../styles/mesa.css';
+
+const DEV_AGENTES = [
+  { uid: 'dev-rafael', nome: 'Rafael Nunes' },
+  { uid: 'dev-helena', nome: 'Helena Vargas' },
+];
+
+const DEV_FICHAS = [
+  {
+    uid: 'dev-rafael',
+    info: {
+      nome: 'Rafael Nunes',
+      classe: 'Ocultista',
+      nex: '25%',
+      foto: '/assets/images/optimized/CharacterMorte-640.webp',
+    },
+    recursos: { pv_atual: 28, pv_max: 36 },
+  },
+  {
+    uid: 'dev-helena',
+    info: {
+      nome: 'Helena Vargas',
+      classe: 'Combatente',
+      nex: '60%',
+      foto: '/assets/images/optimized/CharacterSangue-640.webp',
+    },
+    recursos: { pv_atual: 54, pv_max: 72 },
+  },
+];
+
+function ordenarIniciativas(iniciativas) {
+  return [...iniciativas].sort((a, b) => Number(b.valor || 0) - Number(a.valor || 0));
+}
+
+function normalizarBusca(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function slugElemento(valor) {
+  return normalizarBusca(valor).replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function getBestiaryThumbnail(foto) {
+  return typeof foto === 'string' && foto.startsWith('/assets/bestiario/')
+    ? foto.replace('/assets/bestiario/', '/assets/bestiario/thumbs/')
+    : foto;
+}
 
 export default function Mesa() {
   const { mesaId } = useParams();
   const navigate = useNavigate();
-  const { usuario } = useAuth();
-  
+  const { usuario, devVisualMode } = useAuth();
   const { showAlert, showConfirm, showPrompt } = useDialog();
-  
+
   const [mesaData, setMesaData] = useState(null);
   const [fichasDaMesa, setFichasDaMesa] = useState([]);
   const [fichaAbertaId, setFichaAbertaId] = useState(null);
   const [showTrackerModal, setShowTrackerModal] = useState(false);
-
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
-  
-  // Estado para guardar o bestiário apenas quando carregado (Otimização de Carregamento)
   const [listaBestiario, setListaBestiario] = useState(null);
-
+  const [bestiarioLoading, setBestiarioLoading] = useState(false);
   const [criaturaSelecionada, setCriaturaSelecionada] = useState(null);
   const [minhasFichas, setMinhasFichas] = useState([]);
-
+  const [buscaBestiario, setBuscaBestiario] = useState('');
+  const [filtroElemento, setFiltroElemento] = useState('todos');
   const [iniValor, setIniValor] = useState('');
   const [npcNome, setNpcNome] = useState('');
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
+  const [actionBusy, setActionBusy] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [codigoCopiado, setCodigoCopiado] = useState(false);
 
-  // [OTIMIZAÇÃO DE PERFORMANCE - PARALAXE]
-  // Usamos useRef para manipular o DOM diretamente sem re-renderizar o React
   const parallaxRef = useRef(null);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      // Se a referência não existir (ex: página não carregou), não faz nada
-      if (!parallaxRef.current) return;
-
-      // Calcula a posição diretamente (Matemática leve)
-      const x = (window.innerWidth - e.pageX * 2) / 25;
-      const y = (window.innerHeight - e.pageY * 2) / 25;
-
-      // Aplica o estilo diretamente no elemento HTML (Zero React Re-renders)
-      parallaxRef.current.style.transform = `translate(${x}px, ${y}px)`;
-    };
-    
-    const handleOrientation = (e) => {
-      if (!parallaxRef.current) return;
-      const x = e.gamma ? e.gamma * 1.5 : 0;
-      const y = e.beta ? (e.beta - 45) * 1.5 : 0;
-      parallaxRef.current.style.transform = `translate(${x}px, ${y}px)`;
-    };
-
-    // 'passive: true' melhora a performance de scroll e touch
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', handleOrientation, { passive: true });
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (window.DeviceOrientationEvent) window.removeEventListener('deviceorientation', handleOrientation);
-    };
-  }, []);
+  const busyRef = useRef(false);
+  const encerrandoRef = useRef(false);
+  const copyTimerRef = useRef(null);
+  const bestiarySearchRef = useRef(null);
+  const importFirstItemRef = useRef(null);
 
   const sairDaMesa = useCallback(() => navigate('/'), [navigate]);
 
-  // 1. Monitorar Dados da Mesa
+  const executarAcao = useCallback(async (chave, acao, mensagemErro) => {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setActionBusy(chave);
+    setActionError('');
+
+    try {
+      await acao();
+      return true;
+    } catch (error) {
+      console.error(mensagemErro, error);
+      setActionError(mensagemErro);
+      return false;
+    } finally {
+      busyRef.current = false;
+      setActionBusy('');
+    }
+  }, []);
+
+  const notificarESair = useCallback(async (mensagem, titulo) => {
+    if (encerrandoRef.current) return;
+    encerrandoRef.current = true;
+    await showAlert(mensagem, titulo);
+    sairDaMesa();
+  }, [sairDaMesa, showAlert]);
+
   useEffect(() => {
-    if (!mesaId) return;
-    const unsub = onSnapshot(doc(db, "mesas", mesaId), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.jogadores && !data.jogadores.some(j => j.uid === usuario.uid)) {
-           showAlert("Você foi removido desta mesa.", "Aviso");
-           sairDaMesa();
-           return;
-        }
-        setMesaData(data);
-      } else {
-          showAlert("Esta mesa foi excluída ou não existe.", "Erro");
-          sairDaMesa();
+    if (fichaAbertaId) return;
+    document.title = mesaData?.nome
+      ? `C.A.O.S — ${mesaData.nome}`
+      : 'C.A.O.S — Mesa';
+  }, [fichaAbertaId, mesaData?.nome]);
+
+  useEffect(() => () => {
+    if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    const finePointer = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)');
+    if (!finePointer.matches) return undefined;
+
+    let frameId = null;
+    const handlePointerMove = (event) => {
+      if (!parallaxRef.current || document.body.classList.contains('modo-economia')) return;
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        const x = (window.innerWidth - event.clientX * 2) / 45;
+        const y = (window.innerHeight - event.clientY * 2) / 45;
+        parallaxRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      });
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mesaId || !usuario?.uid) return undefined;
+
+    if (devVisualMode) {
+      const jogadores = [
+        { uid: usuario.uid, nome: usuario.displayName || 'Codex Visual' },
+        ...DEV_AGENTES,
+      ];
+      setMesaData({
+        nome: 'Operação Convergência',
+        mestre: usuario.uid,
+        jogadores,
+        emCombate: true,
+        rodada: 3,
+        turnoAtual: 0,
+        iniciativas: ordenarIniciativas([
+          { uid: 'dev-helena', nome: 'Helena Vargas', valor: 18, isNPC: false },
+          {
+            uid: 'dev-criatura',
+            nome: 'Aberração de Carne',
+            valor: 14,
+            isNPC: true,
+            isMonster: true,
+            pv_atual: 70,
+            pv_max: 70,
+            fichaCompleta: {
+              nome: 'Aberração de Carne',
+              elemento: 'Sangue',
+              vd: 40,
+              tipo: 'Criatura — Grande',
+              foto: '/assets/bestiario/aberracao.webp',
+              pv_atual: 70,
+              pv_max: 70,
+              atributos: { agi: 1, for: 3, int: 0, pre: 1, vig: 3 },
+              acoes: [{ nome: 'Pancada', descricao: 'Ataque corpo a corpo. Resultado definido com dados físicos.' }],
+            },
+          },
+          { uid: 'dev-rafael', nome: 'Rafael Nunes', valor: 11, isNPC: false },
+        ]),
+      });
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(doc(db, 'mesas', mesaId), (snapshot) => {
+      if (!snapshot.exists()) {
+        void notificarESair('Esta mesa foi excluída ou não existe.', 'Erro');
+        return;
       }
+
+      const data = snapshot.data();
+      const jogadores = Array.isArray(data.jogadores) ? data.jogadores : [];
+      if (!jogadores.some((jogador) => jogador.uid === usuario.uid)) {
+        void notificarESair('Você foi removido desta mesa.', 'Aviso');
+        return;
+      }
+      setMesaData({ ...data, jogadores });
     }, (error) => {
-       console.error("Erro ao carregar mesa:", error);
-       showAlert("Erro de permissão ou conexão.", "Erro");
-       sairDaMesa();
+      console.error('Erro ao carregar mesa:', error);
+      void notificarESair('Erro de permissão ou conexão ao carregar a mesa.', 'Erro');
     });
-    return () => unsub();
-  }, [mesaId, usuario.uid, showAlert, sairDaMesa]);
 
-  const souMestre = mesaData?.mestre === usuario.uid;
-  const emCombate = mesaData?.emCombate || false;
-  const isFichaOpen = !!fichaAbertaId;
+    return unsubscribe;
+  }, [devVisualMode, mesaId, notificarESair, usuario]);
 
-  // 2. Monitorar Todas as Fichas
   useEffect(() => {
-    if (!mesaId) return;
-    const unsub = onSnapshot(collection(db, "mesas", mesaId, "personagens"), (snapshot) => {
-        const lista = [];
-        snapshot.forEach(doc => lista.push({ uid: doc.id, ...doc.data() }));
-        setFichasDaMesa(lista);
+    if (!mesaId) return undefined;
+
+    if (devVisualMode) {
+      setFichasDaMesa(DEV_FICHAS);
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'mesas', mesaId, 'personagens'),
+      (snapshot) => {
+        setFichasDaMesa(snapshot.docs.map((documento) => ({ uid: documento.id, ...documento.data() })));
+      },
+      (error) => {
+        console.error('Erro ao sincronizar fichas da mesa:', error);
+        setActionError('Não foi possível sincronizar as fichas desta mesa.');
+      },
+    );
+
+    return unsubscribe;
+  }, [devVisualMode, mesaId]);
+
+  const jogadores = useMemo(
+    () => (Array.isArray(mesaData?.jogadores) ? mesaData.jogadores : []),
+    [mesaData?.jogadores],
+  );
+  const souMestre = mesaData?.mestre === usuario?.uid;
+  const emCombate = Boolean(mesaData?.emCombate);
+  const isFichaOpen = Boolean(fichaAbertaId);
+  const meuPersonagem = fichasDaMesa.find((ficha) => ficha.uid === usuario?.uid);
+  const agentes = jogadores.filter((jogador) => jogador.uid !== mesaData?.mestre);
+  const nomeJogadorAtual = jogadores.find((jogador) => jogador.uid === usuario?.uid)?.nome
+    || usuario?.displayName
+    || 'Agente';
+
+  const elementosBestiario = useMemo(() => {
+    if (!listaBestiario) return [];
+    return [...new Set(listaBestiario.map((criatura) => criatura.elemento).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [listaBestiario]);
+
+  const criaturasFiltradas = useMemo(() => {
+    if (!listaBestiario) return [];
+    const termo = normalizarBusca(buscaBestiario.trim());
+    return listaBestiario.filter((criatura) => {
+      const correspondeElemento = filtroElemento === 'todos'
+        || normalizarBusca(criatura.elemento) === normalizarBusca(filtroElemento);
+      const correspondeBusca = !termo
+        || normalizarBusca(criatura.nome).includes(termo)
+        || normalizarBusca(criatura.tipo).includes(termo);
+      return correspondeElemento && correspondeBusca;
     });
-    return () => unsub();
-  }, [mesaId]);
+  }, [buscaBestiario, filtroElemento, listaBestiario]);
 
-  // --- AÇÕES ---
-
-  // Função otimizada para carregar bestiário sob demanda
-  const abrirBestiario = async () => {
-      setShowBestiarioModal(true);
-      if (!listaBestiario) {
-          try {
-              // Importação dinâmica (Code Splitting)
-              const modulo = await import('../../lib/bestiario');
-              setListaBestiario(modulo.bestiario);
-          } catch (error) {
-              console.error("Erro ao carregar o bestiário:", error);
-              showAlert("Erro ao carregar lista de criaturas.", "Erro");
-          }
-      }
+  const carregarBestiario = async () => {
+    if (bestiarioLoading) return;
+    setBestiarioLoading(true);
+    setActionError('');
+    try {
+      const modulo = await import('../../lib/bestiario.js');
+      setListaBestiario(modulo.bestiario);
+    } catch (error) {
+      console.error('Erro ao carregar o bestiário:', error);
+      setActionError('Não foi possível carregar o bestiário. Tente novamente.');
+      setListaBestiario(null);
+    } finally {
+      setBestiarioLoading(false);
+    }
   };
 
-  const handleCopiarCodigo = () => { 
-      navigator.clipboard.writeText(mesaId); 
-      showAlert("Código copiado para a área de transferência!", "Sucesso"); 
+  const abrirBestiario = () => {
+    setActionError('');
+    setShowBestiarioModal(true);
+    if (!listaBestiario) void carregarBestiario();
   };
-  
+
+  const handleCopiarCodigo = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API indisponível');
+      await navigator.clipboard.writeText(mesaId);
+      setCodigoCopiado(true);
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = window.setTimeout(() => setCodigoCopiado(false), 2200);
+    } catch (error) {
+      console.error('Erro ao copiar código da mesa:', error);
+      setActionError('Não foi possível copiar o código automaticamente. Selecione o código manualmente.');
+    }
+  };
+
   const handleEditarNome = async () => {
-      if (!souMestre) return;
-      const novo = await showPrompt("Novo nome da mesa:", "Editar Mesa", "Nome da Mesa", mesaData.nome);
-      if (novo && novo.trim()) await atualizarNomeMesa(mesaId, novo);
+    if (!souMestre) return;
+    const novoNome = await showPrompt('Novo nome da mesa:', 'Editar Mesa', 'Nome da Mesa', mesaData.nome);
+    if (!novoNome?.trim()) return;
+
+    if (devVisualMode) {
+      setMesaData((atual) => ({ ...atual, nome: novoNome.trim() }));
+      return;
+    }
+
+    await executarAcao(
+      'nome',
+      () => atualizarNomeMesa(mesaId, novoNome.trim()),
+      'Não foi possível atualizar o nome da mesa.',
+    );
   };
 
   const handleExpulsar = async (uid) => {
-      const confirmado = await showConfirm("Tem certeza que deseja remover este jogador da mesa?", "Expulsar Jogador");
-      if (confirmado) {
-          await removerJogadorDaMesa(mesaId, uid);
-      }
+    const confirmado = await showConfirm('Tem certeza que deseja remover este jogador da mesa?', 'Expulsar Jogador');
+    if (!confirmado) return;
+
+    if (devVisualMode) {
+      setMesaData((atual) => {
+        const resultado = removerParticipanteDaIniciativa(
+          atual.iniciativas,
+          uid,
+          atual.turnoAtual,
+        );
+        return {
+          ...atual,
+          jogadores: atual.jogadores.filter((jogador) => jogador.uid !== uid),
+          iniciativas: resultado.iniciativas,
+          turnoAtual: resultado.turnoAtual,
+        };
+      });
+      setFichasDaMesa((atuais) => atuais.filter((ficha) => ficha.uid !== uid));
+      return;
+    }
+
+    await executarAcao(
+      `expulsar-${uid}`,
+      () => removerJogadorDaMesa(mesaId, uid),
+      'Não foi possível remover o jogador da mesa.',
+    );
   };
 
   const toggleCombate = async () => {
-      await alternarCombate(mesaId, !emCombate, mesaData.jogadores);
-  };
-  
-  const enviarIniciativa = async () => {
-      if (!iniValor) return;
-      const ficha = fichasDaMesa.find(f => f.uid === usuario.uid);
-      const nomeExibicao = ficha?.info?.nome || usuario.displayName;
-      await atualizarIniciativa(mesaId, usuario.uid, nomeExibicao, iniValor);
-      setIniValor('');
+    if (devVisualMode) {
+      setMesaData((atual) => {
+        const novoStatus = !atual.emCombate;
+        return {
+          ...atual,
+          emCombate: novoStatus,
+          iniciativas: novoStatus
+            ? agentes.map((agente) => ({ ...agente, valor: 0, isNPC: false }))
+            : [],
+          turnoAtual: 0,
+          rodada: 1,
+        };
+      });
+      return;
+    }
+
+    await executarAcao(
+      'combate',
+      () => alternarCombate(mesaId, !emCombate, agentes),
+      'Não foi possível alterar o estado do combate.',
+    );
   };
 
-  const addNPC = async () => {
-      if (!npcNome || !npcIni) return;
-      await adicionarNPCIniciativa(mesaId, npcNome, npcIni, npcPV);
-      setNpcNome(''); setNpcIni('');
+  const enviarIniciativa = async (event) => {
+    event.preventDefault();
+    if (iniValor === '') return;
+    const ficha = fichasDaMesa.find((item) => item.uid === usuario.uid);
+    const nomeExibicao = ficha?.info?.nome || usuario.displayName || 'Agente';
+
+    if (devVisualMode) {
+      setMesaData((atual) => ({
+        ...atual,
+        iniciativas: ordenarIniciativas([
+          ...(atual.iniciativas || []).filter((item) => item.uid !== usuario.uid),
+          { uid: usuario.uid, nome: nomeExibicao, valor: Number(iniValor), isNPC: false },
+        ]),
+      }));
+      setIniValor('');
+      return;
+    }
+
+    const sucesso = await executarAcao(
+      'iniciativa',
+      () => atualizarIniciativa(mesaId, usuario.uid, nomeExibicao, iniValor),
+      'Não foi possível registrar sua iniciativa.',
+    );
+    if (sucesso) setIniValor('');
+  };
+
+  const addNPC = async (event) => {
+    event.preventDefault();
+    if (!npcNome.trim() || npcIni === '') return;
+
+    if (devVisualMode) {
+      setMesaData((atual) => ({
+        ...atual,
+        iniciativas: ordenarIniciativas([
+          ...(atual.iniciativas || []),
+          {
+            uid: criarIdEntidadeMesa('dev-npc'),
+            nome: npcNome.trim(),
+            valor: Number(npcIni),
+            pv_atual: Number(npcPV),
+            pv_max: Number(npcPV),
+            isNPC: true,
+          },
+        ]),
+      }));
+      setNpcNome('');
+      setNpcIni('');
+      return;
+    }
+
+    const sucesso = await executarAcao(
+      'npc',
+      () => adicionarNPCIniciativa(mesaId, npcNome.trim(), npcIni, npcPV),
+      'Não foi possível adicionar o NPC à iniciativa.',
+    );
+    if (sucesso) {
+      setNpcNome('');
+      setNpcIni('');
+    }
   };
 
   const adicionarMonstro = async (monstro) => {
-      const ini = await showPrompt(`Iniciativa para ${monstro.nome} (Bônus: ${monstro.iniciativa}):`, "Adicionar Monstro", "0", "0");
-      if (ini !== null) { 
-          await adicionarMonstroIniciativa(mesaId, monstro, ini || "0");
-          setShowBestiarioModal(false);
-      }
+    const iniciativa = await showPrompt(
+      `Informe o resultado físico da iniciativa de ${monstro.nome} (referência: ${monstro.iniciativa}):`,
+      'Adicionar Criatura',
+      'Resultado da iniciativa',
+      '0',
+    );
+    if (iniciativa === null) return;
+
+    if (devVisualMode) {
+      setMesaData((atual) => ({
+        ...atual,
+        iniciativas: ordenarIniciativas([
+          ...(atual.iniciativas || []),
+          {
+            uid: criarIdEntidadeMesa(`dev-monstro-${monstro.id}`),
+            nome: monstro.nome,
+            valor: Number(iniciativa || 0),
+            pv_atual: monstro.pv_atual,
+            pv_max: monstro.pv_max,
+            isNPC: true,
+            isMonster: true,
+            fichaCompleta: monstro,
+          },
+        ]),
+      }));
+      setShowBestiarioModal(false);
+      return;
+    }
+
+    const sucesso = await executarAcao(
+      `monstro-${monstro.id}`,
+      () => adicionarMonstroIniciativa(mesaId, monstro, iniciativa || '0'),
+      `Não foi possível adicionar ${monstro.nome} à iniciativa.`,
+    );
+    if (sucesso) setShowBestiarioModal(false);
   };
 
   const abrirImportacao = async () => {
-      const lista = await listarPersonagensPessoais(usuario.uid);
-      setMinhasFichas(lista);
+    setActionError('');
+    if (devVisualMode) {
+      setMinhasFichas(DEV_FICHAS.map((ficha, index) => ({
+        id: `dev-import-${index}`,
+        nome: ficha.info.nome,
+        classe: ficha.info.classe,
+        nex: ficha.info.nex,
+        dadosCompletos: ficha,
+      })));
       setShowImportModal(true);
+      return;
+    }
+
+    const sucesso = await executarAcao(
+      'listar-fichas',
+      async () => setMinhasFichas(await listarPersonagensPessoais(usuario.uid)),
+      'Não foi possível carregar suas fichas pessoais.',
+    );
+    if (sucesso) setShowImportModal(true);
   };
-  
+
   const confirmarImportacao = async (dadosFicha) => {
-      const confirmado = await showConfirm(`Importar "${dadosFicha.info.nome}" para esta mesa?`, "Importar Personagem");
-      if (confirmado) {
-          await importarPersonagemParaMesa(mesaId, usuario.uid, dadosFicha);
-          setShowImportModal(false);
-      }
+    const nomeFicha = dadosFicha?.info?.nome || 'Sem nome';
+    const confirmado = await showConfirm(`Importar "${nomeFicha}" para esta mesa?`, 'Importar Personagem');
+    if (!confirmado) return;
+
+    if (devVisualMode) {
+      setFichasDaMesa((atuais) => [
+        ...atuais.filter((ficha) => ficha.uid !== usuario.uid),
+        {
+          ...dadosFicha,
+          uid: usuario.uid,
+          info: { ...dadosFicha.info, jogador: nomeJogadorAtual },
+        },
+      ]);
+      setShowImportModal(false);
+      return;
+    }
+
+    const sucesso = await executarAcao(
+      'importar-ficha',
+      () => importarPersonagemParaMesa(mesaId, usuario.uid, dadosFicha, nomeJogadorAtual),
+      'Não foi possível importar a ficha para esta mesa.',
+    );
+    if (sucesso) setShowImportModal(false);
   };
 
   const criarNova = async () => {
-      const confirmado = await showConfirm("Criar uma ficha do zero nesta mesa?", "Nova Ficha");
-      if (confirmado) {
-          await importarPersonagemParaMesa(mesaId, usuario.uid, null);
-      }
+    const confirmado = await showConfirm('Criar uma ficha do zero nesta mesa?', 'Nova Ficha');
+    if (!confirmado) return;
+
+    if (devVisualMode) {
+      setFichasDaMesa((atuais) => [
+        ...atuais.filter((ficha) => ficha.uid !== usuario.uid),
+        {
+          uid: usuario.uid,
+          info: {
+            nome: 'Novo Agente',
+            classe: 'Mundano',
+            nex: '0%',
+            jogador: nomeJogadorAtual,
+          },
+          recursos: { pv_atual: 8, pv_max: 8 },
+        },
+      ]);
+      return;
+    }
+
+    await executarAcao(
+      'nova-ficha',
+      () => importarPersonagemParaMesa(mesaId, usuario.uid, null, nomeJogadorAtual),
+      'Não foi possível criar a ficha nesta mesa.',
+    );
   };
 
-  if (!mesaData) return <div className="item-placeholder">Carregando Mesa...</div>;
-  
-  const meuPersonagem = fichasDaMesa.find(f => f.uid === usuario.uid);
-  
-  // MODO FICHA
-  if (isFichaOpen) {
-      return (
-        <FichaProvider>
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#050505' }}>
-                
-                {emCombate && (
-                    <button 
-                        onClick={() => setShowTrackerModal(true)} 
-                        className="btn-login primary"
-                        style={{ 
-                          position: 'fixed', top: '15px', right: '15px', zIndex: 2000, 
-                          padding: '10px 15px', fontSize: '1em', border: 'none', 
-                          borderRadius: '4px', cursor: 'pointer', margin: 0
-                        }} 
-                    >
-                        ⚔️ Tracker (Popup)
-                    </button>
-                )}
-                
-                <div style={{ position: 'relative', flexGrow: 1 }}>
-                    <button 
-                        onClick={() => setFichaAbertaId(null)} 
-                        className="btn-voltar-flutuante"
-                        style={{ top: '15px', left: '15px' }} 
-                    >
-                        ← VOLTAR PARA A MESA
-                    </button>
-                    <Ficha fichaId={fichaAbertaId} mesaContexto={mesaId} /> 
-                </div>
-                
-                {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
-
-                {showTrackerModal && (
-                    <div className="modal-overlay" onClick={() => setShowTrackerModal(false)}>
-                        <div 
-                            className="modal-conteudo modal-tracker" 
-                            style={{ maxWidth: '600px', width: '90%', maxHeight: '80vh' }} 
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="modal-header">
-                                <h3>Tracker de Iniciativa</h3>
-                                <button onClick={() => setShowTrackerModal(false)} className="btn-fechar-modal">X</button>
-                            </div>
-                            <div className="modal-body" style={{ padding: '10px' }}>
-                                <IniciativaTracker 
-                                    mesaId={mesaId}
-                                    iniciativas={mesaData.iniciativas || []}
-                                    turnoAtual={mesaData.turnoAtual || 0}
-                                    rodada={mesaData.rodada || 1}
-                                    souMestre={souMestre}
-                                    fichasDaMesa={fichasDaMesa}
-                                    usuarioUid={usuario.uid}
-                                    onVerFichaCriatura={setCriaturaSelecionada}
-                                    compact={false} 
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </FichaProvider>
-      );
+  if (!mesaData) {
+    return (
+      <div className="ficha-loading" role="status" aria-live="polite">
+        <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" aria-hidden="true" />
+        <h1>Sincronizando mesa...</h1>
+      </div>
+    );
   }
 
-  // MODO MESA
+  const tracker = (
+    <IniciativaTracker
+      mesaId={mesaId}
+      iniciativas={mesaData.iniciativas || []}
+      turnoAtual={mesaData.turnoAtual || 0}
+      rodada={mesaData.rodada || 1}
+      souMestre={souMestre}
+      fichasDaMesa={fichasDaMesa}
+      onVerFichaCriatura={setCriaturaSelecionada}
+      compact={false}
+    />
+  );
+
+  if (isFichaOpen) {
+    return (
+      <FichaProvider>
+        <div className="mesa-ficha-shell">
+          <Ficha
+            fichaId={fichaAbertaId}
+            mesaContexto={mesaId}
+            onBack={() => setFichaAbertaId(null)}
+            onOpenTracker={emCombate ? () => setShowTrackerModal(true) : undefined}
+          />
+
+          <ModalBase
+            isOpen={showTrackerModal}
+            onClose={() => setShowTrackerModal(false)}
+            title="Tracker de Iniciativa"
+            size="large"
+            closeLabel="Fechar tracker de iniciativa"
+            bodyClassName="mesa-tracker-modal__body"
+          >
+            {tracker}
+          </ModalBase>
+
+          {criaturaSelecionada && (
+            <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />
+          )}
+        </div>
+      </FichaProvider>
+    );
+  }
+
   return (
-    <div style={{ paddingTop: '30px', width: '100%', minHeight: '100vh', position: 'relative', overflowX: 'hidden', backgroundColor: '#020406' }}>
-      
-      {/* [CAMADA DE PARALAXE OTIMIZADA] 
-        Usamos ref={parallaxRef} e willChange: 'transform' para performance máxima.
-      */}
-      <div 
-        ref={parallaxRef} 
-        className="parallax-layer" 
-        style={{ 
-          position: 'fixed', 
-          zIndex: 0,
-          willChange: 'transform', // Avisa o navegador para usar a GPU
-          top: 0, left: 0, right: 0, bottom: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}
-      >
-        <img 
-          src="/assets/images/Character.webp" 
-          alt="Símbolo de Fundo" 
-          className="login-bg-symbol" 
-        />
+    <div className={`convergence-page dashboard-page mesa-page ${emCombate ? 'mesa-page--combat' : ''}`}>
+      <div ref={parallaxRef} className="dashboard-ambient-art mesa-ambient-art" aria-hidden="true">
+        <img src="/assets/images/optimized/Character-1280.webp" alt="" decoding="async" />
       </div>
 
-      <div 
-        className="dashboard-container box" 
-        style={{ 
-            background: 'rgba(12, 18, 24, 0.75)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 0 60px rgba(0, 0, 0, 0.8)',
-            position: 'relative', 
-            zIndex: 1, 
-            
-            minHeight: '90vh', 
-            borderColor: emCombate ? 'var(--cor-destaque)' : 'rgba(255, 255, 255, 0.1)' 
-        }}
-      >
-        
-        <div className="dashboard-header">
-             <div>
-                 <h1 
-                    style={{margin:0, cursor: souMestre?'pointer':'default', color: souMestre?'gold':'#fff'}} 
-                    onClick={handleEditarNome}
-                    title={souMestre ? "Clique para editar o nome" : ""}
-                 >
-                    {souMestre?'👑 ':''}{mesaData.nome}
-                 </h1>
-                 {souMestre && (
-                    <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'5px'}}>
-                        <code style={{background:'#222', padding:'2px 6px', borderRadius:'4px', color:'gold'}}>{mesaId}</code>
-                        <button onClick={handleCopiarCodigo} style={{fontSize:'0.7em', padding:'2px 5px'}}>Copiar ID</button>
-                    </div>
-                 )}
-             </div>
-             <div style={{display:'flex', gap:'10px'}}>
-                {souMestre && (
-                    <button 
-                        onClick={toggleCombate} 
-                        style={{
-                            background: emCombate ? '#333' : 'var(--cor-destaque)', 
-                            color: emCombate ? '#aaa' : '#000',
-                            border: '1px solid #555'
-                        }}
-                    >
-                        {emCombate ? 'ENCERRAR COMBATE' : '⚔️ INICIAR COMBATE'}
-                    </button>
-                )}
-                <button onClick={sairDaMesa} className="item-inventario-remover">Sair</button>
-             </div>
-        </div>
+      <ElementRail variante="dashboard" temaAtual="tema-ordem" />
 
-        {emCombate && (
-            <div style={{ marginBottom: '20px' }}>
-                <IniciativaTracker 
-                    mesaId={mesaId}
-                    iniciativas={mesaData.iniciativas || []}
-                    turnoAtual={mesaData.turnoAtual || 0}
-                    rodada={mesaData.rodada || 1}
-                    souMestre={souMestre}
-                    fichasDaMesa={fichasDaMesa}
-                    usuarioUid={usuario.uid}
-                    onVerFichaCriatura={setCriaturaSelecionada}
-                    compact={false}
-                />
-                <div style={{ display:'flex', gap:'15px', justifyContent:'center', marginTop: '10px', flexWrap: 'wrap', background: 'rgba(0,0,0,0.6)', padding:'15px', borderRadius:'0 0 8px 8px' }}>
-                    {souMestre ? (
-                        <>
-                            <button onClick={abrirBestiario} className="btn-login google" style={{width:'auto', padding:'5px 20px'}}>+ BESTIÁRIO</button>
-                            <div style={{display:'flex', gap:'5px', alignItems:'center', borderLeft:'1px solid #555', paddingLeft:'15px'}}>
-                                <span style={{color:'gold', fontSize:'0.9em'}}>NPC Rápido:</span>
-                                <input type="text" placeholder="Nome" value={npcNome} onChange={e=>setNpcNome(e.target.value)} style={{width:'100px'}} />
-                                <input type="number" placeholder="Ini" value={npcIni} onChange={e=>setNpcIni(e.target.value)} style={{width:'50px'}} />
-                                <input type="number" placeholder="PV" value={npcPV} onChange={e=>setNpcPV(e.target.value)} style={{width:'50px'}} />
-                                <button onClick={addNPC}>Add</button>
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
-                            <label>Sua Iniciativa:</label>
-                            <input type="number" placeholder="Valor" value={iniValor} onChange={e=>setIniValor(e.target.value)} style={{width:'100px'}} />
-                            <button onClick={enviarIniciativa} className="btn-login primary" style={{margin:0}}>ENVIAR</button>
-                        </div>
-                    )}
-                </div>
+      <main className="dashboard-workspace mesa-workspace" aria-busy={Boolean(actionBusy)}>
+        <header className="dashboard-topbar mesa-topbar">
+          <div className="mesa-heading">
+            <span className="convergence-eyebrow">Operação compartilhada</span>
+            <div className="mesa-title-row">
+              <h1>{mesaData.nome || 'Mesa sem nome'}</h1>
+              {souMestre && (
+                <button
+                  type="button"
+                  className="mesa-edit-name"
+                  onClick={handleEditarNome}
+                  disabled={Boolean(actionBusy)}
+                >
+                  Editar
+                </button>
+              )}
             </div>
+            {souMestre && (
+              <div className="mesa-code-row">
+                <span>Código</span>
+                <code>{mesaId}</code>
+                <button type="button" onClick={handleCopiarCodigo} aria-label="Copiar código da mesa">
+                  <AppIcon name="code" size={16} />
+                  <span>{codigoCopiado ? 'Copiado' : 'Copiar'}</span>
+                </button>
+                <span className="caos-visually-hidden" aria-live="polite">
+                  {codigoCopiado ? 'Código copiado para a área de transferência.' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="mesa-topbar-actions">
+            {souMestre && (
+              <button
+                type="button"
+                className={`mesa-combat-toggle ${emCombate ? 'is-active' : ''}`}
+                onClick={toggleCombate}
+                disabled={Boolean(actionBusy)}
+              >
+                <AppIcon name="mission" size={18} />
+                <span>{emCombate ? 'Encerrar combate' : 'Iniciar combate'}</span>
+              </button>
+            )}
+            <button type="button" className="convergence-icon-button mesa-exit" onClick={sairDaMesa}>
+              <AppIcon name="logout" size={18} />
+              <span>Sair da mesa</span>
+            </button>
+          </div>
+        </header>
+
+        {actionError && !showBestiarioModal && !showImportModal && (
+          <div className="mesa-action-error" role="alert">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError('')} aria-label="Fechar aviso de erro">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
         )}
 
-        <div className="mesa-container">
-            <div className="mesa-area-principal">
-                {!souMestre && (
-                    <div style={{marginBottom: '30px'}}>
-                        <h2 style={{color:'var(--cor-destaque)'}}>MEU PERSONAGEM</h2>
-                        {meuPersonagem ? (
-                            <div className="item-card" style={{ padding: '20px', textAlign: 'center', border: '2px solid var(--cor-destaque)', background: 'rgba(0, 145, 255, 0.05)' }}>
-                                <h3 style={{ fontSize: '2em', margin: '10px 0' }}>{meuPersonagem.info.nome || "Sem Nome"}</h3>
-                                <p style={{ fontSize: '1.2em', color: '#ccc' }}>{meuPersonagem.info.classe} - NEX {meuPersonagem.info.nex}</p>
-                                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-                                    <button onClick={() => setFichaAbertaId(usuario.uid)} className="btn-login primary" style={{ padding: '10px 30px', fontSize: '1.1em' }}>ABRIR FICHA ▶</button>
-                                    <button onClick={abrirImportacao} className="btn-login anon" style={{fontSize:'0.9em'}}>Trocar Ficha</button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="dashboard-grid" style={{gridTemplateColumns:'1fr 1fr'}}>
-                                <div onClick={abrirImportacao} className="card-novo"><span>📥</span><h3>Importar</h3></div>
-                                <div onClick={criarNova} className="card-novo"><span>✨</span><h3>Criar Novo</h3></div>
-                            </div>
-                        )}
+        <section className="mesa-overview-grid" aria-label="Resumo da mesa">
+          <article className="convergence-panel mesa-hero-panel">
+            <div className="mesa-hero-copy">
+              <span className={`mesa-status-chip ${emCombate ? 'is-combat' : ''}`}>
+                <i aria-hidden="true"></i>
+                {emCombate ? 'Combate em andamento' : 'Operação ativa'}
+              </span>
+              <h2>{mesaData.nome || 'Operação sem nome'}</h2>
+              <p>
+                {souMestre
+                  ? 'Coordene agentes, criaturas e a ordem de ação em um único terminal.'
+                  : 'Acompanhe a equipe e abra sua ficha quando estiver pronto para a operação.'}
+              </p>
+              <dl className="mesa-metrics">
+                <div><dt>Agentes</dt><dd>{agentes.length}</dd></div>
+                <div><dt>Fichas</dt><dd>{fichasDaMesa.length}</dd></div>
+                <div><dt>Rodada</dt><dd>{emCombate ? (mesaData.rodada || 1) : '—'}</dd></div>
+              </dl>
+            </div>
+            <div className="mesa-hero-emblem" aria-hidden="true">
+              <span></span>
+              <img src="/assets/images/optimized/SimboloSemafinidade-320.webp" alt="" />
+            </div>
+          </article>
+
+          <aside className="convergence-panel mesa-connected-panel">
+            <div className="convergence-section-heading">
+              <div>
+                <span className="convergence-eyebrow">Canal seguro</span>
+                <h2>Conectados</h2>
+              </div>
+              <span className="convergence-count">{jogadores.length}</span>
+            </div>
+            <ul className="mesa-connected-list">
+              {jogadores.map((jogador) => {
+                const isMaster = jogador.uid === mesaData.mestre;
+                const isMe = jogador.uid === usuario.uid;
+                return (
+                  <li key={jogador.uid} className={isMe ? 'is-me' : ''}>
+                    <span className={`mesa-presence-dot ${isMaster ? 'is-master' : ''}`} aria-hidden="true"></span>
+                    <div>
+                      <strong>{jogador.nome || 'Agente sem nome'}</strong>
+                      <small>{isMaster ? 'Mestre da operação' : (isMe ? 'Você' : 'Agente conectado')}</small>
                     </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        </section>
+
+        {emCombate && (
+          <section className="convergence-panel mesa-combat-panel" aria-labelledby="mesa-combat-title">
+            <div className="convergence-section-heading mesa-combat-heading">
+              <div>
+                <span className="convergence-eyebrow">Iniciativa manual</span>
+                <h2 id="mesa-combat-title">Ordem de combate</h2>
+              </div>
+              <span className="mesa-manual-badge">Dados físicos</span>
+            </div>
+
+            <div className="mesa-combat-layout">
+              <div className="mesa-combat-tracker">{tracker}</div>
+              <aside className="mesa-combat-controls">
+                {souMestre ? (
+                  <>
+                    <button type="button" className="mesa-bestiary-button" onClick={abrirBestiario}>
+                      <AppIcon name="rituals" size={21} />
+                      <span><strong>Bestiário</strong><small>Adicionar criatura</small></span>
+                    </button>
+                    <form className="mesa-npc-form" onSubmit={addNPC}>
+                      <div className="mesa-form-heading">
+                        <span>Entrada rápida</span>
+                        <strong>NPC manual</strong>
+                      </div>
+                      <label htmlFor="mesa-npc-nome">Nome</label>
+                      <input id="mesa-npc-nome" type="text" value={npcNome} onChange={(event) => setNpcNome(event.target.value)} placeholder="Nome do NPC" required />
+                      <div className="mesa-npc-numbers">
+                        <label htmlFor="mesa-npc-iniciativa">Iniciativa
+                          <input id="mesa-npc-iniciativa" type="number" value={npcIni} onChange={(event) => setNpcIni(event.target.value)} placeholder="0" required />
+                        </label>
+                        <label htmlFor="mesa-npc-pv">PV
+                          <input id="mesa-npc-pv" type="number" value={npcPV} onChange={(event) => setNpcPV(event.target.value)} />
+                        </label>
+                      </div>
+                      <button type="submit" disabled={Boolean(actionBusy)}>
+                        <AppIcon name="plus" size={17} />
+                        {actionBusy === 'npc' ? 'Adicionando...' : 'Adicionar à ordem'}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <form className="mesa-player-initiative" onSubmit={enviarIniciativa}>
+                    <AppIcon name="mission" size={27} />
+                    <div>
+                      <span>Resultado nos dados</span>
+                      <strong>Sua iniciativa</strong>
+                    </div>
+                    <label htmlFor="mesa-player-initiative" className="caos-visually-hidden">Resultado da iniciativa</label>
+                    <input id="mesa-player-initiative" type="number" value={iniValor} onChange={(event) => setIniValor(event.target.value)} placeholder="0" required />
+                    <button type="submit" disabled={Boolean(actionBusy)}>
+                      {actionBusy === 'iniciativa' ? 'Enviando...' : 'Registrar'}
+                    </button>
+                  </form>
                 )}
+              </aside>
+            </div>
+          </section>
+        )}
 
-                <h2 style={{color: souMestre ? 'gold' : '#aaa'}}>TODOS OS AGENTES</h2>
-                <div className="dashboard-grid">
-                    {mesaData.jogadores.filter(j => j.uid !== mesaData.mestre).map(jogador => {
-                        const ficha = fichasDaMesa.find(f => f.uid === jogador.uid);
-                        const isMe = jogador.uid === usuario.uid;
-                        const podeAbrir = souMestre || isMe;
-                        return (
-                            <div key={jogador.uid} className="dashboard-card" style={{ borderColor: isMe ? 'var(--cor-destaque)' : '#333', opacity: ficha ? 1 : 0.7 }}>
-                                <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
-                                    <strong>{jogador.nome}</strong>
-                                    {souMestre && <button onClick={()=>handleExpulsar(jogador.uid)} style={{color:'red', background:'none', border:'none', fontSize:'1.2em', cursor:'pointer'}} title="Expulsar">×</button>}
-                                </div>
-                                {ficha ? (
-                                    <div style={{marginTop:'10px'}}>
-                                        <h4 style={{color:'var(--cor-destaque)', margin:'5px 0'}}>{ficha.info.nome}</h4>
-                                        <p style={{fontSize:'0.8em', color:'#aaa'}}>{ficha.info.classe} - NEX {ficha.info.nex}</p>
-                                        {podeAbrir ? (
-                                            <button onClick={() => setFichaAbertaId(jogador.uid)} className={isMe ? "btn-login primary" : "btn-login google"} style={{width:'100%', fontSize:'0.8em', marginTop:'5px'}}>
-                                                {isMe ? 'Abrir Minha Ficha' : 'Ver Ficha (Mestre)'}
-                                            </button>
-                                        ) : (
-                                            <div style={{fontSize:'0.8em', color:'#555', border:'1px dashed #444', padding:'5px', marginTop:'5px', borderRadius:'4px'}}>Ficha Oculta</div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="estado-vazio" style={{fontSize:'0.8em', padding:'5px', marginTop:'10px'}}>Sem ficha vinculada.</div>
-                                )}
-                            </div>
-                        )
-                    })}
-                    {mesaData.jogadores.length <= 1 && <div className="estado-vazio" style={{gridColumn:'1/-1'}}>Nenhum jogador conectado.</div>}
+        {!souMestre && (
+          <section className="convergence-panel mesa-my-character" aria-labelledby="mesa-my-character-title">
+            <div className="convergence-section-heading">
+              <div>
+                <span className="convergence-eyebrow">Acesso pessoal</span>
+                <h2 id="mesa-my-character-title">Meu personagem</h2>
+              </div>
+            </div>
+
+            {meuPersonagem ? (
+              <article className="mesa-character-feature">
+                <span className="mesa-agent-avatar mesa-agent-avatar--large">
+                  {meuPersonagem.info?.foto
+                    ? <img src={meuPersonagem.info.foto} alt={`Retrato de ${meuPersonagem.info?.nome || 'personagem'}`} />
+                    : <AppIcon name="user" size={29} />}
+                </span>
+                <div>
+                  <span>Agente vinculado</span>
+                  <h3>{meuPersonagem.info?.nome || 'Sem nome'}</h3>
+                  <p>{meuPersonagem.info?.classe || 'Mundano'} · NEX {meuPersonagem.info?.nex || '0%'}</p>
                 </div>
-            </div>
+                <div className="mesa-character-actions">
+                  <button type="button" onClick={() => setFichaAbertaId(usuario.uid)}>
+                    Abrir ficha <span aria-hidden="true">›</span>
+                  </button>
+                  <button type="button" onClick={abrirImportacao}>Trocar ficha</button>
+                </div>
+              </article>
+            ) : (
+              <div className="mesa-character-empty">
+                <button type="button" onClick={abrirImportacao}>
+                  <AppIcon name="export" size={23} />
+                  <strong>Importar ficha</strong>
+                  <span>Usar um personagem pessoal</span>
+                </button>
+                <button type="button" onClick={criarNova}>
+                  <AppIcon name="plus" size={23} />
+                  <strong>Criar nova</strong>
+                  <span>Começar uma ficha vazia</span>
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
-            <div className="mesa-sidebar">
-                 <h3 style={{color:'#aaa', borderBottom:'1px solid #444', margin:'0 0 10px 0', paddingBottom:'5px'}}>
-                    Conectados ({mesaData.jogadores.length})
-                 </h3>
-                 <ul className="mesa-lista-jogadores">
-                    {mesaData.jogadores.map(j => (
-                        <li key={j.uid} className="mesa-jogador-item">
-                             <div style={{width:'8px', height:'8px', borderRadius:'50%', background: j.uid === mesaData.mestre ? 'gold' : (j.uid === usuario.uid ? 'var(--cor-destaque)' : '#fff')}}></div>
-                             <span style={{color: j.uid===usuario.uid?'var(--cor-destaque)':'#ddd'}}>
-                                {j.nome} {j.uid === mesaData.mestre ? '(Mestre)' : ''}
-                             </span>
-                        </li>
-                    ))}
-                 </ul>
+        <section className="convergence-panel mesa-agents-panel" aria-labelledby="mesa-agents-title">
+          <div className="convergence-section-heading">
+            <div>
+              <span className="convergence-eyebrow">Equipe de campo</span>
+              <h2 id="mesa-agents-title">Agentes da operação</h2>
             </div>
-        </div>
-      </div>
+            <span className="convergence-count">{agentes.length}</span>
+          </div>
 
-      {showBestiarioModal && (
-        <div className="modal-overlay">
-            <div className="modal-conteudo" style={{maxWidth:'800px'}}>
-                <div className="modal-header"><h3>Bestiário</h3><button onClick={()=>setShowBestiarioModal(false)} className="btn-fechar-modal">X</button></div>
-                <div className="modal-body">
-                    {!listaBestiario ? (
-                        <div style={{padding:'20px', textAlign:'center', color:'#aaa'}}>Carregando grimório de criaturas...</div>
+          <div className="mesa-agent-grid">
+            {agentes.map((jogador) => {
+              const ficha = fichasDaMesa.find((item) => item.uid === jogador.uid);
+              const isMe = jogador.uid === usuario.uid;
+              const podeAbrir = souMestre || isMe;
+              const nomeFicha = ficha?.info?.nome || 'Sem ficha vinculada';
+              const foto = ficha?.info?.foto;
+
+              return (
+                <article key={jogador.uid} className={`mesa-agent-card ${isMe ? 'is-me' : ''} ${!ficha ? 'is-empty' : ''}`}>
+                  <header>
+                    <span className="mesa-agent-avatar">
+                      {foto
+                        ? <img src={foto} alt={`Retrato de ${nomeFicha}`} loading="lazy" decoding="async" />
+                        : <AppIcon name="user" size={21} />}
+                    </span>
+                    <div>
+                      <small>{isMe ? 'Você' : 'Agente conectado'}</small>
+                      <strong>{jogador.nome || 'Agente sem nome'}</strong>
+                    </div>
+                    {souMestre && (
+                      <button
+                        type="button"
+                        className="mesa-agent-remove"
+                        onClick={() => handleExpulsar(jogador.uid)}
+                        disabled={Boolean(actionBusy)}
+                        aria-label={`Remover ${jogador.nome || 'agente'} da mesa`}
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    )}
+                  </header>
+
+                  <div className="mesa-agent-sheet">
+                    <span>Ficha operacional</span>
+                    <h3>{nomeFicha}</h3>
+                    {ficha ? (
+                      <p>{ficha.info?.classe || 'Mundano'} · NEX {ficha.info?.nex || '0%'}</p>
                     ) : (
-                        listaBestiario.map(m => {
-                            const elemento = m.elemento ? m.elemento.toLowerCase() : 'medo';
-                            return (
-                                <div 
-                                    key={m.id} 
-                                    className={`item-card creature-card-elemento creature-card-${elemento}`} 
-                                    onClick={()=>adicionarMonstro(m)} 
-                                    style={{
-                                        padding:'15px', 
-                                        display:'flex', 
-                                        justifyContent:'space-between', 
-                                        alignItems:'center', 
-                                        marginBottom:'10px',
-                                    }}
-                                >
-                                    <div>
-                                        <strong style={{fontSize:'1.2em'}}>{m.nome}</strong>
-                                        <div style={{fontSize:'0.9em', color:'#aaa'}}>
-                                            VD {m.vd} | <span style={{color:'gold'}}>Iniciativa: {m.iniciativa}</span>
-                                        </div>
-                                    </div>
-                                    <button className="btn-login primary" style={{margin:0, padding:'5px 15px', flexShrink: 0}}>Adicionar</button>
-                                </div>
-                            );
-                        })
+                      <p>Aguardando personagem.</p>
                     )}
-                </div>
-            </div>
-        </div>
-      )}
+                  </div>
 
-      {criaturaSelecionada && <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />}
-      
-      {showImportModal && (
-        <div className="modal-overlay">
-            <div className="modal-conteudo">
-                <div className="modal-header"><h3>Importar Personagem</h3><button onClick={()=>setShowImportModal(false)} className="btn-fechar-modal">X</button></div>
-                <div className="modal-body">
-                    {minhasFichas.length === 0 ? <p className="estado-vazio">Você não tem fichas pessoais criadas.</p> : (
-                        <div style={{ display: 'grid', gap: '10px' }}>
-                            {minhasFichas.map(f => (
-                                <div key={f.id} onClick={()=>confirmarImportacao(f.dadosCompletos)} className="item-card" style={{cursor:'pointer', padding:'15px', border:'1px solid #444'}}>
-                                    <strong style={{color:'var(--cor-destaque)'}}>{f.nome}</strong>
-                                    <span style={{float:'right', color:'#aaa'}}>{f.classe} {f.nex}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+                  {ficha && podeAbrir ? (
+                    <button type="button" className="mesa-agent-open" onClick={() => setFichaAbertaId(jogador.uid)}>
+                      {isMe ? 'Abrir minha ficha' : 'Ver ficha'} <span aria-hidden="true">›</span>
+                    </button>
+                  ) : (
+                    <span className="mesa-agent-locked">{ficha ? 'Ficha reservada ao agente' : 'Sem ficha vinculada'}</span>
+                  )}
+                </article>
+              );
+            })}
+
+            {agentes.length === 0 && (
+              <div className="mesa-empty-state">
+                <AppIcon name="user" size={28} />
+                <strong>Nenhum agente conectado</strong>
+                <span>Compartilhe o código da mesa para montar a equipe.</span>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <ModalBase
+        isOpen={showBestiarioModal}
+        onClose={() => setShowBestiarioModal(false)}
+        title="Bestiário"
+        size="wide"
+        closeLabel="Fechar bestiário"
+        initialFocusRef={bestiarySearchRef}
+        bodyClassName="mesa-bestiary-modal"
+        footer={(
+          <button type="button" className="caos-modal__button caos-modal__button--secondary" onClick={() => setShowBestiarioModal(false)}>
+            Fechar
+          </button>
+        )}
+      >
+        {actionError && (
+          <div className="mesa-action-error mesa-modal-error" role="alert">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError('')} aria-label="Fechar aviso de erro">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        )}
+
+        <div className="mesa-bestiary-toolbar">
+          <label htmlFor="mesa-bestiary-search">
+            <span>Buscar criatura</span>
+            <input ref={bestiarySearchRef} id="mesa-bestiary-search" type="search" value={buscaBestiario} onChange={(event) => setBuscaBestiario(event.target.value)} placeholder="Nome ou tipo" />
+          </label>
+          <label htmlFor="mesa-bestiary-element">
+            <span>Elemento</span>
+            <select id="mesa-bestiary-element" value={filtroElemento} onChange={(event) => setFiltroElemento(event.target.value)}>
+              <option value="todos">Todos</option>
+              {elementosBestiario.map((elemento) => <option key={elemento} value={elemento}>{elemento}</option>)}
+            </select>
+          </label>
         </div>
+
+        {bestiarioLoading ? (
+          <div className="mesa-modal-loading" role="status">Carregando grimório de criaturas...</div>
+        ) : !listaBestiario ? (
+          <div className="mesa-bestiary-retry">
+            <AppIcon name="rituals" size={27} />
+            <strong>O grimório não pôde ser aberto</strong>
+            <span>Verifique a conexão e tente carregar o bestiário novamente.</span>
+            <button type="button" className="caos-modal__button caos-modal__button--primary" onClick={carregarBestiario}>
+              Tentar novamente
+            </button>
+          </div>
+        ) : (
+          <div className="mesa-creature-grid">
+            {criaturasFiltradas.map((criatura) => {
+              const elemento = slugElemento(criatura.elemento || 'medo');
+              return (
+                <button
+                  type="button"
+                  key={criatura.id}
+                  className={`mesa-creature-card mesa-creature-card--${elemento}`}
+                  onClick={() => adicionarMonstro(criatura)}
+                  disabled={Boolean(actionBusy)}
+                >
+                  <span className="mesa-creature-thumb">
+                    {criatura.foto
+                      ? <img src={getBestiaryThumbnail(criatura.foto)} alt="" loading="lazy" decoding="async" />
+                      : <AppIcon name="rituals" size={24} />}
+                  </span>
+                  <span className="mesa-creature-copy">
+                    <strong>{criatura.nome}</strong>
+                    <small>{criatura.tipo || 'Criatura'} · VD {criatura.vd}</small>
+                    <em>{criatura.elemento || 'Medo'} · Referência {criatura.iniciativa}</em>
+                  </span>
+                  <span className="mesa-creature-add"><AppIcon name="plus" size={17} /> Adicionar</span>
+                </button>
+              );
+            })}
+            {criaturasFiltradas.length === 0 && (
+              <div className="mesa-empty-state">
+                <strong>Nenhuma criatura encontrada</strong>
+                <span>Ajuste a busca ou o filtro de elemento.</span>
+              </div>
+            )}
+          </div>
+        )}
+      </ModalBase>
+
+      <ModalBase
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Importar Personagem"
+        size="medium"
+        closeLabel="Fechar importação de personagem"
+        initialFocusRef={importFirstItemRef}
+        footer={(
+          <button type="button" className="caos-modal__button caos-modal__button--secondary" onClick={() => setShowImportModal(false)}>
+            Cancelar
+          </button>
+        )}
+      >
+        {actionError && (
+          <div className="mesa-action-error mesa-modal-error" role="alert">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError('')} aria-label="Fechar aviso de erro">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        )}
+
+        {minhasFichas.length === 0 ? (
+          <div className="mesa-empty-state">
+            <AppIcon name="user" size={27} />
+            <strong>Nenhuma ficha pessoal encontrada</strong>
+            <span>Crie uma ficha no painel antes de importá-la para a mesa.</span>
+          </div>
+        ) : (
+          <div className="mesa-import-list">
+            {minhasFichas.map((ficha, index) => (
+              <button ref={index === 0 ? importFirstItemRef : undefined} type="button" key={ficha.id} onClick={() => confirmarImportacao(ficha.dadosCompletos)} disabled={Boolean(actionBusy)}>
+                <span className="mesa-agent-avatar"><AppIcon name="user" size={20} /></span>
+                <span><strong>{ficha.nome || 'Sem nome'}</strong><small>{ficha.classe || 'Mundano'} · NEX {ficha.nex || '0%'}</small></span>
+                <span aria-hidden="true">›</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </ModalBase>
+
+      {criaturaSelecionada && (
+        <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />
       )}
     </div>
   );

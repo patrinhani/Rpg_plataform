@@ -2,6 +2,14 @@
 import React from 'react';
 import { useFicha } from '../../contexts/FichaContext';
 
+const NOMES_ATRIBUTOS = {
+  for: 'Força',
+  agi: 'Agilidade',
+  int: 'Intelecto',
+  pre: 'Presença',
+  vig: 'Vigor',
+};
+
 function Atributos({ onFichaChange }) {
   // Consome os dados calculados do contexto (que incluem as penalidades de condições)
   const { personagem, calculados } = useFicha();
@@ -46,6 +54,7 @@ function Atributos({ onFichaChange }) {
             type="number" 
             id={idCss}
             className="input-hex"
+            aria-label={NOMES_ATRIBUTOS[chave]}
             
             // Mostra o valor FINAL (já com penalidades)
             value={valorFinal} 

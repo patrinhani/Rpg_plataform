@@ -1,164 +1,318 @@
-// src/components/mesa/IniciativaTracker.jsx
-import React, { useEffect, useRef } from 'react';
-import { avancarTurno, removerDaIniciativa, atualizarNPCStatus } from '../../lib/mesas';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { avancarTurno, removerDaIniciativa, atualizarNPCStatus } from '../../lib/mesas.js';
+import AppIcon from '../icons/NavigationIcons.jsx';
+import '../../styles/mesa.css';
 
-export default function IniciativaTracker({ 
-    mesaId, iniciativas, turnoAtual, rodada, souMestre, fichasDaMesa, onVerFichaCriatura,
-    compact = false 
+function getHealthNumber(value, fallback = 0) {
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : fallback;
+}
+
+function NPCHealthInput({
+  mesaId,
+  initiative,
+  currentHealth,
+  disabled,
+  onBusyChange,
+  onClearError,
+  onError,
 }) {
+  const normalizedCurrentHealth = getHealthNumber(currentHealth);
+  const [draft, setDraft] = useState(String(normalizedCurrentHealth));
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const cancelEditRef = useRef(false);
 
-    const scrollRef = useRef(null);
+  useEffect(() => {
+    if (!editing && !saving) setDraft(String(normalizedCurrentHealth));
+  }, [editing, normalizedCurrentHealth, saving]);
 
-    const handleAvancar = async () => {
-        await avancarTurno(mesaId, turnoAtual, iniciativas.length);
-    };
+  useEffect(() => () => {
+    onBusyChange(initiative.uid, false);
+  }, [initiative.uid, onBusyChange]);
 
-    // Auto-scroll para o jogador da vez no modo compacto
-    useEffect(() => {
-        if (compact && scrollRef.current) {
-            const activeItem = scrollRef.current.children[turnoAtual];
-            if (activeItem) {
-                activeItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            }
-        }
-    }, [turnoAtual, compact]);
+  const handleFocus = () => {
+    cancelEditRef.current = false;
+    setEditing(true);
+    onBusyChange(initiative.uid, true);
+  };
 
-    const getPercent = (atual, max) => Math.max(0, Math.min(100, (atual / (max || 1)) * 100));
+  const handleBlur = async () => {
+    setEditing(false);
 
-    return (
-        <div 
-            className={`tracker-container ${compact ? 'compacto' : 'normal'}`}
-            style={!compact ? { 
-                border: '2px solid var(--cor-destaque)', 
-                background: 'rgba(10,10,10,0.9)', 
-                marginBottom: '20px',
-                padding: '0' 
-            } : {}}
-        >
-            {/* --- HEADER DO COMBATE --- */}
-            <div className="header-combate">
-                <h3 style={{ margin: 0, color: 'var(--cor-destaque)', fontSize: compact ? '1em' : '1.2em' }}>
-                    {compact ? 'COMBATE' : 'COMBATE'} 
-                    <span style={{fontSize:'0.8em', color:'#aaa', marginLeft: '5px'}}>R: {rodada}</span>
-                </h3>
-                
-                {souMestre && (
-                    <button 
-                        onClick={handleAvancar} 
-                        className="btn-login primary"
-                        style={{ 
-                            margin: compact ? '5px 0 0 0' : 0, 
-                            padding: compact ? '2px 10px' : '5px 20px', 
-                            fontSize: compact ? '0.7em' : '0.9em',
-                            width: compact ? '100%' : 'auto'
-                        }}
-                    >
-                        PRÓXIMO ➜
-                    </button>
-                )}
-            </div>
+    if (cancelEditRef.current) {
+      cancelEditRef.current = false;
+      setDraft(String(normalizedCurrentHealth));
+      onBusyChange(initiative.uid, false);
+      return;
+    }
 
-            {/* --- LISTA DE INICIATIVAS --- */}
-            <div className="lista-iniciativa" ref={scrollRef}>
-                {iniciativas.map((ini, index) => {
-                    const isTurno = index === turnoAtual;
-                    const fichaReal = !ini.isNPC ? fichasDaMesa.find(f => f.uid === ini.uid) : null;
-                    
-                    // LÓGICA DA FOTO:
-                    // 1. Se for Monstro e tiver foto no bestiário.
-                    // 2. Se for Jogador e tiver foto na ficha (base64 ou url).
-                    let imagemAvatar = null;
-                    if (ini.isMonster && ini.fichaCompleta?.foto) {
-                        imagemAvatar = ini.fichaCompleta.foto;
-                    } else if (fichaReal && fichaReal.info?.foto) {
-                        imagemAvatar = fichaReal.info.foto;
-                    }
-                    
-                    let pvAtual = fichaReal ? fichaReal.recursos.pv_atual : (ini.pv_atual || 0);
-                    let pvMax = fichaReal ? fichaReal.recursos.pv_max : (ini.pv_max || 10);
-                    
-                    const ocultarInfo = ini.isNPC && !souMestre;
-                    const displayPV = ocultarInfo ? '?' : pvAtual;
-                    const barraCor = ocultarInfo ? '#444' : '#d40000';
-                    const barraWidth = ocultarInfo ? '100%' : `${getPercent(pvAtual, pvMax)}%`;
+    const nextHealth = Number(draft);
+    if (draft.trim() === '' || !Number.isFinite(nextHealth) || !Number.isInteger(nextHealth)) {
+      setDraft(String(normalizedCurrentHealth));
+      onBusyChange(initiative.uid, false);
+      onError(`Informe um valor inteiro válido para os PV de ${initiative.nome}.`);
+      return;
+    }
 
-                    return (
-                        <div 
-                            key={index} 
-                            className={`card-iniciativa ${isTurno ? 'ativo' : ''}`}
-                        >
-                            {/* Valor da Iniciativa */}
-                            <div className="ini-valor">
-                                {ini.valor}
-                            </div>
+    if (nextHealth === normalizedCurrentHealth) {
+      setDraft(String(nextHealth));
+      onBusyChange(initiative.uid, false);
+      return;
+    }
 
-                            {/* FOTO / AVATAR (NOVO) */}
-                            {imagemAvatar && (
-                                <div className="ini-avatar-container" style={{
-                                    width: compact ? '35px' : '50px',
-                                    height: compact ? '35px' : '50px',
-                                    borderRadius: '50%',
-                                    overflow: 'hidden',
-                                    border: isTurno ? '2px solid gold' : '2px solid #444',
-                                    marginRight: '10px',
-                                    flexShrink: 0,
-                                    backgroundColor: '#000'
-                                }}>
-                                    <img 
-                                        src={imagemAvatar} 
-                                        alt="Avatar" 
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                    />
-                                </div>
-                            )}
+    onClearError();
+    setSaving(true);
+    try {
+      await atualizarNPCStatus(mesaId, initiative.uid, 'pv_atual', nextHealth);
+      setDraft(String(nextHealth));
+    } catch (error) {
+      console.error(`Erro ao atualizar os PV de ${initiative.nome}:`, error);
+      setDraft(String(normalizedCurrentHealth));
+      onError(`Não foi possível atualizar os PV de ${initiative.nome}. Tente novamente.`);
+    } finally {
+      setSaving(false);
+      onBusyChange(initiative.uid, false);
+    }
+  };
 
-                            {/* Info Central */}
-                            <div className="ini-info">
-                                <div className="ini-nome-row">
-                                    <strong>{ini.nome}</strong>
-                                    {/* Botão Ficha Monstro (Só Mestre) */}
-                                    {!compact && ini.isMonster && souMestre && (
-                                        <button onClick={() => onVerFichaCriatura(ini.fichaCompleta)} className="btn-mini-ficha" title="Ver Ficha">📄</button>
-                                    )}
-                                </div>
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.currentTarget.blur();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelEditRef.current = true;
+      event.currentTarget.blur();
+    }
+  };
 
-                                {/* Barra de Vida */}
-                                <div className="barra-vida-container">
-                                    <div style={{ width: barraWidth, height: '100%', background: barraCor, transition: 'width 0.3s' }}></div>
-                                </div>
+  return (
+    <label className={`initiative-card__health-input ${saving ? 'initiative-card__health-input--saving' : ''}`}>
+      <span className="caos-visually-hidden">Pontos de vida atuais de {initiative.nome}</span>
+      <input
+        type="number"
+        step="1"
+        inputMode="numeric"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        disabled={disabled || saving}
+        aria-busy={saving ? 'true' : undefined}
+        aria-label={`Pontos de vida atuais de ${initiative.nome}`}
+      />
+      <span className="initiative-card__health-save-status" aria-live="polite">
+        {saving ? 'Salvando...' : 'PV atual'}
+      </span>
+    </label>
+  );
+}
 
-                                {/* Input de Dano Rápido (Mestre + NPC) */}
-                                {ini.isNPC && souMestre && (
-                                    <div className="input-dano-rapido">
-                                        <input 
-                                            type="number" 
-                                            value={pvAtual} 
-                                            onChange={(e) => atualizarNPCStatus(mesaId, ini.uid, 'pv_atual', e.target.value)} 
-                                        />
-                                    </div>
-                                )}
-                            </div>
+export default function IniciativaTracker({
+  mesaId,
+  iniciativas = [],
+  turnoAtual = 0,
+  rodada = 1,
+  souMestre,
+  fichasDaMesa = [],
+  onVerFichaCriatura,
+  compact = false,
+}) {
+  const scrollRef = useRef(null);
+  const [advancing, setAdvancing] = useState(false);
+  const [removingUid, setRemovingUid] = useState(null);
+  const [busyHealthUids, setBusyHealthUids] = useState(() => new Set());
+  const [actionError, setActionError] = useState('');
 
-                            {/* Texto PV (Escondido no compacto para jogadores) */}
-                            {!compact && (
-                                <div className="ini-status-texto">
-                                    <span style={{color: ocultarInfo ? '#aaa' : '#d40000'}}>{displayPV}</span> / {ocultarInfo ? '?' : pvMax}
-                                </div>
-                            )}
+  const handleHealthBusyChange = useCallback((uid, isBusy) => {
+    setBusyHealthUids((currentUids) => {
+      const nextUids = new Set(currentUids);
+      if (isBusy) nextUids.add(uid);
+      else nextUids.delete(uid);
+      return nextUids;
+    });
+  }, []);
 
-                            {/* Botão Remover (Só Mestre) */}
-                            {souMestre && (
-                                <button 
-                                    onClick={() => removerDaIniciativa(mesaId, ini.uid)} 
-                                    className="btn-remover-ini"
-                                >
-                                    &times;
-                                </button>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
+  const handleAdvance = async () => {
+    if (advancing || removingUid || iniciativas.length === 0) return;
+    setActionError('');
+    setAdvancing(true);
+    try {
+      await avancarTurno(mesaId, turnoAtual, iniciativas.length);
+    } catch (error) {
+      console.error('Erro ao avançar o turno:', error);
+      setActionError('Não foi possível avançar o turno. Verifique a conexão e tente novamente.');
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
+  const handleRemove = async (initiative) => {
+    if (removingUid || busyHealthUids.size > 0) return;
+    setActionError('');
+    setRemovingUid(initiative.uid);
+    try {
+      await removerDaIniciativa(mesaId, initiative.uid);
+    } catch (error) {
+      console.error(`Erro ao remover ${initiative.nome} da iniciativa:`, error);
+      setActionError(`Não foi possível remover ${initiative.nome} da iniciativa. Tente novamente.`);
+    } finally {
+      setRemovingUid(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!compact || !scrollRef.current) return;
+    const activeItem = scrollRef.current.children[turnoAtual];
+    if (!activeItem) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.body.classList.contains('modo-economia');
+    activeItem.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+  }, [turnoAtual, compact]);
+
+  const getPercent = (current, maximum) => {
+    const safeCurrent = Number(current) || 0;
+    const safeMaximum = Math.max(1, Number(maximum) || 1);
+    return Math.max(0, Math.min(100, (safeCurrent / safeMaximum) * 100));
+  };
+
+  return (
+    <section className={`initiative-tracker ${compact ? 'initiative-tracker--compact' : 'initiative-tracker--normal'}`} aria-label="Ordem de iniciativa">
+      <header className="initiative-tracker__header">
+        <div>
+          <span>Ordem de ação</span>
+          <h3>Combate <small>Rodada {rodada}</small></h3>
         </div>
-    );
+
+        {souMestre && (
+          <button
+            type="button"
+            onClick={handleAdvance}
+            className="initiative-tracker__next"
+            disabled={advancing || Boolean(removingUid) || iniciativas.length === 0}
+          >
+            <span>{advancing ? 'Avançando...' : 'Próximo'}</span>
+            <AppIcon name="back" size={17} />
+          </button>
+        )}
+      </header>
+
+      {actionError && (
+        <div className="initiative-tracker__feedback" role="alert">
+          <span>{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} aria-label="Fechar aviso de erro">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+      )}
+
+      <div className="initiative-tracker__list" ref={scrollRef} role="list">
+        {iniciativas.length === 0 && (
+          <p className="initiative-tracker__empty">Nenhum participante na iniciativa.</p>
+        )}
+
+        {iniciativas.map((initiative, index) => {
+          const isCurrentTurn = index === turnoAtual;
+          const playerSheet = !initiative.isNPC
+            ? fichasDaMesa.find((sheet) => sheet.uid === initiative.uid)
+            : null;
+
+          const avatar = initiative.isMonster && initiative.fichaCompleta?.foto
+            ? initiative.fichaCompleta.foto
+            : playerSheet?.info?.foto || null;
+
+          const currentHealth = playerSheet?.recursos?.pv_atual ?? initiative.pv_atual ?? 0;
+          const maximumHealth = playerSheet?.recursos?.pv_max ?? initiative.pv_max ?? 10;
+          const safeCurrentHealth = getHealthNumber(currentHealth);
+          const safeMaximumHealth = Math.max(1, getHealthNumber(maximumHealth, 1));
+          const accessibleCurrentHealth = Math.max(0, Math.min(safeMaximumHealth, safeCurrentHealth));
+          const hideHealth = initiative.isNPC && !souMestre;
+          const healthPercent = hideHealth ? 100 : getPercent(safeCurrentHealth, safeMaximumHealth);
+
+          return (
+            <article
+              key={initiative.uid || `${initiative.nome}-${initiative.valor}`}
+              className={`initiative-card ${isCurrentTurn ? 'initiative-card--active' : ''} ${souMestre ? 'initiative-card--removable' : ''}`.trim()}
+              role="listitem"
+              aria-current={isCurrentTurn ? 'step' : undefined}
+            >
+              <span className="initiative-card__value" aria-label={`Iniciativa ${initiative.valor}`}>
+                {initiative.valor}
+              </span>
+
+              <div className="initiative-card__avatar">
+                {avatar ? (
+                  <img src={avatar} alt={`Avatar de ${initiative.nome}`} loading="lazy" decoding="async" />
+                ) : (
+                  <span aria-hidden="true">{initiative.nome?.charAt(0)?.toUpperCase() || '?'}</span>
+                )}
+              </div>
+
+              <div className="initiative-card__main">
+                <div className="initiative-card__name">
+                  <strong>{initiative.nome}</strong>
+                  {!compact && initiative.isMonster && souMestre && (
+                    <button
+                      type="button"
+                      onClick={() => onVerFichaCriatura?.(initiative.fichaCompleta)}
+                      className="initiative-card__sheet"
+                      aria-label={`Ver ficha de ${initiative.nome}`}
+                    >
+                      <AppIcon name="overview" size={16} />
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  className={`initiative-card__health ${hideHealth ? 'initiative-card__health--hidden' : ''}`}
+                  role="progressbar"
+                  aria-label={hideHealth ? `Pontos de vida de ${initiative.nome} ocultos` : `Pontos de vida de ${initiative.nome}`}
+                  aria-valuemin={hideHealth ? undefined : 0}
+                  aria-valuemax={hideHealth ? undefined : safeMaximumHealth}
+                  aria-valuenow={hideHealth ? undefined : accessibleCurrentHealth}
+                  aria-valuetext={hideHealth ? 'Ocultos' : undefined}
+                >
+                  <span style={{ width: `${healthPercent}%` }} />
+                </div>
+
+                {initiative.isNPC && souMestre && (
+                  <NPCHealthInput
+                    mesaId={mesaId}
+                    initiative={initiative}
+                    currentHealth={currentHealth}
+                    disabled={Boolean(removingUid)}
+                    onBusyChange={handleHealthBusyChange}
+                    onClearError={() => setActionError('')}
+                    onError={setActionError}
+                  />
+                )}
+              </div>
+
+              {!compact && (
+                <span className={`initiative-card__health-text ${hideHealth ? 'initiative-card__health-text--hidden' : ''}`}>
+                  <strong>{hideHealth ? '?' : currentHealth}</strong>
+                  <small>/ {hideHealth ? '?' : maximumHealth}</small>
+                </span>
+              )}
+
+              {souMestre && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(initiative)}
+                  className="initiative-card__remove"
+                  disabled={Boolean(removingUid) || busyHealthUids.size > 0}
+                  aria-label={`Remover ${initiative.nome} da iniciativa`}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
