@@ -2746,15 +2746,6 @@
 
 body.modo-economia .ficha-section-atmosphere { display: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .ficha-section-atmosphere__symbol,
-  .ficha-section-atmosphere__orbit,
-  .ficha-section-atmosphere__trace,
-  .ficha-section-atmosphere::before {
-    animation: none !important;
-  }
-}
-
 /* -------------------------------------------------------------------------- */
 /* Resumo — central tática                                                     */
 /* Defesa, respostas reativas, resistências e condições.                       */
@@ -5867,19 +5858,5 @@ body.modo-economia :where(.convergence-page, .ficha-convergence-shell) *::after 
       "treino treino"
       "condicao condicao";
     grid-template-columns: minmax(0, 1fr) auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ficha-summary .identity-portrait-scan,
-  .ficha-summary .summary-element-atmosphere::before,
-  .ficha-summary .summary-element-atmosphere *,
-  .ficha-summary .summary-theme-imprint::before,
-  .ficha-summary .summary-theme-imprint::after,
-  .ficha-summary .summary-theme-imprint *,
-  .ficha-summary .summary-theme-imprint *::before,
-  .ficha-summary .summary-theme-imprint *::after {
-    animation: none !important;
-    transition: none !important;
   }
 }
