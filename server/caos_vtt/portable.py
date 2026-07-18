@@ -31,6 +31,9 @@ PACKAGED_CAMPAIGN_RELATIVE_DIR = Path("campaigns") / "mnemosyne"
 DEMO_MODE_MARKER = "DEMO-MODE.txt"
 PUBLIC_ORIGIN_PLACEHOLDER = "https://SEU-PROJETO.vercel.app"
 MAX_PUBLIC_ORIGIN_FILE_BYTES = 4096
+FIREBASE_PROJECT_FILE_NAME = "FIREBASE-PROJECT.txt"
+FIREBASE_PROJECT_PLACEHOLDER = "SEU-FIREBASE-PROJECT-ID"
+MAX_FIREBASE_PROJECT_FILE_BYTES = 256
 
 
 def find_frontend_dir() -> Path:
@@ -118,6 +121,7 @@ def build_portable_settings(
     public_origins: Sequence[str] = (),
     *,
     state_db_path: Path | None = None,
+    firebase_project_id: str | None = None,
 ) -> Settings:
     for origin in public_origins:
         if urlsplit(origin.strip()).scheme.lower() != "https":
@@ -135,6 +139,7 @@ def build_portable_settings(
         bind_host="127.0.0.1",
         bind_port=port,
         state_db_path=state_db_path,
+        firebase_project_id=firebase_project_id,
     )
 
 
@@ -155,6 +160,69 @@ def read_public_origin_file(path: Path) -> tuple[str, ...]:
     # Reuse the canonical Settings validation before returning the value.
     build_portable_settings(DEFAULT_PORT, (text,))
     return (text,)
+
+
+def _validated_firebase_project_id(value: str) -> str:
+    """Valida o identificador publico reutilizando a regra canonica do backend."""
+
+    settings = Settings(
+        host_token="portable-project-validation-token",
+        firebase_project_id=value,
+    )
+    if settings.firebase_project_id is None:  # pragma: no cover - guarda defensiva
+        raise ValueError("Firebase project ID ausente")
+    return settings.firebase_project_id
+
+
+def read_firebase_project_file(path: Path) -> str | None:
+    """Le somente um Firebase project ID; o arquivo nunca e executado como script."""
+
+    candidate = path.expanduser()
+    try:
+        if candidate.stat().st_size > MAX_FIREBASE_PROJECT_FILE_BYTES:
+            raise ValueError("O arquivo do projeto Firebase excede 256 bytes")
+        text = candidate.read_text(encoding="utf-8-sig").strip()
+    except OSError as error:
+        raise ValueError(
+            f"Nao foi possivel ler o arquivo do projeto Firebase: {candidate}"
+        ) from error
+    if not text or text == FIREBASE_PROJECT_PLACEHOLDER:
+        return None
+    if "\n" in text or "\r" in text or "\x00" in text:
+        raise ValueError(
+            "O arquivo do projeto Firebase deve conter somente um project ID"
+        )
+    return _validated_firebase_project_id(text)
+
+
+def resolve_firebase_project_id(
+    project_id: str | None,
+    project_file: Path | None,
+    *,
+    frozen: bool | None = None,
+    executable: Path | None = None,
+) -> str | None:
+    """Resolve configuracao explicita ou o arquivo ao lado do executavel congelado."""
+
+    if project_id is not None and project_file is not None:
+        raise ValueError(
+            "Use --firebase-project-id ou --firebase-project-file, nunca os dois"
+        )
+    if project_id is not None:
+        return _validated_firebase_project_id(project_id)
+    if project_file is not None:
+        return read_firebase_project_file(project_file)
+
+    is_frozen = bool(getattr(sys, "frozen", False)) if frozen is None else frozen
+    if not is_frozen:
+        return None
+    executable_path = Path(sys.executable) if executable is None else executable
+    adjacent_file = (
+        executable_path.expanduser().resolve().parent / FIREBASE_PROJECT_FILE_NAME
+    )
+    if not adjacent_file.is_file():
+        return None
+    return read_firebase_project_file(adjacent_file)
 
 
 def default_portable_state_db(
@@ -255,6 +323,18 @@ def _parser() -> argparse.ArgumentParser:
         metavar="ARQUIVO",
         help="banco SQLite de sessoes (padrao: pasta data ao lado do executavel)",
     )
+    firebase_group = parser.add_mutually_exclusive_group()
+    firebase_group.add_argument(
+        "--firebase-project-id",
+        metavar="PROJECT_ID",
+        help="Firebase project ID publico usado pelo acesso autenticado da Mesa",
+    )
+    firebase_group.add_argument(
+        "--firebase-project-file",
+        type=Path,
+        metavar="ARQUIVO",
+        help="arquivo UTF-8 opcional contendo somente o Firebase project ID",
+    )
     return parser
 
 
@@ -271,11 +351,20 @@ def run(argv: Sequence[str] | None = None) -> int:
     if args.tunnel and not 5 <= args.tunnel_timeout <= 180:
         raise ValueError("--tunnel-timeout deve estar entre 5 e 180 segundos")
 
+    firebase_project_id = resolve_firebase_project_id(
+        args.firebase_project_id,
+        args.firebase_project_file,
+    )
+
     # Reject malformed manual origins before starting any external process.
     manual_origins = list(args.public_origin)
     if args.public_origin_file is not None:
         manual_origins.extend(read_public_origin_file(args.public_origin_file))
-    build_portable_settings(args.port, manual_origins)
+    build_portable_settings(
+        args.port,
+        manual_origins,
+        firebase_project_id=firebase_project_id,
+    )
 
     campaign_paths = resolve_campaign_paths(
         args.campaign_manifest,
@@ -323,6 +412,7 @@ def run(argv: Sequence[str] | None = None) -> int:
             args.port,
             public_origins,
             state_db_path=state_db_path,
+            firebase_project_id=firebase_project_id,
         )
         share_url = f"{tunnel_origin}/vtt-lab" if tunnel_origin else None
         browser_open_url = share_url or browser_url
@@ -337,11 +427,24 @@ def run(argv: Sequence[str] | None = None) -> int:
             print(f"Endereco publico do Mestre: {share_url}")
             print("Compartilhe somente o link de jogador criado dentro da sala.")
             print("O endereco online e temporario e muda a cada execucao.")
-        print(f"Host token temporario: {settings.host_token}")
+        if settings.firebase_project_id:
+            print(
+                "Acesso autenticado da Mesa: ativo "
+                f"(Firebase {settings.firebase_project_id})"
+            )
+        else:
+            print(
+                "Acesso autenticado da Mesa: desativado; "
+                "o VTT isolado continua disponivel pelo fluxo manual."
+            )
+        print(f"Host token de fallback isolado: {settings.host_token}")
         print(f"Sessoes salvas em: {settings.state_db_path}")
         if manual_origins:
             print(f"Origens publicas adicionais: {', '.join(manual_origins)}")
-        print("Copie o token acima para o campo 'Host token' ao criar a sala.")
+        print(
+            "Use o token somente no VTT portatil isolado. "
+            "Ao abrir por uma Mesa autenticada, ele nao e necessario."
+        )
         print("O token nao foi salvo em disco e muda a cada execucao.")
         print("Fechar esta janela encerra o servidor; salas vinculadas permanecem salvas.")
         print("Pressione Ctrl+C para encerrar.\n", flush=True)
@@ -364,6 +467,8 @@ def run(argv: Sequence[str] | None = None) -> int:
             ws_max_size=16 * 1024,
             workers=1,
             log_level="warning",
+            # URLs de mídia/WS carregam grants efêmeros e não devem ir para logs.
+            access_log=False,
         )
         server = uvicorn.Server(config)
         server_finished = threading.Event()

@@ -283,7 +283,7 @@ export default function Dashboard() {
             {showCriarMesa && (
               <form onSubmit={(event) => { event.preventDefault(); handleCriarMesa(); }}>
                 <label htmlFor="dashboard-nome-mesa">Nome da nova missão</label>
-                <input id="dashboard-nome-mesa" type="text" placeholder="Ex.: Ecos do Abismo" value={inputNomeMesa} onChange={event => setInputNomeMesa(event.target.value)} />
+                <input id="dashboard-nome-mesa" type="text" maxLength={80} placeholder="Ex.: Ecos do Abismo" value={inputNomeMesa} onChange={event => setInputNomeMesa(event.target.value)} />
                 <button type="submit">Criar mesa</button>
               </form>
             )}

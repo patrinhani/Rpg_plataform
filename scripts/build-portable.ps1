@@ -4,6 +4,7 @@ param(
     [switch]$SkipArchive,
     [switch]$SkipTunnel,
     [string]$CampaignRoot,
+    [string]$FirebaseProjectId = '',
     [switch]$SkipCampaign,
     [ValidateRange(1, 2147483647)]
     [long]$MaxCampaignBytes = 536870912
@@ -27,6 +28,47 @@ function Invoke-Checked {
     & $FilePath @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "$FailureMessage (codigo de saida: $LASTEXITCODE)."
+    }
+}
+
+function Read-FirebaseProjectIdFromDotEnv {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return ''
+    }
+    $values = @()
+    foreach ($line in [IO.File]::ReadAllLines($Path)) {
+        $trimmedLine = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmedLine) -or $trimmedLine.StartsWith('#')) {
+            continue
+        }
+        if ($line -match '^\s*VITE_APP_PROJECT_ID\s*=\s*(.*?)\s*$') {
+            $value = $Matches[1].Trim()
+            if ($value.Length -ge 2) {
+                $first = $value[0]
+                $last = $value[$value.Length - 1]
+                if (($first -eq '"' -and $last -eq '"') -or ($first -eq "'" -and $last -eq "'")) {
+                    $value = $value.Substring(1, $value.Length - 2)
+                }
+            }
+            $values += $value
+        }
+    }
+    if ($values.Count -gt 1) {
+        throw "O arquivo '$Path' define VITE_APP_PROJECT_ID mais de uma vez."
+    }
+    if ($values.Count -eq 0) {
+        return ''
+    }
+    return [string]$values[0]
+}
+
+function Assert-FirebaseProjectId {
+    param([Parameter(Mandatory = $true)][string]$Value)
+
+    if ($Value -notmatch '^[a-z][a-z0-9-]{4,28}[a-z0-9]$') {
+        throw 'FirebaseProjectId invalido. Informe somente o project ID publico do Firebase.'
     }
 }
 
@@ -330,6 +372,7 @@ try {
     $launcherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT.cmd'
     $onlineLauncherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT Online.cmd'
     $webOriginConfigSource = Join-Path $serverDirectory 'packaging\ORIGEM-WEB.txt'
+    $firebaseProjectConfigSource = Join-Path $serverDirectory 'packaging\FIREBASE-PROJECT.txt'
     $cloudflaredLicenseSource = Join-Path $serverDirectory 'packaging\cloudflared\LICENSE-cloudflared.txt'
     $cloudflaredNoticeSource = Join-Path $serverDirectory 'packaging\cloudflared\CLOUDFLARED-NOTICE.txt'
     $readmeSource = Join-Path $serverDirectory 'README-PORTABLE.md'
@@ -369,6 +412,18 @@ try {
     $stagingZipPath = Join-Path $stagingRoot $zipName
     $stagingHashPath = "$stagingZipPath.sha256"
     $resolvedCampaignRoot = $null
+    $resolvedFirebaseProjectId = if (-not [string]::IsNullOrWhiteSpace($FirebaseProjectId)) {
+        $FirebaseProjectId.Trim()
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:CAOS_VTT_FIREBASE_PROJECT_ID)) {
+        $env:CAOS_VTT_FIREBASE_PROJECT_ID.Trim()
+    }
+    else {
+        Read-FirebaseProjectIdFromDotEnv -Path (Join-Path $repoRoot '.env.local')
+    }
+    if (-not [string]::IsNullOrWhiteSpace($resolvedFirebaseProjectId)) {
+        Assert-FirebaseProjectId -Value $resolvedFirebaseProjectId
+    }
 
     Write-Step 'Validando ambiente de build'
     foreach ($safePath in @(
@@ -408,6 +463,9 @@ try {
     }
     if (-not (Test-Path -LiteralPath $quickStartSource -PathType Leaf)) {
         throw "Guia rapido portatil nao encontrado: '$quickStartSource'."
+    }
+    if (-not (Test-Path -LiteralPath $firebaseProjectConfigSource -PathType Leaf)) {
+        throw "Configuracao publica do Firebase nao encontrada: '$firebaseProjectConfigSource'."
     }
     if ($SkipCampaign) {
         if ($PSBoundParameters.ContainsKey('CampaignRoot')) {
@@ -606,6 +664,15 @@ try {
     Copy-Item -LiteralPath $launcherSource -Destination $portableDirectory -Force
     Copy-Item -LiteralPath $readmeSource -Destination $portableDirectory -Force
     Copy-Item -LiteralPath $quickStartSource -Destination $portableDirectory -Force
+    $packagedFirebaseProject = Join-Path $portableDirectory 'FIREBASE-PROJECT.txt'
+    Copy-Item -LiteralPath $firebaseProjectConfigSource -Destination $packagedFirebaseProject -Force
+    if (-not [string]::IsNullOrWhiteSpace($resolvedFirebaseProjectId)) {
+        $resolvedFirebaseProjectId | Set-Content -LiteralPath $packagedFirebaseProject -Encoding ascii
+        Write-Host "Acesso autenticado da Mesa configurado para Firebase $resolvedFirebaseProjectId." -ForegroundColor Green
+    }
+    else {
+        Write-Host 'Firebase project ID nao encontrado; o pacote manterá apenas o fallback manual isolado.' -ForegroundColor Yellow
+    }
     if ($SkipCampaign) {
         @(
             'BUILD DEMO SEM CAMPANHA',

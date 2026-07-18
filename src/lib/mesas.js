@@ -12,6 +12,12 @@ import {
   removerParticipanteDaIniciativa,
   resolverNomeLegivelJogador,
 } from './mesa-utils.js';
+import {
+  criarMembrosIniciais,
+  obterMembrosMesa,
+  obterPapelNaMesa,
+  removerMembroDaMesa,
+} from './mesa-membership.js';
 export { vincularVttMesa } from './vtt-mesa-link.js';
 
 // ... (Funções de Combate permanecem iguais: alternarCombate, avancarTurno, etc.) ...
@@ -220,10 +226,16 @@ export async function removerDaIniciativa(mesaId, uidAlvo) {
 // --- GERENCIAMENTO DE MESA ---
 
 export async function criarMesa(nomeMesa, mestreUid, mestreNome) {
+  const membroUids = criarMembrosIniciais(mestreUid);
+  const uidMestre = membroUids[0];
+  const nomeMestre = String(mestreNome || '').trim().slice(0, 80) || "Mestre";
+  const nome = String(nomeMesa || '').trim().slice(0, 80);
+  if (!nome) throw new Error('Informe um nome para a mesa.');
   const docRef = await addDoc(collection(db, "mesas"), {
-    nome: nomeMesa,
-    mestre: mestreUid,
-    jogadores: [{ uid: mestreUid, nome: mestreNome || "Mestre" }], 
+    nome,
+    mestre: uidMestre,
+    membroUids,
+    jogadores: [{ uid: uidMestre, nome: nomeMestre }],
     dataCriacao: new Date().toISOString(),
     emCombate: false,
     iniciativas: []
@@ -232,33 +244,62 @@ export async function criarMesa(nomeMesa, mestreUid, mestreNome) {
 }
 
 export async function buscarMinhasMesas(uid) {
+  const uidNormalizado = String(uid || '').trim();
+  if (!uidNormalizado) throw new Error('Usuário inválido para buscar mesas.');
   const mesas = [];
-  const qMestre = query(collection(db, "mesas"), where("mestre", "==", uid));
-  const snapMestre = await getDocs(qMestre);
-  snapMestre.forEach(doc => mesas.push({ id: doc.id, ...doc.data(), papel: 'mestre' }));
-
-  const snapTodas = await getDocs(collection(db, "mesas"));
-  snapTodas.forEach(doc => {
-      const data = doc.data();
-      const souJogador = data.jogadores && data.jogadores.some(j => j.uid === uid);
-      if (souJogador && data.mestre !== uid) {
-          mesas.push({ id: doc.id, ...data, papel: 'jogador' });
+  const qMembro = query(collection(db, "mesas"), where("membroUids", "array-contains", uidNormalizado));
+  const snapshot = await getDocs(qMembro);
+  snapshot.forEach(documento => {
+      const data = documento.data();
+      const papel = obterPapelNaMesa(data, uidNormalizado);
+      if (!papel) {
+          throw new Error(`A mesa ${documento.id} possui uma lista de membros inconsistente.`);
       }
+      mesas.push({ id: documento.id, ...data, papel });
   });
   return mesas;
 }
 
 export async function entrarNaMesa(mesaId, jogadorUid, jogadorNome) {
-  const mesaRef = doc(db, "mesas", mesaId);
+  const idMesa = String(mesaId || '').trim();
+  const uid = String(jogadorUid || '').trim();
+  const nome = String(jogadorNome || '').trim().slice(0, 80) || "Agente";
+  if (!idMesa) throw new Error('Código da mesa inválido.');
+  if (!uid) throw new Error('Usuário inválido para entrar na mesa.');
+  const mesaRef = doc(db, "mesas", idMesa);
+
+  try {
+    // O primeiro acesso é intencionalmente cego: pelas regras seguras, quem ainda
+    // não é membro não pode ler a mesa. arrayUnion mantém a adesão atômica.
+    await updateDoc(mesaRef, {
+      membroUids: arrayUnion(uid),
+      jogadores: arrayUnion({ uid, nome }),
+    });
+  } catch (erroEntrada) {
+    // Um membro existente pode repetir o convite com outro nome. Nesse caso as
+    // regras recusam alterar jogadores, mas a leitura posterior confirma o acesso.
+    try {
+      const snapshotExistente = await getDoc(mesaRef);
+      if (snapshotExistente.exists()) {
+        const dadosExistentes = snapshotExistente.data();
+        if (obterMembrosMesa(dadosExistentes).includes(uid)) return dadosExistentes.nome;
+      }
+    } catch {
+      // Mantém abaixo uma mensagem única que não revela mesas privadas.
+    }
+
+    const erro = new Error(
+      'Não foi possível entrar na mesa. Confira o convite. Se a mesa for antiga, o mestre precisa executar o backfill de membroUids.',
+    );
+    erro.cause = erroEntrada;
+    throw erro;
+  }
+
   const mesaSnap = await getDoc(mesaRef);
   if (!mesaSnap.exists()) throw new Error("Mesa não encontrada.");
-  
   const dados = mesaSnap.data();
-  const jaEsta = dados.jogadores.some(j => j.uid === jogadorUid);
-  if (!jaEsta) {
-      await updateDoc(mesaRef, {
-        jogadores: arrayUnion({ uid: jogadorUid, nome: jogadorNome || "Agente" })
-      });
+  if (!obterMembrosMesa(dados).includes(uid)) {
+    throw new Error('A entrada foi registrada, mas a associação à mesa não pôde ser confirmada.');
   }
   return dados.nome;
 }
@@ -284,6 +325,7 @@ export async function removerJogadorDaMesa(mesaId, jogadorUid) {
         );
 
         transaction.update(mesaRef, {
+            membroUids: removerMembroDaMesa(dados, jogadorUid),
             jogadores: jogadores.filter(jogador => jogador.uid !== jogadorUid),
             iniciativas: resultado.iniciativas,
             turnoAtual: resultado.turnoAtual
@@ -301,5 +343,7 @@ export async function excluirMesaCompleta(mesaId) {
 }
 
 export async function atualizarNomeMesa(mesaId, novoNome) {
-    await updateDoc(doc(db, "mesas", mesaId), { nome: novoNome });
+    const nome = String(novoNome || '').trim().slice(0, 80);
+    if (!nome) throw new Error('Informe um nome para a mesa.');
+    await updateDoc(doc(db, "mesas", mesaId), { nome });
 }

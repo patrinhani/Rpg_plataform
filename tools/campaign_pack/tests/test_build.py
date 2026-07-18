@@ -237,6 +237,91 @@ def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) ->
     assert catalog.resolve_asset(ids["token"], "player").path.read_bytes() == b"token-agente"
 
 
+def test_preserves_scene_layers_and_copies_consumed_assets(tmp_path: Path) -> None:
+    manifest_path, source, manifest, ids = _fixture(tmp_path)
+    prop = next(item for item in manifest["assets"] if item["id"] == ids["prop"])
+    prop["image"] = {"format": "png", "width": 100, "height": 100, "hasAlpha": True}
+    scene = manifest["collections"]["scenes"][0]  # type: ignore[index]
+    scene["layers"] = [
+        {
+            "id": "scene-layer:ancora",
+            "key": "ancora",
+            "label": "Âncora",
+            "defaultState": None,
+            "states": {
+                "ativo": {
+                    "label": "Ativa",
+                    "assetId": ids["prop"],
+                    "placements": [
+                        {"x": 0.4, "y": 0.3, "width": 0.2, "height": 0.2, "rotation": -45}
+                    ],
+                }
+            },
+        }
+    ]
+    manifest["collections"]["propAssetIds"] = []  # type: ignore[index]
+    manifest["collections"]["stateGroups"] = []  # type: ignore[index]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    output = tmp_path / "runtime-pack"
+
+    result = build_pack(manifest_path, source, output)
+    runtime = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+
+    assert result.asset_count == 5
+    layer = runtime["collections"]["scenes"][0]["layers"][0]
+    assert layer["id"] == "scene-layer:ancora"
+    assert layer["states"]["ativo"]["assetId"] == ids["prop"]
+    assert layer["states"]["ativo"]["placements"][0]["rotation"] == -45.0
+    assert runtime["summary"]["sceneLayerCount"] == 1
+    assert (output / "assets" / "objetos" / "ancora-v1.bin").exists()
+
+    catalog = CampaignCatalog.load(output / "manifest.json", {"fixture": output})
+    typed = catalog.list_scenes("player")[0].layers[0]
+    assert typed.key == "ancora"
+    assert typed.states[0].placements[0].width == 0.2
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (("x", -0.01), ("width", 0), ("height", 1.01), ("rotation", 361), ("x", True)),
+)
+def test_rejects_invalid_scene_layer_placement(
+    tmp_path: Path, field: str, value: object
+) -> None:
+    manifest_path, source, manifest, ids = _fixture(tmp_path)
+    prop = next(item for item in manifest["assets"] if item["id"] == ids["prop"])
+    prop["image"] = {"format": "png", "width": 100, "height": 100, "hasAlpha": True}
+    placement: dict[str, object] = {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.2,
+        "height": 0.2,
+        "rotation": 0,
+    }
+    placement[field] = value
+    manifest["collections"]["scenes"][0]["layers"] = [  # type: ignore[index]
+        {
+            "id": "scene-layer:ancora",
+            "key": "ancora",
+            "label": "Âncora",
+            "defaultState": None,
+            "states": {
+                "ativo": {
+                    "label": "Ativa",
+                    "assetId": ids["prop"],
+                    "placements": [placement],
+                }
+            },
+        }
+    ]
+    manifest["collections"]["propAssetIds"] = []  # type: ignore[index]
+    manifest["collections"]["stateGroups"] = []  # type: ignore[index]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(PackManifestError, match="numero|limites"):
+        check_pack(manifest_path, source)
+
+
 def test_builds_older_manifest_without_new_asset_collections(tmp_path: Path) -> None:
     manifest_path, source, manifest, ids = _fixture(tmp_path)
     collections = manifest["collections"]  # type: ignore[assignment]

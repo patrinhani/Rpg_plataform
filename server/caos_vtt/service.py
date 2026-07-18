@@ -10,6 +10,7 @@ import math
 import re
 import secrets
 import string
+import time
 import warnings
 import zlib
 from collections import OrderedDict
@@ -39,6 +40,7 @@ from .models import (
     PropSpawnCommand,
     PropUpdateCommand,
     Role,
+    SceneLayerSetCommand,
     SceneSelectCommand,
     TokenRemoveCommand,
     TokenSpawnCommand,
@@ -64,6 +66,7 @@ CatalogCommand = (
     MoveCommand
     | SceneSelectCommand
     | OverlaySetCommand
+    | SceneLayerSetCommand
     | TokenSpawnCommand
     | TokenRemoveCommand
     | PropSpawnCommand
@@ -95,11 +98,35 @@ class ClientConnection:
     websocket: WebSocket
     role: Role
     media_digest: bytes
+    mesa_session: MesaSession | None = None
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
     async def send(self, payload: dict[str, Any]) -> None:
         async with self.send_lock:
             await self.websocket.send_json(payload)
+
+
+@dataclass(eq=False, slots=True)
+class MesaSession:
+    """Ephemeral proof tying an integrated VTT grant to one Mesa member.
+
+    The Firebase token intentionally lives only in memory. It is never included
+    in room snapshots or persistence and is discarded as soon as the session is
+    revoked.
+    """
+
+    room_id: str
+    mesa_id: str
+    uid: str
+    role: Role
+    id_token: str = field(repr=False)
+    last_verified_at: float = field(default_factory=time.monotonic)
+    transient_failures: int = 0
+    revoked: bool = False
+    verification_lock: asyncio.Lock = field(
+        default_factory=asyncio.Lock,
+        repr=False,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,6 +135,7 @@ class TicketGrant:
     role: Role
     expires_at: datetime
     media_digest: bytes
+    mesa_session: MesaSession | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +143,7 @@ class MediaGrant:
     room_id: str
     role: Role
     expires_at: datetime
+    mesa_session: MesaSession | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,6 +240,7 @@ class Room:
     scene_tokens: dict[str, dict[str, CatalogToken]] = field(default_factory=dict)
     scene_props: dict[str, dict[str, CatalogProp]] = field(default_factory=dict)
     scene_overlays: dict[str, dict[str, bool]] = field(default_factory=dict)
+    scene_layers: dict[str, dict[str, str | None]] = field(default_factory=dict)
     scene_fog: dict[str, FogState] = field(default_factory=dict)
     persistence_warning: str | None = None
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
@@ -259,8 +289,12 @@ class VTTService:
         campaign_id: str | None = None,
         external_mesa_id: str | None = None,
     ) -> tuple[Room, str, str]:
+        # Invite secrets are generated even for integrated rooms so persisted
+        # legacy digests are overwritten with values that were never disclosed.
         master_invite = secrets.token_urlsafe(32)
         player_invite = secrets.token_urlsafe(32)
+        room: Room
+        created = False
         async with self._rooms_lock:
             if external_mesa_id is not None:
                 existing_id = self._external_rooms.get(external_mesa_id)
@@ -269,26 +303,60 @@ class VTTService:
                     async with existing.broadcast_lock:
                         async with existing.lock:
                             existing.name = name.strip()
+                            # Integrated rooms never authenticate with legacy
+                            # invites. Rotate on every secure reuse so values
+                            # persisted by older releases become useless too.
                             existing.master_invite_digest = _token_digest(master_invite)
                             existing.player_invite_digest = _token_digest(player_invite)
                         await self._persist_room(existing)
-                    return existing, master_invite, player_invite
-            room_id = self._new_room_id()
-            room = Room(
-                room_id=room_id,
-                name=name.strip(),
-                master_invite_digest=_token_digest(master_invite),
-                player_invite_digest=_token_digest(player_invite),
-                campaign_id=campaign_id or (self.catalog.campaign_id if self.catalog else None),
-                external_mesa_id=external_mesa_id,
-            )
-            if self.catalog is not None:
-                self._initialize_catalog_room(room)
-            self._rooms[room_id] = room
-            if external_mesa_id is not None:
-                self._external_rooms[external_mesa_id] = room_id
-            await self._persist_room(room)
+                    room = existing
+                else:
+                    created = True
+            else:
+                created = True
+
+            if created:
+                room_id = self._new_room_id()
+                room = Room(
+                    room_id=room_id,
+                    name=name.strip(),
+                    master_invite_digest=_token_digest(master_invite),
+                    player_invite_digest=_token_digest(player_invite),
+                    campaign_id=campaign_id
+                    or (self.catalog.campaign_id if self.catalog else None),
+                    external_mesa_id=external_mesa_id,
+                )
+                if self.catalog is not None:
+                    self._initialize_catalog_room(room)
+                self._rooms[room_id] = room
+                if external_mesa_id is not None:
+                    self._external_rooms[external_mesa_id] = room_id
+                await self._persist_room(room)
+
+        if external_mesa_id is not None:
+            # This also evicts grants/sockets produced by an older process path
+            # before the room was converted or securely reused.
+            await self._revoke_manual_room_access(room)
+            return room, "", ""
         return room, master_invite, player_invite
+
+    async def ensure_room_for_mesa(
+        self,
+        name: str,
+        *,
+        campaign_id: str | None,
+        external_mesa_id: str,
+    ) -> Room:
+        room, _, _ = await self.create_room(
+            name,
+            campaign_id=campaign_id,
+            external_mesa_id=external_mesa_id,
+        )
+        return room
+
+    def room_for_external_mesa(self, external_mesa_id: str) -> Room | None:
+        room_id = self._external_rooms.get(external_mesa_id)
+        return self._rooms.get(room_id or "")
 
     def _initialize_catalog_room(self, room: Room) -> None:
         assert self.catalog is not None
@@ -298,6 +366,9 @@ class VTTService:
             room.scene_props[scene.scene_id] = {}
             room.scene_overlays[scene.scene_id] = {
                 overlay.asset_id: False for overlay in scene.overlays
+            }
+            room.scene_layers[scene.scene_id] = {
+                layer.layer_id: layer.default_state for layer in scene.layers
             }
             room.scene_fog[scene.scene_id] = FogState(
                 map_asset_id=scene.active_player_map,
@@ -318,7 +389,7 @@ class VTTService:
 
     async def issue_ticket(self, room_id: str, invite_token: str) -> IssuedAccess | None:
         room = self._rooms.get(room_id)
-        if room is None:
+        if room is None or room.external_mesa_id is not None:
             return None
 
         supplied = _token_digest(invite_token)
@@ -329,28 +400,70 @@ class VTTService:
         else:
             return None
 
+        return await self.issue_role_access(room_id, role)
+
+    async def issue_role_access(self, room_id: str, role: Role) -> IssuedAccess | None:
+        room = self._rooms.get(room_id)
+        if room is None or room.external_mesa_id is not None:
+            return None
+
+        return await self._issue_access(room, role, mesa_session=None)
+
+    async def issue_mesa_access(
+        self,
+        room_id: str,
+        role: Role,
+        *,
+        mesa_id: str,
+        uid: str,
+        id_token: str,
+    ) -> IssuedAccess | None:
+        room = self._rooms.get(room_id)
+        if room is None or room.external_mesa_id != mesa_id:
+            return None
+        mesa_session = MesaSession(
+            room_id=room_id,
+            mesa_id=mesa_id,
+            uid=uid,
+            role=role,
+            id_token=id_token,
+        )
+        return await self._issue_access(room, role, mesa_session=mesa_session)
+
+    async def _issue_access(
+        self,
+        room: Room,
+        role: Role,
+        *,
+        mesa_session: MesaSession | None,
+    ) -> IssuedAccess:
+        if (room.external_mesa_id is None) != (mesa_session is None):
+            raise ValueError("modo de acesso incompativel com a sala")
+
         ticket = secrets.token_urlsafe(24)
         media_token = secrets.token_urlsafe(32)
         media_digest = _token_digest(media_token)
         now = datetime.now(UTC)
         ticket_grant = TicketGrant(
-            room_id=room_id,
+            room_id=room.room_id,
             role=role,
             expires_at=now + timedelta(seconds=self.ticket_ttl_seconds),
             media_digest=media_digest,
+            mesa_session=mesa_session,
         )
         media_grant = MediaGrant(
-            room_id=room_id,
+            room_id=room.room_id,
             role=role,
             expires_at=now + timedelta(seconds=self.media_ttl_seconds),
+            mesa_session=mesa_session,
         )
         async with self._access_lock:
             self._purge_expired_access(now)
             pending_tickets = sum(
-                grant.room_id == room_id for grant in self._tickets.values()
+                grant.room_id == room.room_id for grant in self._tickets.values()
             )
             media_grants = sum(
-                grant.room_id == room_id for grant in self._media_grants.values()
+                grant.room_id == room.room_id for grant in self._media_grants.values()
             )
             if (
                 pending_tickets >= self.max_pending_tickets_per_room
@@ -373,10 +486,17 @@ class VTTService:
             self._purge_expired_access(now)
             grant = self._tickets.pop(ticket, None)
             if grant is not None and (
-                grant.room_id != room_id or grant.expires_at <= now
+                grant.room_id != room_id
+                or grant.expires_at <= now
+                or (grant.mesa_session is not None and grant.mesa_session.revoked)
             ):
                 self._media_grants.pop(grant.media_digest, None)
-        if grant is None or grant.room_id != room_id or grant.expires_at <= now:
+        if (
+            grant is None
+            or grant.room_id != room_id
+            or grant.expires_at <= now
+            or (grant.mesa_session is not None and grant.mesa_session.revoked)
+        ):
             return None
         return grant
 
@@ -389,10 +509,88 @@ class VTTService:
             grant is None
             or grant.room_id != room_id
             or grant.expires_at <= now
+            or (grant.mesa_session is not None and grant.mesa_session.revoked)
             or room_id not in self._rooms
         ):
             return None
         return grant
+
+    async def revoke_mesa_session(self, session: MesaSession) -> None:
+        """Revoke every ephemeral credential/socket backed by one Firebase proof."""
+
+        session.revoked = True
+        session.id_token = ""
+        async with self._access_lock:
+            expired_tickets = [
+                token
+                for token, grant in self._tickets.items()
+                if grant.mesa_session is session
+            ]
+            expired_media = [
+                digest
+                for digest, grant in self._media_grants.items()
+                if grant.mesa_session is session
+            ]
+            for token in expired_tickets:
+                self._tickets.pop(token, None)
+            for digest in expired_media:
+                self._media_grants.pop(digest, None)
+
+        room = self._rooms.get(session.room_id)
+        if room is None:
+            return
+        async with room.lock:
+            clients = tuple(
+                client
+                for client in room.clients
+                if client.mesa_session is session
+            )
+            for client in clients:
+                room.clients.discard(client)
+        for client in clients:
+            try:
+                await client.websocket.close(
+                    code=4403,
+                    reason="Mesa membership changed",
+                )
+            except Exception:
+                pass
+
+    async def _revoke_manual_room_access(self, room: Room) -> None:
+        """Remove legacy invite-derived access after a room becomes integrated."""
+
+        async with self._access_lock:
+            legacy_tickets = [
+                token
+                for token, grant in self._tickets.items()
+                if grant.room_id == room.room_id and grant.mesa_session is None
+            ]
+            legacy_media = [
+                digest
+                for digest, grant in self._media_grants.items()
+                if grant.room_id == room.room_id and grant.mesa_session is None
+            ]
+            for token in legacy_tickets:
+                self._tickets.pop(token, None)
+            for digest in legacy_media:
+                self._media_grants.pop(digest, None)
+
+        async with room.lock:
+            clients = tuple(
+                client
+                for client in room.clients
+                if client.mesa_session is None
+            )
+            for client in clients:
+                room.clients.discard(client)
+        for client in clients:
+            try:
+                await client.websocket.close(
+                    code=4403,
+                    reason="Room now uses Mesa authentication",
+                )
+            except Exception:
+                pass
 
     async def can_access_asset(self, room_id: str, role: Role, asset_id: str) -> bool:
         """Restrict player media to assets currently revealed in the active scene."""
@@ -418,6 +616,19 @@ class VTTService:
             if scene is None:
                 return False
             fog = room.scene_fog.get(active_scene_id)
+            layer_asset_ids = {
+                state.asset_id for layer in scene.layers for state in layer.states
+            }
+            if asset_id in layer_asset_ids:
+                if fog is not None and fog.enabled:
+                    return False
+                selected_layers = room.scene_layers.get(active_scene_id, {})
+                return any(
+                    selected_layers.get(layer.layer_id) == state.key
+                    and state.asset_id == asset_id
+                    for layer in scene.layers
+                    for state in layer.states
+                )
             if fog is not None and fog.enabled:
                 if scene.active_player_map == asset_id:
                     return False
@@ -498,11 +709,33 @@ class VTTService:
                         prop.rotation,
                     )
                 )
+            scene_layer_items: list[tuple[str, float, float, float, float, float]] = []
+            selected_layers = room.scene_layers.get(scene_id, {})
+            for layer in scene.layers:
+                selected_state = selected_layers.get(layer.layer_id)
+                state = next(
+                    (item for item in layer.states if item.key == selected_state),
+                    None,
+                )
+                if state is None:
+                    continue
+                for placement in state.placements:
+                    scene_layer_items.append(
+                        (
+                            state.asset_id,
+                            placement.x,
+                            placement.y,
+                            placement.width,
+                            placement.height,
+                            placement.rotation,
+                        )
+                    )
             mask = bytes(fog.mask)
             render_revision = fog.render_revision
             map_id = scene.active_player_map
 
         prop_signature = tuple(prop_layers)
+        scene_layer_signature = tuple(scene_layer_items)
         cache_key = (
             room_id,
             scene_id,
@@ -510,6 +743,7 @@ class VTTService:
             map_id,
             overlay_ids,
             prop_signature,
+            scene_layer_signature,
         )
         async with self._fog_cache_lock:
             cached = self._fog_render_cache.get(cache_key)
@@ -524,6 +758,7 @@ class VTTService:
                         map_id,
                         overlay_ids,
                         prop_signature,
+                        scene_layer_signature,
                         mask,
                         render_revision,
                     )
@@ -568,16 +803,26 @@ class VTTService:
                     self._fog_render_cache.popitem(last=False)
 
     async def connect(
-        self, room_id: str, websocket: WebSocket, role: Role, media_digest: bytes
+        self,
+        room_id: str,
+        websocket: WebSocket,
+        role: Role,
+        media_digest: bytes,
+        mesa_session: MesaSession | None = None,
     ) -> ClientConnection | None:
         room = self._rooms.get(room_id)
-        if room is None:
+        if (
+            room is None
+            or (room.external_mesa_id is None) != (mesa_session is None)
+            or (mesa_session is not None and mesa_session.revoked)
+        ):
             await self._revoke_media_digests((media_digest,))
             return None
         connection = ClientConnection(
             websocket=websocket,
             role=role,
             media_digest=media_digest,
+            mesa_session=mesa_session,
         )
         try:
             async with room.broadcast_lock:
@@ -596,7 +841,10 @@ class VTTService:
         if room is not None:
             async with room.lock:
                 room.clients.discard(connection)
-        await self._revoke_media_digests((connection.media_digest,))
+        if connection.mesa_session is not None:
+            await self.revoke_mesa_session(connection.mesa_session)
+        else:
+            await self._revoke_media_digests((connection.media_digest,))
 
     async def move_token(
         self,
@@ -751,6 +999,40 @@ class VTTService:
                 return CatalogCommandFailure("overlay_not_found", "Overlay nao encontrado")
             overlays[command.payload.assetId] = command.payload.enabled
             self._mark_scene_render_dirty(room, room.active_scene_id or "")
+            return None
+
+        if isinstance(command, SceneLayerSetCommand):
+            if role != "master":
+                return CatalogCommandFailure(
+                    "forbidden", "Somente o mestre altera objetos ancorados"
+                )
+            scene_id = room.active_scene_id or ""
+            layer_states = room.scene_layers.get(scene_id)
+            if layer_states is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            scene = next(
+                (item for item in self._master_scenes() if item.scene_id == scene_id),
+                None,
+            )
+            layer = next(
+                (
+                    item
+                    for item in (scene.layers if scene is not None else ())
+                    if item.layer_id == command.payload.layerId
+                ),
+                None,
+            )
+            if layer is None or command.payload.layerId not in layer_states:
+                return CatalogCommandFailure(
+                    "layer_not_found", "Objeto ancorado nao encontrado nesta cena"
+                )
+            valid_states = {state.key for state in layer.states}
+            if command.payload.state is not None and command.payload.state not in valid_states:
+                return CatalogCommandFailure(
+                    "layer_state_not_found", "Estado do objeto ancorado nao encontrado"
+                )
+            layer_states[layer.layer_id] = command.payload.state
+            self._mark_scene_render_dirty(room, scene_id)
             return None
 
         if isinstance(command, TokenSpawnCommand):
@@ -917,6 +1199,7 @@ class VTTService:
             set(room.scene_tokens)
             | set(room.scene_props)
             | set(room.scene_overlays)
+            | set(room.scene_layers)
             | set(room.scene_fog)
         )
         scenes: dict[str, Any] = {}
@@ -957,6 +1240,7 @@ class VTTService:
                     )
                 ],
                 "overlays": dict(sorted(room.scene_overlays.get(scene_id, {}).items())),
+                "layers": dict(sorted(room.scene_layers.get(scene_id, {}).items())),
                 "fog": {
                     "enabled": fog.enabled,
                     "revision": fog.revision,
@@ -1092,12 +1376,19 @@ class VTTService:
             raise ValueError("cenas persistidas invalidas")
         total_tokens = 0
         total_props = 0
+        scene_by_id = {scene.scene_id: scene for scene in self._master_scenes()}
         scene_maps = {
-            scene.scene_id: (
+            scene_id: (
                 scene.active_player_map,
                 self._map_fingerprint(scene.active_player_map),
             )
-            for scene in self._master_scenes()
+            for scene_id, scene in scene_by_id.items()
+        }
+        layer_target_by_asset = {
+            state.asset_id: (scene.scene_id, layer.layer_id, state.key)
+            for scene in scene_by_id.values()
+            for layer in scene.layers
+            for state in layer.states
         }
         for scene_id in tuple(room.scene_tokens):
             raw_scene = scenes_payload.get(scene_id, {})
@@ -1112,6 +1403,22 @@ class VTTService:
                 if not isinstance(enabled, bool):
                     raise ValueError("estado de overlay invalido")
                 room.scene_overlays[scene_id][asset_id] = enabled
+
+            raw_layers = raw_scene.get("layers", {})
+            if not isinstance(raw_layers, dict):
+                raise ValueError("layers persistidos invalidos")
+            scene = scene_by_id[scene_id]
+            layer_by_id = {layer.layer_id: layer for layer in scene.layers}
+            for layer_id, layer in layer_by_id.items():
+                if layer_id not in raw_layers:
+                    continue
+                selected_state = raw_layers[layer_id]
+                if selected_state is not None and (
+                    not isinstance(selected_state, str)
+                    or selected_state not in {state.key for state in layer.states}
+                ):
+                    raise ValueError("estado de layer persistido invalido")
+                room.scene_layers[scene_id][layer_id] = selected_state
 
             raw_tokens = raw_scene.get("tokens", [])
             if not isinstance(raw_tokens, list):
@@ -1136,7 +1443,31 @@ class VTTService:
             raw_props = raw_scene.get("props", [])
             if not isinstance(raw_props, list):
                 raise ValueError("objetos persistidos invalidos")
+            migrated_layer_ids: set[str] = set()
             for raw_prop in raw_props:
+                raw_asset_id = (
+                    raw_prop.get("assetId") if isinstance(raw_prop, dict) else None
+                )
+                layer_target = layer_target_by_asset.get(raw_asset_id or "")
+                if layer_target is not None:
+                    target_scene_id, layer_id, state_key = layer_target
+                    if target_scene_id == scene_id:
+                        if (
+                            layer_id not in raw_layers
+                            and layer_id not in migrated_layer_ids
+                        ):
+                            room.scene_layers[scene_id][layer_id] = (
+                                None if raw_prop.get("visible") is False else state_key
+                            )
+                            migrated_layer_ids.add(layer_id)
+                    else:
+                        warnings.warn(
+                            "Objeto persistido de layer em cena incorreta foi ignorado",
+                            RuntimeWarning,
+                            stacklevel=2,
+                        )
+                    # Assets promovidos a layers deixam de existir como props livres.
+                    continue
                 try:
                     prop = self._deserialize_prop(raw_prop)
                 except (AssetNotAvailableError, PersistedAssetObsoleteError):
@@ -1359,6 +1690,10 @@ class VTTService:
 
     def room_exists(self, room_id: str) -> bool:
         return room_id in self._rooms
+
+    def room_uses_integrated_access(self, room_id: str) -> bool:
+        room = self._rooms.get(room_id)
+        return room is not None and room.external_mesa_id is not None
 
     def _new_room_id(self) -> str:
         while True:
@@ -1586,6 +1921,7 @@ class VTTService:
     ) -> dict[str, Any]:
         assert self.catalog is not None
         states = room.scene_overlays.get(scene.scene_id, {})
+        selected_layers = room.scene_layers.get(scene.scene_id, {})
         fog = room.scene_fog.get(scene.scene_id)
         map_id = scene.active_player_map
         if map_id is None and role == "master":
@@ -1598,6 +1934,47 @@ class VTTService:
                 "width": map_asset.image.width if map_asset.image is not None else None,
                 "height": map_asset.image.height if map_asset.image is not None else None,
             }
+        layers_payload: list[dict[str, Any]] = []
+        compose_layers_for_player = (
+            role == "player" and fog is not None and fog.enabled
+        )
+        if not compose_layers_for_player:
+            for layer in scene.layers:
+                selected_key = selected_layers.get(layer.layer_id)
+                selected_state = next(
+                    (state for state in layer.states if state.key == selected_key),
+                    None,
+                )
+                if role == "player" and selected_state is None:
+                    continue
+                layer_payload: dict[str, Any] = {
+                    "id": layer.layer_id,
+                    "key": layer.key,
+                    "label": layer.label,
+                    "state": selected_state.key if selected_state is not None else None,
+                    "assetId": (
+                        selected_state.asset_id if selected_state is not None else None
+                    ),
+                    "placements": [
+                        {
+                            "x": placement.x,
+                            "y": placement.y,
+                            "width": placement.width,
+                            "height": placement.height,
+                            "rotation": placement.rotation,
+                        }
+                        for placement in (
+                            selected_state.placements if selected_state is not None else ()
+                        )
+                    ],
+                }
+                if role == "master":
+                    layer_payload["options"] = [
+                        {"key": state.key, "label": state.label}
+                        for state in layer.states
+                    ]
+                layers_payload.append(layer_payload)
+
         payload = {
             "id": scene.scene_id,
             "key": scene.key,
@@ -1627,6 +2004,8 @@ class VTTService:
                 else None
             ),
         }
+        if scene.layers:
+            payload["layers"] = layers_payload
         if role == "master":
             guide_id = scene.active_gm_guide_map
             guide_payload: dict[str, Any] | None = None
@@ -1744,6 +2123,7 @@ class VTTService:
         map_id: str,
         overlay_ids: tuple[str, ...],
         prop_layers: tuple[tuple[str, float, float, float, float, float], ...],
+        scene_layers: tuple[tuple[str, float, float, float, float, float], ...],
         mask: bytes,
         render_revision: int,
     ) -> RenderedFogMap:
@@ -1756,7 +2136,9 @@ class VTTService:
                     raise ValueError("Dimensoes do mapa excedem o limite de renderizacao")
                 composed = source.convert("RGBA")
 
-        for asset_id, x, y, relative_width, relative_height, rotation in prop_layers:
+        for asset_id, x, y, relative_width, relative_height, rotation in (
+            scene_layers + prop_layers
+        ):
             with self.catalog.open_asset(asset_id, "player") as opened:
                 with Image.open(opened.stream) as prop_source:
                     prop_source.load()

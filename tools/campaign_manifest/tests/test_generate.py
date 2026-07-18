@@ -39,6 +39,45 @@ def _webp(*chunks: tuple[bytes, bytes]) -> bytes:
 
 
 class CampaignManifestTests(unittest.TestCase):
+    def _classification_config(
+        self, root: Path, *, scene_layers: list[dict[str, object]] | None = None
+    ) -> Path:
+        path = root / "fixture.asset-overrides.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schemaVersion": 2,
+                    "campaignId": "mnemosyne",
+                    "assetOverrides": {},
+                    "assetFamilyOverrides": {
+                        "assets/tokens/corpo-conectado-token-vtt": {
+                            "extensions": ["png", "webp"],
+                            "kind": "prop",
+                            "audience": "players",
+                            "controlledBy": "gm",
+                        },
+                        "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt": {
+                            "extensions": ["png", "webp"],
+                            "kind": "prop",
+                            "audience": "players",
+                            "controlledBy": "gm",
+                        },
+                    },
+                    "sceneLayers": scene_layers or [],
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        return path
+
+    def _build(self, campaign: Path) -> dict[str, object]:
+        return build_manifest(
+            campaign,
+            self._classification_config(campaign.parent),
+        )
+
     def _campaign(self, root: Path) -> Path:
         campaign = root / "Projeto Memoria"
         (campaign / "assets" / "mapas" / "helix-9" / "vtt-limpo").mkdir(parents=True)
@@ -90,7 +129,7 @@ class CampaignManifestTests(unittest.TestCase):
     def test_builds_utf8_manifest_with_relative_paths_and_scene(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             campaign = self._campaign(Path(temporary))
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
 
             self.assertEqual(manifest["summary"]["assetCount"], 10)
             documents = {item["relativePath"]: item for item in manifest["documents"]}
@@ -145,13 +184,162 @@ class CampaignManifestTests(unittest.TestCase):
             self.assertNotIn("sourceRoot", manifest["campaign"])
             self.assertNotIn("\\", manifest["assets"][0]["relativePath"])
 
+    def test_scene_layers_consume_props_overlays_and_complete_state_groups(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            # Mantem uma unica revisao por estado para que o grupo inteiro seja
+            # assumido pela layer, sem deixar uma variante historica solta.
+            (
+                campaign
+                / "assets"
+                / "objetos"
+                / "ancoras"
+                / "malha-mnemonica-ativa-objeto-vtt-v2.png"
+            ).unlink()
+            placement = {"x": 0.5, "y": 0.5, "width": 0.2, "height": 0.2, "rotation": 0}
+            config = self._classification_config(
+                root,
+                scene_layers=[
+                    {
+                        "key": "corpos-conectados",
+                        "sceneKey": "helix-9-nivel-0",
+                        "label": "Corpos conectados",
+                        "defaultState": None,
+                        "states": {
+                            "conectados": {
+                                "label": "Conectados",
+                                "assetPath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
+                                "placements": [placement, {**placement, "rotation": 90}],
+                            }
+                        },
+                    },
+                    {
+                        "key": "malha-mnemonica",
+                        "sceneKey": "helix-9-nivel-0",
+                        "label": "Malha mnemônica",
+                        "defaultState": None,
+                        "states": {
+                            "ativo": {
+                                "label": "Ativa",
+                                "assetPath": "assets/objetos/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+                                "placements": [placement],
+                            },
+                            "desativado": {
+                                "label": "Desativada",
+                                "assetPath": "assets/objetos/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+                                "placements": [placement],
+                            },
+                        },
+                    },
+                    {
+                        "key": "inundacao-controlada",
+                        "sceneKey": "helix-9-nivel-0",
+                        "label": "Inundação",
+                        "defaultState": None,
+                        "states": {
+                            "inundado": {
+                                "label": "Inundado",
+                                "assetPath": "assets/mapas/helix-9/overlays/helix-9-nivel-0-inundacao-overlay-vtt-v1.png",
+                                "placements": [{**placement, "width": 1, "height": 1}],
+                            }
+                        },
+                    },
+                ],
+            )
+
+            manifest = build_manifest(campaign, config)
+            scene = manifest["collections"]["scenes"][0]
+
+            self.assertEqual(
+                [layer["key"] for layer in scene["layers"]],
+                ["corpos-conectados", "inundacao-controlada", "malha-mnemonica"],
+            )
+            self.assertEqual(scene["overlays"], [])
+            self.assertEqual(manifest["collections"]["stateGroups"], [])
+            prop_paths = {
+                next(asset for asset in manifest["assets"] if asset["id"] == asset_id)[
+                    "relativePath"
+                ]
+                for asset_id in manifest["collections"]["propAssetIds"]
+            }
+            self.assertEqual(
+                prop_paths,
+                {"assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"},
+            )
+            self.assertEqual(manifest["summary"]["sceneLayerCount"], 3)
+
+    def test_scene_layer_rejects_partial_consumption_of_state_group(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            config = self._classification_config(
+                root,
+                scene_layers=[
+                    {
+                        "key": "malha-mnemonica",
+                        "sceneKey": "helix-9-nivel-0",
+                        "label": "Malha mnemônica",
+                        "defaultState": None,
+                        "states": {
+                            "ativo": {
+                                "label": "Ativa",
+                                "assetPath": "assets/objetos/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
+                                "placements": [
+                                    {"x": 0.5, "y": 0.5, "width": 0.2, "height": 0.2, "rotation": 0}
+                                ],
+                            }
+                        },
+                    }
+                ],
+            )
+
+            with self.assertRaisesRegex(ManifestError, "apenas parte"):
+                build_manifest(campaign, config)
+
+    def test_invalid_scene_layer_geometry_is_ignored_with_config_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            config = self._classification_config(
+                root,
+                scene_layers=[
+                    {
+                        "key": "corpos-conectados",
+                        "sceneKey": "helix-9-nivel-0",
+                        "label": "Corpos conectados",
+                        "defaultState": None,
+                        "states": {
+                            "conectados": {
+                                "label": "Conectados",
+                                "assetPath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
+                                "placements": [
+                                    {"x": 0.5, "y": 0.5, "width": 0, "height": 0.2, "rotation": 0}
+                                ],
+                            }
+                        },
+                    }
+                ],
+            )
+
+            manifest = build_manifest(campaign, config)
+
+            self.assertEqual(manifest["summary"]["sceneLayerCount"], 0)
+            self.assertTrue(
+                any(
+                    warning["code"] == "classification-config-invalid"
+                    and "sceneLayers" in warning["message"]
+                    for warning in manifest["warnings"]
+                )
+            )
+
     def test_render_is_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             first_campaign = self._campaign(root / "first")
             second_campaign = self._campaign(root / "second")
-            first = render_manifest(build_manifest(first_campaign))
-            second = render_manifest(build_manifest(second_campaign))
+            first = render_manifest(self._build(first_campaign))
+            second = render_manifest(self._build(second_campaign))
             self.assertEqual(first, second)
             self.assertNotIn(str(first_campaign.resolve()), first)
 
@@ -222,7 +410,7 @@ class CampaignManifestTests(unittest.TestCase):
             for name in (*family_members, *lookalikes):
                 (tokens / name).write_bytes(_png(64, 64))
 
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
             assets = {asset["relativePath"]: asset for asset in manifest["assets"]}
 
             for name in family_members:
@@ -279,7 +467,7 @@ class CampaignManifestTests(unittest.TestCase):
                 _png(2048, 2048)
             )
 
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
 
             self.assertFalse(
                 any(
@@ -304,7 +492,7 @@ class CampaignManifestTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
             scene = manifest["collections"]["scenes"][0]
 
             self.assertIsNone(scene["activePlayerMap"])
@@ -322,7 +510,7 @@ class CampaignManifestTests(unittest.TestCase):
             version_two = overlays / "helix-9-nivel-0-inundacao-overlay-vtt-v2.png"
             version_two.write_bytes(_png(128, 128))
 
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
             scene = manifest["collections"]["scenes"][0]
 
             self.assertEqual(len(scene["overlays"]), 1)
@@ -344,7 +532,7 @@ class CampaignManifestTests(unittest.TestCase):
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"/>',
                 encoding="utf-8",
             )
-            ambiguous = build_manifest(campaign)
+            ambiguous = self._build(campaign)
             ambiguous_scene = ambiguous["collections"]["scenes"][0]
             overlay_warnings = [
                 warning
@@ -400,7 +588,7 @@ class CampaignManifestTests(unittest.TestCase):
     def test_refuses_output_inside_source_campaign(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             campaign = self._campaign(Path(temporary))
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
             with self.assertRaises(ManifestError):
                 write_manifest(manifest, campaign / "manifest.json", campaign)
 
@@ -411,7 +599,7 @@ class CampaignManifestTests(unittest.TestCase):
             output = root / "generated" / "manifest.json"
             source_files_before = sorted(path.relative_to(campaign) for path in campaign.rglob("*") if path.is_file())
 
-            write_manifest(build_manifest(campaign), output, campaign)
+            write_manifest(self._build(campaign), output, campaign)
 
             source_files_after = sorted(path.relative_to(campaign) for path in campaign.rglob("*") if path.is_file())
             self.assertEqual(source_files_before, source_files_after)
@@ -426,7 +614,7 @@ class CampaignManifestTests(unittest.TestCase):
             legacy_temporary = output.with_name(f"{output.name}.tmp")
             legacy_temporary.write_text("nao tocar", encoding="utf-8")
 
-            write_manifest(build_manifest(campaign), output, campaign)
+            write_manifest(self._build(campaign), output, campaign)
 
             self.assertEqual(legacy_temporary.read_text(encoding="utf-8"), "nao tocar")
             self.assertEqual(list(output.parent.glob(f".{output.name}.*.tmp")), [])
@@ -443,7 +631,7 @@ class CampaignManifestTests(unittest.TestCase):
             except OSError as error:
                 self.skipTest(f"symlink indisponivel: {error}")
 
-            manifest = build_manifest(campaign)
+            manifest = self._build(campaign)
 
             asset_paths = {asset["relativePath"] for asset in manifest["assets"]}
             self.assertNotIn("assets/tokens/outside-token-vtt-v1.png", asset_paths)

@@ -6,10 +6,11 @@ O gerador cria uma cópia autocontida e leve para o VTT. O pack mantém os IDs e
 
 - versões ativas dos mapas de jogador e dos guias privados do Mestre;
 - overlays referenciados pelas cenas;
+- camadas semânticas de cena e todos os assets de seus estados/posicionamentos;
 - tokens listados em `collections.tokenAssetIds`;
 - objetos de mapa listados em `collections.propAssetIds`.
 
-Versões antigas sem seletor no runtime, documentos, grupos de estado e assets sem referência não entram no pack. As listas estruturais `documents` e `stateGroups` permanecem vazias no JSON para compatibilidade com `CampaignCatalog`. Alertas referentes aos assets e cenas selecionados são preservados.
+Versões antigas sem seletor no runtime, documentos, grupos de estado e assets sem referência não entram no pack. Manifests anteriores sem `layers` continuam válidos. Assets assumidos por uma camada deixam de ser props, tokens ou overlays globais, evitando que o mesmo elemento apareça duas vezes. As listas estruturais `documents` e grupos de estado ainda aplicáveis permanecem no JSON para compatibilidade com `CampaignCatalog`. Alertas referentes aos assets e cenas selecionados são preservados.
 
 ## Criar
 

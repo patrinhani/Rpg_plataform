@@ -19,6 +19,34 @@ export function normalizeVttRoomId(value) {
   return normalizeWithPattern(value, ROOM_ID_PATTERN);
 }
 
+export function normalizeVttServerOrigin(value) {
+  const rawValue = String(value || '').trim();
+  if (!rawValue) return '';
+
+  try {
+    const url = new URL(rawValue);
+    if (!['http:', 'https:'].includes(url.protocol)) return '';
+    if (!url.hostname || url.username || url.password) return '';
+    if (!/^[a-z][a-z\d+.-]*:\/\/[^/?#]+\/?$/i.test(rawValue)) return '';
+    if ((url.pathname && url.pathname !== '/') || url.search || url.hash) return '';
+    if (
+      url.protocol === 'http:'
+      && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname.toLowerCase())
+    ) return '';
+    return url.origin;
+  } catch {
+    return '';
+  }
+}
+
+export function resolveAuthenticatedVttServerOrigin({
+  trustedOrigin,
+  requestedOrigin,
+  canEditServerUrl = false,
+} = {}) {
+  return normalizeVttServerOrigin(canEditServerUrl ? requestedOrigin : trustedOrigin);
+}
+
 export function readVttLaunchContext(search = '') {
   const params = new URLSearchParams(String(search || ''));
   return {

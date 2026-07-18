@@ -1,0 +1,116 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function estruturaMembrosValida(dados) {
+      return dados.nome is string
+        && dados.nome.size() > 0
+        && dados.nome.size() <= 80
+        && dados.mestre is string
+        && dados.membroUids is list
+        && dados.jogadores is list
+        && dados.membroUids.size() == dados.membroUids.toSet().size()
+        && dados.membroUids.size() == dados.jogadores.size()
+        && dados.mestre in dados.membroUids;
+    }
+
+    function uidDeclaradoMembro(dados) {
+      return autenticado()
+        && dados.membroUids is list
+        && request.auth.uid in dados.membroUids;
+    }
+
+    function membroDaMesa(dados) {
+      return uidDeclaradoMembro(dados) && estruturaMembrosValida(dados);
+    }
+
+    function mestreDaMesa(dados) {
+      return membroDaMesa(dados) && dados.mestre == request.auth.uid;
+    }
+
+    function alterouSomente(campos) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos);
+    }
+
+    function criacaoDeMesaValida() {
+      return autenticado()
+        && estruturaMembrosValida(request.resource.data)
+        && request.resource.data.mestre == request.auth.uid
+        && request.resource.data.membroUids == [request.auth.uid]
+        && request.resource.data.jogadores.size() == 1
+        && request.resource.data.jogadores[0].keys().hasOnly(['uid', 'nome'])
+        && request.resource.data.jogadores[0].uid == request.auth.uid
+        && request.resource.data.jogadores[0].nome is string
+        && request.resource.data.jogadores[0].nome.size() > 0
+        && request.resource.data.jogadores[0].nome.size() <= 80;
+    }
+
+    // Exceção estreita para o convite por código: o documento da mesa não pode ser
+    // lido antes da adesão. O usuário só pode acrescentar a si próprio, uma vez,
+    // sem alterar mestre, VTT ou qualquer outro estado da mesa.
+    function entradaPropriaValida() {
+      let ultimoJogador = request.resource.data.jogadores[
+        request.resource.data.jogadores.size() - 1
+      ];
+      return autenticado()
+        && estruturaMembrosValida(resource.data)
+        && estruturaMembrosValida(request.resource.data)
+        && !(request.auth.uid in resource.data.membroUids)
+        && alterouSomente(['membroUids', 'jogadores'])
+        && request.resource.data.membroUids.size() == resource.data.membroUids.size() + 1
+        && request.resource.data.membroUids.hasAll(resource.data.membroUids)
+        && request.auth.uid in request.resource.data.membroUids
+        && request.resource.data.jogadores.size() == resource.data.jogadores.size() + 1
+        && request.resource.data.jogadores.hasAll(resource.data.jogadores)
+        && ultimoJogador.keys().hasOnly(['uid', 'nome'])
+        && ultimoJogador.uid == request.auth.uid
+        && ultimoJogador.nome is string
+        && ultimoJogador.nome.size() > 0
+        && ultimoJogador.nome.size() <= 80;
+    }
+
+    function atualizacaoDoMestreValida() {
+      return mestreDaMesa(resource.data)
+        && estruturaMembrosValida(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read, write: if autenticado() && request.auth.uid == userId;
+
+      match /{documento=**} {
+        allow read, write: if autenticado() && request.auth.uid == userId;
+      }
+    }
+
+    match /mesas/{mesaId} {
+      allow create: if criacaoDeMesaValida();
+      allow get: if membroDaMesa(resource.data);
+      // A consulta com array-contains consegue provar esta condição sem ler a
+      // coleção inteira. A validação estrutural completa ocorre no cliente e nos
+      // updates; regras não podem usar condições adicionais como filtros.
+      allow list: if uidDeclaradoMembro(resource.data);
+      // A iniciativa permanece no documento da mesa. Como uma regra não consegue
+      // isolar com segurança um único item desse array, apenas o mestre pode
+      // alterá-la; o jogador informa o resultado obtido com os dados físicos.
+      allow update: if atualizacaoDoMestreValida()
+        || entradaPropriaValida();
+      allow delete: if mestreDaMesa(resource.data);
+
+      match /personagens/{personagemUid} {
+        function acessoAoPersonagemNaMesaValido() {
+          let mesaPai = get(
+            /databases/$(database)/documents/mesas/$(mesaId)
+          ).data;
+          return membroDaMesa(mesaPai)
+            && (request.auth.uid == personagemUid || mestreDaMesa(mesaPai));
+        }
+
+        allow read, create, update, delete: if acessoAoPersonagemNaMesaValido();
+      }
+    }
+  }
+}

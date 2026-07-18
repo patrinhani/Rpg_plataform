@@ -37,6 +37,9 @@ def main() -> None:
         ws="auto",
         ws_max_size=16 * 1024,
         workers=1,
+        # Tickets e grants de mídia aparecem em URLs de handshake/assets.
+        # Desligar o access log evita gravar essas credenciais efêmeras no console.
+        access_log=False,
     )
 
 

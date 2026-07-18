@@ -18,13 +18,6 @@ class CreateRoomRequest(BaseModel):
         max_length=80,
         pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$",
     )
-    externalMesaId: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=128,
-        pattern=r"^[A-Za-z0-9_-]{1,128}$",
-    )
-
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str) -> str:
@@ -47,6 +40,21 @@ class TicketResponse(BaseModel):
     expiresIn: int
     mediaToken: str
     mediaExpiresIn: int
+
+
+class MesaAccessRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mesaId: str = Field(
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]{1,128}$",
+    )
+
+
+class MesaAccessResponse(TicketResponse):
+    roomId: str
+    revision: int = Field(ge=0)
 
 
 class MovePayload(BaseModel):
@@ -113,6 +121,35 @@ class OverlaySetCommand(BaseModel):
     type: Literal["overlay.set"]
     commandId: str = Field(min_length=1, max_length=100)
     payload: OverlaySetPayload
+
+
+class SceneLayerSetPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    layerId: str = Field(min_length=13, max_length=160)
+    state: str | None = Field(default=None, min_length=1, max_length=80)
+
+    @field_validator("layerId")
+    @classmethod
+    def validate_layer_id(cls, value: str) -> str:
+        if not value.startswith("scene-layer:") or any(ord(character) < 32 for character in value):
+            raise ValueError("layerId invalido")
+        return value
+
+    @field_validator("state")
+    @classmethod
+    def validate_state(cls, value: str | None) -> str | None:
+        if value is not None and any(ord(character) < 32 for character in value):
+            raise ValueError("state invalido")
+        return value
+
+
+class SceneLayerSetCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["layer.set"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: SceneLayerSetPayload
 
 
 class TokenSpawnPayload(BaseModel):

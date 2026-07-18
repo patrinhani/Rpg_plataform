@@ -32,6 +32,7 @@ DEFAULT_MAX_PACK_BYTES = 128 * 1024 * 1024
 HASH_CHUNK_SIZE = 1024 * 1024
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _SOURCE_REF_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_SCENE_LAYER_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 _ASSET_KINDS = frozenset(
     {"map", "overlay", "token", "prop", "handout", "symbol", "concept", "other"}
 )
@@ -146,6 +147,12 @@ def _expect_positive_int(value: Any, context: str) -> int:
     if not _is_int(value) or value <= 0:
         raise PackManifestError(f"{context} deve ser inteiro positivo")
     return value
+
+
+def _expect_number(value: Any, context: str) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise PackManifestError(f"{context} deve ser numero")
+    return float(value)
 
 
 def _stat_is_link_or_junction(result: os.stat_result) -> bool:
@@ -353,12 +360,113 @@ def _sanitize_grid_hint(value: Any, context: str) -> dict[str, Any] | None:
     return result
 
 
+def _sanitize_layer_placement(value: Any, context: str) -> dict[str, float]:
+    raw = _expect_object(value, context)
+    if set(raw) != {"x", "y", "width", "height", "rotation"}:
+        raise PackManifestError(f"{context} possui campos inesperados")
+    result = {
+        field: _expect_number(raw.get(field), f"{context}.{field}")
+        for field in ("x", "y", "width", "height", "rotation")
+    }
+    if not (
+        0.0 <= result["x"] <= 1.0
+        and 0.0 <= result["y"] <= 1.0
+        and 0.0 < result["width"] <= 1.0
+        and 0.0 < result["height"] <= 1.0
+        and -360.0 <= result["rotation"] <= 360.0
+    ):
+        raise PackManifestError(f"{context} esta fora dos limites normalizados")
+    return result
+
+
+def _parse_scene_layers(
+    value: Any,
+    context: str,
+    records: Mapping[str, AssetRecord],
+    layer_ids: set[str],
+    consumed_ids: set[str],
+) -> list[dict[str, Any]]:
+    layers: list[dict[str, Any]] = []
+    for layer_index, raw_value in enumerate(_expect_list(value, context)):
+        layer_context = f"{context}[{layer_index}]"
+        raw = _expect_object(raw_value, layer_context)
+        key = _expect_string(raw.get("key"), f"{layer_context}.key")
+        layer_id = _expect_string(raw.get("id"), f"{layer_context}.id")
+        if (
+            not _SCENE_LAYER_KEY_PATTERN.fullmatch(key)
+            or layer_id != f"scene-layer:{key}"
+            or layer_id in layer_ids
+        ):
+            raise PackManifestError(f"{layer_context}.id invalido ou duplicado")
+        layer_ids.add(layer_id)
+        raw_states = _expect_object(raw.get("states"), f"{layer_context}.states")
+        if not raw_states:
+            raise PackManifestError(f"{layer_context}.states nao pode ser vazio")
+        states: dict[str, dict[str, Any]] = {}
+        for state_key, raw_state_value in raw_states.items():
+            state_context = f"{layer_context}.states[{state_key}]"
+            if (
+                not isinstance(state_key, str)
+                or not _SCENE_LAYER_KEY_PATTERN.fullmatch(state_key)
+            ):
+                raise PackManifestError(f"{layer_context}.states contem key invalida")
+            raw_state = _expect_object(raw_state_value, state_context)
+            asset_id = _expect_string(raw_state.get("assetId"), f"{state_context}.assetId")
+            record = records.get(asset_id)
+            if (
+                record is None
+                or record.payload["kind"] not in {"prop", "overlay"}
+                or record.payload["audience"] != "players"
+                or record.payload.get("image") is None
+                or asset_id in consumed_ids
+            ):
+                raise PackManifestError(
+                    f"{state_context}.assetId nao e imagem prop/overlay publica e exclusiva"
+                )
+            raw_placements = _expect_list(
+                raw_state.get("placements"), f"{state_context}.placements"
+            )
+            if not raw_placements:
+                raise PackManifestError(f"{state_context}.placements nao pode ser vazio")
+            consumed_ids.add(asset_id)
+            states[state_key] = {
+                "label": _expect_string(raw_state.get("label"), f"{state_context}.label"),
+                "assetId": asset_id,
+                "placements": [
+                    _sanitize_layer_placement(
+                        placement,
+                        f"{state_context}.placements[{placement_index}]",
+                    )
+                    for placement_index, placement in enumerate(raw_placements)
+                ],
+            }
+        default_state = raw.get("defaultState")
+        if default_state is not None:
+            default_state = _expect_string(default_state, f"{layer_context}.defaultState")
+            if default_state not in states:
+                raise PackManifestError(f"{layer_context}.defaultState referencia estado ausente")
+        layers.append(
+            {
+                "id": layer_id,
+                "key": key,
+                "label": _expect_string(raw.get("label"), f"{layer_context}.label"),
+                "defaultState": default_state,
+                "states": dict(sorted(states.items())),
+            }
+        )
+    return sorted(layers, key=lambda item: item["key"])
+
+
 def _parse_scenes(
     collections: Mapping[str, Any], records: Mapping[str, AssetRecord]
-) -> tuple[list[dict[str, Any]], set[str]]:
+) -> tuple[list[dict[str, Any]], set[str], set[str]]:
     scenes: list[dict[str, Any]] = []
     selected_ids: set[str] = set()
     scene_ids: set[str] = set()
+    scene_keys: set[str] = set()
+    layer_ids: set[str] = set()
+    consumed_layer_ids: set[str] = set()
+    all_overlay_ids: set[str] = set()
     for index, raw_value in enumerate(
         _expect_list(collections.get("scenes"), "collections.scenes")
     ):
@@ -366,9 +474,10 @@ def _parse_scenes(
         raw = _expect_object(raw_value, context)
         key = _expect_string(raw.get("key"), f"{context}.key")
         scene_id = _expect_string(raw.get("id"), f"{context}.id")
-        if scene_id != f"scene:{key}" or scene_id in scene_ids:
+        if scene_id != f"scene:{key}" or scene_id in scene_ids or key in scene_keys:
             raise PackManifestError(f"{context}.id invalido ou duplicado")
         scene_ids.add(scene_id)
+        scene_keys.add(key)
         player_maps = _parse_variant_list(
             raw.get("playerMaps"), f"{context}.playerMaps", records, "map"
         )
@@ -404,6 +513,18 @@ def _parse_scenes(
                 }
             )
         overlays.sort(key=lambda item: (item["name"], item["version"], item["assetId"]))
+        all_overlay_ids.update(overlay_ids)
+        layers = _parse_scene_layers(
+            raw.get("layers", []),
+            f"{context}.layers",
+            records,
+            layer_ids,
+            consumed_layer_ids,
+        )
+        if consumed_layer_ids.intersection(all_overlay_ids):
+            raise PackManifestError(
+                f"{context}.overlays reutiliza asset consumido por scene layer"
+            )
         active_player = _validate_active(
             raw.get("activePlayerMap"), player_maps, f"{context}.activePlayerMap"
         )
@@ -422,6 +543,7 @@ def _parse_scenes(
             "playerMaps": player_maps,
             "gmGuideMaps": gm_maps,
             "overlays": overlays,
+            "layers": layers,
             "activePlayerMap": active_player,
             "activeGmGuideMap": active_gm,
             "gridHint": _sanitize_grid_hint(raw.get("gridHint"), f"{context}.gridHint"),
@@ -430,8 +552,13 @@ def _parse_scenes(
         selected_ids.update(item["assetId"] for item in player_maps)
         selected_ids.update(item["assetId"] for item in gm_maps)
         selected_ids.update(item["assetId"] for item in overlays)
+        selected_ids.update(
+            state["assetId"]
+            for layer in layers
+            for state in layer["states"].values()
+        )
     scenes.sort(key=lambda item: item["key"])
-    return scenes, selected_ids
+    return scenes, selected_ids, consumed_layer_ids
 
 
 def _sanitize_runtime_warnings(
@@ -491,6 +618,7 @@ def _parse_state_groups(
     collections: Mapping[str, Any],
     records: Mapping[str, AssetRecord],
     included_prop_ids: set[str],
+    consumed_layer_ids: set[str],
 ) -> list[dict[str, Any]]:
     """Keep only validated prop state metadata whose bytes ship in the pack."""
 
@@ -510,6 +638,7 @@ def _parse_state_groups(
         raw_states = _expect_object(group.get("states"), f"{context}.states")
         states: dict[str, dict[str, Any]] = {}
         include_group = True
+        group_asset_ids: set[str] = set()
         for state_name, raw_state in raw_states.items():
             state_context = f"{context}.states[{state_name}]"
             if not isinstance(state_name, str) or not state_name:
@@ -529,6 +658,7 @@ def _parse_state_groups(
             if version != max(variant["version"] for variant in variants):
                 raise PackManifestError(f"{state_context} nao seleciona a maior versao")
             referenced_ids = {variant["assetId"] for variant in variants}
+            group_asset_ids.update(referenced_ids)
             if asset_id not in included_prop_ids or not referenced_ids <= included_prop_ids:
                 # Manifests from before propAssetIds remain valid: their state
                 # metadata is omitted together with the prop bytes.
@@ -538,6 +668,13 @@ def _parse_state_groups(
                 "version": version,
                 "variants": variants,
             }
+        consumed_group_ids = group_asset_ids.intersection(consumed_layer_ids)
+        if consumed_group_ids:
+            if consumed_group_ids != group_asset_ids:
+                raise PackManifestError(
+                    f"{context} e consumido apenas parcialmente por scene layers"
+                )
+            include_group = False
         if include_group:
             result.append({"id": group_id, "key": key, "states": states})
     return result
@@ -582,7 +719,7 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
 
     records = _parse_assets(raw)
     collections = _expect_object(raw.get("collections"), "collections")
-    scenes, selected_ids = _parse_scenes(collections, records)
+    scenes, selected_ids, consumed_layer_ids = _parse_scenes(collections, records)
     token_ids = _parse_asset_ids(
         collections,
         records,
@@ -596,7 +733,16 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
         expected_kind="prop",
         optional=True,
     )
-    state_groups = _parse_state_groups(collections, records, set(prop_ids))
+    if consumed_layer_ids.intersection((*token_ids, *prop_ids)):
+        raise PackManifestError(
+            "tokenAssetIds/propAssetIds reutilizam asset consumido por scene layer"
+        )
+    state_groups = _parse_state_groups(
+        collections,
+        records,
+        set(prop_ids),
+        consumed_layer_ids,
+    )
     # Validar IDs e tipos agora evita que um manifesto defeituoso passe pelo
     # builder, mas os bytes/IDs nao entram no runtime antes de haver revelacao.
     _parse_asset_ids(
@@ -638,6 +784,7 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
             "assetCount": len(selected_records),
             "documentCount": 0,
             "sceneCount": len(scenes),
+            "sceneLayerCount": sum(len(scene["layers"]) for scene in scenes),
             "stateGroupCount": len(state_groups),
             "totalAssetBytes": total_bytes,
             "warningCount": len(warnings),

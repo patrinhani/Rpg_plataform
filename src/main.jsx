@@ -7,8 +7,6 @@ import { BrowserRouter } from 'react-router-dom'
 import './App.css'
 
 const AuthenticatedAppShell = lazy(() => import('./AuthenticatedAppShell.jsx'))
-const StandaloneVtt = lazy(() => import('./features/vtt-lab/VttLabIntegrated.jsx'))
-const isStandaloneVtt = /^\/vtt-lab\/?$/.test(window.location.pathname)
 
 const entryLoading = (
   <div className="app-loading-screen" role="status" aria-live="polite">
@@ -21,7 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Suspense fallback={entryLoading}>
-        {isStandaloneVtt ? <StandaloneVtt /> : <AuthenticatedAppShell />}
+        <AuthenticatedAppShell />
       </Suspense>
     </BrowserRouter>
   </React.StrictMode>

@@ -23,6 +23,7 @@ MANIFEST_SCHEMA_VERSION = 2
 MAX_MANIFEST_BYTES = 32 * 1024 * 1024
 HASH_CHUNK_SIZE = 1024 * 1024
 _SOURCE_REF_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_SCENE_LAYER_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _ROLES = frozenset({"master", "player"})
 _AUDIENCES = frozenset({"gm", "players", "unspecified"})
@@ -101,6 +102,32 @@ class OverlayView:
 
 
 @dataclass(frozen=True, slots=True)
+class SceneLayerPlacement:
+    x: float
+    y: float
+    width: float
+    height: float
+    rotation: float
+
+
+@dataclass(frozen=True, slots=True)
+class SceneLayerState:
+    key: str
+    label: str
+    asset_id: str
+    placements: tuple[SceneLayerPlacement, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SceneLayer:
+    layer_id: str
+    key: str
+    label: str
+    default_state: str | None
+    states: tuple[SceneLayerState, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class GridHintView:
     grid_type: str
     columns: int
@@ -114,6 +141,7 @@ class SceneView:
     player_maps: tuple[SceneVariantView, ...]
     gm_guide_maps: tuple[SceneVariantView, ...]
     overlays: tuple[OverlayView, ...]
+    layers: tuple[SceneLayer, ...]
     active_player_map: str | None
     active_gm_guide_map: str | None
     grid_hint: GridHintView | None
@@ -216,6 +244,12 @@ def _expect_positive_int(value: Any, context: str) -> int:
     if not _is_int(value) or value <= 0:
         raise ManifestValidationError(f"{context} deve ser inteiro positivo")
     return value
+
+
+def _expect_number(value: Any, context: str) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ManifestValidationError(f"{context} deve ser numero")
+    return float(value)
 
 
 def _normalize_relative_path(value: Any, context: str, *, assets_only: bool) -> PurePosixPath:
@@ -453,20 +487,130 @@ def _parse_grid_hint(value: Any, context: str) -> GridHintView | None:
     return GridHintView(grid_type, columns, rows)
 
 
+def _parse_layer_placement(value: Any, context: str) -> SceneLayerPlacement:
+    raw = _expect_object(value, context)
+    if set(raw) != {"x", "y", "width", "height", "rotation"}:
+        raise ManifestValidationError(f"{context} possui campos inesperados")
+    x = _expect_number(raw.get("x"), f"{context}.x")
+    y = _expect_number(raw.get("y"), f"{context}.y")
+    width = _expect_number(raw.get("width"), f"{context}.width")
+    height = _expect_number(raw.get("height"), f"{context}.height")
+    rotation = _expect_number(raw.get("rotation"), f"{context}.rotation")
+    if not (
+        0.0 <= x <= 1.0
+        and 0.0 <= y <= 1.0
+        and 0.0 < width <= 1.0
+        and 0.0 < height <= 1.0
+        and -360.0 <= rotation <= 360.0
+    ):
+        raise ManifestValidationError(f"{context} esta fora dos limites normalizados")
+    return SceneLayerPlacement(x, y, width, height, rotation)
+
+
+def _parse_scene_layers(
+    value: Any,
+    context: str,
+    assets: Mapping[str, _AssetRecord],
+    layer_ids: set[str],
+    consumed_asset_ids: set[str],
+) -> tuple[SceneLayer, ...]:
+    layers: list[SceneLayer] = []
+    for layer_index, raw_layer in enumerate(_expect_list(value, context)):
+        layer_context = f"{context}[{layer_index}]"
+        layer = _expect_object(raw_layer, layer_context)
+        key = _expect_string(layer.get("key"), f"{layer_context}.key")
+        layer_id = _expect_string(layer.get("id"), f"{layer_context}.id")
+        if (
+            not _SCENE_LAYER_KEY_PATTERN.fullmatch(key)
+            or layer_id != f"scene-layer:{key}"
+            or layer_id in layer_ids
+        ):
+            raise ManifestValidationError(f"{layer_context}.id invalido ou duplicado")
+        layer_ids.add(layer_id)
+        raw_states = _expect_object(layer.get("states"), f"{layer_context}.states")
+        if not raw_states:
+            raise ManifestValidationError(f"{layer_context}.states nao pode ser vazio")
+        states: list[SceneLayerState] = []
+        for state_key, raw_state in raw_states.items():
+            state_context = f"{layer_context}.states[{state_key}]"
+            if (
+                not isinstance(state_key, str)
+                or not _SCENE_LAYER_KEY_PATTERN.fullmatch(state_key)
+            ):
+                raise ManifestValidationError(f"{layer_context}.states contem key invalida")
+            state = _expect_object(raw_state, state_context)
+            asset_id = _expect_string(state.get("assetId"), f"{state_context}.assetId")
+            record = assets.get(asset_id)
+            if (
+                record is None
+                or record.view.kind not in {"prop", "overlay"}
+                or record.view.audience != "players"
+                or record.view.image is None
+                or asset_id in consumed_asset_ids
+            ):
+                raise ManifestValidationError(
+                    f"{state_context}.assetId nao e imagem prop/overlay publica e exclusiva"
+                )
+            raw_placements = _expect_list(
+                state.get("placements"), f"{state_context}.placements"
+            )
+            if not raw_placements:
+                raise ManifestValidationError(f"{state_context}.placements nao pode ser vazio")
+            consumed_asset_ids.add(asset_id)
+            states.append(
+                SceneLayerState(
+                    key=state_key,
+                    label=_expect_string(state.get("label"), f"{state_context}.label"),
+                    asset_id=asset_id,
+                    placements=tuple(
+                        _parse_layer_placement(
+                            placement,
+                            f"{state_context}.placements[{placement_index}]",
+                        )
+                        for placement_index, placement in enumerate(raw_placements)
+                    ),
+                )
+            )
+        default_state = layer.get("defaultState")
+        if default_state is not None:
+            default_state = _expect_string(
+                default_state, f"{layer_context}.defaultState"
+            )
+            if default_state not in {state.key for state in states}:
+                raise ManifestValidationError(
+                    f"{layer_context}.defaultState referencia estado ausente"
+                )
+        layers.append(
+            SceneLayer(
+                layer_id=layer_id,
+                key=key,
+                label=_expect_string(layer.get("label"), f"{layer_context}.label"),
+                default_state=default_state,
+                states=tuple(sorted(states, key=lambda item: item.key)),
+            )
+        )
+    return tuple(sorted(layers, key=lambda item: item.key))
+
+
 def _parse_scenes(
     collections: dict[str, Any], assets: Mapping[str, _AssetRecord]
 ) -> tuple[SceneView, ...]:
     raw_scenes = _expect_list(collections.get("scenes"), "collections.scenes")
     scene_ids: set[str] = set()
+    scene_keys: set[str] = set()
+    layer_ids: set[str] = set()
+    consumed_layer_asset_ids: set[str] = set()
+    overlay_asset_ids: set[str] = set()
     scenes: list[SceneView] = []
     for index, raw_scene in enumerate(raw_scenes):
         context = f"collections.scenes[{index}]"
         scene = _expect_object(raw_scene, context)
         key = _expect_string(scene.get("key"), f"{context}.key")
         scene_id = _expect_string(scene.get("id"), f"{context}.id")
-        if scene_id != f"scene:{key}" or scene_id in scene_ids:
+        if scene_id != f"scene:{key}" or scene_id in scene_ids or key in scene_keys:
             raise ManifestValidationError(f"{context}.id invalido ou duplicado")
         scene_ids.add(scene_id)
+        scene_keys.add(key)
 
         player_maps = tuple(
             sorted(
@@ -515,6 +659,18 @@ def _parse_scenes(
         if len({item.asset_id for item in overlays}) != len(overlays):
             raise ManifestValidationError(f"{context}.overlays contem asset duplicado")
         overlays.sort(key=lambda item: (item.name, item.version, item.asset_id))
+        overlay_asset_ids.update(item.asset_id for item in overlays)
+        layers = _parse_scene_layers(
+            scene.get("layers", []),
+            f"{context}.layers",
+            assets,
+            layer_ids,
+            consumed_layer_asset_ids,
+        )
+        if overlay_asset_ids.intersection(consumed_layer_asset_ids):
+            raise ManifestValidationError(
+                f"{context} reutiliza asset de layer como overlay simples"
+            )
 
         active_player = _validate_active_variant(
             scene.get("activePlayerMap"), player_maps, f"{context}.activePlayerMap"
@@ -529,6 +685,7 @@ def _parse_scenes(
                 player_maps=player_maps,
                 gm_guide_maps=gm_maps,
                 overlays=tuple(overlays),
+                layers=layers,
                 active_player_map=active_player,
                 active_gm_guide_map=active_gm,
                 grid_hint=_parse_grid_hint(scene.get("gridHint"), f"{context}.gridHint"),
@@ -728,6 +885,16 @@ class CampaignCatalog:
             expected_kind="prop",
             optional=True,
         )
+        scene_layer_asset_ids = {
+            state.asset_id
+            for scene in scenes
+            for layer in scene.layers
+            for state in layer.states
+        }
+        if scene_layer_asset_ids.intersection((*token_ids, *prop_ids)):
+            raise ManifestValidationError(
+                "tokenAssetIds/propAssetIds reutilizam asset consumido por scene layer"
+            )
         prop_state_groups = _parse_state_groups(
             collections,
             assets,
@@ -881,6 +1048,7 @@ class CampaignCatalog:
                     player_maps=player_maps,
                     gm_guide_maps=(),
                     overlays=overlays,
+                    layers=scene.layers,
                     active_player_map=(
                         scene.active_player_map
                         if scene.active_player_map in available_player_ids
@@ -1072,6 +1240,9 @@ __all__ = [
     "OpenedAsset",
     "OverlayView",
     "ResolvedAsset",
+    "SceneLayer",
+    "SceneLayerPlacement",
+    "SceneLayerState",
     "SceneVariantView",
     "SceneView",
     "SourceConfigurationError",

@@ -34,8 +34,6 @@ const TelaCarregamento = () => (
 
 function App() {
   const { usuario, loading: authLoading, devVisualMode } = useAuth();
-  const isStandaloneVtt = typeof window !== 'undefined'
-    && /^\/vtt-lab\/?$/.test(window.location.pathname);
   
   const [verificandoNome, setVerificandoNome] = useState(true);
   const [precisaNome, setPrecisaNome] = useState(false);
@@ -45,11 +43,6 @@ function App() {
 
   // --- EFEITO: VERIFICAR NOME ---
   useEffect(() => {
-    if (isStandaloneVtt) {
-        setPrecisaNome(false);
-        setVerificandoNome(false);
-        return;
-    }
     if (authLoading) return;
     if (!usuario) {
         setVerificandoNome(false);
@@ -80,18 +73,7 @@ function App() {
         setVerificandoNome(false);
     }
     checarNome();
-  }, [usuario, authLoading, devVisualMode, isStandaloneVtt]);
-
-  // A mesa portatil autentica cada participante pelos convites efemeros do
-  // proprio servidor VTT. Ela precisa abrir em dispositivos que nao possuem
-  // conta Firebase, sem afrouxar a protecao das fichas e do painel principal.
-  if (isStandaloneVtt) {
-      return (
-        <Suspense fallback={<TelaCarregamento />}>
-            <VttLab />
-        </Suspense>
-      );
-  }
+  }, [usuario, authLoading, devVisualMode]);
 
   // --- SALVAR NOME ---
   const salvarNomePerfil = async (e) => {

@@ -16,6 +16,7 @@ from PIL import Image
 from caos_vtt import create_app
 from caos_vtt.campaign import CampaignCatalog
 from caos_vtt.config import Settings
+from caos_vtt.firestore_auth import VerifiedMesaMember
 from conftest import HOST_TOKEN, ORIGIN
 from test_campaign import _campaign_fixture, _write_manifest
 
@@ -368,7 +369,6 @@ def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> N
             json={
                 "name": "Mesa com objetos",
                 "campaignId": "memoria",
-                "externalMesaId": "mesa-props-persistentes",
             },
         )
         assert response.status_code == 201
@@ -478,17 +478,8 @@ def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> N
 
     restarted = create_app(app.state.settings, catalog=app.state.catalog)
     with TestClient(restarted) as client:
-        reopened = client.post(
-            "/api/vtt/rooms",
-            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-            json={
-                "name": "Mesa com objetos retomada",
-                "campaignId": "memoria",
-                "externalMesaId": "mesa-props-persistentes",
-            },
-        ).json()
-        assert reopened["roomId"] == room["roomId"]
-        access = _access(client, reopened, "masterInviteToken")
+        assert restarted.state.vtt.room_exists(room["roomId"])
+        access = _access(client, room, "masterInviteToken")
         with client.websocket_connect(
             f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
             headers={"Origin": ORIGIN},
@@ -506,28 +497,42 @@ def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> N
             assert master.receive_json()["state"]["props"] == {}
 
 
-def test_room_and_fog_survive_restart_and_external_id_rotates_invites(
+def test_integrated_room_and_fog_survive_restart_without_persisting_firebase_tokens(
     tmp_path: Path,
 ) -> None:
+    class RoleVerifier:
+        def __init__(self, room_name: str) -> None:
+            self.room_name = room_name
+
+        def verify(self, id_token: str, mesa_id: str) -> VerifiedMesaMember:
+            role = "master" if id_token == "firebase-master-token" else "player"
+            return VerifiedMesaMember(
+                mesa_id=mesa_id,
+                uid="uid-mestre" if role == "master" else "uid-jogador",
+                role=role,
+                room_name=self.room_name,
+                campaign_id="memoria",
+                linked_room_id=None,
+                server_origin=None,
+            )
+
+    def integrated_access(client: TestClient, id_token: str):
+        return client.post(
+            "/api/vtt/mesa-access",
+            headers={"Authorization": f"Bearer {id_token}"},
+            json={"mesaId": "mesa-firebase-persistente"},
+        )
+
     state_db = tmp_path / "state" / "sessions.sqlite3"
     first_app, ids = _fog_app(tmp_path, state_db_path=state_db)
+    first_app.state.mesa_verifier = RoleVerifier("Mnemosyne persistente")
     with TestClient(first_app) as client:
-        response = client.post(
-            "/api/vtt/rooms",
-            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-            json={
-                "name": "Mnemosyne persistente",
-                "campaignId": "memoria",
-                "externalMesaId": "mesa-firebase-persistente",
-            },
-        )
-        assert response.status_code == 201
-        room = response.json()
-        original_master_invite = room["masterInviteToken"]
-        original_player_invite = room["playerInviteToken"]
-        master_access = _access(client, room, "masterInviteToken")
+        response = integrated_access(client, "firebase-master-token")
+        assert response.status_code == 200
+        master_access = response.json()
+        room_id = master_access["roomId"]
         with client.websocket_connect(
-            f"/ws/vtt/rooms/{room['roomId']}?ticket={master_access['ticket']}",
+            f"/ws/vtt/rooms/{room_id}?ticket={master_access['ticket']}",
             headers={"Origin": ORIGIN},
         ) as master:
             master.receive_json()
@@ -563,51 +568,34 @@ def test_room_and_fog_survive_restart_and_external_id_rotates_invites(
         persisted_fog_revision = persisted_snapshot["state"]["fog"]["revision"]
 
     raw_database = state_db.read_bytes()
-    assert original_master_invite.encode() not in raw_database
-    assert original_player_invite.encode() not in raw_database
+    assert b"firebase-master-token" not in raw_database
 
     restarted_app = create_app(
         first_app.state.settings,
         catalog=first_app.state.catalog,
     )
+    restarted_app.state.mesa_verifier = RoleVerifier("Mnemosyne recuperada")
     with TestClient(restarted_app) as client:
-        assert restarted_app.state.vtt.room_exists(room["roomId"])
-        old_master = client.post(
-            f"/api/vtt/rooms/{room['roomId']}/tickets",
-            headers={"Authorization": f"Bearer {original_master_invite}"},
+        assert restarted_app.state.vtt.room_exists(room_id)
+        legacy_invite = client.post(
+            f"/api/vtt/rooms/{room_id}/tickets",
+            headers={"Authorization": "Bearer qualquer-convite-antigo"},
         )
-        assert old_master.status_code == 200
+        assert legacy_invite.status_code == 403
 
-        recovered = client.post(
-            "/api/vtt/rooms",
-            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-            json={
-                "name": "Mnemosyne recuperada",
-                "campaignId": "memoria",
-                "externalMesaId": "mesa-firebase-persistente",
-            },
-        )
-        assert recovered.status_code == 201
-        rotated = recovered.json()
-        assert rotated["roomId"] == room["roomId"]
-        assert rotated["revision"] == persisted_revision
-        assert rotated["masterInviteToken"] != original_master_invite
-        assert rotated["playerInviteToken"] != original_player_invite
-
-        assert (
-            client.post(
-                f"/api/vtt/rooms/{room['roomId']}/tickets",
-                headers={"Authorization": f"Bearer {original_master_invite}"},
-            ).status_code
-            == 401
-        )
-        fresh_master = _access(client, rotated, "masterInviteToken")
-        fresh_player = _access(client, rotated, "playerInviteToken")
+        recovered = integrated_access(client, "firebase-master-token")
+        assert recovered.status_code == 200
+        fresh_master = recovered.json()
+        fresh_player_response = integrated_access(client, "firebase-player-token")
+        assert fresh_player_response.status_code == 200
+        fresh_player = fresh_player_response.json()
+        assert fresh_master["roomId"] == room_id
+        assert fresh_master["revision"] == persisted_revision
         with client.websocket_connect(
-            f"/ws/vtt/rooms/{room['roomId']}?ticket={fresh_master['ticket']}",
+            f"/ws/vtt/rooms/{room_id}?ticket={fresh_master['ticket']}",
             headers={"Origin": ORIGIN},
         ) as master, client.websocket_connect(
-            f"/ws/vtt/rooms/{room['roomId']}?ticket={fresh_player['ticket']}",
+            f"/ws/vtt/rooms/{room_id}?ticket={fresh_player['ticket']}",
             headers={"Origin": ORIGIN},
         ) as player:
             master_snapshot = master.receive_json()
@@ -633,7 +621,6 @@ def test_storage_tolerates_legacy_missing_fog_and_corrupt_rows(tmp_path: Path) -
             json={
                 "name": "Sala migrada",
                 "campaignId": "memoria",
-                "externalMesaId": "mesa-migrada",
             },
         ).json()
 
@@ -677,7 +664,6 @@ def test_persisted_fog_resets_closed_when_map_fingerprint_is_stale(
             json={
                 "name": "Mesa vinculada ao mapa",
                 "campaignId": "memoria",
-                "externalMesaId": f"mesa-fingerprint-{fingerprint_state}",
             },
         )
         assert response.status_code == 201
@@ -717,19 +703,7 @@ def test_persisted_fog_resets_closed_when_map_fingerprint_is_stale(
     assert restarted.state.vtt.room_exists(room["roomId"])
 
     with TestClient(restarted) as client:
-        reopened_response = client.post(
-            "/api/vtt/rooms",
-            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-            json={
-                "name": "Mesa recuperada com fog fechado",
-                "campaignId": "memoria",
-                "externalMesaId": f"mesa-fingerprint-{fingerprint_state}",
-            },
-        )
-        assert reopened_response.status_code == 201
-        reopened = reopened_response.json()
-        assert reopened["roomId"] == room["roomId"]
-        access = _access(client, reopened, "masterInviteToken")
+        access = _access(client, room, "masterInviteToken")
         with client.websocket_connect(
             f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
             headers={"Origin": ORIGIN},
@@ -794,7 +768,6 @@ def test_restore_ignores_entities_whose_asset_kind_changed_without_quarantine(
             json={
                 "name": "Mesa antes da evolucao do catalogo",
                 "campaignId": "memoria",
-                "externalMesaId": "mesa-assets-kind-evoluido",
             },
         )
         assert response.status_code == 201
@@ -899,19 +872,7 @@ def test_restore_ignores_entities_whose_asset_kind_changed_without_quarantine(
     assert evolved_app.state.vtt.room_exists(room["roomId"])
 
     with TestClient(evolved_app) as client:
-        reopened_response = client.post(
-            "/api/vtt/rooms",
-            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-            json={
-                "name": "Mesa depois da evolucao do catalogo",
-                "campaignId": "memoria",
-                "externalMesaId": "mesa-assets-kind-evoluido",
-            },
-        )
-        assert reopened_response.status_code == 201
-        reopened = reopened_response.json()
-        assert reopened["roomId"] == room["roomId"]
-        access = _access(client, reopened, "masterInviteToken")
+        access = _access(client, room, "masterInviteToken")
         with client.websocket_connect(
             f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
             headers={"Origin": ORIGIN},

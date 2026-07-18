@@ -1272,7 +1272,7 @@ body.modo-economia .initiative-card__health > span {
 }
 
 .mesa-npc-form input,
-.mesa-player-initiative input,
+.mesa-player-initiative :where(input, select),
 .mesa-bestiary-toolbar :where(input, select) {
   background: rgba(2, 8, 13, 0.86);
   border: 1px solid rgba(150, 184, 210, 0.2);
@@ -1328,9 +1328,20 @@ body.modo-economia .initiative-card__health > span {
   flex-direction: column;
 }
 
-.mesa-player-initiative input,
+.mesa-player-initiative :where(input, select),
 .mesa-player-initiative > button {
   grid-column: 1 / -1;
+}
+
+.mesa-player-initiative--readonly > div {
+  gap: 4px;
+}
+
+.mesa-player-initiative--readonly p {
+  color: var(--conv-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+  margin: 2px 0 0;
 }
 
 .mesa-character-feature {

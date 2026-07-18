@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { readVttLaunchContext } from '../../lib/vtt-link.js';
+import {
+  readVttLaunchContext,
+  resolveAuthenticatedVttServerOrigin,
+} from '../../lib/vtt-link.js';
 import { readVttPersistenceWarning } from '../../lib/vtt-persistence.js';
+import { getIntegratedVttSessionRefreshDelay } from '../../lib/vtt-session.js';
 import VttBoard from '../vtt-table/index.js';
 import './vtt-lab.css';
 
@@ -10,9 +14,11 @@ const DEMO_TOKEN_ID = 'demo-token';
 const LOG_LIMIT = 80;
 const SOCKET_CONNECTION_TIMEOUT_MS = 12_000;
 const REST_REQUEST_TIMEOUT_MS = 12_000;
+const MISSING_INTEGRATED_SERVER_ORIGIN_ERROR = 'O mestre ainda precisa configurar o servidor VTT desta Mesa.';
 const BOARD_COMMAND_TYPES = new Set([
   'scene.select',
   'overlay.set',
+  'layer.set',
   'token.spawn',
   'token.move',
   'token.remove',
@@ -59,7 +65,9 @@ function getRuntimeDefaultServerUrl() {
   return LOCAL_DEVELOPMENT_SERVER_URL;
 }
 
-function getInitialServerUrl() {
+function getInitialServerUrl({ integrated = false } = {}) {
+  if (integrated) return LOCAL_DEVELOPMENT_SERVER_URL;
+
   try {
     return localStorage.getItem(SERVER_URL_STORAGE_KEY) || getRuntimeDefaultServerUrl();
   } catch {
@@ -86,10 +94,11 @@ function normalizeServerUrl(value) {
   if (url.username || url.password) {
     throw new Error('A URL do servidor não pode conter usuário ou senha.');
   }
+  if ((url.pathname && url.pathname !== '/') || url.search || url.hash) {
+    throw new Error('Informe somente a origem do servidor, sem caminho, consulta ou fragmento.');
+  }
 
-  url.search = '';
-  url.hash = '';
-  return url.toString().replace(/\/$/, '');
+  return url.origin;
 }
 
 function buildHttpUrl(serverUrl, path) {
@@ -214,6 +223,12 @@ function hydrateCampaignState(rawState, revision, grant) {
           url: assetUrl(overlay.assetId),
         }))
         : [],
+      layers: Array.isArray(rawScene.layers)
+        ? rawScene.layers.map((layer) => ({
+          ...layer,
+          assetUrl: layer.assetId ? assetUrl(layer.assetId) : '',
+        }))
+        : [],
     },
     tokens: Object.fromEntries(Object.entries(rawTokens).map(([key, tokenValue]) => {
       const token = tokenValue && typeof tokenValue === 'object' ? tokenValue : {};
@@ -283,16 +298,35 @@ function directionLabel(direction) {
   return 'Sistema';
 }
 
-export default function VttLab({ onPersistLinkedRoom }) {
-  const [initialPlayerInvite] = useState(readPlayerInviteFragment);
+export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) {
   const [launchContext] = useState(readLaunchContext);
-  const [serverUrl, setServerUrl] = useState(getInitialServerUrl);
+  const usesAutomaticAccess = Boolean(automaticAccess?.enabled && launchContext.mesaId);
+  const integratedPlayerMissingServerOrigin = Boolean(
+    usesAutomaticAccess
+    && automaticAccess?.canEditServerUrl !== true
+    && !automaticAccess?.initialServerUrl,
+  );
+  const [initialPlayerInvite] = useState(
+    () => (usesAutomaticAccess
+      ? { roomId: '', inviteToken: '', present: false }
+      : readPlayerInviteFragment()),
+  );
+  const [serverUrl, setServerUrl] = useState(
+    () => automaticAccess?.initialServerUrl
+      || (integratedPlayerMissingServerOrigin
+        ? ''
+        : getInitialServerUrl({ integrated: usesAutomaticAccess })),
+  );
   const [hostToken, setHostToken] = useState('');
   const [roomName, setRoomName] = useState(() => launchContext.roomName || 'Mesa C.A.O.S.');
-  const [roomId, setRoomId] = useState(() => initialPlayerInvite.roomId || launchContext.roomId);
+  const [roomId, setRoomId] = useState(
+    () => (usesAutomaticAccess ? '' : (initialPlayerInvite.roomId || launchContext.roomId)),
+  );
   const [masterInviteToken, setMasterInviteToken] = useState('');
   const [playerInviteToken, setPlayerInviteToken] = useState(initialPlayerInvite.inviteToken);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState(
+    () => (integratedPlayerMissingServerOrigin ? 'error' : 'disconnected'),
+  );
   const [connectedRole, setConnectedRole] = useState('');
   const [revision, setRevision] = useState(0);
   const [boardTokens, setBoardTokens] = useState(() => ({
@@ -305,10 +339,14 @@ export default function VttLab({ onPersistLinkedRoom }) {
   }));
   const [campaignState, setCampaignState] = useState(null);
   const [logs, setLogs] = useState([]);
-  const [lastError, setLastError] = useState('');
+  const [lastError, setLastError] = useState(
+    () => (integratedPlayerMissingServerOrigin ? MISSING_INTEGRATED_SERVER_ORIGIN_ERROR : ''),
+  );
   const [persistenceWarning, setPersistenceWarning] = useState('');
   const [busyAction, setBusyAction] = useState('');
-  const [linkStatus, setLinkStatus] = useState(() => (launchContext.roomId ? 'linked' : 'pending'));
+  const [linkStatus, setLinkStatus] = useState(
+    () => (!usesAutomaticAccess && launchContext.roomId ? 'linked' : 'pending'),
+  );
 
   const socketRef = useRef(null);
   const boardRef = useRef(null);
@@ -319,6 +357,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
   const connectionTimerRef = useRef(null);
   const mediaGrantRef = useRef(null);
   const persistenceWarningRef = useRef('');
+  const automaticAccessHandlerRef = useRef(null);
 
   const appendLog = useCallback((direction, type, message = '') => {
     logSequenceRef.current += 1;
@@ -371,7 +410,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
     }
   }, [appendLog, serverUrl]);
 
-  const persistLinkedRoom = useCallback(async (nextRoomId) => {
+  const persistLinkedRoom = useCallback(async (nextRoomId, nextServerOrigin = serverUrl) => {
     if (!launchContext.mesaId || !launchContext.campaignId || !nextRoomId) return;
 
     try {
@@ -380,6 +419,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
         launchContext.mesaId,
         launchContext.campaignId,
         String(nextRoomId),
+        normalizeServerUrl(nextServerOrigin),
       );
       if (!mountedRef.current) return;
       setLinkStatus('saved');
@@ -393,7 +433,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
         `Sala aberta, mas o vínculo com a Mesa não foi atualizado: ${error.message}`,
       );
     }
-  }, [appendLog, launchContext.campaignId, launchContext.mesaId, onPersistLinkedRoom]);
+  }, [appendLog, launchContext.campaignId, launchContext.mesaId, onPersistLinkedRoom, serverUrl]);
 
   const handleServerMessage = useCallback((event) => {
     let message;
@@ -628,7 +668,6 @@ export default function VttLab({ onPersistLinkedRoom }) {
         },
         body: JSON.stringify({
           name: roomName.trim(),
-          ...(launchContext.mesaId ? { externalMesaId: launchContext.mesaId } : {}),
           ...(launchContext.campaignId ? { campaignId: launchContext.campaignId } : {}),
         }),
         signal: requestController.signal,
@@ -650,7 +689,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
       setPlayerInviteToken(String(data.playerInviteToken));
       setRevision(Number.isFinite(Number(data.revision)) ? Number(data.revision) : 0);
       setHostToken('');
-      void persistLinkedRoom(String(data.roomId));
+      void persistLinkedRoom(String(data.roomId), normalizedServerUrl);
       appendLog('system', 'room.created', `Sala ${data.roomId} criada; host token removido da memória.`);
     } catch (error) {
       if (error.name === 'AbortError' || !mountedRef.current) return;
@@ -729,7 +768,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
         role: String(data.role),
       } : null;
       if (data.role === 'master') {
-        void persistLinkedRoom(roomId.trim());
+        void persistLinkedRoom(roomId.trim(), normalizedServerUrl);
       }
       openSocket(normalizedServerUrl, roomId.trim(), String(data.ticket), String(data.role));
     } catch (error) {
@@ -751,6 +790,131 @@ export default function VttLab({ onPersistLinkedRoom }) {
       }
     }
   };
+
+  const handleAutomaticAccess = useCallback(async () => {
+    if (!usesAutomaticAccess || busyAction) return;
+
+    if (integratedPlayerMissingServerOrigin) {
+      setLastError(MISSING_INTEGRATED_SERVER_ORIGIN_ERROR);
+      setConnectionStatus('error');
+      appendLog('error', 'server.url.missing', MISSING_INTEGRATED_SERVER_ORIGIN_ERROR);
+      return;
+    }
+
+    const normalizedServerUrl = resolveAuthenticatedVttServerOrigin({
+      trustedOrigin: automaticAccess?.initialServerUrl,
+      requestedOrigin: serverUrl,
+      canEditServerUrl: automaticAccess?.canEditServerUrl === true,
+    });
+    if (!normalizedServerUrl) {
+      const errorMessage = 'Para autenticar pela Mesa, use HTTPS ou HTTP local em localhost, 127.0.0.1 ou [::1].';
+      setLastError(errorMessage);
+      setConnectionStatus('error');
+      appendLog('error', 'server.url.untrusted', errorMessage);
+      return;
+    }
+    if (typeof automaticAccess?.getIdToken !== 'function') {
+      const errorMessage = 'A autenticação da Mesa não está disponível nesta sessão.';
+      setLastError(errorMessage);
+      setConnectionStatus('error');
+      return;
+    }
+
+    setServerUrl(normalizedServerUrl);
+    try {
+      localStorage.setItem(SERVER_URL_STORAGE_KEY, normalizedServerUrl);
+    } catch {
+      // A conexão autenticada pode continuar sem persistir a preferência local.
+    }
+
+    closeSocket('Substituída por uma nova conexão autenticada');
+    requestControllerRef.current?.abort();
+    const requestController = new AbortController();
+    requestControllerRef.current = requestController;
+    setBusyAction('automatic-access');
+    setLastError('');
+
+    try {
+      const idToken = String(await automaticAccess.getIdToken()).trim();
+      if (!idToken) throw new Error('A sessão Firebase não forneceu uma credencial válida.');
+      if (requestController.signal.aborted) return;
+
+      const response = await fetchWithTimeout(
+        buildHttpUrl(normalizedServerUrl, '/api/vtt/mesa-access'),
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ mesaId: launchContext.mesaId }),
+          signal: requestController.signal,
+        },
+        requestController,
+      );
+      const data = await readJsonResponse(response);
+
+      if (
+        !mountedRef.current
+        || requestController.signal.aborted
+        || requestControllerRef.current !== requestController
+      ) return;
+
+      const nextRoomId = String(data.roomId || '').trim();
+      const nextRole = String(data.role || '');
+      if (
+        !nextRoomId
+        || !data.ticket
+        || !data.mediaToken
+        || !['master', 'player'].includes(nextRole)
+      ) {
+        throw new Error('A resposta de acesso automático do VTT está incompleta.');
+      }
+
+      setRoomId(nextRoomId);
+      setRevision(Number.isFinite(Number(data.revision)) ? Number(data.revision) : 0);
+      mediaGrantRef.current = {
+        token: String(data.mediaToken),
+        roomId: nextRoomId,
+        serverUrl: normalizedServerUrl,
+        role: nextRole,
+      };
+      appendLog(
+        'system',
+        'mesa.access.granted',
+        `A Mesa autorizou o acesso como ${roleLabel(nextRole)}.`,
+      );
+      if (nextRole === 'master') {
+        void persistLinkedRoom(nextRoomId, normalizedServerUrl);
+      }
+      openSocket(normalizedServerUrl, nextRoomId, String(data.ticket), nextRole);
+    } catch (error) {
+      if (error.name === 'AbortError' || !mountedRef.current) return;
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Não foi possível validar o acesso desta Mesa.';
+      setConnectionStatus('error');
+      setLastError(errorMessage);
+      appendLog('error', 'mesa.access.error', errorMessage);
+    } finally {
+      if (requestControllerRef.current === requestController) {
+        requestControllerRef.current = null;
+        if (mountedRef.current) setBusyAction('');
+      }
+    }
+  }, [
+    appendLog,
+    automaticAccess,
+    busyAction,
+    closeSocket,
+    integratedPlayerMissingServerOrigin,
+    launchContext.mesaId,
+    openSocket,
+    persistLinkedRoom,
+    serverUrl,
+    usesAutomaticAccess,
+  ]);
+  automaticAccessHandlerRef.current = handleAutomaticAccess;
 
   const handleDisconnect = useCallback(() => {
     closeSocket('Desconexão solicitada pelo usuário', { log: true });
@@ -959,12 +1123,35 @@ export default function VttLab({ onPersistLinkedRoom }) {
     appendLog('system', 'invite.link.loaded', 'Convite de jogador preenchido pelo link seguro.');
   }, [appendLog, initialPlayerInvite]);
 
+  useEffect(() => {
+    if (!usesAutomaticAccess || automaticAccess?.autoStart === false) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      void automaticAccessHandlerRef.current?.();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [automaticAccess?.autoStart, launchContext.mesaId, usesAutomaticAccess]);
+
+  useEffect(() => {
+    const refreshDelay = getIntegratedVttSessionRefreshDelay({
+      usesAutomaticAccess,
+      connectionStatus,
+    });
+    if (refreshDelay === null) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      void automaticAccessHandlerRef.current?.();
+    }, refreshDelay);
+    return () => window.clearTimeout(timeoutId);
+  }, [connectionStatus, usesAutomaticAccess]);
+
   const isConnected = connectionStatus === 'connected';
   const canDisconnect = isConnected || connectionStatus === 'connecting';
   const controlsLocked = Boolean(busyAction) || canDisconnect;
   const operationLabel = busyAction === 'create'
     ? 'Criando sala'
-    : (busyAction.startsWith('connect-') ? 'Solicitando ticket' : '');
+    : (busyAction === 'automatic-access'
+      ? 'Validando acesso'
+      : (busyAction.startsWith('connect-') ? 'Solicitando ticket' : ''));
   const statusLabel = operationLabel || STATUS_LABELS[connectionStatus] || connectionStatus;
   const statusVisualState = operationLabel ? 'working' : connectionStatus;
 
@@ -975,20 +1162,22 @@ export default function VttLab({ onPersistLinkedRoom }) {
     >
       <header className="vtt-lab__header">
         <div>
-          <span className="vtt-lab__eyebrow">C.A.O.S. · mesa portátil</span>
+          <span className="vtt-lab__eyebrow">
+            {usesAutomaticAccess ? 'C.A.O.S. · acesso pela Mesa' : 'C.A.O.S. · mesa portátil'}
+          </span>
           <h1 id="vtt-lab-title">Mesa virtual C.A.O.S.</h1>
           <p>Mapas, tokens e efeitos sincronizados. As rolagens continuam nos dados físicos.</p>
           {launchContext.mesaId && (
             <div className="vtt-lab__linked-table">
               <span>
                 Vinculado à mesa {launchContext.roomName || launchContext.mesaId}
-                {launchContext.roomId ? ` · sala ${launchContext.roomId}` : ''}
+                {!usesAutomaticAccess && launchContext.roomId ? ` · sala ${launchContext.roomId}` : ''}
               </span>
               <span className={`vtt-lab__link-status is-${linkStatus}`}>
                 {linkStatus === 'saved' && 'Vínculo atualizado'}
                 {linkStatus === 'warning' && 'Vínculo pendente'}
                 {linkStatus === 'linked' && 'ID recuperado'}
-                {linkStatus === 'pending' && 'Aguardando criação'}
+                {linkStatus === 'pending' && (usesAutomaticAccess ? 'Validando acesso' : 'Aguardando criação')}
               </span>
               <a href={`/mesa/${encodeURIComponent(launchContext.mesaId)}`}>Voltar para a mesa</a>
             </div>
@@ -1046,7 +1235,7 @@ export default function VttLab({ onPersistLinkedRoom }) {
                 <span>Conexão</span>
                 <h2>Servidor da mesa</h2>
               </div>
-              <span className="vtt-lab__safe-chip">URL local</span>
+              <span className="vtt-lab__safe-chip">Origem do VTT</span>
             </div>
 
             <label className="vtt-lab__field" htmlFor="vtt-lab-server-url">
@@ -1056,16 +1245,78 @@ export default function VttLab({ onPersistLinkedRoom }) {
                 type="url"
                 value={serverUrl}
                 onChange={(event) => setServerUrl(event.target.value)}
-                onBlur={persistServerUrl}
-                placeholder={getRuntimeDefaultServerUrl()}
+                onBlur={usesAutomaticAccess && automaticAccess?.canEditServerUrl !== true
+                  ? undefined
+                  : persistServerUrl}
+                placeholder={integratedPlayerMissingServerOrigin
+                  ? 'Aguardando configuração do mestre'
+                  : (usesAutomaticAccess
+                    ? LOCAL_DEVELOPMENT_SERVER_URL
+                    : getRuntimeDefaultServerUrl())}
                 autoComplete="url"
                 spellCheck="false"
+                readOnly={usesAutomaticAccess && automaticAccess?.canEditServerUrl !== true}
                 disabled={controlsLocked}
               />
-              <small>Somente esta URL é salva no navegador.</small>
+              <small>
+                {usesAutomaticAccess
+                  ? (automaticAccess?.canEditServerUrl === true
+                    ? 'O mestre vincula esta origem à Mesa. Para outros dispositivos, use a URL HTTPS do túnel.'
+                    : (integratedPlayerMissingServerOrigin
+                      ? MISSING_INTEGRATED_SERVER_ORIGIN_ERROR
+                      : 'Origem definida pelo mestre e recuperada diretamente da Mesa.'))
+                  : 'Somente esta URL é salva no navegador.'}
+              </small>
             </label>
           </section>
 
+          {usesAutomaticAccess ? (
+            <section className="vtt-lab__panel vtt-lab__join-panel">
+              <div className="vtt-lab__panel-heading">
+                <div>
+                  <span>Acesso pela Mesa</span>
+                  <h2>Entrada automática</h2>
+                </div>
+              </div>
+
+              <p className="vtt-lab__linked-room-help">
+                Sua conta é validada diretamente na Mesa. O servidor define o papel de mestre ou
+                jogador; nenhum convite ou chave precisa ser informado aqui.
+              </p>
+
+              <div className="vtt-lab__field">
+                <span>Papel concedido</span>
+                <strong>{connectedRole ? roleLabel(connectedRole) : 'Aguardando validação'}</strong>
+              </div>
+
+              <div className="vtt-lab__invite-block">
+                <button
+                  type="button"
+                  className="vtt-lab__primary-button"
+                  onClick={handleAutomaticAccess}
+                  disabled={Boolean(busyAction) || canDisconnect || integratedPlayerMissingServerOrigin}
+                >
+                  {busyAction === 'automatic-access'
+                    ? 'Validando...'
+                    : (connectionStatus === 'error' ? 'Retentar acesso' : 'Validar e entrar')}
+                </button>
+                <button
+                  type="button"
+                  className="vtt-lab__text-button"
+                  onClick={handleDisconnect}
+                  disabled={!canDisconnect}
+                >
+                  Desconectar
+                </button>
+              </div>
+
+              <p className="vtt-lab__security-note">
+                A credencial Firebase é usada apenas para solicitar um acesso temporário e não é
+                salva pelo VTT.
+              </p>
+            </section>
+          ) : (
+            <>
           <section className="vtt-lab__panel vtt-lab__create-panel">
             <div className="vtt-lab__panel-heading">
               <div>
@@ -1216,6 +1467,8 @@ export default function VttLab({ onPersistLinkedRoom }) {
               não é enviado ao servidor e é removido da barra após preencher o convite.
             </p>
           </section>
+            </>
+          )}
         </aside>
 
         <section className="vtt-lab__workspace" aria-label="Mesa sincronizada">

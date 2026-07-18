@@ -210,6 +210,7 @@ def test_portable_run_stops_tunnel_when_server_fails(
 
         def run(self) -> None:
             assert self.config.app.state.settings.bind_host == "127.0.0.1"
+            assert self.config.kwargs["access_log"] is False
             assert self.config.app.state.settings.allows_origin(
                 "https://mesa-teste.trycloudflare.com"
             )
@@ -265,6 +266,7 @@ def test_portable_stops_server_when_tunnel_dies_mid_session(
             self.should_exit = False
 
         def run(self) -> None:
+            assert self.config.kwargs["access_log"] is False
             deadline = time.monotonic() + 2
             while not self.should_exit and time.monotonic() < deadline:
                 time.sleep(0.01)

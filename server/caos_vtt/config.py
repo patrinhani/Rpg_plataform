@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
+
+
+_FIREBASE_PROJECT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
 
 
 def _normalise_origin(value: str) -> str:
@@ -48,6 +52,7 @@ class Settings:
     bind_host: str = "127.0.0.1"
     bind_port: int = 8765
     state_db_path: Path | None = None
+    firebase_project_id: str | None = None
 
     def __post_init__(self) -> None:
         token = self.host_token.strip()
@@ -78,9 +83,16 @@ class Settings:
             if state_db_path.exists() and not state_db_path.is_file():
                 raise ValueError("CAOS_VTT_STATE_DB precisa apontar para um arquivo")
 
+        firebase_project_id = self.firebase_project_id
+        if firebase_project_id is not None:
+            firebase_project_id = firebase_project_id.strip()
+            if not _FIREBASE_PROJECT_ID_PATTERN.fullmatch(firebase_project_id):
+                raise ValueError("CAOS_VTT_FIREBASE_PROJECT_ID invalido")
+
         object.__setattr__(self, "host_token", token)
         object.__setattr__(self, "allowed_origins", origins)
         object.__setattr__(self, "state_db_path", state_db_path)
+        object.__setattr__(self, "firebase_project_id", firebase_project_id)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -112,6 +124,9 @@ class Settings:
             bind_host=os.getenv("CAOS_VTT_HOST", "127.0.0.1"),
             bind_port=int(os.getenv("CAOS_VTT_PORT", "8765")),
             state_db_path=state_db_path,
+            firebase_project_id=(
+                os.getenv("CAOS_VTT_FIREBASE_PROJECT_ID", "").strip() or None
+            ),
         )
 
     def allows_origin(self, origin: str | None) -> bool:

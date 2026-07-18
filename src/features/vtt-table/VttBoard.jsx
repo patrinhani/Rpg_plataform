@@ -71,6 +71,28 @@ function VttOverlayImage({ overlay }) {
   );
 }
 
+function VttSceneLayerImage({ layer, placement, placementIndex }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <img
+      className={`vtt-board__scene-layer ${loaded ? 'is-loaded' : ''}`}
+      src={layer.assetUrl}
+      alt=""
+      aria-hidden="true"
+      draggable="false"
+      style={{
+        '--vtt-layer-x': `${clamp(placement.x, 0, 1) * 100}%`,
+        '--vtt-layer-y': `${clamp(placement.y, 0, 1) * 100}%`,
+        '--vtt-layer-width': `${clamp(placement.width, 0.01, 1) * 100}%`,
+        '--vtt-layer-height': `${clamp(placement.height, 0.01, 1) * 100}%`,
+        '--vtt-layer-rotation': `${clamp(placement.rotation ?? 0, -360, 360)}deg`,
+      }}
+      data-placement={placementIndex}
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
+
 function normalizeTokens(rawTokens, role) {
   if (!rawTokens || typeof rawTokens !== 'object') return [];
   return Object.values(rawTokens)
@@ -151,6 +173,10 @@ export default function VttBoard({
   const overlays = useMemo(
     () => (Array.isArray(scene?.overlays) ? scene.overlays : []),
     [scene?.overlays],
+  );
+  const sceneLayers = useMemo(
+    () => (Array.isArray(scene?.layers) ? scene.layers : []),
+    [scene?.layers],
   );
   const fog = state.fog && typeof state.fog === 'object' ? state.fog : null;
   const scenes = useMemo(
@@ -753,6 +779,19 @@ export default function VttBoard({
                 onError={() => setMapLoadState('error')}
               />
 
+              {sceneLayers.flatMap((layer) => (
+                layer.assetUrl && Array.isArray(layer.placements)
+                  ? layer.placements.map((placement, placementIndex) => (
+                    <VttSceneLayerImage
+                      key={`${layer.id}:${layer.assetId}:${placementIndex}`}
+                      layer={layer}
+                      placement={placement}
+                      placementIndex={placementIndex}
+                    />
+                  ))
+                  : []
+              ))}
+
               {props.map((prop) => {
                 const position = draftPropPositions[prop.id] || prop;
                 const selected = selectedPropId === prop.id;
@@ -922,6 +961,30 @@ export default function VttBoard({
                     })}
                   />
                   <span>{overlay.label || humanize(overlay.name)}</span>
+                </label>
+              ))}
+            </fieldset>
+
+            <fieldset className="vtt-board__layers" disabled={!connected || sceneLayers.length === 0}>
+              <legend>Composição da cena</legend>
+              {sceneLayers.length === 0 && <p>Esta cena não possui objetos ancorados.</p>}
+              {sceneLayers.map((layer) => (
+                <label key={layer.id} className="vtt-board__field">
+                  <span>{layer.label || humanize(layer.key)}</span>
+                  <select
+                    value={layer.state || ''}
+                    onChange={(event) => emitCommand('layer.set', {
+                      layerId: layer.id,
+                      state: event.target.value || null,
+                    })}
+                  >
+                    <option value="">Não exibir</option>
+                    {(Array.isArray(layer.options) ? layer.options : []).map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label || humanize(option.key)}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               ))}
             </fieldset>

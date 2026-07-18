@@ -9,6 +9,7 @@ from .api import create_router
 from .campaign import CampaignCatalog
 from .config import Settings
 from .frontend import mount_frontend
+from .firestore_auth import FirestoreMesaVerifier
 from .service import VTTService
 
 
@@ -28,6 +29,11 @@ def create_app(
     )
     app.state.settings = resolved
     app.state.catalog = catalog
+    app.state.mesa_verifier = (
+        FirestoreMesaVerifier(resolved.firebase_project_id)
+        if resolved.firebase_project_id is not None
+        else None
+    )
     app.state.vtt = VTTService(
         ticket_ttl_seconds=resolved.ticket_ttl_seconds,
         max_pending_tickets_per_room=resolved.max_pending_tickets_per_room,

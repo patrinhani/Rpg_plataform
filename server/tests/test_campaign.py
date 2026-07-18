@@ -209,7 +209,7 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     assert player_scenes[0].active_player_map == ids["map_v2"]
     assert player_scenes[0].gm_guide_maps == ()
     assert player_scenes[0].active_gm_guide_map is None
-    assert player_scenes[0].overlays[0].name == "névoa"
+    assert player_scenes[0].overlays[0].asset_id == ids["overlay"]
 
     master_scene = catalog.list_scenes("master")[0]
     assert master_scene.gm_guide_maps[0].asset_id == ids["gm_map"]
@@ -229,12 +229,105 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     assert catalog.list_handouts("player") == ()
     with pytest.raises(AssetNotAvailableError):
         catalog.get_asset(ids["handout"], "player")
-    assert "agente-é" in ids["token_player"]
     assert str(source_root) not in repr(player_scenes)
     assert str(source_root) not in repr(catalog.list_tokens("master"))
     assert catalog.hash_cache_size == 0
 
 
+def test_scene_layers_are_typed_public_and_keep_normalized_placements(tmp_path: Path) -> None:
+    manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    prop = next(asset for asset in manifest["assets"] if asset["id"] == ids["prop"])
+    prop["image"] = {"format": "png", "width": 128, "height": 128, "hasAlpha": True}
+    manifest["collections"]["propAssetIds"] = []
+    manifest["collections"]["stateGroups"] = []
+    manifest["collections"]["scenes"][0]["layers"] = [
+        {
+            "id": "scene-layer:ancora",
+            "key": "ancora",
+            "label": "Âncora",
+            "defaultState": None,
+            "states": {
+                "ativo": {
+                    "label": "Ativa",
+                    "assetId": ids["prop"],
+                    "placements": [
+                        {"x": 0.4, "y": 0.3, "width": 0.2, "height": 0.25, "rotation": -45},
+                        {"x": 0.6, "y": 0.7, "width": 0.1, "height": 0.1, "rotation": 135},
+                    ],
+                }
+            },
+        }
+    ]
+    _write_manifest(manifest_path, manifest)
+
+    catalog = _load(manifest_path, source_root)
+    master_layer = catalog.list_scenes("master")[0].layers[0]
+    player_layer = catalog.list_scenes("player")[0].layers[0]
+
+    assert master_layer == player_layer
+    assert master_layer.layer_id == "scene-layer:ancora"
+    assert master_layer.default_state is None
+    assert master_layer.states[0].key == "ativo"
+    assert master_layer.states[0].asset_id == ids["prop"]
+    assert master_layer.states[0].placements[0].rotation == -45.0
+    assert master_layer.states[0].placements[1].x == 0.6
+    assert catalog.get_asset(ids["prop"], "player").image is not None
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    (
+        ("gm-audience", "publica"),
+        ("no-image", "publica"),
+        ("bad-default", "defaultState"),
+        ("bad-width", "limites"),
+        ("duplicate-asset", "exclusiva"),
+    ),
+)
+def test_rejects_invalid_scene_layer_catalog_data(
+    tmp_path: Path, mutation: str, message: str
+) -> None:
+    manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    prop = next(asset for asset in manifest["assets"] if asset["id"] == ids["prop"])
+    prop["image"] = {"format": "png", "width": 128, "height": 128, "hasAlpha": True}
+    manifest["collections"]["propAssetIds"] = []
+    manifest["collections"]["stateGroups"] = []
+    layer = {
+        "id": "scene-layer:ancora",
+        "key": "ancora",
+        "label": "Âncora",
+        "defaultState": None,
+        "states": {
+            "ativo": {
+                "label": "Ativa",
+                "assetId": ids["prop"],
+                "placements": [
+                    {"x": 0.4, "y": 0.3, "width": 0.2, "height": 0.2, "rotation": 0}
+                ],
+            }
+        },
+    }
+    manifest["collections"]["scenes"][0]["layers"] = [layer]
+    if mutation == "gm-audience":
+        prop["audience"] = "gm"
+    elif mutation == "no-image":
+        prop["image"] = None
+    elif mutation == "bad-default":
+        layer["defaultState"] = "ausente"
+    elif mutation == "bad-width":
+        layer["states"]["ativo"]["placements"][0]["width"] = 0
+    else:
+        layer["states"]["duplicado"] = {
+            "label": "Duplicada",
+            "assetId": ids["prop"],
+            "placements": [
+                {"x": 0.5, "y": 0.5, "width": 0.2, "height": 0.2, "rotation": 0}
+            ],
+        }
+    _write_manifest(manifest_path, manifest)
+
+    with pytest.raises(ManifestValidationError, match=message):
+        _load(manifest_path, source_root)
 def test_prop_state_groups_are_typed_private_and_unambiguous(tmp_path: Path) -> None:
     manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
     _add_prop_state_assets(source_root, manifest, ids)
@@ -694,7 +787,6 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
         room = _create_room(
             client,
             campaignId="memoria",
-            externalMesaId="mesa-firebase-01",
         )
         master_access = _issue_access(client, room, "masterInviteToken")
         player_access = _issue_access(client, room, "playerInviteToken")
@@ -712,7 +804,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             assert master_initial["state"]["table"] == {
                 "name": "Mesa de catálogo",
                 "campaignId": "memoria",
-                "externalMesaId": "mesa-firebase-01",
+                "externalMesaId": None,
             }
             assert "table" not in player_initial["state"]
             assert master_initial["state"]["scene"] == {

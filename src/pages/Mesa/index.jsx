@@ -3,7 +3,11 @@ import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../lib/firebase.js';
 import { criarIdEntidadeMesa, removerParticipanteDaIniciativa } from '../../lib/mesa-utils.js';
-import { buildVttLaunchPath, normalizeVttRoomId } from '../../lib/vtt-link.js';
+import {
+  buildVttLaunchPath,
+  normalizeVttRoomId,
+  normalizeVttServerOrigin,
+} from '../../lib/vtt-link.js';
 import {
   adicionarMonstroIniciativa,
   adicionarNPCIniciativa,
@@ -93,7 +97,8 @@ export default function Mesa() {
   const [minhasFichas, setMinhasFichas] = useState([]);
   const [buscaBestiario, setBuscaBestiario] = useState('');
   const [filtroElemento, setFiltroElemento] = useState('todos');
-  const [iniValor, setIniValor] = useState('');
+  const [agenteIniUid, setAgenteIniUid] = useState('');
+  const [agenteIniValor, setAgenteIniValor] = useState('');
   const [npcNome, setNpcNome] = useState('');
   const [npcIni, setNpcIni] = useState('');
   const [npcPV, setNpcPV] = useState(20);
@@ -135,6 +140,8 @@ export default function Mesa() {
     await showAlert(mensagem, titulo);
     sairDaMesa();
   }, [sairDaMesa, showAlert]);
+
+  const mestreUidDaMesa = mesaData?.mestre;
 
   useEffect(() => {
     if (fichaAbertaId) return;
@@ -234,11 +241,32 @@ export default function Mesa() {
   }, [devVisualMode, mesaId, notificarESair, usuario]);
 
   useEffect(() => {
-    if (!mesaId) return undefined;
+    if (!mesaId || !usuario?.uid) return undefined;
 
     if (devVisualMode) {
       setFichasDaMesa(DEV_FICHAS);
       return undefined;
+    }
+
+    if (!mestreUidDaMesa) return undefined;
+
+    setFichasDaMesa([]);
+
+    if (mestreUidDaMesa !== usuario.uid) {
+      const unsubscribe = onSnapshot(
+        doc(db, 'mesas', mesaId, 'personagens', usuario.uid),
+        (snapshot) => {
+          setFichasDaMesa(snapshot.exists()
+            ? [{ uid: snapshot.id, ...snapshot.data() }]
+            : []);
+        },
+        (error) => {
+          console.error('Erro ao sincronizar sua ficha da mesa:', error);
+          setActionError('Não foi possível sincronizar sua ficha desta mesa.');
+        },
+      );
+
+      return unsubscribe;
     }
 
     const unsubscribe = onSnapshot(
@@ -253,13 +281,13 @@ export default function Mesa() {
     );
 
     return unsubscribe;
-  }, [devVisualMode, mesaId]);
+  }, [devVisualMode, mesaId, mestreUidDaMesa, usuario?.uid]);
 
   const jogadores = useMemo(
     () => (Array.isArray(mesaData?.jogadores) ? mesaData.jogadores : []),
     [mesaData?.jogadores],
   );
-  const souMestre = mesaData?.mestre === usuario?.uid;
+  const souMestre = mestreUidDaMesa === usuario?.uid;
   const emCombate = Boolean(mesaData?.emCombate);
   const isFichaOpen = Boolean(fichaAbertaId);
   const meuPersonagem = fichasDaMesa.find((ficha) => ficha.uid === usuario?.uid);
@@ -269,9 +297,14 @@ export default function Mesa() {
     || 'Agente';
 
   const abrirVtt = useCallback(() => {
-    if (!mesaId || !mesaData || !souMestre) return;
+    if (!mesaId || !mesaData) return;
     const campaignId = String(mesaData.vtt?.campaignId || 'mnemosyne');
     const linkedRoomId = normalizeVttRoomId(mesaData.vtt?.roomId);
+    const serverOrigin = normalizeVttServerOrigin(mesaData.vtt?.serverOrigin);
+    if (!souMestre && !serverOrigin) {
+      setActionError('O mestre ainda precisa abrir o VTT e registrar o endereço do servidor desta mesa.');
+      return;
+    }
     const launchPath = buildVttLaunchPath({
       mesaId,
       campaignId,
@@ -280,10 +313,10 @@ export default function Mesa() {
     });
     window.open(launchPath, '_blank', 'noopener,noreferrer');
 
-    if (!devVisualMode) {
+    if (souMestre && !devVisualMode) {
       void executarAcao(
         'vtt-bind',
-        () => vincularVttMesa(mesaId, campaignId, linkedRoomId),
+        () => vincularVttMesa(mesaId, campaignId, linkedRoomId, serverOrigin || undefined),
         'O VTT abriu, mas não foi possível registrar o vínculo desta mesa.',
       );
     }
@@ -413,30 +446,32 @@ export default function Mesa() {
     );
   };
 
-  const enviarIniciativa = async (event) => {
+  const registrarIniciativaAgente = async (event) => {
     event.preventDefault();
-    if (iniValor === '') return;
-    const ficha = fichasDaMesa.find((item) => item.uid === usuario.uid);
-    const nomeExibicao = ficha?.info?.nome || usuario.displayName || 'Agente';
+    if (!souMestre || agenteIniValor === '') return;
+    const agente = agentes.find((item) => item.uid === agenteIniUid);
+    if (!agente) return;
+    const ficha = fichasDaMesa.find((item) => item.uid === agente.uid);
+    const nomeExibicao = ficha?.info?.nome || agente.nome || 'Agente';
 
     if (devVisualMode) {
       setMesaData((atual) => ({
         ...atual,
         iniciativas: ordenarIniciativas([
-          ...(atual.iniciativas || []).filter((item) => item.uid !== usuario.uid),
-          { uid: usuario.uid, nome: nomeExibicao, valor: Number(iniValor), isNPC: false },
+          ...(atual.iniciativas || []).filter((item) => item.uid !== agente.uid),
+          { uid: agente.uid, nome: nomeExibicao, valor: Number(agenteIniValor), isNPC: false },
         ]),
       }));
-      setIniValor('');
+      setAgenteIniValor('');
       return;
     }
 
     const sucesso = await executarAcao(
-      'iniciativa',
-      () => atualizarIniciativa(mesaId, usuario.uid, nomeExibicao, iniValor),
-      'Não foi possível registrar sua iniciativa.',
+      'iniciativa-agente',
+      () => atualizarIniciativa(mesaId, agente.uid, nomeExibicao, agenteIniValor),
+      `Não foi possível registrar a iniciativa de ${nomeExibicao}.`,
     );
-    if (sucesso) setIniValor('');
+    if (sucesso) setAgenteIniValor('');
   };
 
   const addNPC = async (event) => {
@@ -681,18 +716,22 @@ export default function Mesa() {
           </div>
 
           <div className="mesa-topbar-actions">
-            {souMestre && (
-              <button
-                type="button"
-                className="mesa-vtt-launch"
-                onClick={abrirVtt}
-                disabled={Boolean(actionBusy)}
-                title={mesaData.vtt?.roomId ? 'Retomar a sala vinculada a esta mesa' : 'Criar ou vincular uma sala VTT'}
-              >
-                <AppIcon name="map" size={18} />
-                <span>{mesaData.vtt?.roomId ? 'Retomar VTT' : 'Abrir VTT'}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              className="mesa-vtt-launch"
+              onClick={abrirVtt}
+              disabled={Boolean(actionBusy)}
+              title={souMestre
+                ? (mesaData.vtt?.roomId ? 'Retomar a sala vinculada a esta mesa' : 'Criar ou vincular uma sala VTT')
+                : 'Entrar no VTT desta mesa'}
+            >
+              <AppIcon name="map" size={18} />
+              <span>
+                {souMestre
+                  ? (mesaData.vtt?.roomId ? 'Retomar VTT' : 'Abrir VTT')
+                  : 'Entrar no VTT'}
+              </span>
+            </button>
             {souMestre && (
               <button
                 type="button"
@@ -786,6 +825,37 @@ export default function Mesa() {
               <aside className="mesa-combat-controls">
                 {souMestre ? (
                   <>
+                    <form className="mesa-player-initiative mesa-master-initiative" onSubmit={registrarIniciativaAgente}>
+                      <AppIcon name="mission" size={27} />
+                      <div>
+                        <span>Resultado físico</span>
+                        <strong>Iniciativa de agente</strong>
+                      </div>
+                      <label htmlFor="mesa-master-initiative-agent" className="caos-visually-hidden">Agente</label>
+                      <select
+                        id="mesa-master-initiative-agent"
+                        value={agenteIniUid}
+                        onChange={(event) => setAgenteIniUid(event.target.value)}
+                        required
+                      >
+                        <option value="">Escolha um agente</option>
+                        {agentes.map((agente) => (
+                          <option key={agente.uid} value={agente.uid}>{agente.nome || 'Agente'}</option>
+                        ))}
+                      </select>
+                      <label htmlFor="mesa-master-initiative-value" className="caos-visually-hidden">Resultado da iniciativa</label>
+                      <input
+                        id="mesa-master-initiative-value"
+                        type="number"
+                        value={agenteIniValor}
+                        onChange={(event) => setAgenteIniValor(event.target.value)}
+                        placeholder="Resultado informado pelo jogador"
+                        required
+                      />
+                      <button type="submit" disabled={Boolean(actionBusy) || agentes.length === 0}>
+                        {actionBusy === 'iniciativa-agente' ? 'Registrando...' : 'Registrar resultado'}
+                      </button>
+                    </form>
                     <button type="button" className="mesa-bestiary-button" onClick={abrirBestiario}>
                       <AppIcon name="rituals" size={21} />
                       <span><strong>Bestiário</strong><small>Adicionar criatura</small></span>
@@ -812,18 +882,14 @@ export default function Mesa() {
                     </form>
                   </>
                 ) : (
-                  <form className="mesa-player-initiative" onSubmit={enviarIniciativa}>
+                  <div className="mesa-player-initiative mesa-player-initiative--readonly">
                     <AppIcon name="mission" size={27} />
                     <div>
                       <span>Resultado nos dados</span>
-                      <strong>Sua iniciativa</strong>
+                      <strong>Informe ao mestre</strong>
+                      <p>Role os dados físicos e diga o total para o mestre registrar na ordem.</p>
                     </div>
-                    <label htmlFor="mesa-player-initiative" className="caos-visually-hidden">Resultado da iniciativa</label>
-                    <input id="mesa-player-initiative" type="number" value={iniValor} onChange={(event) => setIniValor(event.target.value)} placeholder="0" required />
-                    <button type="submit" disabled={Boolean(actionBusy)}>
-                      {actionBusy === 'iniciativa' ? 'Enviando...' : 'Registrar'}
-                    </button>
-                  </form>
+                  </div>
                 )}
               </aside>
             </div>

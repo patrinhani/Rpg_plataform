@@ -5,31 +5,33 @@ O pacote portátil funciona no Windows x64 sem instalar Python, Node.js, serviç
 ## Primeira execução
 
 1. Copie o ZIP para o computador da mesa e extraia **todo** o conteúdo para uma pasta comum.
-2. Mantenha juntos `CAOS-VTT.exe`, `_internal`, `campaigns` e `cloudflared.exe`.
+2. Mantenha juntos `CAOS-VTT.exe`, `_internal`, `campaigns`, `FIREBASE-PROJECT.txt` e `cloudflared.exe`.
 3. Abra `Iniciar C.A.O.S. VTT Online.cmd` para uma mesa pela internet ou `Iniciar C.A.O.S. VTT.cmd` para uso apenas neste computador.
-4. Aguarde o navegador abrir e copie o **Host token temporário** exibido na janela preta.
-5. Na página, informe o nome e o host token, crie a sala e clique em **Conectar como mestre**.
-6. Clique em **Copiar link completo para o jogador** e compartilhe somente esse link.
+4. Se abrir pelo botão de uma Mesa no sistema, o autor entra como Mestre e os convidados entram como jogadores automaticamente; não é preciso copiar chaves.
+5. Se abrir diretamente a página portátil isolada, use o **Host token de fallback** exibido na janela preta, crie a sala e compartilhe somente o link de jogador gerado por ela.
 
 Não execute o programa dentro do ZIP e não feche a janela preta durante a sessão. As rolagens continuam com dados físicos.
 
 ## O que o pacote inclui
 
-- frontend VTT dedicado e leve, sem Firebase, bestiário ou módulos da ficha;
+- frontend VTT dedicado e leve, sem bestiário ou módulos da ficha; a validação Firebase fica no backend e só é ativada quando uma Mesa autenticada solicita acesso;
 - servidor FastAPI e WebSocket compilado em formato PyInstaller `onedir` e sem UPX;
 - pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens, objetos de cenário e guias privados do Mestre;
 - `cloudflared.exe` oficial para o launcher online;
+- `FIREBASE-PROJECT.txt`, com somente o identificador público necessário ao acesso autenticado da Mesa;
 - guia rápido, documentação, licença e aviso de terceiro.
 
 Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanha antes de aceitar conexões. O jogador recebe somente o estado autorizado da cena ativa; guias do Mestre e variantes inativas não são expostos.
 
-## Sessão e convites
+## Acesso pela Mesa e fallback isolado
 
-O host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
+`FIREBASE-PROJECT.txt` contém apenas o project ID público do Firebase — nunca uma API key, conta de serviço ou segredo. Quando ele corresponde ao projeto do sistema hospedado, o backend valida o ID token recebido pelo navegador e consulta a Mesa: o autor é Mestre e os membros convidados são jogadores. O papel não é aceito da URL nem escolhido pelo cliente.
+
+O host token e os convites continuam disponíveis somente como fallback para abrir o frontend portátil isolado. Nesse modo, o host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
 
 O estado fica em `data\caos-vtt-state.sqlite3`, ao lado de `CAOS-VTT.exe`. Sala, cena ativa, posições de tokens, objetos de cenário, overlays e máscaras de fog sobrevivem ao fechamento do programa. Tickets e grants de mídia não são recuperados.
 
-Uma sala vinculada pelo `externalMesaId` da Mesa é recuperada ao ser criada novamente. O servidor mantém o mesmo `roomId` e o estado salvo, mas gera novos convites de Mestre e jogador; os convites anteriores deixam de funcionar. Guarde o convite de Mestre apenas durante a sessão atual e nunca o envie aos jogadores. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
+Uma sala integrada é recuperada automaticamente pelo ID da Mesa. O servidor mantém o mesmo `roomId` e o estado salvo, mas recusa convites manuais e revoga a sessão se a pessoa deixar de ser membro ou mudar de papel. O ID token Firebase fica somente na memória e é renovado pelo navegador; nunca é gravado no banco local. Salas criadas diretamente no frontend portátil continuam isoladas e usam seus próprios convites de fallback. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
 
 ## Fog of war e objetos de cenário
 
@@ -39,7 +41,9 @@ Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays
 
 ## Modo online
 
-O fluxo recomendado é usar a página aberta pelo próprio endereço `trycloudflare`, pois frontend e backend ficam na mesma origem. Para abrir o VTT pelo botão de uma Mesa no sistema hospedado na Vercel, edite `ORIGEM-WEB.txt` uma vez e substitua o exemplo pela origem HTTPS exata do seu app, sem barra ou caminho, como `https://seu-projeto.vercel.app`. Depois inicie o modo online, abra o VTT pela Mesa e cole o endereço `https://*.trycloudflare.com` mostrado no console em **URL do servidor**. O launcher autoriza apenas a origem configurada; valores malformados continuam sendo recusados pelo executável.
+O fluxo recomendado é abrir o VTT pelo botão da própria Mesa no sistema hospedado. Edite `ORIGEM-WEB.txt` uma vez e substitua o exemplo pela origem HTTPS exata do seu app, sem barra ou caminho, como `https://seu-projeto.vercel.app`. Confirme também que `FIREBASE-PROJECT.txt` contém somente o project ID desse mesmo Firebase. Depois inicie o modo online, abra o VTT pela Mesa e informe o endereço `https://*.trycloudflare.com` mostrado no console como servidor da Mesa quando solicitado. O launcher autoriza apenas a origem configurada; valores malformados continuam sendo recusados pelo executável.
+
+Também é possível usar a página aberta pelo próprio endereço `trycloudflare`; por ser o frontend portátil isolado, ela usa o host token e os convites de fallback. Isso é útil para uma sessão sem integração com o restante do sistema.
 
 `Iniciar C.A.O.S. VTT Online.cmd` executa `CAOS-VTT.exe --tunnel`. O Quick Tunnel é temporário, gratuito, não exige conta e cria um endereço `https://*.trycloudflare.com` diferente a cada execução. Ele é adequado para mesas pessoais, não oferece SLA e pode ser bloqueado por proxy, política corporativa ou antivírus.
 
@@ -96,6 +100,8 @@ Pré-requisitos apenas para compilar: Windows x64, Git, Node.js 20.19+ (ou 22.12
 .\scripts\build-portable.ps1 -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
 ```
 
+O build procura somente `VITE_APP_PROJECT_ID` em `.env.local` e grava seu valor público em `FIREBASE-PROJECT.txt`; nenhuma outra variável é copiada para o pacote. Para substituir explicitamente, use `-FirebaseProjectId seu-project-id`. Se nenhum ID for encontrado, o pacote ainda funciona pelo fallback manual isolado.
+
 O computador que executará a mesa não precisa desses programas. O build recompila apenas o frontend dedicado `dist-vtt`, gera e valida o pack da campanha, monta tudo em uma área temporária e só substitui o último artefato válido após concluir.
 
 Resultados:
@@ -113,6 +119,7 @@ Opções úteis:
 - `-SkipArchive`: gera somente a pasta portátil;
 - `-SkipFrontendBuild`: reutiliza `dist-vtt` somente se estiver atualizado e isolado.
 - `-MaxCampaignBytes N`: altera conscientemente o teto do pack em bytes.
+- `-FirebaseProjectId ID`: define explicitamente o projeto Firebase público usado pela integração com a Mesa.
 
 Também é possível definir `CAOS_VTT_CAMPAIGN_ROOT`. O build aceita até 512 MiB por padrão e mostra o peso verificado; `-MaxCampaignBytes` permite acompanhar campanhas maiores sem um teto escondido. A trava existe apenas para detectar crescimento acidental. O build exige que o manifesto versionado corresponda à campanha atual; se o teste de atualização falhar, regenere o manifesto, revise o diff e execute novamente. A fonte original da campanha é apenas lida e não é alterada.
 

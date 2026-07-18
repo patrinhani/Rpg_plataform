@@ -47,6 +47,7 @@ KNOWN_OVERLAY_NAMES = (
     "inundacao",
     "telas-quebradas",
 )
+_SCENE_LAYER_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 STATE_ALIASES = {
     "ativo": "ativo",
     "ativa": "ativo",
@@ -359,7 +360,135 @@ def _classification_config_ref(path: Path) -> str:
 
 
 def _empty_classification_rules() -> dict[str, Any]:
-    return {"exact": {}, "families": {}}
+    return {"exact": {}, "families": {}, "sceneLayers": []}
+
+
+def _is_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _normalized_scene_layer_placement(
+    value: object, context: str
+) -> dict[str, float] | None:
+    if not isinstance(value, dict) or set(value) != {
+        "x",
+        "y",
+        "width",
+        "height",
+        "rotation",
+    }:
+        return None
+    if not all(_is_number(value[field]) for field in value):
+        return None
+    x = float(value["x"])
+    y = float(value["y"])
+    width = float(value["width"])
+    height = float(value["height"])
+    rotation = float(value["rotation"])
+    if not (
+        0.0 <= x <= 1.0
+        and 0.0 <= y <= 1.0
+        and 0.0 < width <= 1.0
+        and 0.0 < height <= 1.0
+        and -360.0 <= rotation <= 360.0
+    ):
+        return None
+    return {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "rotation": rotation,
+    }
+
+
+def _normalized_scene_layers(value: object) -> list[dict[str, Any]] | None:
+    """Valida a curadoria de camadas antes de qualquer asset ser consumido."""
+
+    if not isinstance(value, list):
+        return None
+    result: list[dict[str, Any]] = []
+    seen_keys: set[str] = set()
+    for layer_index, value_layer in enumerate(value):
+        if not isinstance(value_layer, dict) or set(value_layer) != {
+            "key",
+            "sceneKey",
+            "label",
+            "defaultState",
+            "states",
+        }:
+            return None
+        key = value_layer.get("key")
+        scene_key = value_layer.get("sceneKey")
+        label = value_layer.get("label")
+        default_state = value_layer.get("defaultState")
+        raw_states = value_layer.get("states")
+        if (
+            not isinstance(key, str)
+            or not _SCENE_LAYER_KEY_PATTERN.fullmatch(key)
+            or key in seen_keys
+            or not isinstance(scene_key, str)
+            or not _SCENE_LAYER_KEY_PATTERN.fullmatch(scene_key)
+            or not isinstance(label, str)
+            or not label
+            or any(character in label for character in "\x00\r\n")
+            or not isinstance(raw_states, dict)
+            or not raw_states
+        ):
+            return None
+        seen_keys.add(key)
+        states: dict[str, dict[str, Any]] = {}
+        for state_key, value_state in raw_states.items():
+            if (
+                not isinstance(state_key, str)
+                or not _SCENE_LAYER_KEY_PATTERN.fullmatch(state_key)
+                or not isinstance(value_state, dict)
+                or set(value_state) != {"label", "assetPath", "placements"}
+            ):
+                return None
+            state_label = value_state.get("label")
+            asset_path = value_state.get("assetPath")
+            raw_placements = value_state.get("placements")
+            if (
+                not isinstance(state_label, str)
+                or not state_label
+                or any(character in state_label for character in "\x00\r\n")
+                or not _is_safe_asset_rule_path(asset_path)
+                or not isinstance(raw_placements, list)
+                or not raw_placements
+            ):
+                return None
+            placements: list[dict[str, float]] = []
+            for placement_index, raw_placement in enumerate(raw_placements):
+                placement = _normalized_scene_layer_placement(
+                    raw_placement,
+                    (
+                        f"sceneLayers[{layer_index}].states[{state_key}]"
+                        f".placements[{placement_index}]"
+                    ),
+                )
+                if placement is None:
+                    return None
+                placements.append(placement)
+            states[state_key] = {
+                "label": state_label,
+                "assetPath": PurePosixPath(asset_path).as_posix(),
+                "placements": placements,
+            }
+        if default_state is not None and (
+            not isinstance(default_state, str) or default_state not in states
+        ):
+            return None
+        result.append(
+            {
+                "key": key,
+                "sceneKey": scene_key,
+                "label": label,
+                "defaultState": default_state,
+                "states": states,
+            }
+        )
+    return sorted(result, key=lambda item: item["key"])
 
 
 def _is_safe_asset_rule_path(relative_path: object) -> bool:
@@ -513,6 +642,17 @@ def _load_classification_config(
         )
         return _empty_classification_rules(), descriptor, warnings
 
+    scene_layers = _normalized_scene_layers(config.get("sceneLayers", []))
+    if scene_layers is None:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": "sceneLayers deve seguir o schema semantico de camadas de cena.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
     raw_overrides = config.get("assetOverrides")
     if not isinstance(raw_overrides, dict):
         warnings.append(
@@ -549,7 +689,11 @@ def _load_classification_config(
                 "message": "assetFamilyOverrides deve ser um objeto indexado por familia versionada.",
             }
         )
-        return {"exact": overrides, "families": {}}, descriptor, warnings
+        return {
+            "exact": overrides,
+            "families": {},
+            "sceneLayers": scene_layers,
+        }, descriptor, warnings
 
     families: dict[str, dict[str, Any]] = {}
     for family_path, raw_rule in sorted(raw_families.items(), key=lambda item: str(item[0])):
@@ -592,7 +736,11 @@ def _load_classification_config(
             "override": semantic_override,
         }
 
-    return {"exact": overrides, "families": families}, descriptor, warnings
+    return {
+        "exact": overrides,
+        "families": families,
+        "sceneLayers": scene_layers,
+    }, descriptor, warnings
 
 
 def _image_metadata(path: Path) -> dict[str, Any] | None:
@@ -918,6 +1066,93 @@ def _build_state_groups(
     return result
 
 
+def _build_scene_layers(
+    assets: list[dict[str, Any]],
+    scenes: list[dict[str, Any]],
+    configured_layers: list[dict[str, Any]],
+) -> set[str]:
+    """Anexa camadas curadas e devolve os assets retirados das colecoes globais."""
+
+    assets_by_path = {asset["relativePath"]: asset for asset in assets}
+    scenes_by_key = {scene["key"]: scene for scene in scenes}
+    consumed_ids: set[str] = set()
+    for scene in scenes:
+        scene["layers"] = []
+
+    for configured in configured_layers:
+        scene = scenes_by_key.get(configured["sceneKey"])
+        if scene is None:
+            raise ManifestError(
+                f"sceneLayers referencia cena ausente: {configured['sceneKey']}"
+            )
+        states: dict[str, dict[str, Any]] = {}
+        for state_key, configured_state in configured["states"].items():
+            asset_path = configured_state["assetPath"]
+            asset = assets_by_path.get(asset_path)
+            if asset is None:
+                raise ManifestError(f"sceneLayers referencia asset ausente: {asset_path}")
+            if asset.get("kind") not in {"prop", "overlay"}:
+                raise ManifestError(
+                    f"sceneLayers exige asset prop ou overlay: {asset_path}"
+                )
+            if asset.get("audience") != "players":
+                raise ManifestError(
+                    f"sceneLayers exige asset visivel para players: {asset_path}"
+                )
+            if not isinstance(asset.get("image"), dict):
+                raise ManifestError(f"sceneLayers exige asset de imagem: {asset_path}")
+            asset_id = asset["id"]
+            if asset_id in consumed_ids:
+                raise ManifestError(
+                    f"sceneLayers reutiliza asset em mais de um estado: {asset_path}"
+                )
+            consumed_ids.add(asset_id)
+            states[state_key] = {
+                "label": configured_state["label"],
+                "assetId": asset_id,
+                "placements": configured_state["placements"],
+            }
+        scene["layers"].append(
+            {
+                "id": f"scene-layer:{configured['key']}",
+                "key": configured["key"],
+                "label": configured["label"],
+                "defaultState": configured["defaultState"],
+                "states": states,
+            }
+        )
+
+    for scene in scenes:
+        scene["overlays"] = [
+            overlay
+            for overlay in scene["overlays"]
+            if overlay["assetId"] not in consumed_ids
+        ]
+        scene["layers"].sort(key=lambda item: item["key"])
+    return consumed_ids
+
+
+def _exclude_consumed_state_groups(
+    state_groups: list[dict[str, Any]], consumed_ids: set[str]
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    for group in state_groups:
+        group_asset_ids = {
+            variant["assetId"]
+            for state in group["states"].values()
+            for variant in state.get("variants", [])
+        }
+        consumed_group_ids = group_asset_ids.intersection(consumed_ids)
+        if not consumed_group_ids:
+            result.append(group)
+            continue
+        if consumed_group_ids != group_asset_ids:
+            raise ManifestError(
+                f"sceneLayers consome apenas parte do grupo de estados: {group['id']}"
+            )
+    return result
+
+
 def _source_fingerprint(assets: list[dict[str, Any]], documents: list[dict[str, Any]]) -> str:
     digest = hashlib.sha256()
     for item in sorted([*assets, *documents], key=lambda entry: entry["relativePath"]):
@@ -1038,6 +1273,14 @@ def build_manifest(
     documents.sort(key=lambda item: item["relativePath"])
     scenes = _build_scenes(assets, warnings)
     state_groups = _build_state_groups(assets, warnings)
+    consumed_scene_layer_ids = _build_scene_layers(
+        assets,
+        scenes,
+        classification_rules.get("sceneLayers", []),
+    )
+    state_groups = _exclude_consumed_state_groups(
+        state_groups, consumed_scene_layer_ids
+    )
     warnings.sort(key=lambda item: (item["code"], item["path"], item["message"]))
 
     manifest = {
@@ -1057,6 +1300,7 @@ def build_manifest(
             "assetCount": len(assets),
             "documentCount": len(documents),
             "sceneCount": len(scenes),
+            "sceneLayerCount": sum(len(scene["layers"]) for scene in scenes),
             "stateGroupCount": len(state_groups),
             "totalAssetBytes": sum(asset["bytes"] for asset in assets),
             "warningCount": len(warnings),
@@ -1067,8 +1311,18 @@ def build_manifest(
         "collections": {
             "scenes": scenes,
             "stateGroups": state_groups,
-            "tokenAssetIds": [asset["id"] for asset in assets if asset["kind"] == "token"],
-            "propAssetIds": [asset["id"] for asset in assets if asset["kind"] == "prop"],
+            "tokenAssetIds": [
+                asset["id"]
+                for asset in assets
+                if asset["kind"] == "token"
+                and asset["id"] not in consumed_scene_layer_ids
+            ],
+            "propAssetIds": [
+                asset["id"]
+                for asset in assets
+                if asset["kind"] == "prop"
+                and asset["id"] not in consumed_scene_layer_ids
+            ],
             "handoutAssetIds": [asset["id"] for asset in assets if asset["kind"] == "handout"],
         },
         "warnings": warnings,
@@ -1124,8 +1378,24 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         if path.is_absolute() or ".." in path.parts or "\\" in relative_path:
             raise ManifestError(f"caminho relativo inseguro: {relative_path}")
 
+    assets_by_id = {asset["id"]: asset for asset in assets}
     referenced_ids: set[str] = set()
+    consumed_layer_ids: set[str] = set()
+    scene_ids: set[str] = set()
+    scene_keys: set[str] = set()
+    layer_ids: set[str] = set()
     for scene in manifest["collections"]["scenes"]:
+        scene_id = scene.get("id")
+        scene_key = scene.get("key")
+        if (
+            not isinstance(scene_key, str)
+            or scene_id != f"scene:{scene_key}"
+            or scene_id in scene_ids
+            or scene_key in scene_keys
+        ):
+            raise ManifestError("ID ou key de cena invalido/duplicado")
+        scene_ids.add(scene_id)
+        scene_keys.add(scene_key)
         for collection_name in ("playerMaps", "gmGuideMaps", "overlays"):
             variants = scene[collection_name]
             for variant in variants:
@@ -1143,6 +1413,54 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             if active_id not in available:
                 raise ManifestError(f"{active_name} nao integra as variantes de {scene['id']}")
             referenced_ids.add(active_id)
+        for layer in scene.get("layers", []):
+            if not isinstance(layer, dict):
+                raise ManifestError(f"layer invalida em {scene_id}")
+            layer_key = layer.get("key")
+            layer_id = layer.get("id")
+            if (
+                not isinstance(layer_key, str)
+                or not _SCENE_LAYER_KEY_PATTERN.fullmatch(layer_key)
+                or layer_id != f"scene-layer:{layer_key}"
+                or layer_id in layer_ids
+                or not isinstance(layer.get("label"), str)
+                or not layer["label"]
+            ):
+                raise ManifestError(f"ID ou metadados de layer invalidos em {scene_id}")
+            layer_ids.add(layer_id)
+            states = layer.get("states")
+            if not isinstance(states, dict) or not states:
+                raise ManifestError(f"states de layer vazio/invalido: {layer_id}")
+            default_state = layer.get("defaultState")
+            if default_state is not None and default_state not in states:
+                raise ManifestError(f"defaultState invalido: {layer_id}")
+            for state_key, state in states.items():
+                if (
+                    not isinstance(state_key, str)
+                    or not _SCENE_LAYER_KEY_PATTERN.fullmatch(state_key)
+                    or not isinstance(state, dict)
+                    or not isinstance(state.get("label"), str)
+                    or not state["label"]
+                ):
+                    raise ManifestError(f"estado de layer invalido: {layer_id}")
+                asset_id = state.get("assetId")
+                asset = assets_by_id.get(asset_id)
+                if (
+                    asset is None
+                    or asset.get("kind") not in {"prop", "overlay"}
+                    or asset.get("audience") != "players"
+                    or not isinstance(asset.get("image"), dict)
+                    or asset_id in consumed_layer_ids
+                ):
+                    raise ManifestError(f"asset de layer invalido/duplicado: {layer_id}")
+                placements = state.get("placements")
+                if not isinstance(placements, list) or not placements:
+                    raise ManifestError(f"placements de layer vazio/invalido: {layer_id}")
+                for placement in placements:
+                    if _normalized_scene_layer_placement(placement, layer_id) is None:
+                        raise ManifestError(f"placement de layer invalido: {layer_id}")
+                consumed_layer_ids.add(asset_id)
+                referenced_ids.add(asset_id)
     for group in manifest["collections"]["stateGroups"]:
         for state in group["states"].values():
             if not isinstance(state.get("version"), int) or state["version"] < 0:
@@ -1152,7 +1470,6 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
                 if not isinstance(variant.get("version"), int) or variant["version"] < 0:
                     raise ManifestError(f"versao de variante invalida: {group['id']}")
                 referenced_ids.add(variant["assetId"])
-    assets_by_id = {asset["id"]: asset for asset in assets}
     for collection_name, expected_kind in (
         ("tokenAssetIds", "token"),
         ("propAssetIds", "prop"),
@@ -1166,12 +1483,30 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         if len(collection_ids) != len(set(collection_ids)):
             raise ManifestError(f"collections.{collection_name} contem IDs duplicados")
         referenced_ids.update(collection_ids)
+        if consumed_layer_ids.intersection(collection_ids):
+            raise ManifestError(
+                f"collections.{collection_name} reutiliza asset consumido por layer"
+            )
         for asset_id in collection_ids:
             asset = assets_by_id.get(asset_id)
             if asset is not None and asset.get("kind") != expected_kind:
                 raise ManifestError(
                     f"{collection_name} referencia kind diferente de {expected_kind}: {asset_id}"
                 )
+
+    for scene in manifest["collections"]["scenes"]:
+        if consumed_layer_ids.intersection(
+            overlay["assetId"] for overlay in scene["overlays"]
+        ):
+            raise ManifestError("overlay simples reutiliza asset consumido por layer")
+    for group in manifest["collections"]["stateGroups"]:
+        group_ids = {
+            variant["assetId"]
+            for state in group["states"].values()
+            for variant in state.get("variants", [])
+        }
+        if consumed_layer_ids.intersection(group_ids):
+            raise ManifestError("stateGroup reutiliza asset consumido por layer")
 
     unknown_ids = referenced_ids.difference(asset_ids)
     if unknown_ids:
