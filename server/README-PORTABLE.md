@@ -17,17 +17,25 @@ Não execute o programa dentro do ZIP e não feche a janela preta durante a sess
 
 - frontend VTT dedicado e leve, sem Firebase, bestiário ou módulos da ficha;
 - servidor FastAPI e WebSocket compilado em formato PyInstaller `onedir` e sem UPX;
-- pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens e guias privados do Mestre;
+- pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens, objetos de cenário e guias privados do Mestre;
 - `cloudflared.exe` oficial para o launcher online;
 - guia rápido, documentação, licença e aviso de terceiro.
 
-Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanha antes de aceitar conexões. O jogador recebe somente a cena ativa, os overlays revelados e os tokens visíveis; guias do Mestre e variantes inativas não são expostos.
+Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanha antes de aceitar conexões. O jogador recebe somente o estado autorizado da cena ativa; guias do Mestre e variantes inativas não são expostos.
 
 ## Sessão e convites
 
 O host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
 
-Salas, posições, overlays e convites permanecem em memória. Fechar o programa encerra o túnel e apaga o estado da sessão. Guarde o convite de Mestre apenas enquanto a sessão estiver aberta e nunca o envie aos jogadores.
+O estado fica em `data\caos-vtt-state.sqlite3`, ao lado de `CAOS-VTT.exe`. Sala, cena ativa, posições de tokens, objetos de cenário, overlays e máscaras de fog sobrevivem ao fechamento do programa. Tickets e grants de mídia não são recuperados.
+
+Uma sala vinculada pelo `externalMesaId` da Mesa é recuperada ao ser criada novamente. O servidor mantém o mesmo `roomId` e o estado salvo, mas gera novos convites de Mestre e jogador; os convites anteriores deixam de funcionar. Guarde o convite de Mestre apenas durante a sessão atual e nunca o envie aos jogadores. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
+
+## Fog of war e objetos de cenário
+
+O fog começa **ligado e totalmente fechado** em todas as cenas. O Mestre pode revelar ou ocultar áreas com o pincel, fechar tudo, revelar tudo ou desligar o fog conscientemente. Se o mapa ativo da cena mudar entre versões da campanha, a máscara anterior é descartada e a visão volta a ficar fechada para evitar revelações acidentais.
+
+Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays ou dos objetos de cenário. O servidor compõe essas camadas com a máscara e entrega uma única imagem pronta; tokens fora de áreas reveladas também não entram no snapshot do jogador. Os objetos de cenário são independentes dos tokens e podem ser posicionados, redimensionados, girados, ocultados e trocados pelo Mestre.
 
 ## Modo online
 
@@ -46,6 +54,14 @@ Se a porta 8765 estiver ocupada:
 ```
 
 Abra `http://127.0.0.1:8766/vtt-lab`. Use `--no-browser` para não abrir o navegador automaticamente.
+
+Para guardar as sessões em outro caminho, use:
+
+```powershell
+.\CAOS-VTT.exe --state-db "D:\Mesa\caos-vtt-state.sqlite3"
+```
+
+O console sempre mostra o caminho efetivo em `Sessoes salvas em:`.
 
 Para um túnel externo já configurado, autorize somente sua origem HTTPS exata:
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.parse import urlsplit
 
 
@@ -44,6 +45,7 @@ class Settings:
     ticket_ttl_seconds: int = 60
     bind_host: str = "127.0.0.1"
     bind_port: int = 8765
+    state_db_path: Path | None = None
 
     def __post_init__(self) -> None:
         token = self.host_token.strip()
@@ -60,8 +62,15 @@ class Settings:
         if self.bind_host not in {"127.0.0.1", "localhost", "::1"}:
             raise ValueError("CAOS_VTT_HOST deve permanecer restrito ao loopback")
 
+        state_db_path = self.state_db_path
+        if state_db_path is not None:
+            state_db_path = state_db_path.expanduser().resolve(strict=False)
+            if state_db_path.exists() and not state_db_path.is_file():
+                raise ValueError("CAOS_VTT_STATE_DB precisa apontar para um arquivo")
+
         object.__setattr__(self, "host_token", token)
         object.__setattr__(self, "allowed_origins", origins)
+        object.__setattr__(self, "state_db_path", state_db_path)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -74,12 +83,19 @@ class Settings:
             "http://localhost:5173,http://127.0.0.1:5173",
         )
         origins = tuple(item for item in raw_origins.split(",") if item.strip())
+        raw_state_db = os.getenv("CAOS_VTT_STATE_DB", "").strip()
+        state_db_path = (
+            Path(raw_state_db)
+            if raw_state_db
+            else Path(".artifacts") / "caos-vtt-state.sqlite3"
+        )
         return cls(
             host_token=host_token,
             allowed_origins=origins,
             ticket_ttl_seconds=int(os.getenv("CAOS_VTT_TICKET_TTL", "60")),
             bind_host=os.getenv("CAOS_VTT_HOST", "127.0.0.1"),
             bind_port=int(os.getenv("CAOS_VTT_PORT", "8765")),
+            state_db_path=state_db_path,
         )
 
     def allows_origin(self, origin: str | None) -> bool:

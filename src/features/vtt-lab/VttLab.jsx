@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { readVttLaunchContext } from '../../lib/vtt-link.js';
+import { readVttPersistenceWarning } from '../../lib/vtt-persistence.js';
 import VttBoard from '../vtt-table/index.js';
 import './vtt-lab.css';
 
@@ -14,7 +16,15 @@ const BOARD_COMMAND_TYPES = new Set([
   'token.spawn',
   'token.move',
   'token.remove',
+  'prop.spawn',
+  'prop.update',
+  'prop.remove',
+  'fog.set_enabled',
+  'fog.stroke',
+  'fog.reset',
+  'fog.reveal_all',
 ]);
+const BOARD_COMMANDS_WITHOUT_PAYLOAD = new Set(['fog.reset', 'fog.reveal_all']);
 
 const STATUS_LABELS = {
   disconnected: 'Desconectado',
@@ -58,15 +68,7 @@ function getInitialServerUrl() {
 }
 
 function readLaunchContext() {
-  const params = new URLSearchParams(globalThis.location?.search || '');
-  const mesaId = String(params.get('mesaId') || '').trim();
-  const campaignId = String(params.get('campaignId') || '').trim();
-  const roomName = String(params.get('roomName') || '').trim();
-  return {
-    mesaId: /^[A-Za-z0-9_-]{1,128}$/.test(mesaId) ? mesaId : '',
-    campaignId: /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(campaignId) ? campaignId : '',
-    roomName: roomName.slice(0, 80),
-  };
+  return readVttLaunchContext(globalThis.location?.search || '');
 }
 
 function normalizeServerUrl(value) {
@@ -133,6 +135,18 @@ function buildAssetUrl(serverUrl, roomId, mediaToken, assetId) {
   return url.toString();
 }
 
+function buildFogMapUrl(serverUrl, roomId, mediaToken, sceneId, fogRevision) {
+  if (!mediaToken) return '';
+  const url = new URL(buildHttpUrl(
+    serverUrl,
+    `/api/vtt/rooms/${encodeURIComponent(roomId)}/fog-map`,
+  ));
+  url.searchParams.set('access', String(mediaToken));
+  url.searchParams.set('scene', String(sceneId || ''));
+  url.searchParams.set('revision', String(Math.max(0, Number(fogRevision) || 0)));
+  return url.toString();
+}
+
 function readPlayerInviteFragment() {
   const location = globalThis.location;
   if (!location?.hash) return { roomId: '', inviteToken: '', present: false };
@@ -168,6 +182,10 @@ function hydrateCampaignState(rawState, revision, grant) {
   const rawTokens = rawState.tokens && typeof rawState.tokens === 'object'
     ? rawState.tokens
     : {};
+  const rawProps = rawState.props && typeof rawState.props === 'object'
+    ? rawState.props
+    : {};
+  const useProtectedMap = grant.role === 'player' && rawState.fog?.enabled;
 
   return {
     ...rawState,
@@ -176,7 +194,15 @@ function hydrateCampaignState(rawState, revision, grant) {
       ...rawScene,
       map: rawScene.map ? {
         ...rawScene.map,
-        url: assetUrl(rawScene.map.assetId),
+        url: useProtectedMap
+          ? buildFogMapUrl(
+              grant.serverUrl,
+              grant.roomId,
+              grant.token,
+              rawScene.id,
+              rawState.fog?.renderRevision ?? revision,
+            )
+          : assetUrl(rawScene.map.assetId),
       } : null,
       gmGuideMap: rawScene.gmGuideMap ? {
         ...rawScene.gmGuideMap,
@@ -196,6 +222,15 @@ function hydrateCampaignState(rawState, revision, grant) {
         ...token,
         id,
         assetUrl: assetUrl(token.assetId),
+      }];
+    })),
+    props: Object.fromEntries(Object.entries(rawProps).map(([key, propValue]) => {
+      const prop = propValue && typeof propValue === 'object' ? propValue : {};
+      const id = String(prop.id || key);
+      return [id, {
+        ...prop,
+        id,
+        assetUrl: assetUrl(prop.assetId),
       }];
     })),
   };
@@ -248,13 +283,13 @@ function directionLabel(direction) {
   return 'Sistema';
 }
 
-export default function VttLab() {
+export default function VttLab({ onPersistLinkedRoom }) {
   const [initialPlayerInvite] = useState(readPlayerInviteFragment);
   const [launchContext] = useState(readLaunchContext);
   const [serverUrl, setServerUrl] = useState(getInitialServerUrl);
   const [hostToken, setHostToken] = useState('');
   const [roomName, setRoomName] = useState(() => launchContext.roomName || 'Mesa C.A.O.S.');
-  const [roomId, setRoomId] = useState(initialPlayerInvite.roomId);
+  const [roomId, setRoomId] = useState(() => initialPlayerInvite.roomId || launchContext.roomId);
   const [masterInviteToken, setMasterInviteToken] = useState('');
   const [playerInviteToken, setPlayerInviteToken] = useState(initialPlayerInvite.inviteToken);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -271,7 +306,9 @@ export default function VttLab() {
   const [campaignState, setCampaignState] = useState(null);
   const [logs, setLogs] = useState([]);
   const [lastError, setLastError] = useState('');
+  const [persistenceWarning, setPersistenceWarning] = useState('');
   const [busyAction, setBusyAction] = useState('');
+  const [linkStatus, setLinkStatus] = useState(() => (launchContext.roomId ? 'linked' : 'pending'));
 
   const socketRef = useRef(null);
   const boardRef = useRef(null);
@@ -281,6 +318,7 @@ export default function VttLab() {
   const requestControllerRef = useRef(null);
   const connectionTimerRef = useRef(null);
   const mediaGrantRef = useRef(null);
+  const persistenceWarningRef = useRef('');
 
   const appendLog = useCallback((direction, type, message = '') => {
     logSequenceRef.current += 1;
@@ -333,6 +371,30 @@ export default function VttLab() {
     }
   }, [appendLog, serverUrl]);
 
+  const persistLinkedRoom = useCallback(async (nextRoomId) => {
+    if (!launchContext.mesaId || !launchContext.campaignId || !nextRoomId) return;
+
+    try {
+      if (typeof onPersistLinkedRoom !== 'function') return;
+      await onPersistLinkedRoom(
+        launchContext.mesaId,
+        launchContext.campaignId,
+        String(nextRoomId),
+      );
+      if (!mountedRef.current) return;
+      setLinkStatus('saved');
+      appendLog('system', 'room.link.saved', 'Sala vinculada à Mesa sem salvar credenciais.');
+    } catch (error) {
+      if (!mountedRef.current) return;
+      setLinkStatus('warning');
+      appendLog(
+        'error',
+        'room.link.warning',
+        `Sala aberta, mas o vínculo com a Mesa não foi atualizado: ${error.message}`,
+      );
+    }
+  }, [appendLog, launchContext.campaignId, launchContext.mesaId, onPersistLinkedRoom]);
+
   const handleServerMessage = useCallback((event) => {
     let message;
 
@@ -359,6 +421,17 @@ export default function VttLab() {
       const snapshotRevision = Number.isFinite(Number(message.revision))
         ? Number(message.revision)
         : 0;
+      const nextPersistenceWarning = readVttPersistenceWarning(message.state, message.role);
+      if (nextPersistenceWarning !== persistenceWarningRef.current) {
+        const persistenceRecovered = Boolean(persistenceWarningRef.current) && !nextPersistenceWarning;
+        persistenceWarningRef.current = nextPersistenceWarning;
+        setPersistenceWarning(nextPersistenceWarning);
+        if (nextPersistenceWarning) {
+          appendLog('error', 'persistence.unsaved', nextPersistenceWarning);
+        } else if (persistenceRecovered) {
+          appendLog('system', 'persistence.saved', 'A gravação da sessão no disco voltou a funcionar.');
+        }
+      }
       setRevision(snapshotRevision);
       setBoardTokens(normalizeBoardTokens(message.state?.tokens));
       setCampaignState(hydrateCampaignState(
@@ -577,6 +650,7 @@ export default function VttLab() {
       setPlayerInviteToken(String(data.playerInviteToken));
       setRevision(Number.isFinite(Number(data.revision)) ? Number(data.revision) : 0);
       setHostToken('');
+      void persistLinkedRoom(String(data.roomId));
       appendLog('system', 'room.created', `Sala ${data.roomId} criada; host token removido da memória.`);
     } catch (error) {
       if (error.name === 'AbortError' || !mountedRef.current) return;
@@ -652,10 +726,21 @@ export default function VttLab() {
         token: String(data.mediaToken),
         roomId: roomId.trim(),
         serverUrl: normalizedServerUrl,
+        role: String(data.role),
       } : null;
+      if (data.role === 'master') {
+        void persistLinkedRoom(roomId.trim());
+      }
       openSocket(normalizedServerUrl, roomId.trim(), String(data.ticket), String(data.role));
     } catch (error) {
       if (error.name === 'AbortError' || !mountedRef.current) return;
+      if (
+        expectedRole === 'master'
+        && launchContext.roomId
+        && roomId.trim() === launchContext.roomId
+      ) {
+        setLinkStatus('warning');
+      }
       setConnectionStatus('error');
       setLastError(error.message);
       appendLog('error', 'ticket.error', error.message);
@@ -761,10 +846,12 @@ export default function VttLab() {
     const payload = {
       type,
       commandId: createCommandId(),
-      payload: command?.payload && typeof command.payload === 'object'
-        ? command.payload
-        : {},
     };
+    if (!BOARD_COMMANDS_WITHOUT_PAYLOAD.has(type)) {
+      payload.payload = command?.payload && typeof command.payload === 'object'
+        ? command.payload
+        : {};
+    }
     socket.send(JSON.stringify(payload));
     appendLog('out', type, 'Comando da mesa enviado.');
     return true;
@@ -893,7 +980,16 @@ export default function VttLab() {
           <p>Mapas, tokens e efeitos sincronizados. As rolagens continuam nos dados físicos.</p>
           {launchContext.mesaId && (
             <div className="vtt-lab__linked-table">
-              <span>Vinculado à mesa {launchContext.roomName || launchContext.mesaId}</span>
+              <span>
+                Vinculado à mesa {launchContext.roomName || launchContext.mesaId}
+                {launchContext.roomId ? ` · sala ${launchContext.roomId}` : ''}
+              </span>
+              <span className={`vtt-lab__link-status is-${linkStatus}`}>
+                {linkStatus === 'saved' && 'Vínculo atualizado'}
+                {linkStatus === 'warning' && 'Vínculo pendente'}
+                {linkStatus === 'linked' && 'ID recuperado'}
+                {linkStatus === 'pending' && 'Aguardando criação'}
+              </span>
               <a href={`/mesa/${encodeURIComponent(launchContext.mesaId)}`}>Voltar para a mesa</a>
             </div>
           )}
@@ -923,6 +1019,23 @@ export default function VttLab() {
             ×
           </button>
         </div>
+      )}
+
+      {persistenceWarning && (
+        <section
+          className="vtt-lab__persistence-warning"
+          role="alert"
+          aria-atomic="true"
+        >
+          <span className="vtt-lab__persistence-warning-icon" aria-hidden="true">!</span>
+          <div>
+            <strong>Alterações ainda não foram salvas no disco</strong>
+            <p>
+              {persistenceWarning} A mesa continua funcionando, mas não feche o servidor até
+              este aviso desaparecer automaticamente.
+            </p>
+          </div>
+        </section>
       )}
 
       <div className="vtt-lab__layout">
@@ -957,9 +1070,17 @@ export default function VttLab() {
             <div className="vtt-lab__panel-heading">
               <div>
                 <span>Hospedar</span>
-                <h2>Criar sala</h2>
+                <h2>{launchContext.roomId ? 'Recuperar hospedagem' : 'Criar sala'}</h2>
               </div>
             </div>
+
+            {launchContext.mesaId && (
+              <p className="vtt-lab__linked-room-help">
+                {launchContext.roomId
+                  ? 'O ID vinculado já foi preenchido. Cole o convite de mestre e conecte abaixo para retomar. Se a sala não existir mais, use o host token aqui para recriá-la; o novo ID substituirá o vínculo.'
+                  : 'Ao criar a sala, este dispositivo salvará na Mesa apenas o ID e a campanha. Host token, convites e tickets nunca são gravados.'}
+              </p>
+            )}
 
             <form className="vtt-lab__form" onSubmit={handleCreateRoom}>
               <label className="vtt-lab__field" htmlFor="vtt-lab-room-name">
@@ -987,7 +1108,9 @@ export default function VttLab() {
               </label>
 
               <button className="vtt-lab__primary-button" type="submit" disabled={controlsLocked}>
-                {busyAction === 'create' ? 'Criando...' : 'Criar sala'}
+                {busyAction === 'create'
+                  ? 'Criando...'
+                  : (launchContext.roomId ? 'Recriar sala' : 'Criar sala')}
               </button>
             </form>
           </section>

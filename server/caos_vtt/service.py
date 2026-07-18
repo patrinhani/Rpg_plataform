@@ -1,26 +1,47 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import hashlib
+import io
 import json
+import math
 import secrets
 import string
+import warnings
+import zlib
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from fastapi import WebSocket
+from PIL import Image, ImageDraw
 
-from .campaign import AssetNotAvailableError, CampaignCatalog, SceneView
+from .campaign import (
+    AssetNotAvailableError,
+    CampaignCatalog,
+    CampaignCatalogError,
+    SceneView,
+)
 from .models import (
+    FogResetCommand,
+    FogRevealAllCommand,
+    FogSetEnabledCommand,
+    FogStrokeCommand,
     MoveCommand,
     OverlaySetCommand,
+    PropRemoveCommand,
+    PropSpawnCommand,
+    PropUpdateCommand,
     Role,
     SceneSelectCommand,
     TokenRemoveCommand,
     TokenSpawnCommand,
 )
+from .storage import RoomStateStore
 
 
 PROTOCOL_VERSION = 1
@@ -28,8 +49,12 @@ DEMO_TOKEN_ID = "demo-token"
 ROOM_ALPHABET = string.ascii_uppercase + string.digits
 MEDIA_TOKEN_TTL_SECONDS = 12 * 60 * 60
 MAX_ROOM_TOKENS = 256
+MAX_ROOM_PROPS = 128
 PROCESSED_COMMAND_LIMIT = 256
 CLIENT_SEND_TIMEOUT_SECONDS = 5.0
+FOG_MASK_SIZE = 256
+FOG_RENDER_CACHE_LIMIT = 8
+MAX_FOG_RENDER_PIXELS = 40_000_000
 
 CatalogCommand = (
     MoveCommand
@@ -37,6 +62,13 @@ CatalogCommand = (
     | OverlaySetCommand
     | TokenSpawnCommand
     | TokenRemoveCommand
+    | PropSpawnCommand
+    | PropUpdateCommand
+    | PropRemoveCommand
+    | FogStrokeCommand
+    | FogSetEnabledCommand
+    | FogResetCommand
+    | FogRevealAllCommand
 )
 
 
@@ -114,6 +146,37 @@ class CatalogToken:
 
 
 @dataclass(slots=True)
+class CatalogProp:
+    prop_id: str
+    asset_id: str
+    x: float
+    y: float
+    label: str
+    width: float
+    height: float
+    rotation: float
+    visible: bool
+
+
+@dataclass(slots=True)
+class FogState:
+    enabled: bool = True
+    revision: int = 0
+    render_revision: int = 0
+    map_asset_id: str | None = None
+    mask: bytearray = field(
+        default_factory=lambda: bytearray(FOG_MASK_SIZE * FOG_MASK_SIZE)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class RenderedFogMap:
+    content: bytes
+    media_type: str
+    revision: int
+
+
+@dataclass(slots=True)
 class Room:
     room_id: str
     name: str
@@ -131,7 +194,10 @@ class Room:
     )
     active_scene_id: str | None = None
     scene_tokens: dict[str, dict[str, CatalogToken]] = field(default_factory=dict)
+    scene_props: dict[str, dict[str, CatalogProp]] = field(default_factory=dict)
     scene_overlays: dict[str, dict[str, bool]] = field(default_factory=dict)
+    scene_fog: dict[str, FogState] = field(default_factory=dict)
+    persistence_warning: str | None = None
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     broadcast_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
@@ -142,15 +208,25 @@ class VTTService:
         *,
         ticket_ttl_seconds: int,
         catalog: CampaignCatalog | None = None,
+        state_db_path: Path | None = None,
     ) -> None:
         self.ticket_ttl_seconds = ticket_ttl_seconds
         self.media_ttl_seconds = MEDIA_TOKEN_TTL_SECONDS
         self.catalog = catalog
         self._rooms: dict[str, Room] = {}
+        self._external_rooms: dict[str, str] = {}
         self._tickets: dict[str, TicketGrant] = {}
         self._media_grants: dict[bytes, MediaGrant] = {}
+        self._fog_render_cache: OrderedDict[tuple[Any, ...], RenderedFogMap] = OrderedDict()
+        self._fog_render_inflight: dict[
+            tuple[Any, ...], asyncio.Task[RenderedFogMap]
+        ] = {}
+        self._fog_cache_lock = asyncio.Lock()
         self._rooms_lock = asyncio.Lock()
         self._access_lock = asyncio.Lock()
+        self._store = RoomStateStore(state_db_path) if state_db_path is not None else None
+        if self._store is not None:
+            self._restore_rooms()
 
     @property
     def has_catalog(self) -> bool:
@@ -166,6 +242,17 @@ class VTTService:
         master_invite = secrets.token_urlsafe(32)
         player_invite = secrets.token_urlsafe(32)
         async with self._rooms_lock:
+            if external_mesa_id is not None:
+                existing_id = self._external_rooms.get(external_mesa_id)
+                existing = self._rooms.get(existing_id or "")
+                if existing is not None:
+                    async with existing.broadcast_lock:
+                        async with existing.lock:
+                            existing.name = name.strip()
+                            existing.master_invite_digest = _token_digest(master_invite)
+                            existing.player_invite_digest = _token_digest(player_invite)
+                        await self._persist_room(existing)
+                    return existing, master_invite, player_invite
             room_id = self._new_room_id()
             room = Room(
                 room_id=room_id,
@@ -178,6 +265,9 @@ class VTTService:
             if self.catalog is not None:
                 self._initialize_catalog_room(room)
             self._rooms[room_id] = room
+            if external_mesa_id is not None:
+                self._external_rooms[external_mesa_id] = room_id
+            await self._persist_room(room)
         return room, master_invite, player_invite
 
     def _initialize_catalog_room(self, room: Room) -> None:
@@ -185,9 +275,13 @@ class VTTService:
         scenes = self.catalog.list_scenes("master")
         for scene in scenes:
             room.scene_tokens[scene.scene_id] = {}
+            room.scene_props[scene.scene_id] = {}
             room.scene_overlays[scene.scene_id] = {
                 overlay.asset_id: False for overlay in scene.overlays
             }
+            room.scene_fog[scene.scene_id] = FogState(
+                map_asset_id=scene.active_player_map
+            )
         room.active_scene_id = scenes[0].scene_id if scenes else None
 
     async def issue_ticket(self, room_id: str, invite_token: str) -> IssuedAccess | None:
@@ -274,6 +368,17 @@ class VTTService:
             )
             if scene is None:
                 return False
+            fog = room.scene_fog.get(active_scene_id)
+            if fog is not None and fog.enabled:
+                if scene.active_player_map == asset_id:
+                    return False
+                if any(overlay.asset_id == asset_id for overlay in scene.overlays):
+                    return False
+                if any(
+                    prop.asset_id == asset_id
+                    for prop in room.scene_props.get(active_scene_id, {}).values()
+                ):
+                    return False
             if scene.active_player_map == asset_id:
                 return True
 
@@ -285,10 +390,133 @@ class VTTService:
             ):
                 return True
 
-            return any(
-                token.visible and token.asset_id == asset_id
+            if any(
+                token.asset_id == asset_id
+                and self._token_visible_to_player(room, active_scene_id, token)
                 for token in room.scene_tokens.get(active_scene_id, {}).values()
+            ):
+                return True
+            return any(
+                prop.asset_id == asset_id
+                and self._prop_visible_to_player(room, active_scene_id, prop)
+                for prop in room.scene_props.get(active_scene_id, {}).values()
             )
+
+    async def render_player_fog_map(
+        self,
+        room_id: str,
+        role: Role,
+    ) -> RenderedFogMap | None:
+        """Render the active player map server-side without exposing raw layers."""
+
+        catalog = self.catalog
+        room = self._rooms.get(room_id)
+        if catalog is None or room is None or role != "player":
+            return None
+
+        async with room.lock:
+            scene_id = room.active_scene_id
+            fog = room.scene_fog.get(scene_id or "")
+            if scene_id is None or fog is None or not fog.enabled:
+                return None
+            scene = next(
+                (item for item in catalog.list_scenes("player") if item.scene_id == scene_id),
+                None,
+            )
+            if scene is None or scene.active_player_map is None:
+                return None
+            overlay_states = room.scene_overlays.get(scene_id, {})
+            overlay_ids = tuple(
+                overlay.asset_id
+                for overlay in scene.overlays
+                if overlay_states.get(overlay.asset_id, False)
+            )
+            prop_layers: list[tuple[str, float, float, float, float, float]] = []
+            for prop in room.scene_props.get(scene_id, {}).values():
+                if not prop.visible:
+                    continue
+                try:
+                    catalog.get_asset(prop.asset_id, "player")
+                except AssetNotAvailableError:
+                    continue
+                prop_layers.append(
+                    (
+                        prop.asset_id,
+                        prop.x,
+                        prop.y,
+                        prop.width,
+                        prop.height,
+                        prop.rotation,
+                    )
+                )
+            mask = bytes(fog.mask)
+            render_revision = fog.render_revision
+            map_id = scene.active_player_map
+
+        prop_signature = tuple(prop_layers)
+        cache_key = (
+            room_id,
+            scene_id,
+            render_revision,
+            map_id,
+            overlay_ids,
+            prop_signature,
+        )
+        async with self._fog_cache_lock:
+            cached = self._fog_render_cache.get(cache_key)
+            if cached is not None:
+                self._fog_render_cache.move_to_end(cache_key)
+                return cached
+            task = self._fog_render_inflight.get(cache_key)
+            if task is None:
+                task = asyncio.create_task(
+                    asyncio.to_thread(
+                        self._render_player_fog_map_sync,
+                        map_id,
+                        overlay_ids,
+                        prop_signature,
+                        mask,
+                        render_revision,
+                    )
+                )
+                self._fog_render_inflight[cache_key] = task
+                task.add_done_callback(
+                    lambda completed, key=cache_key: asyncio.create_task(
+                        self._finish_fog_render(key, completed)
+                    )
+                )
+        try:
+            rendered = await asyncio.shield(task)
+        except (CampaignCatalogError, OSError, ValueError):
+            return None
+        async with room.lock:
+            current_fog = room.scene_fog.get(scene_id)
+            if (
+                room.active_scene_id != scene_id
+                or current_fog is None
+                or not current_fog.enabled
+                or current_fog.render_revision != rendered.revision
+            ):
+                return None
+        return rendered
+
+    async def _finish_fog_render(
+        self,
+        cache_key: tuple[Any, ...],
+        task: asyncio.Task[RenderedFogMap],
+    ) -> None:
+        try:
+            rendered = task.result()
+        except (CampaignCatalogError, OSError, ValueError, asyncio.CancelledError):
+            rendered = None
+        async with self._fog_cache_lock:
+            if self._fog_render_inflight.get(cache_key) is task:
+                self._fog_render_inflight.pop(cache_key, None)
+            if rendered is not None:
+                self._fog_render_cache[cache_key] = rendered
+                self._fog_render_cache.move_to_end(cache_key)
+                while len(self._fog_render_cache) > FOG_RENDER_CACHE_LIMIT:
+                    self._fog_render_cache.popitem(last=False)
 
     async def connect(
         self, room_id: str, websocket: WebSocket, role: Role
@@ -352,6 +580,7 @@ class VTTService:
                         room.processed_commands.popitem(last=False)
                     clients = tuple(room.clients)
 
+            await self._persist_room(room)
             await self._send_to_clients(room, ((client, event) for client in clients))
             return event
 
@@ -401,6 +630,19 @@ class VTTService:
                         room.catalog_commands.popitem(last=False)
                     payloads = tuple(payload_list)
 
+            if previous is None:
+                await self._persist_room(room)
+                for client, payload in payloads:
+                    state = payload.get("state")
+                    if client.role != "master" or not isinstance(state, dict):
+                        continue
+                    if room.persistence_warning is None:
+                        state.pop("persistence", None)
+                    else:
+                        state["persistence"] = {
+                            "saved": False,
+                            "message": room.persistence_warning,
+                        }
             await self._send_to_clients(room, payloads)
         return None
 
@@ -410,6 +652,28 @@ class VTTService:
         role: Role,
         command: CatalogCommand,
     ) -> CatalogCommandFailure | None:
+        if isinstance(
+            command,
+            (FogStrokeCommand, FogSetEnabledCommand, FogResetCommand, FogRevealAllCommand),
+        ):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre altera a nevoa")
+            scene_id = room.active_scene_id or ""
+            fog = room.scene_fog.get(scene_id)
+            if fog is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            if isinstance(command, FogSetEnabledCommand):
+                fog.enabled = command.payload.enabled
+            elif isinstance(command, FogResetCommand):
+                fog.mask[:] = b"\x00" * len(fog.mask)
+            elif isinstance(command, FogRevealAllCommand):
+                fog.mask[:] = b"\xff" * len(fog.mask)
+            else:
+                self._apply_fog_stroke(fog, command)
+            fog.revision += 1
+            self._mark_scene_render_dirty(room, scene_id)
+            return None
+
         if isinstance(command, SceneSelectCommand):
             if role != "master":
                 return CatalogCommandFailure("forbidden", "Somente o mestre seleciona cenas")
@@ -428,6 +692,7 @@ class VTTService:
             if command.payload.assetId not in overlays:
                 return CatalogCommandFailure("overlay_not_found", "Overlay nao encontrado")
             overlays[command.payload.assetId] = command.payload.enabled
+            self._mark_scene_render_dirty(room, room.active_scene_id or "")
             return None
 
         if isinstance(command, TokenSpawnCommand):
@@ -463,6 +728,69 @@ class VTTService:
             )
             return None
 
+        if isinstance(command, PropSpawnCommand):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre cria objetos")
+            props = room.scene_props.get(room.active_scene_id or "")
+            if props is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            if self._prop_count(room) >= MAX_ROOM_PROPS:
+                return CatalogCommandFailure("prop_limit", "A sala atingiu o limite de objetos")
+            prop_id = command.payload.propId or self._generated_prop_id(command.commandId)
+            if any(prop_id in scene for scene in room.scene_props.values()):
+                return CatalogCommandFailure("prop_id_conflict", "propId ja existe na sala")
+            assert self.catalog is not None
+            try:
+                asset = self.catalog.get_asset(command.payload.assetId, "master")
+            except AssetNotAvailableError:
+                return CatalogCommandFailure("asset_not_found", "Objeto de cenario indisponivel")
+            if asset.kind != "prop":
+                return CatalogCommandFailure("asset_not_prop", "Asset nao e objeto de cenario")
+            props[prop_id] = CatalogProp(
+                prop_id=prop_id,
+                asset_id=command.payload.assetId,
+                x=command.payload.x,
+                y=command.payload.y,
+                label=command.payload.label,
+                width=command.payload.width,
+                height=command.payload.height,
+                rotation=command.payload.rotation,
+                visible=command.payload.visible,
+            )
+            self._mark_scene_render_dirty(room, room.active_scene_id or "")
+            return None
+
+        if isinstance(command, (PropUpdateCommand, PropRemoveCommand)):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre altera objetos")
+            props = room.scene_props.get(room.active_scene_id or "")
+            if props is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            prop = props.get(command.payload.propId)
+            if prop is None:
+                return CatalogCommandFailure("prop_not_found", "Objeto nao encontrado")
+            if isinstance(command, PropRemoveCommand):
+                props.pop(prop.prop_id)
+                self._mark_scene_render_dirty(room, room.active_scene_id or "")
+                return None
+
+            assert isinstance(command, PropUpdateCommand)
+            if command.payload.assetId is not None:
+                assert self.catalog is not None
+                try:
+                    asset = self.catalog.get_asset(command.payload.assetId, "master")
+                except AssetNotAvailableError:
+                    return CatalogCommandFailure("asset_not_found", "Objeto de cenario indisponivel")
+                if asset.kind != "prop":
+                    return CatalogCommandFailure("asset_not_prop", "Asset nao e objeto de cenario")
+                prop.asset_id = command.payload.assetId
+            for field_name in ("label", "x", "y", "width", "height", "rotation", "visible"):
+                value = getattr(command.payload, field_name)
+                if value is not None:
+                    setattr(prop, field_name, value)
+            self._mark_scene_render_dirty(room, room.active_scene_id or "")
+            return None
+
         tokens = room.scene_tokens.get(room.active_scene_id or "")
         if tokens is None:
             return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
@@ -480,7 +808,11 @@ class VTTService:
             if token is None:
                 return CatalogCommandFailure("token_not_found", "Token nao encontrado")
             if role == "player":
-                if not token.visible or not token.movable:
+                active_scene_id = room.active_scene_id or ""
+                if (
+                    not token.movable
+                    or not self._token_visible_to_player(room, active_scene_id, token)
+                ):
                     return CatalogCommandFailure("token_forbidden", "Token nao pode ser movido")
                 assert self.catalog is not None
                 try:
@@ -492,6 +824,452 @@ class VTTService:
             return None
 
         return CatalogCommandFailure("unknown_message_type", "Comando desconhecido")
+
+    async def _persist_room(self, room: Room) -> bool:
+        if self._store is None:
+            room.persistence_warning = None
+            return True
+        payload = self._serialize_room(room)
+        try:
+            await asyncio.to_thread(self._store.save, payload)
+        except Exception as error:
+            room.persistence_warning = (
+                "A sessao continua ativa, mas a ultima alteracao nao foi salva no disco."
+            )
+            warnings.warn(
+                f"Nao foi possivel persistir a sala {room.room_id}: {error}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return False
+        room.persistence_warning = None
+        return True
+
+    @staticmethod
+    def _serialize_room(room: Room) -> dict[str, Any]:
+        scene_ids = (
+            set(room.scene_tokens)
+            | set(room.scene_props)
+            | set(room.scene_overlays)
+            | set(room.scene_fog)
+        )
+        scenes: dict[str, Any] = {}
+        for scene_id in sorted(scene_ids):
+            fog = room.scene_fog.get(scene_id, FogState())
+            scenes[scene_id] = {
+                "tokens": [
+                    {
+                        "tokenId": token.token_id,
+                        "assetId": token.asset_id,
+                        "x": token.x,
+                        "y": token.y,
+                        "label": token.label,
+                        "size": token.size,
+                        "movable": token.movable,
+                        "visible": token.visible,
+                    }
+                    for token in sorted(
+                        room.scene_tokens.get(scene_id, {}).values(),
+                        key=lambda item: item.token_id,
+                    )
+                ],
+                "props": [
+                    {
+                        "propId": prop.prop_id,
+                        "assetId": prop.asset_id,
+                        "x": prop.x,
+                        "y": prop.y,
+                        "label": prop.label,
+                        "width": prop.width,
+                        "height": prop.height,
+                        "rotation": prop.rotation,
+                        "visible": prop.visible,
+                    }
+                    for prop in sorted(
+                        room.scene_props.get(scene_id, {}).values(),
+                        key=lambda item: item.prop_id,
+                    )
+                ],
+                "overlays": dict(sorted(room.scene_overlays.get(scene_id, {}).items())),
+                "fog": {
+                    "enabled": fog.enabled,
+                    "revision": fog.revision,
+                    "renderRevision": fog.render_revision,
+                    "mapAssetId": fog.map_asset_id,
+                    "maskBase64": base64.b64encode(bytes(fog.mask)).decode("ascii"),
+                },
+            }
+        return {
+            "schemaVersion": 1,
+            "roomId": room.room_id,
+            "name": room.name,
+            "campaignId": room.campaign_id,
+            "externalMesaId": room.external_mesa_id,
+            "masterInviteDigest": room.master_invite_digest.hex(),
+            "playerInviteDigest": room.player_invite_digest.hex(),
+            "revision": room.revision,
+            "demo": {"tokenX": room.token_x, "tokenY": room.token_y},
+            "activeSceneId": room.active_scene_id,
+            "scenes": scenes,
+            "catalogCommands": [
+                {
+                    "commandId": command_id,
+                    "role": processed.role,
+                    "messageType": processed.message_type,
+                    "fingerprint": processed.fingerprint,
+                }
+                for command_id, processed in room.catalog_commands.items()
+            ],
+        }
+
+    def _restore_rooms(self) -> None:
+        assert self._store is not None
+        for stored_room_id, payload in self._store.load_all():
+            expected_campaign = self.catalog.campaign_id if self.catalog is not None else None
+            if payload.get("campaignId") != expected_campaign:
+                # Keep rooms from another campaign intact for a later matching launch.
+                continue
+            try:
+                if payload.get("roomId") != stored_room_id:
+                    raise ValueError("roomId diverge da chave persistida")
+                room = self._deserialize_room(payload)
+            except (TypeError, ValueError, binascii.Error, CampaignCatalogError) as error:
+                warnings.warn(
+                    f"Sala persistida invalida foi ignorada: {error}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self._store.quarantine(stored_room_id, payload, str(error))
+                continue
+            if room.room_id in self._rooms:
+                warnings.warn(
+                    f"Sala persistida duplicada foi ignorada: {room.room_id}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self._store.quarantine(stored_room_id, payload, "roomId duplicado")
+                continue
+            external_id = room.external_mesa_id
+            if external_id is not None and external_id in self._external_rooms:
+                warnings.warn(
+                    f"externalMesaId persistido duplicado foi ignorado: {external_id}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self._store.quarantine(
+                    stored_room_id, payload, "externalMesaId duplicado"
+                )
+                continue
+            self._rooms[room.room_id] = room
+            if external_id is not None:
+                self._external_rooms[external_id] = room.room_id
+
+    def _deserialize_room(self, payload: dict[str, Any]) -> Room:
+        if payload.get("schemaVersion") != 1:
+            raise ValueError("schemaVersion de sala desconhecido")
+        room_id = payload.get("roomId")
+        if (
+            not isinstance(room_id, str)
+            or len(room_id) != 8
+            or any(character not in ROOM_ALPHABET for character in room_id)
+        ):
+            raise ValueError("roomId invalido")
+        name = payload.get("name")
+        if not isinstance(name, str) or not 1 <= len(name.strip()) <= 80:
+            raise ValueError("nome de sala invalido")
+
+        campaign_id = payload.get("campaignId")
+        if campaign_id is not None and not isinstance(campaign_id, str):
+            raise ValueError("campaignId invalido")
+        expected_campaign = self.catalog.campaign_id if self.catalog is not None else None
+        if campaign_id != expected_campaign:
+            raise ValueError("sala pertence a outra campanha")
+
+        external_id = payload.get("externalMesaId")
+        if external_id is not None:
+            if (
+                not isinstance(external_id, str)
+                or not 1 <= len(external_id) <= 128
+                or any(
+                    not (character.isascii() and (character.isalnum() or character in "_-"))
+                    for character in external_id
+                )
+            ):
+                raise ValueError("externalMesaId invalido")
+
+        master_digest = self._decode_invite_digest(payload.get("masterInviteDigest"))
+        player_digest = self._decode_invite_digest(payload.get("playerInviteDigest"))
+        revision = self._nonnegative_int(payload.get("revision"), "revision")
+        room = Room(
+            room_id=room_id,
+            name=name.strip(),
+            master_invite_digest=master_digest,
+            player_invite_digest=player_digest,
+            campaign_id=campaign_id,
+            external_mesa_id=external_id,
+            revision=revision,
+        )
+
+        demo = payload.get("demo", {})
+        if not isinstance(demo, dict):
+            raise ValueError("estado demo invalido")
+        room.token_x = self._normalised_float(demo.get("tokenX", 0.5), "tokenX")
+        room.token_y = self._normalised_float(demo.get("tokenY", 0.5), "tokenY")
+
+        if self.catalog is None:
+            return room
+
+        self._initialize_catalog_room(room)
+        scenes_payload = payload.get("scenes", {})
+        if not isinstance(scenes_payload, dict):
+            raise ValueError("cenas persistidas invalidas")
+        total_tokens = 0
+        total_props = 0
+        scene_map_ids = {
+            scene.scene_id: scene.active_player_map for scene in self._master_scenes()
+        }
+        for scene_id in tuple(room.scene_tokens):
+            raw_scene = scenes_payload.get(scene_id, {})
+            if not isinstance(raw_scene, dict):
+                raise ValueError("estado de cena invalido")
+
+            raw_overlays = raw_scene.get("overlays", {})
+            if not isinstance(raw_overlays, dict):
+                raise ValueError("overlays persistidos invalidos")
+            for asset_id in tuple(room.scene_overlays[scene_id]):
+                enabled = raw_overlays.get(asset_id, False)
+                if not isinstance(enabled, bool):
+                    raise ValueError("estado de overlay invalido")
+                room.scene_overlays[scene_id][asset_id] = enabled
+
+            raw_tokens = raw_scene.get("tokens", [])
+            if not isinstance(raw_tokens, list):
+                raise ValueError("tokens persistidos invalidos")
+            for raw_token in raw_tokens:
+                try:
+                    token = self._deserialize_token(raw_token)
+                except AssetNotAvailableError:
+                    warnings.warn(
+                        "Token persistido com asset obsoleto foi ignorado",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    continue
+                if token.token_id in room.scene_tokens[scene_id]:
+                    raise ValueError("tokenId persistido duplicado")
+                total_tokens += 1
+                if total_tokens > MAX_ROOM_TOKENS:
+                    raise ValueError("limite de tokens persistidos excedido")
+                room.scene_tokens[scene_id][token.token_id] = token
+
+            raw_props = raw_scene.get("props", [])
+            if not isinstance(raw_props, list):
+                raise ValueError("objetos persistidos invalidos")
+            for raw_prop in raw_props:
+                try:
+                    prop = self._deserialize_prop(raw_prop)
+                except AssetNotAvailableError:
+                    warnings.warn(
+                        "Objeto persistido com asset obsoleto foi ignorado",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    continue
+                if prop.prop_id in room.scene_props[scene_id]:
+                    raise ValueError("propId persistido duplicado")
+                total_props += 1
+                if total_props > MAX_ROOM_PROPS:
+                    raise ValueError("limite de objetos persistidos excedido")
+                room.scene_props[scene_id][prop.prop_id] = prop
+
+            raw_fog = raw_scene.get("fog")
+            if raw_fog is not None:
+                room.scene_fog[scene_id] = self._deserialize_fog(
+                    raw_fog, scene_map_ids.get(scene_id)
+                )
+
+        active_scene_id = payload.get("activeSceneId")
+        if active_scene_id is not None:
+            if isinstance(active_scene_id, str) and active_scene_id in room.scene_tokens:
+                room.active_scene_id = active_scene_id
+            else:
+                warnings.warn(
+                    "Cena ativa persistida nao existe mais; primeira cena atual foi usada",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+
+        raw_commands = payload.get("catalogCommands", [])
+        if not isinstance(raw_commands, list):
+            raise ValueError("historico de comandos invalido")
+        for item in raw_commands[-PROCESSED_COMMAND_LIMIT:]:
+            if not isinstance(item, dict):
+                raise ValueError("comando persistido invalido")
+            command_id = item.get("commandId")
+            role = item.get("role")
+            message_type = item.get("messageType")
+            fingerprint = item.get("fingerprint")
+            if (
+                not isinstance(command_id, str)
+                or not 1 <= len(command_id) <= 100
+                or role not in {"master", "player"}
+                or not isinstance(message_type, str)
+                or not isinstance(fingerprint, str)
+                or len(fingerprint) != 64
+                or any(character not in string.hexdigits for character in fingerprint)
+            ):
+                raise ValueError("historico de comandos invalido")
+            room.catalog_commands[command_id] = ProcessedCatalogCommand(
+                role=role,
+                message_type=message_type,
+                fingerprint=fingerprint.lower(),
+            )
+        return room
+
+    def _deserialize_token(self, payload: Any) -> CatalogToken:
+        if not isinstance(payload, dict):
+            raise ValueError("token persistido invalido")
+        token_id = payload.get("tokenId")
+        asset_id = payload.get("assetId")
+        label = payload.get("label")
+        size = payload.get("size")
+        movable = payload.get("movable")
+        visible = payload.get("visible")
+        if (
+            not isinstance(token_id, str)
+            or not 1 <= len(token_id) <= 64
+            or not token_id[0].isalnum()
+            or any(not (character.isalnum() or character in "._:-") for character in token_id)
+            or not isinstance(asset_id, str)
+            or not isinstance(label, str)
+            or not 1 <= len(label.strip()) <= 80
+            or any(ord(character) < 32 for character in label)
+            or not isinstance(movable, bool)
+            or not isinstance(visible, bool)
+        ):
+            raise ValueError("token persistido invalido")
+        if isinstance(size, bool) or not isinstance(size, (int, float)):
+            raise ValueError("tamanho de token invalido")
+        size_float = float(size)
+        if not math.isfinite(size_float) or not 0.01 <= size_float <= 0.25:
+            raise ValueError("tamanho de token invalido")
+        assert self.catalog is not None
+        asset = self.catalog.get_asset(asset_id, "master")
+        if asset.kind != "token":
+            raise ValueError("asset persistido nao e token")
+        return CatalogToken(
+            token_id=token_id,
+            asset_id=asset_id,
+            x=self._normalised_float(payload.get("x"), "token.x"),
+            y=self._normalised_float(payload.get("y"), "token.y"),
+            label=label.strip(),
+            size=size_float,
+            movable=movable and asset.controlled_by == "players",
+            visible=visible,
+        )
+
+    def _deserialize_prop(self, payload: Any) -> CatalogProp:
+        if not isinstance(payload, dict):
+            raise ValueError("objeto persistido invalido")
+        prop_id = payload.get("propId")
+        asset_id = payload.get("assetId")
+        label = payload.get("label")
+        visible = payload.get("visible")
+        if (
+            not isinstance(prop_id, str)
+            or not 1 <= len(prop_id) <= 64
+            or not prop_id[0].isalnum()
+            or any(not (character.isalnum() or character in "._:-") for character in prop_id)
+            or not isinstance(asset_id, str)
+            or not isinstance(label, str)
+            or not 1 <= len(label.strip()) <= 80
+            or any(ord(character) < 32 for character in label)
+            or not isinstance(visible, bool)
+        ):
+            raise ValueError("objeto persistido invalido")
+        assert self.catalog is not None
+        asset = self.catalog.get_asset(asset_id, "master")
+        if asset.kind != "prop":
+            raise ValueError("asset persistido nao e objeto de cenario")
+        return CatalogProp(
+            prop_id=prop_id,
+            asset_id=asset_id,
+            x=self._normalised_float(payload.get("x"), "prop.x"),
+            y=self._normalised_float(payload.get("y"), "prop.y"),
+            label=label.strip(),
+            width=self._bounded_float(payload.get("width"), 0.01, 0.8, "prop.width"),
+            height=self._bounded_float(payload.get("height"), 0.01, 0.8, "prop.height"),
+            rotation=self._bounded_float(
+                payload.get("rotation"), -360, 360, "prop.rotation"
+            ),
+            visible=visible,
+        )
+
+    @staticmethod
+    def _deserialize_fog(payload: Any, expected_map_asset_id: str | None) -> FogState:
+        if not isinstance(payload, dict):
+            raise ValueError("fog persistido invalido")
+        enabled = payload.get("enabled")
+        if not isinstance(enabled, bool):
+            raise ValueError("fog.enabled invalido")
+        revision = VTTService._nonnegative_int(payload.get("revision"), "fog.revision")
+        render_revision = VTTService._nonnegative_int(
+            payload.get("renderRevision", revision), "fog.renderRevision"
+        )
+        persisted_map_asset_id = payload.get("mapAssetId")
+        if persisted_map_asset_id != expected_map_asset_id:
+            warnings.warn(
+                "Mapa da cena mudou; a nevoa foi fechada e reiniciada por seguranca",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return FogState(map_asset_id=expected_map_asset_id)
+        encoded = payload.get("maskBase64")
+        if not isinstance(encoded, str) or len(encoded) > 100_000:
+            raise ValueError("mascara de fog invalida")
+        mask = base64.b64decode(encoded, validate=True)
+        if len(mask) != FOG_MASK_SIZE * FOG_MASK_SIZE:
+            raise ValueError("dimensoes da mascara de fog invalidas")
+        return FogState(
+            enabled=enabled,
+            revision=revision,
+            render_revision=render_revision,
+            map_asset_id=expected_map_asset_id,
+            mask=bytearray(mask),
+        )
+
+    @staticmethod
+    def _decode_invite_digest(value: Any) -> bytes:
+        if not isinstance(value, str) or len(value) != 64:
+            raise ValueError("digest de convite invalido")
+        digest = bytes.fromhex(value)
+        if len(digest) != 32:
+            raise ValueError("digest de convite invalido")
+        return digest
+
+    @staticmethod
+    def _nonnegative_int(value: Any, label: str) -> int:
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"{label} invalido")
+        return value
+
+    @staticmethod
+    def _normalised_float(value: Any, label: str) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{label} invalido")
+        result = float(value)
+        if not math.isfinite(result) or not 0 <= result <= 1:
+            raise ValueError(f"{label} invalido")
+        return result
+
+    @staticmethod
+    def _bounded_float(value: Any, minimum: float, maximum: float, label: str) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{label} invalido")
+        result = float(value)
+        if not math.isfinite(result) or not minimum <= result <= maximum:
+            raise ValueError(f"{label} invalido")
+        return result
 
     def room_exists(self, room_id: str) -> bool:
         return room_id in self._rooms
@@ -577,9 +1355,12 @@ class VTTService:
         scene_by_id = {scene.scene_id: scene for scene in scenes}
         active_scene = scene_by_id.get(room.active_scene_id or "")
         tokens: dict[str, dict[str, Any]] = {}
+        props: dict[str, dict[str, Any]] = {}
         if active_scene is not None:
             for token in room.scene_tokens.get(active_scene.scene_id, {}).values():
-                if role == "player" and not token.visible:
+                if role == "player" and not self._token_visible_to_player(
+                    room, active_scene.scene_id, token
+                ):
                     continue
                 try:
                     asset = self.catalog.get_asset(token.asset_id, role)
@@ -595,6 +1376,31 @@ class VTTService:
                     "movable": token.movable,
                     "visible": token.visible,
                 }
+            active_fog = room.scene_fog.get(active_scene.scene_id)
+            compose_props_for_player = (
+                role == "player" and active_fog is not None and active_fog.enabled
+            )
+            if not compose_props_for_player:
+                for prop in room.scene_props.get(active_scene.scene_id, {}).values():
+                    if role == "player" and not self._prop_visible_to_player(
+                        room, active_scene.scene_id, prop
+                    ):
+                        continue
+                    try:
+                        self.catalog.get_asset(prop.asset_id, role)
+                    except AssetNotAvailableError:
+                        continue
+                    props[prop.prop_id] = {
+                        "id": prop.prop_id,
+                        "assetId": prop.asset_id,
+                        "x": prop.x,
+                        "y": prop.y,
+                        "label": prop.label,
+                        "width": prop.width,
+                        "height": prop.height,
+                        "rotation": prop.rotation,
+                        "visible": prop.visible,
+                    }
 
         state: dict[str, Any] = {
             "scene": (
@@ -603,6 +1409,8 @@ class VTTService:
                 else None
             ),
             "tokens": tokens,
+            "props": props,
+            "fog": self._fog_payload(room, active_scene, role),
         }
         if role == "master":
             state["table"] = {
@@ -626,7 +1434,19 @@ class VTTService:
                     }
                     for asset in self.catalog.list_tokens("master")
                 ],
+                "propAssets": [
+                    {
+                        "assetId": asset.asset_id,
+                        "label": self._asset_label(asset.asset_id),
+                    }
+                    for asset in self.catalog.list_props("master")
+                ],
             }
+            if room.persistence_warning is not None:
+                state["persistence"] = {
+                    "saved": False,
+                    "message": room.persistence_warning,
+                }
 
         return {
             "type": "room.snapshot",
@@ -645,6 +1465,7 @@ class VTTService:
     ) -> dict[str, Any]:
         assert self.catalog is not None
         states = room.scene_overlays.get(scene.scene_id, {})
+        fog = room.scene_fog.get(scene.scene_id)
         map_id = scene.active_player_map
         if map_id is None and role == "master":
             map_id = scene.active_gm_guide_map
@@ -669,7 +1490,11 @@ class VTTService:
                     "enabled": states.get(item.asset_id, False),
                 }
                 for item in scene.overlays
-                if role == "master" or states.get(item.asset_id, False)
+                if role == "master"
+                or (
+                    states.get(item.asset_id, False)
+                    and not (fog is not None and fog.enabled)
+                )
             ],
             "gridHint": (
                 {
@@ -702,6 +1527,162 @@ class VTTService:
             payload["gmGuideMap"] = guide_payload
         return payload
 
+    @staticmethod
+    def _apply_fog_stroke(fog: FogState, command: FogStrokeCommand) -> None:
+        image = Image.frombytes("L", (FOG_MASK_SIZE, FOG_MASK_SIZE), bytes(fog.mask))
+        draw = ImageDraw.Draw(image)
+        points = [
+            (
+                round(point.x * (FOG_MASK_SIZE - 1)),
+                round(point.y * (FOG_MASK_SIZE - 1)),
+            )
+            for point in command.payload.points
+        ]
+        radius = max(1, round(command.payload.radius * (FOG_MASK_SIZE - 1)))
+        fill = 255 if command.payload.reveal else 0
+        if len(points) > 1:
+            draw.line(points, fill=fill, width=(radius * 2) + 1, joint="curve")
+        for x, y in points:
+            draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
+        fog.mask[:] = image.tobytes()
+
+    @staticmethod
+    def _fog_payload(
+        room: Room,
+        scene: SceneView | None,
+        role: Role,
+    ) -> dict[str, Any] | None:
+        if scene is None:
+            return None
+        fog = room.scene_fog.get(scene.scene_id)
+        if fog is None:
+            return None
+        payload: dict[str, Any] = {
+            "enabled": fog.enabled,
+            "revision": fog.revision,
+            "renderRevision": fog.render_revision,
+            "width": FOG_MASK_SIZE,
+            "height": FOG_MASK_SIZE,
+        }
+        if role == "master":
+            compressed = zlib.compress(bytes(fog.mask), level=6)
+            payload.update(
+                {
+                    "encoding": "zlib-base64",
+                    "data": base64.b64encode(compressed).decode("ascii"),
+                }
+            )
+        return payload
+
+    @staticmethod
+    def _fog_reveals_point(fog: FogState, x: float, y: float) -> bool:
+        if not fog.enabled:
+            return True
+        pixel_x = min(FOG_MASK_SIZE - 1, max(0, round(x * (FOG_MASK_SIZE - 1))))
+        pixel_y = min(FOG_MASK_SIZE - 1, max(0, round(y * (FOG_MASK_SIZE - 1))))
+        return fog.mask[(pixel_y * FOG_MASK_SIZE) + pixel_x] >= 128
+
+    @classmethod
+    def _token_visible_to_player(
+        cls,
+        room: Room,
+        scene_id: str,
+        token: CatalogToken,
+    ) -> bool:
+        if not token.visible:
+            return False
+        fog = room.scene_fog.get(scene_id)
+        return fog is None or cls._fog_reveals_point(fog, token.x, token.y)
+
+    @classmethod
+    def _prop_visible_to_player(
+        cls,
+        room: Room,
+        scene_id: str,
+        prop: CatalogProp,
+    ) -> bool:
+        if not prop.visible:
+            return False
+        fog = room.scene_fog.get(scene_id)
+        return fog is None or cls._fog_reveals_point(fog, prop.x, prop.y)
+
+    def _discard_fog_cache(self, room_id: str, scene_id: str) -> None:
+        for key in tuple(self._fog_render_cache):
+            if key[0] == room_id and key[1] == scene_id:
+                self._fog_render_cache.pop(key, None)
+
+    def _mark_scene_render_dirty(self, room: Room, scene_id: str) -> None:
+        fog = room.scene_fog.get(scene_id)
+        if fog is None:
+            return
+        fog.render_revision += 1
+        self._discard_fog_cache(room.room_id, scene_id)
+
+    def _render_player_fog_map_sync(
+        self,
+        map_id: str,
+        overlay_ids: tuple[str, ...],
+        prop_layers: tuple[tuple[str, float, float, float, float, float], ...],
+        mask: bytes,
+        render_revision: int,
+    ) -> RenderedFogMap:
+        assert self.catalog is not None
+        with self.catalog.open_asset(map_id, "player") as opened:
+            with Image.open(opened.stream) as source:
+                source.load()
+                width, height = source.size
+                if width <= 0 or height <= 0 or width * height > MAX_FOG_RENDER_PIXELS:
+                    raise ValueError("Dimensoes do mapa excedem o limite de renderizacao")
+                composed = source.convert("RGBA")
+
+        for asset_id, x, y, relative_width, relative_height, rotation in prop_layers:
+            with self.catalog.open_asset(asset_id, "player") as opened:
+                with Image.open(opened.stream) as prop_source:
+                    prop_source.load()
+                    prop_image = prop_source.convert("RGBA")
+            target_size = (
+                max(1, round(width * relative_width)),
+                max(1, round(height * relative_height)),
+            )
+            prop_image = prop_image.resize(target_size, Image.Resampling.LANCZOS)
+            if rotation:
+                prop_image = prop_image.rotate(
+                    -rotation,
+                    resample=Image.Resampling.BICUBIC,
+                    expand=True,
+                )
+            composed.alpha_composite(
+                prop_image,
+                dest=(
+                    round((x * width) - (prop_image.width / 2)),
+                    round((y * height) - (prop_image.height / 2)),
+                ),
+            )
+
+        for overlay_id in overlay_ids:
+            with self.catalog.open_asset(overlay_id, "player") as opened:
+                with Image.open(opened.stream) as overlay_source:
+                    overlay_source.load()
+                    overlay = overlay_source.convert("RGBA")
+            if overlay.size != composed.size:
+                overlay = overlay.resize(composed.size, Image.Resampling.LANCZOS)
+            composed.alpha_composite(overlay)
+
+        reveal_mask = Image.frombytes(
+            "L", (FOG_MASK_SIZE, FOG_MASK_SIZE), mask
+        ).resize(composed.size, Image.Resampling.NEAREST)
+        background = Image.new("RGB", composed.size, (3, 5, 7))
+        flattened = Image.new("RGB", composed.size, (3, 5, 7))
+        flattened.paste(composed, mask=composed.getchannel("A"))
+        rendered_image = Image.composite(flattened, background, reveal_mask)
+        output = io.BytesIO()
+        rendered_image.save(output, format="WEBP", quality=90, method=2)
+        return RenderedFogMap(
+            content=output.getvalue(),
+            media_type="image/webp",
+            revision=render_revision,
+        )
+
     def _master_scenes(self) -> tuple[SceneView, ...]:
         assert self.catalog is not None
         return self.catalog.list_scenes("master")
@@ -711,9 +1692,18 @@ class VTTService:
         return sum(len(tokens) for tokens in room.scene_tokens.values())
 
     @staticmethod
+    def _prop_count(room: Room) -> int:
+        return sum(len(props) for props in room.scene_props.values())
+
+    @staticmethod
     def _generated_token_id(command_id: str) -> str:
         digest = hashlib.sha256(command_id.encode("utf-8")).hexdigest()[:20]
         return f"token-{digest}"
+
+    @staticmethod
+    def _generated_prop_id(command_id: str) -> str:
+        digest = hashlib.sha256(command_id.encode("utf-8")).hexdigest()[:20]
+        return f"prop-{digest}"
 
     @staticmethod
     def _humanize(value: str) -> str:

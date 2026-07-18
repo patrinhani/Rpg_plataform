@@ -17,16 +17,23 @@ from fastapi import (
 )
 from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
-from starlette.responses import StreamingResponse
+from starlette.responses import Response, StreamingResponse
 
 from .campaign import CampaignCatalogError, OpenedAsset
 from .config import Settings
 from .models import (
     CreateRoomRequest,
     CreateRoomResponse,
+    FogResetCommand,
+    FogRevealAllCommand,
+    FogSetEnabledCommand,
+    FogStrokeCommand,
     MoveCommand,
     OverlaySetCommand,
     PingCommand,
+    PropRemoveCommand,
+    PropSpawnCommand,
+    PropUpdateCommand,
     SceneSelectCommand,
     TicketResponse,
     TokenRemoveCommand,
@@ -206,6 +213,34 @@ def create_router() -> APIRouter:
             },
         )
 
+    @router.get("/api/vtt/rooms/{room_id}/fog-map")
+    async def get_fog_map(
+        room_id: str,
+        request: Request,
+        access: Annotated[str, Query(min_length=16, max_length=256)],
+        revision: Annotated[int | None, Query(ge=0)] = None,
+    ) -> Response:
+        service: VTTService = request.app.state.vtt
+        grant = await service.validate_media_grant(room_id, access)
+        if grant is None:
+            raise _asset_not_found()
+        rendered = await service.render_player_fog_map(room_id, grant.role)
+        if rendered is None:
+            raise _asset_not_found()
+        if revision is not None and revision != rendered.revision:
+            # A revisao e usada somente como cache-buster; nunca permite ler estado antigo.
+            raise _asset_not_found()
+        return Response(
+            content=rendered.content,
+            media_type=rendered.media_type,
+            headers={
+                "Cache-Control": "no-store, private",
+                "Content-Length": str(len(rendered.content)),
+                "Content-Security-Policy": "default-src 'none'; sandbox",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
     @router.websocket("/ws/vtt/rooms/{room_id}")
     async def room_socket(
         websocket: WebSocket,
@@ -307,6 +342,13 @@ async def _handle_socket_message(
         "overlay.set": (OverlaySetCommand, "invalid_overlay_set"),
         "token.spawn": (TokenSpawnCommand, "invalid_token_spawn"),
         "token.remove": (TokenRemoveCommand, "invalid_token_remove"),
+        "prop.spawn": (PropSpawnCommand, "invalid_prop_spawn"),
+        "prop.update": (PropUpdateCommand, "invalid_prop_update"),
+        "prop.remove": (PropRemoveCommand, "invalid_prop_remove"),
+        "fog.stroke": (FogStrokeCommand, "invalid_fog_stroke"),
+        "fog.set_enabled": (FogSetEnabledCommand, "invalid_fog_set_enabled"),
+        "fog.reset": (FogResetCommand, "invalid_fog_reset"),
+        "fog.reveal_all": (FogRevealAllCommand, "invalid_fog_reveal_all"),
     }
     command_definition = catalog_commands.get(message_type)
     if command_definition is not None and service.has_catalog:

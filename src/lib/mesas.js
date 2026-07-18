@@ -12,6 +12,7 @@ import {
   removerParticipanteDaIniciativa,
   resolverNomeLegivelJogador,
 } from './mesa-utils.js';
+export { vincularVttMesa } from './vtt-mesa-link.js';
 
 // ... (Funções de Combate permanecem iguais: alternarCombate, avancarTurno, etc.) ...
 // ... (Funções de Iniciativa permanecem iguais) ...
@@ -228,20 +229,6 @@ export async function criarMesa(nomeMesa, mestreUid, mestreNome) {
     iniciativas: []
   });
   return docRef.id;
-}
-
-export async function vincularVttMesa(mesaId, campaignId = 'mnemosyne') {
-  const normalizedCampaignId = String(campaignId || '').trim();
-  if (!mesaId || !normalizedCampaignId || normalizedCampaignId.length > 80) {
-    throw new Error('Configuração de VTT inválida.');
-  }
-  await updateDoc(doc(db, 'mesas', mesaId), {
-    vtt: {
-      enabled: true,
-      campaignId: normalizedCampaignId,
-      updatedAt: new Date().toISOString(),
-    },
-  });
 }
 
 export async function buscarMinhasMesas(uid) {

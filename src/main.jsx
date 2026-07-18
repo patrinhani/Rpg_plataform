@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './App.css'
 
 const AuthenticatedAppShell = lazy(() => import('./AuthenticatedAppShell.jsx'))
-const StandaloneVtt = lazy(() => import('./features/vtt-lab/index.js'))
+const StandaloneVtt = lazy(() => import('./features/vtt-lab/VttLabIntegrated.jsx'))
 const isStandaloneVtt = /^\/vtt-lab\/?$/.test(window.location.pathname)
 
 const entryLoading = (

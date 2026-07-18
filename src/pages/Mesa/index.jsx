@@ -3,6 +3,7 @@ import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../lib/firebase.js';
 import { criarIdEntidadeMesa, removerParticipanteDaIniciativa } from '../../lib/mesa-utils.js';
+import { buildVttLaunchPath, normalizeVttRoomId } from '../../lib/vtt-link.js';
 import {
   adicionarMonstroIniciativa,
   adicionarNPCIniciativa,
@@ -270,17 +271,19 @@ export default function Mesa() {
   const abrirVtt = useCallback(() => {
     if (!mesaId || !mesaData || !souMestre) return;
     const campaignId = String(mesaData.vtt?.campaignId || 'mnemosyne');
-    const params = new URLSearchParams({
+    const linkedRoomId = normalizeVttRoomId(mesaData.vtt?.roomId);
+    const launchPath = buildVttLaunchPath({
       mesaId,
       campaignId,
       roomName: String(mesaData.nome || 'Mesa C.A.O.S.'),
+      roomId: linkedRoomId,
     });
-    window.open(`/vtt-lab?${params.toString()}`, '_blank', 'noopener,noreferrer');
+    window.open(launchPath, '_blank', 'noopener,noreferrer');
 
     if (!devVisualMode) {
       void executarAcao(
         'vtt-bind',
-        () => vincularVttMesa(mesaId, campaignId),
+        () => vincularVttMesa(mesaId, campaignId, linkedRoomId),
         'O VTT abriu, mas não foi possível registrar o vínculo desta mesa.',
       );
     }
@@ -684,9 +687,10 @@ export default function Mesa() {
                 className="mesa-vtt-launch"
                 onClick={abrirVtt}
                 disabled={Boolean(actionBusy)}
+                title={mesaData.vtt?.roomId ? 'Retomar a sala vinculada a esta mesa' : 'Criar ou vincular uma sala VTT'}
               >
                 <AppIcon name="map" size={18} />
-                <span>Abrir VTT</span>
+                <span>{mesaData.vtt?.roomId ? 'Retomar VTT' : 'Abrir VTT'}</span>
               </button>
             )}
             {souMestre && (

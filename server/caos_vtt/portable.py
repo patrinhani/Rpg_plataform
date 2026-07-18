@@ -114,6 +114,8 @@ def load_portable_catalog(
 def build_portable_settings(
     port: int,
     public_origins: Sequence[str] = (),
+    *,
+    state_db_path: Path | None = None,
 ) -> Settings:
     for origin in public_origins:
         if urlsplit(origin.strip()).scheme.lower() != "https":
@@ -130,7 +132,27 @@ def build_portable_settings(
         ticket_ttl_seconds=60,
         bind_host="127.0.0.1",
         bind_port=port,
+        state_db_path=state_db_path,
     )
+
+
+def default_portable_state_db(
+    *,
+    frozen: bool | None = None,
+    executable: Path | None = None,
+    source_root: Path | None = None,
+) -> Path:
+    is_frozen = bool(getattr(sys, "frozen", False)) if frozen is None else frozen
+    if is_frozen:
+        executable_path = Path(sys.executable) if executable is None else executable
+        root = executable_path.expanduser().resolve().parent
+    else:
+        root = (
+            source_root.expanduser().resolve(strict=False)
+            if source_root is not None
+            else Path(__file__).resolve().parents[2]
+        )
+    return root / "data" / "caos-vtt-state.sqlite3"
 
 
 def _port_is_available(port: int) -> bool:
@@ -200,6 +222,12 @@ def _parser() -> argparse.ArgumentParser:
         metavar="PASTA",
         help="raiz explicita correspondente a --campaign-manifest",
     )
+    parser.add_argument(
+        "--state-db",
+        type=Path,
+        metavar="ARQUIVO",
+        help="banco SQLite de sessoes (padrao: pasta data ao lado do executavel)",
+    )
     return parser
 
 
@@ -256,7 +284,16 @@ def run(argv: Sequence[str] | None = None) -> int:
             public_origins.append(tunnel_origin)
 
         # The public origin is known and canonical before the app/WS routes exist.
-        settings = build_portable_settings(args.port, public_origins)
+        state_db_path = (
+            args.state_db.expanduser().resolve(strict=False)
+            if args.state_db is not None
+            else default_portable_state_db(source_root=frontend_dir.parent)
+        )
+        settings = build_portable_settings(
+            args.port,
+            public_origins,
+            state_db_path=state_db_path,
+        )
         share_url = f"{tunnel_origin}/vtt-lab" if tunnel_origin else None
         browser_open_url = share_url or browser_url
         browser_health_url = (
@@ -271,11 +308,12 @@ def run(argv: Sequence[str] | None = None) -> int:
             print("Compartilhe somente o link de jogador criado dentro da sala.")
             print("O endereco online e temporario e muda a cada execucao.")
         print(f"Host token temporario: {settings.host_token}")
+        print(f"Sessoes salvas em: {settings.state_db_path}")
         if args.public_origin:
             print(f"Origens publicas adicionais: {', '.join(args.public_origin)}")
         print("Copie o token acima para o campo 'Host token' ao criar a sala.")
         print("O token nao foi salvo em disco e muda a cada execucao.")
-        print("Fechar esta janela encerra o servidor, o tunel e o estado em memoria.")
+        print("Fechar esta janela encerra o servidor; salas vinculadas permanecem salvas.")
         print("Pressione Ctrl+C para encerrar.\n", flush=True)
 
         if not args.no_browser:

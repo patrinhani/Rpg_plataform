@@ -31,6 +31,7 @@ def create_app(
     app.state.vtt = VTTService(
         ticket_ttl_seconds=resolved.ticket_ttl_seconds,
         catalog=catalog,
+        state_db_path=resolved.state_db_path,
     )
     app.add_middleware(
         CORSMiddleware,

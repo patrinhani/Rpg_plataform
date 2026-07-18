@@ -17,7 +17,7 @@ const Verificacao = lazy(() => import('./pages/Verificacao/index.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard/index.jsx'));
 const Ficha = lazy(() => import('./pages/Ficha/index.jsx'));
 const Mesa = lazy(() => import('./pages/Mesa/index.jsx'));
-const VttLab = lazy(() => import('./features/vtt-lab/index.js'));
+const VttLab = lazy(() => import('./features/vtt-lab/VttLabIntegrated.jsx'));
 
 // Firebase
 import { db } from './lib/firebase.js';

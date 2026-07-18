@@ -6,6 +6,11 @@ const MAX_ZOOM = 3.2;
 const DEFAULT_TOKEN_SIZE = 0.075;
 const MIN_TOKEN_SIZE = 0.01;
 const MAX_TOKEN_SIZE = 0.25;
+const DEFAULT_FOG_BRUSH_RADIUS = 0.045;
+const DEFAULT_PROP_SIZE = 0.18;
+const MIN_PROP_SIZE = 0.025;
+const MAX_PROP_SIZE = 0.8;
+const FOG_STROKE_BATCH_SIZE = 128;
 
 function snapToDevicePixel(value) {
   const ratio = typeof window === 'undefined' ? 1 : Math.max(1, window.devicePixelRatio || 1);
@@ -28,6 +33,27 @@ function humanize(value) {
 function tokenInitials(label) {
   const words = String(label || '?').trim().split(/\s+/).filter(Boolean);
   return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase() || '?';
+}
+
+function decodeBase64(value) {
+  const binary = globalThis.atob(String(value || ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+async function decodeFogMask(fog) {
+  if (!fog?.data) return null;
+  const compressed = decodeBase64(fog.data);
+  if (fog.encoding === 'raw-base64') return compressed;
+  if (fog.encoding !== 'zlib-base64' || typeof DecompressionStream === 'undefined') {
+    throw new Error('Este navegador não consegue visualizar a máscara privada da névoa.');
+  }
+  const stream = new Blob([compressed]).stream()
+    .pipeThrough(new DecompressionStream('deflate'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 function VttOverlayImage({ overlay }) {
@@ -59,6 +85,23 @@ function normalizeTokens(rawTokens, role) {
     .filter((token) => token.id);
 }
 
+function normalizeProps(rawProps, role) {
+  if (!rawProps || typeof rawProps !== 'object') return [];
+  return Object.values(rawProps)
+    .filter((prop) => prop && (role === 'master' || prop.visible !== false))
+    .map((prop) => ({
+      ...prop,
+      id: String(prop.id || ''),
+      label: String(prop.label || prop.id || 'Objeto'),
+      x: clamp(prop.x, 0, 1),
+      y: clamp(prop.y, 0, 1),
+      width: clamp(prop.width ?? DEFAULT_PROP_SIZE, MIN_PROP_SIZE, MAX_PROP_SIZE),
+      height: clamp(prop.height ?? prop.width ?? DEFAULT_PROP_SIZE, MIN_PROP_SIZE, MAX_PROP_SIZE),
+      rotation: clamp(prop.rotation ?? 0, -360, 360),
+    }))
+    .filter((prop) => prop.id);
+}
+
 export default function VttBoard({
   state = {},
   role = 'player',
@@ -72,25 +115,42 @@ export default function VttBoard({
   const stageRef = useRef(null);
   const panRef = useRef(null);
   const tokenDragRef = useRef(null);
+  const propDragRef = useRef(null);
+  const fogCanvasRef = useRef(null);
+  const fogStrokeRef = useRef(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
   const [draftPositions, setDraftPositions] = useState({});
   const [selectedTokenId, setSelectedTokenId] = useState('');
   const [selectedAssetId, setSelectedAssetId] = useState('');
+  const [selectedPropId, setSelectedPropId] = useState('');
+  const [selectedPropAssetId, setSelectedPropAssetId] = useState('');
+  const [draftPropPositions, setDraftPropPositions] = useState({});
   const [showGrid, setShowGrid] = useState(true);
   const [isPanning, setIsPanning] = useState(false);
   const [mapLoadState, setMapLoadState] = useState('idle');
   const [nativeZoomLimit, setNativeZoomLimit] = useState(MAX_ZOOM);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideZoom, setGuideZoom] = useState(1);
+  const [fogEditMode, setFogEditMode] = useState(false);
+  const [fogRevealMode, setFogRevealMode] = useState(true);
+  const [fogBrushRadius, setFogBrushRadius] = useState(DEFAULT_FOG_BRUSH_RADIUS);
+  const [fogMask, setFogMask] = useState(null);
+  const [fogMaskError, setFogMaskError] = useState('');
+  const [fogDraftPoints, setFogDraftPoints] = useState([]);
 
   const tokens = useMemo(
     () => normalizeTokens(state.tokens, role),
     [role, state.tokens],
   );
+  const props = useMemo(
+    () => normalizeProps(state.props, role),
+    [role, state.props],
+  );
   const overlays = useMemo(
     () => (Array.isArray(scene?.overlays) ? scene.overlays : []),
     [scene?.overlays],
   );
+  const fog = state.fog && typeof state.fog === 'object' ? state.fog : null;
   const scenes = useMemo(
     () => (Array.isArray(catalog?.scenes) ? catalog.scenes : []),
     [catalog?.scenes],
@@ -98,6 +158,10 @@ export default function VttBoard({
   const tokenAssets = useMemo(
     () => (Array.isArray(catalog?.tokenAssets) ? catalog.tokenAssets : []),
     [catalog?.tokenAssets],
+  );
+  const propAssets = useMemo(
+    () => (Array.isArray(catalog?.propAssets) ? catalog.propAssets : []),
+    [catalog?.propAssets],
   );
   const isMaster = role === 'master';
   const mapWidth = Math.max(1, Number(scene?.map?.width) || 1);
@@ -113,14 +177,94 @@ export default function VttBoard({
     return true;
   }, [connected, onCommand]);
 
+  const confirmMasterCommand = useCallback((message, type, payload = {}) => {
+    if (typeof globalThis.confirm === 'function' && !globalThis.confirm(message)) return false;
+    return emitCommand(type, payload);
+  }, [emitCommand]);
+
   useEffect(() => {
     setCamera({ x: 0, y: 0, scale: 1 });
     setDraftPositions({});
     setSelectedTokenId('');
+    setSelectedPropId('');
+    setDraftPropPositions({});
     setIsPanning(false);
     setGuideOpen(false);
     setGuideZoom(1);
+    setFogEditMode(false);
+    setFogDraftPoints([]);
   }, [scene?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFogMaskError('');
+    if (!isMaster || !fog?.enabled || !fog.data) {
+      setFogMask(null);
+      return () => { cancelled = true; };
+    }
+    decodeFogMask(fog)
+      .then((mask) => {
+        if (!cancelled) setFogMask(mask);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setFogMask(null);
+          setFogMaskError(error instanceof Error ? error.message : 'Falha ao abrir a máscara da névoa.');
+        }
+      });
+    return () => { cancelled = true; };
+  }, [fog, isMaster]);
+
+  useEffect(() => {
+    const canvas = fogCanvasRef.current;
+    if (!canvas || !fog?.enabled || !isMaster) return;
+    const width = Math.max(1, Number(fog.width) || 256);
+    const height = Math.max(1, Number(fog.height) || 256);
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.clearRect(0, 0, width, height);
+    if (fogMask?.length === width * height) {
+      const pixels = context.createImageData(width, height);
+      for (let index = 0; index < fogMask.length; index += 1) {
+        const offset = index * 4;
+        pixels.data[offset] = 2;
+        pixels.data[offset + 1] = 8;
+        pixels.data[offset + 2] = 12;
+        pixels.data[offset + 3] = fogMask[index] > 127 ? 0 : (fogEditMode ? 190 : 130);
+      }
+      context.putImageData(pixels, 0, 0);
+    }
+
+    if (fogDraftPoints.length > 0) {
+      const points = fogDraftPoints.map((point) => ({ x: point.x * width, y: point.y * height }));
+      context.save();
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.lineWidth = Math.max(2, fogBrushRadius * width * 2);
+      context.globalCompositeOperation = fogRevealMode ? 'destination-out' : 'source-over';
+      context.strokeStyle = 'rgba(2, 8, 12, 0.9)';
+      context.fillStyle = 'rgba(2, 8, 12, 0.9)';
+      context.beginPath();
+      context.moveTo(points[0].x, points[0].y);
+      for (const point of points.slice(1)) context.lineTo(point.x, point.y);
+      context.stroke();
+      if (points.length === 1) {
+        context.beginPath();
+        context.arc(points[0].x, points[0].y, context.lineWidth / 2, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.restore();
+    }
+  }, [fog?.enabled, fog?.height, fog?.width, fogBrushRadius, fogDraftPoints, fogEditMode, fogMask, fogRevealMode, isMaster]);
+
+  useEffect(() => {
+    if (!fog?.enabled) {
+      setFogEditMode(false);
+      setFogDraftPoints([]);
+    }
+  }, [fog?.enabled]);
 
   useEffect(() => {
     setMapLoadState(scene?.map?.url ? 'loading' : 'idle');
@@ -128,6 +272,7 @@ export default function VttBoard({
 
   useEffect(() => {
     setDraftPositions({});
+    setDraftPropPositions({});
   }, [revision]);
 
   useEffect(() => {
@@ -165,6 +310,12 @@ export default function VttBoard({
       setSelectedAssetId(tokenAssets[0].assetId);
     }
   }, [selectedAssetId, tokenAssets]);
+
+  useEffect(() => {
+    if (!selectedPropAssetId && propAssets[0]?.assetId) {
+      setSelectedPropAssetId(propAssets[0].assetId);
+    }
+  }, [propAssets, selectedPropAssetId]);
 
   const setZoom = useCallback((nextScale) => {
     setCamera((current) => ({
@@ -255,6 +406,58 @@ export default function VttBoard({
     };
   }, []);
 
+  const handleFogPointerDown = (event) => {
+    if (!fogEditMode || !connected || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const point = pointerToMap(event);
+    if (!point) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    fogStrokeRef.current = { pointerId: event.pointerId, points: [point] };
+    setFogDraftPoints([point]);
+  };
+
+  const handleFogPointerMove = (event) => {
+    const stroke = fogStrokeRef.current;
+    if (!stroke || stroke.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const point = pointerToMap(event);
+    const previous = stroke.points.at(-1);
+    if (!point || (previous && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.0025)) return;
+    stroke.points.push(point);
+    if (stroke.points.length >= FOG_STROKE_BATCH_SIZE) {
+      emitCommand('fog.stroke', {
+        points: stroke.points,
+        radius: fogBrushRadius,
+        reveal: fogRevealMode,
+      });
+      stroke.points = [point];
+      setFogDraftPoints([point]);
+      return;
+    }
+    setFogDraftPoints([...stroke.points]);
+  };
+
+  const finishFogStroke = (event, cancelled = false) => {
+    const stroke = fogStrokeRef.current;
+    if (!stroke || stroke.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    fogStrokeRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (!cancelled && stroke.points.length > 0) {
+      emitCommand('fog.stroke', {
+        points: stroke.points,
+        radius: fogBrushRadius,
+        reveal: fogRevealMode,
+      });
+    }
+    setFogDraftPoints([]);
+  };
+
   const canMoveToken = useCallback((token) => (
     connected && (isMaster || token.movable !== false)
   ), [connected, isMaster]);
@@ -262,6 +465,7 @@ export default function VttBoard({
   const handleTokenPointerDown = (event, token) => {
     event.stopPropagation();
     setSelectedTokenId(token.id);
+    setSelectedPropId('');
     if (!canMoveToken(token)) return;
     event.preventDefault();
     const pointer = pointerToMap(event);
@@ -273,6 +477,82 @@ export default function VttBoard({
       offsetX: pointer ? pointer.x - shown.x : 0,
       offsetY: pointer ? pointer.y - shown.y : 0,
     };
+  };
+
+  const handlePropPointerDown = (event, prop) => {
+    event.stopPropagation();
+    setSelectedPropId(prop.id);
+    setSelectedTokenId('');
+    if (!connected || !isMaster) return;
+    event.preventDefault();
+    const pointer = pointerToMap(event);
+    const shown = draftPropPositions[prop.id] || prop;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    propDragRef.current = {
+      pointerId: event.pointerId,
+      propId: prop.id,
+      offsetX: pointer ? pointer.x - shown.x : 0,
+      offsetY: pointer ? pointer.y - shown.y : 0,
+    };
+  };
+
+  const handlePropPointerMove = (event, prop) => {
+    const drag = propDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.propId !== prop.id) return;
+    const point = pointerToMap(event);
+    if (!point) return;
+    setDraftPropPositions((current) => ({
+      ...current,
+      [prop.id]: {
+        x: clamp(point.x - drag.offsetX, 0, 1),
+        y: clamp(point.y - drag.offsetY, 0, 1),
+      },
+    }));
+  };
+
+  const finishPropDrag = (event, prop, cancelled = false) => {
+    const drag = propDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.propId !== prop.id) return;
+    propDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (cancelled) {
+      setDraftPropPositions((current) => {
+        const next = { ...current };
+        delete next[prop.id];
+        return next;
+      });
+      return;
+    }
+    const point = pointerToMap(event);
+    if (!point) return;
+    const position = {
+      x: clamp(point.x - drag.offsetX, 0, 1),
+      y: clamp(point.y - drag.offsetY, 0, 1),
+    };
+    setDraftPropPositions((current) => ({ ...current, [prop.id]: position }));
+    emitCommand('prop.update', { propId: prop.id, ...position });
+  };
+
+  const handlePropKeyDown = (event, prop) => {
+    const directions = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const direction = directions[event.key];
+    if (!direction || !connected || !isMaster) return;
+    event.preventDefault();
+    const shown = draftPropPositions[prop.id] || prop;
+    const step = event.shiftKey ? 0.05 : 0.02;
+    const position = {
+      x: clamp(shown.x + direction[0] * step, 0, 1),
+      y: clamp(shown.y + direction[1] * step, 0, 1),
+    };
+    setDraftPropPositions((current) => ({ ...current, [prop.id]: position }));
+    emitCommand('prop.update', { propId: prop.id, ...position });
   };
 
   const handleTokenPointerMove = (event, token) => {
@@ -354,6 +634,31 @@ export default function VttBoard({
     setSelectedTokenId('');
   };
 
+  const handleSpawnProp = () => {
+    if (!selectedPropAssetId) return;
+    const asset = propAssets.find((item) => item.assetId === selectedPropAssetId);
+    emitCommand('prop.spawn', {
+      assetId: selectedPropAssetId,
+      label: asset?.label || humanize(selectedPropAssetId.split('/').pop()),
+      x: 0.5,
+      y: 0.5,
+      width: DEFAULT_PROP_SIZE,
+      height: DEFAULT_PROP_SIZE,
+      rotation: 0,
+    });
+  };
+
+  const handleUpdateSelectedProp = (patch) => {
+    if (!selectedPropId) return;
+    emitCommand('prop.update', { propId: selectedPropId, ...patch });
+  };
+
+  const handleRemoveSelectedProp = () => {
+    if (!selectedPropId) return;
+    emitCommand('prop.remove', { propId: selectedPropId });
+    setSelectedPropId('');
+  };
+
   return (
     <section className="vtt-board" aria-label="Mesa virtual C.A.O.S.">
       <header className="vtt-board__toolbar">
@@ -428,6 +733,35 @@ export default function VttBoard({
                 onError={() => setMapLoadState('error')}
               />
 
+              {props.map((prop) => {
+                const position = draftPropPositions[prop.id] || prop;
+                const selected = selectedPropId === prop.id;
+                return (
+                  <button
+                    key={prop.id}
+                    type="button"
+                    className={`vtt-board__prop ${selected ? 'is-selected' : ''} ${prop.visible === false ? 'is-hidden' : ''}`}
+                    style={{
+                      '--vtt-prop-x': `${position.x * 100}%`,
+                      '--vtt-prop-y': `${position.y * 100}%`,
+                      '--vtt-prop-width': `${prop.width * 100}%`,
+                      '--vtt-prop-height': `${prop.height * 100}%`,
+                      '--vtt-prop-rotation': `${prop.rotation}deg`,
+                    }}
+                    onPointerDown={(event) => handlePropPointerDown(event, prop)}
+                    onPointerMove={(event) => handlePropPointerMove(event, prop)}
+                    onPointerUp={(event) => finishPropDrag(event, prop)}
+                    onPointerCancel={(event) => finishPropDrag(event, prop, true)}
+                    onKeyDown={(event) => handlePropKeyDown(event, prop)}
+                    aria-label={`${prop.label}. Objeto de cenário.${isMaster ? ' Use as setas para mover.' : ''}`}
+                    aria-pressed={selected}
+                  >
+                    {prop.assetUrl && <img src={prop.assetUrl} alt="" draggable="false" />}
+                    <small>{prop.label}</small>
+                  </button>
+                );
+              })}
+
               {mapLoadState !== 'ready' && (
                 <div className={`vtt-board__map-status is-${mapLoadState}`} role="status">
                   {mapLoadState === 'error' ? 'Não foi possível carregar este mapa.' : 'Carregando mapa...'}
@@ -440,6 +774,18 @@ export default function VttBoard({
                   overlay={overlay}
                 />
               ))}
+
+              {isMaster && fog?.enabled && (
+                <canvas
+                  ref={fogCanvasRef}
+                  className={`vtt-board__fog-mask ${fogEditMode ? 'is-editing' : ''}`}
+                  onPointerDown={handleFogPointerDown}
+                  onPointerMove={handleFogPointerMove}
+                  onPointerUp={(event) => finishFogStroke(event)}
+                  onPointerCancel={(event) => finishFogStroke(event, true)}
+                  aria-label={fogEditMode ? 'Editor da névoa de guerra' : undefined}
+                />
+              )}
 
               {hasGrid && showGrid && (
                 <div
@@ -560,6 +906,90 @@ export default function VttBoard({
               ))}
             </fieldset>
 
+            <fieldset className="vtt-board__fog-controls" disabled={!connected || !scene}>
+              <legend>Névoa de guerra</legend>
+              <label className="vtt-board__fog-toggle">
+                <input
+                  type="checkbox"
+                  checked={Boolean(fog?.enabled)}
+                  onChange={(event) => {
+                    const enabled = event.target.checked;
+                    if (enabled) {
+                      emitCommand('fog.set_enabled', { enabled: true });
+                      return;
+                    }
+                    confirmMasterCommand(
+                      'Desativar a névoa libera o mapa completo, os efeitos e os objetos para todos os jogadores. Continuar?',
+                      'fog.set_enabled',
+                      { enabled: false },
+                    );
+                  }}
+                />
+                <span>
+                  <strong>{fog?.enabled ? 'Proteção ativa' : 'Proteção desativada'}</strong>
+                  <small>Oculta mapa, efeitos e tokens ainda não revelados.</small>
+                </span>
+              </label>
+
+              {fog?.enabled && (
+                <>
+                  <button
+                    type="button"
+                    className={fogEditMode ? 'is-active' : ''}
+                    onClick={() => setFogEditMode((current) => !current)}
+                    aria-pressed={fogEditMode}
+                  >
+                    {fogEditMode ? 'Concluir desenho' : 'Editar no mapa'}
+                  </button>
+                  <div className="vtt-board__fog-modes" aria-label="Modo do pincel">
+                    <button
+                      type="button"
+                      className={fogRevealMode ? 'is-active' : ''}
+                      onClick={() => setFogRevealMode(true)}
+                      aria-pressed={fogRevealMode}
+                    >Revelar</button>
+                    <button
+                      type="button"
+                      className={!fogRevealMode ? 'is-active' : ''}
+                      onClick={() => setFogRevealMode(false)}
+                      aria-pressed={!fogRevealMode}
+                    >Ocultar</button>
+                  </div>
+                  <label className="vtt-board__fog-radius">
+                    <span>Raio do pincel <output>{Math.round(fogBrushRadius * 100)}%</output></span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="15"
+                      step="1"
+                      value={Math.round(fogBrushRadius * 100)}
+                      onChange={(event) => setFogBrushRadius(Number(event.target.value) / 100)}
+                    />
+                  </label>
+                  <div className="vtt-board__fog-actions">
+                    <button
+                      type="button"
+                      onClick={() => confirmMasterCommand(
+                        'Ocultar tudo apaga as áreas já reveladas desta cena. Continuar?',
+                        'fog.reset',
+                      )}
+                    >Ocultar tudo</button>
+                    <button
+                      type="button"
+                      onClick={() => confirmMasterCommand(
+                        'Revelar tudo deixará o mapa inteiro visível aos jogadores. Continuar?',
+                        'fog.reveal_all',
+                      )}
+                    >Revelar tudo</button>
+                  </div>
+                  <small className="vtt-board__fog-status">
+                    Máscara privada · revisão {Number(fog.revision || 0)}
+                  </small>
+                  {fogMaskError && <p className="vtt-board__fog-error" role="alert">{fogMaskError}</p>}
+                </>
+              )}
+            </fieldset>
+
             <div className="vtt-board__spawn">
               <label className="vtt-board__field" htmlFor="vtt-board-token-asset">
                 <span>Adicionar token</span>
@@ -590,6 +1020,111 @@ export default function VttBoard({
             >
               Remover token selecionado
             </button>
+
+            <div className="vtt-board__prop-editor">
+              <label className="vtt-board__field" htmlFor="vtt-board-prop-asset">
+                <span>Objetos de cenário</span>
+                <select
+                  id="vtt-board-prop-asset"
+                  value={selectedPropAssetId}
+                  onChange={(event) => setSelectedPropAssetId(event.target.value)}
+                  disabled={!connected || propAssets.length === 0}
+                >
+                  {propAssets.length === 0 && <option value="">Nenhum objeto disponível</option>}
+                  {propAssets.map((asset) => (
+                    <option key={asset.assetId} value={asset.assetId}>
+                      {asset.label || humanize(asset.assetId.split('/').pop())}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="vtt-board__prop-primary-actions">
+                <button type="button" onClick={handleSpawnProp} disabled={!selectedPropAssetId}>
+                  Posicionar objeto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const asset = propAssets.find((item) => item.assetId === selectedPropAssetId);
+                    handleUpdateSelectedProp({
+                      assetId: selectedPropAssetId,
+                      label: asset?.label || humanize(selectedPropAssetId.split('/').pop()),
+                    });
+                  }}
+                  disabled={!selectedPropId || !selectedPropAssetId}
+                >
+                  Trocar visual
+                </button>
+              </div>
+              <div className="vtt-board__prop-transform" aria-label="Ajustes do objeto selecionado">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prop = props.find((item) => item.id === selectedPropId);
+                    if (prop) handleUpdateSelectedProp({
+                      width: clamp(prop.width * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                      height: clamp(prop.height * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                    });
+                  }}
+                  disabled={!selectedPropId}
+                  aria-label="Diminuir objeto"
+                >−</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prop = props.find((item) => item.id === selectedPropId);
+                    if (prop) handleUpdateSelectedProp({
+                      rotation: ((((prop.rotation - 15) + 180) % 360) + 360) % 360 - 180,
+                    });
+                  }}
+                  disabled={!selectedPropId}
+                  aria-label="Girar objeto à esquerda"
+                >↺</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prop = props.find((item) => item.id === selectedPropId);
+                    if (prop) handleUpdateSelectedProp({
+                      rotation: ((((prop.rotation + 15) + 180) % 360) + 360) % 360 - 180,
+                    });
+                  }}
+                  disabled={!selectedPropId}
+                  aria-label="Girar objeto à direita"
+                >↻</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prop = props.find((item) => item.id === selectedPropId);
+                    if (prop) handleUpdateSelectedProp({
+                      width: clamp(prop.width * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                      height: clamp(prop.height * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                    });
+                  }}
+                  disabled={!selectedPropId}
+                  aria-label="Aumentar objeto"
+                >+</button>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const prop = props.find((item) => item.id === selectedPropId);
+                  if (prop) handleUpdateSelectedProp({ visible: prop.visible === false });
+                }}
+                disabled={!selectedPropId}
+              >
+                {props.find((item) => item.id === selectedPropId)?.visible === false
+                  ? 'Mostrar aos jogadores'
+                  : 'Ocultar dos jogadores'}
+              </button>
+              <button
+                type="button"
+                className="vtt-board__remove"
+                onClick={handleRemoveSelectedProp}
+                disabled={!selectedPropId}
+              >
+                Remover objeto selecionado
+              </button>
+            </div>
 
             <p className="vtt-board__director-note">
               A mesa sincroniza posições e efeitos. Rolagens continuam sendo feitas com dados físicos.

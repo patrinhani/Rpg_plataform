@@ -76,6 +76,27 @@
   font-size: 0.72rem;
 }
 
+.vtt-lab__linked-table .vtt-lab__link-status {
+  border: 1px solid rgba(122, 161, 186, 0.28);
+  border-radius: 999px;
+  color: #a9bfcd;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.vtt-lab__linked-table .vtt-lab__link-status.is-saved {
+  border-color: rgba(85, 225, 141, 0.34);
+  color: #7be7a4;
+}
+
+.vtt-lab__linked-table .vtt-lab__link-status.is-warning {
+  border-color: rgba(255, 213, 107, 0.38);
+  color: #ffd56b;
+}
+
 .vtt-lab__linked-table a {
   border: 1px solid rgb(var(--vtt-lab-accent-rgb) / 0.35);
   border-radius: 999px;
@@ -177,6 +198,52 @@
   min-width: 36px;
 }
 
+.vtt-lab__persistence-warning {
+  align-items: center;
+  background:
+    linear-gradient(115deg, rgba(255, 183, 64, 0.16), transparent 58%),
+    rgba(50, 29, 9, 0.96);
+  border: 1px solid rgba(255, 194, 87, 0.58);
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.24), inset 0 0 24px rgba(255, 177, 50, 0.04);
+  color: #fff2cf;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0 auto 14px;
+  max-width: 1700px;
+  padding: 12px 15px;
+}
+
+.vtt-lab__persistence-warning-icon {
+  align-items: center;
+  background: rgba(255, 190, 74, 0.15);
+  border: 1px solid rgba(255, 211, 127, 0.58);
+  border-radius: 50%;
+  color: #ffd47d;
+  display: inline-flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 1rem;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.vtt-lab__persistence-warning strong {
+  color: #fff7df;
+  display: block;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+}
+
+.vtt-lab__persistence-warning p {
+  color: #e9cca0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 3px 0 0;
+}
+
 .vtt-lab__layout {
   align-items: start;
   display: grid;
@@ -246,6 +313,17 @@
 
 .vtt-lab__form {
   gap: 12px;
+}
+
+.vtt-lab__linked-room-help {
+  background: rgba(41, 168, 255, 0.06);
+  border: 1px solid rgba(41, 168, 255, 0.18);
+  border-radius: 9px;
+  color: #a9c4d4;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  margin: 0 0 13px;
+  padding: 10px 11px;
 }
 
 .vtt-lab__field {

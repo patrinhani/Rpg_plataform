@@ -444,7 +444,13 @@ def _create_room(
         json={"name": name, **context},
     )
     assert response.status_code == 201
-    return response.json()
+    room = response.json()
+    # Estes testes validam catálogo/comandos sem fog. A produção começa fechada
+    # por segurança; a suíte específica test_fog cobre esse comportamento.
+    persisted_room = client.app.state.vtt._rooms[room["roomId"]]
+    for fog in persisted_room.scene_fog.values():
+        fog.enabled = False
+    return room
 
 
 def _issue_access(
@@ -662,7 +668,15 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 ],
                 "gridHint": {"type": "square", "columns": 28, "rows": 28},
             }
-            assert set(master_initial["state"]["catalog"]) == {"scenes", "tokenAssets"}
+            assert set(master_initial["state"]["catalog"]) == {
+                "scenes",
+                "tokenAssets",
+                "propAssets",
+            }
+            assert [
+                item["assetId"]
+                for item in master_initial["state"]["catalog"]["propAssets"]
+            ] == [ids["prop"]]
             assert {
                 item["assetId"] for item in master_initial["state"]["catalog"]["tokenAssets"]
             } == {

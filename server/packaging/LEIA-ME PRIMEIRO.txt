@@ -11,8 +11,13 @@ Mantenha CAOS-VTT.exe e _internal juntos. Mantenha também campaigns e cloudflar
 essas pastas/arquivos estiverem presentes na variante recebida.
 Não execute o programa dentro do ZIP e não feche a janela preta durante a sessão.
 
-As rolagens continuam sendo feitas com dados físicos. Fechar o programa encerra a sala e apaga
-o estado mantido em memória.
+As rolagens continuam sendo feitas com dados físicos. Fechar o programa encerra o servidor e o
+túnel, mas a sala continua salva em data\caos-vtt-state.sqlite3. Ao retomar a Mesa, o estado é
+recuperado e novos convites são gerados; links antigos deixam de funcionar.
+
+O fog of war começa ligado e totalmente fechado. Com ele ligado, o servidor compõe mapa, objetos
+de cenário e overlays antes de enviar a imagem ao jogador; tokens em áreas ocultas não aparecem.
+Para transportar ou fazer backup das sessões, copie também a pasta data com o programa fechado.
 
 Se o Windows mostrar um alerta, não desative o antivírus. Confira o SHA-256 do ZIP e consulte
 README-PORTABLE.md para diagnóstico, modo local e detalhes de segurança.
