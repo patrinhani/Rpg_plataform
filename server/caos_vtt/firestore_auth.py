@@ -19,7 +19,11 @@ _MAX_HEADER_BYTES = 2 * 1024
 _MAX_CLAIMS_BYTES = 12 * 1024
 _MAX_SIGNATURE_BYTES = 4 * 1024
 _MAX_RESPONSE_BYTES = 1024 * 1024
-_CLOCK_SKEW_SECONDS = 30
+# A freshly issued Firebase token can be a few seconds ahead of a Windows host
+# whose clock has not synchronized yet. Keep this tolerance narrow: Firestore
+# remains the authoritative signature check and expired tokens are still
+# rejected locally without any grace period.
+_CLOCK_SKEW_SECONDS = 60
 
 _BASE64URL_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 _PROJECT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")

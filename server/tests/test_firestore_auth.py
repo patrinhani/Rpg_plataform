@@ -237,7 +237,7 @@ def test_rejects_malformed_jwt_before_network(token: str) -> None:
         {"sub": " uid-player"},
         {"sub": "uid\nplayer"},
         {"sub": "x" * 129},
-        {"iat": int(time.time()) + 120},
+        {"iat": int(time.time()) + 61},
         {"iat": "yesterday"},
         {"exp": int(time.time()) - 1},
         {"exp": True},
@@ -257,6 +257,19 @@ def test_rejects_invalid_firebase_claims_before_network(
             _token(**overrides),
             MESA_ID,
         )
+
+
+def test_allows_narrow_clock_skew_for_fresh_token() -> None:
+    opener = RecordingOpener(_document())
+    now = int(time.time())
+
+    verified = FirestoreMesaVerifier(PROJECT_ID, opener=opener).verify(
+        _token(iat=now + 59, exp=now + 3600),
+        MESA_ID,
+    )
+
+    assert verified.uid == "uid-master"
+    assert opener.request is not None
 
 
 def test_rejects_oversized_token_and_invalid_mesa_id_before_network() -> None:
