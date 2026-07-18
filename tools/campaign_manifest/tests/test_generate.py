@@ -297,6 +297,133 @@ class CampaignManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(ManifestError, "apenas parte"):
                 build_manifest(campaign, config)
 
+    def test_exact_override_can_keep_recovered_prop_outside_automatic_state_group(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            ritual_path = (
+                "assets/tokens/fragmento-mnemosyne-ritual-objeto-vtt-v1.png"
+            )
+            recovered_path = (
+                "assets/tokens/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png"
+            )
+            (campaign / ritual_path).write_bytes(_png(64, 64))
+            (campaign / recovered_path).write_bytes(_png(64, 64))
+            config_path = root / "state-group-opt-out.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "campaignId": "mnemosyne",
+                        "assetOverrides": {
+                            recovered_path: {"stateGroup": False},
+                        },
+                        "assetFamilyOverrides": {
+                            "assets/tokens/fragmento-mnemosyne-ritual-objeto-vtt": {
+                                "extensions": ["png"],
+                                "kind": "prop",
+                                "audience": "players",
+                                "controlledBy": "gm",
+                            },
+                            "assets/tokens/fragmento-mnemosyne-recuperado-objeto-vtt": {
+                                "extensions": ["png"],
+                                "kind": "prop",
+                                "audience": "players",
+                                "controlledBy": "gm",
+                            },
+                        },
+                        "sceneLayers": [
+                            {
+                                "key": "fragmento-ritual",
+                                "sceneKey": "helix-9-nivel-0",
+                                "label": "Fragmento em ritual",
+                                "defaultState": None,
+                                "states": {
+                                    "ritual": {
+                                        "label": "Ritual",
+                                        "assetPath": ritual_path,
+                                        "placements": [
+                                            {
+                                                "x": 0.5,
+                                                "y": 0.5,
+                                                "width": 0.2,
+                                                "height": 0.2,
+                                                "rotation": 0,
+                                            }
+                                        ],
+                                    }
+                                },
+                            }
+                        ],
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = build_manifest(campaign, config_path)
+            assets = {asset["relativePath"]: asset for asset in manifest["assets"]}
+            state_group_ids = {
+                group["id"] for group in manifest["collections"]["stateGroups"]
+            }
+            layer = manifest["collections"]["scenes"][0]["layers"][0]
+
+            self.assertEqual(
+                layer["states"]["ritual"]["assetId"], assets[ritual_path]["id"]
+            )
+            self.assertNotIn(
+                assets[ritual_path]["id"], manifest["collections"]["propAssetIds"]
+            )
+            self.assertIn(
+                assets[recovered_path]["id"], manifest["collections"]["propAssetIds"]
+            )
+            self.assertNotIn("state-group:fragmento-mnemosyne", state_group_ids)
+
+    def test_family_override_rejects_state_group_opt_out(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            family_path = "assets/objetos/ancoras/malha-mnemonica"
+            config_path = root / "invalid-family-state-group.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "campaignId": "mnemosyne",
+                        "assetOverrides": {},
+                        "assetFamilyOverrides": {
+                            family_path: {
+                                "extensions": ["png"],
+                                "stateGroup": False,
+                            }
+                        },
+                        "sceneLayers": [],
+                    },
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = build_manifest(campaign, config_path)
+
+            self.assertTrue(
+                any(
+                    warning["code"] == "classification-override-invalid"
+                    and warning["path"] == family_path
+                    for warning in manifest["warnings"]
+                )
+            )
+            self.assertIn(
+                "state-group:malha-mnemonica",
+                {
+                    group["id"]
+                    for group in manifest["collections"]["stateGroups"]
+                },
+            )
+
     def test_invalid_scene_layer_geometry_is_ignored_with_config_warning(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

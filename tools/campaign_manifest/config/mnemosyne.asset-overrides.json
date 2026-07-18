@@ -1,7 +1,21 @@
 {
   "schemaVersion": 2,
   "campaignId": "mnemosyne",
-  "assetOverrides": {},
+  "assetOverrides": {
+    "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png": {
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm"
+    },
+    "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm"
+    }
+  },
   "assetFamilyOverrides": {
     "assets/tokens/corpo-conectado-token-vtt": {
       "extensions": ["png", "webp"],
@@ -21,7 +35,7 @@
       "key": "emissor-sincronia",
       "sceneKey": "helix-9-nivel-0",
       "label": "Emissor de Sincronia",
-      "defaultState": null,
+      "defaultState": "ativo",
       "states": {
         "ativo": {
           "label": "Ativo",
@@ -39,7 +53,7 @@
       "key": "malha-mnemonica",
       "sceneKey": "helix-9-subsolo-1",
       "label": "Malha Mnemônica",
-      "defaultState": null,
+      "defaultState": "ativo",
       "states": {
         "ativo": {
           "label": "Ativa",
@@ -54,20 +68,20 @@
       }
     },
     {
-      "key": "rele-hematico",
+      "key": "base-rele-hematico",
       "sceneKey": "helix-9-subsolo-2-camara",
       "label": "Relé Hemático",
-      "defaultState": null,
+      "defaultState": "ativo",
       "states": {
         "ativo": {
           "label": "Ativo",
-          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
-          "placements": [{"x": 0.25, "y": 0.52, "width": 0.16, "height": 0.16, "rotation": 0}]
+          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+          "placements": [{"x": 0.507, "y": 0.499, "width": 0.42, "height": 0.42, "rotation": 0}]
         },
         "desativado": {
           "label": "Desativado",
-          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
-          "placements": [{"x": 0.25, "y": 0.52, "width": 0.16, "height": 0.16, "rotation": 0}]
+          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
+          "placements": [{"x": 0.507, "y": 0.499, "width": 0.42, "height": 0.42, "rotation": 0}]
         }
       }
     },
@@ -75,22 +89,17 @@
       "key": "fragmento-mnemosyne",
       "sceneKey": "helix-9-subsolo-2-camara",
       "label": "Fragmento Mnemosyne",
-      "defaultState": null,
+      "defaultState": "ritual",
       "states": {
-        "recuperado": {
-          "label": "Recuperado",
-          "assetPath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-          "placements": [{"x": 0.5, "y": 0.5, "width": 0.15, "height": 0.15, "rotation": 0}]
-        },
         "removido": {
           "label": "Removido",
           "assetPath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
-          "placements": [{"x": 0.5, "y": 0.5, "width": 1, "height": 1, "rotation": 0}]
+          "placements": [{"x": 0.507, "y": 0.49, "width": 1, "height": 1, "rotation": 0}]
         },
         "ritual": {
           "label": "Ritual",
           "assetPath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
-          "placements": [{"x": 0.5, "y": 0.5, "width": 0.18, "height": 0.18, "rotation": 0}]
+          "placements": [{"x": 0.507, "y": 0.49, "width": 0.165, "height": 0.165, "rotation": 0}]
         }
       }
     },
@@ -98,16 +107,16 @@
       "key": "corpos-conectados",
       "sceneKey": "helix-9-subsolo-2-camara",
       "label": "Corpos Conectados",
-      "defaultState": null,
+      "defaultState": "conectados",
       "states": {
         "conectados": {
           "label": "Conectados",
           "assetPath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
           "placements": [
-            {"x": 0.39, "y": 0.35, "width": 0.125, "height": 0.125, "rotation": -45},
-            {"x": 0.64, "y": 0.35, "width": 0.125, "height": 0.125, "rotation": 45},
-            {"x": 0.39, "y": 0.64, "width": 0.125, "height": 0.125, "rotation": -135},
-            {"x": 0.64, "y": 0.64, "width": 0.125, "height": 0.125, "rotation": 135}
+            {"x": 0.394, "y": 0.345, "width": 0.092, "height": 0.092, "rotation": -34},
+            {"x": 0.623, "y": 0.345, "width": 0.092, "height": 0.092, "rotation": 34},
+            {"x": 0.392, "y": 0.627, "width": 0.092, "height": 0.092, "rotation": -142},
+            {"x": 0.626, "y": 0.627, "width": 0.092, "height": 0.092, "rotation": 143}
           ]
         }
       }

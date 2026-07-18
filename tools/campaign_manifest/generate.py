@@ -22,7 +22,7 @@ from xml.etree import ElementTree
 
 
 SCHEMA_VERSION = 2
-GENERATOR_VERSION = "1.3.0"
+GENERATOR_VERSION = "1.4.0"
 CAMPAIGN_ID = "mnemosyne"
 CAMPAIGN_TITLE = "Projeto Mnemosyne"
 CAMPAIGN_SOURCE_REF = "mnemosyne"
@@ -504,7 +504,9 @@ def _is_safe_asset_rule_path(relative_path: object) -> bool:
     )
 
 
-def _semantic_override(override: object) -> dict[str, str] | None:
+def _semantic_override(
+    override: object, *, allow_state_group: bool = False
+) -> dict[str, Any] | None:
     if not isinstance(override, dict) or not override:
         return None
     validators = {
@@ -512,12 +514,18 @@ def _semantic_override(override: object) -> dict[str, str] | None:
         "audience": VALID_AUDIENCES,
         "controlledBy": VALID_CONTROLLERS,
     }
-    if set(override).difference(validators):
+    allowed_fields = set(validators)
+    if allow_state_group:
+        allowed_fields.add("stateGroup")
+    if set(override).difference(allowed_fields):
         return None
     if not all(
         isinstance(value, str) and value in validators[field]
         for field, value in override.items()
+        if field in validators
     ):
+        return None
+    if "stateGroup" in override and override["stateGroup"] is not False:
         return None
     return dict(override)
 
@@ -549,18 +557,18 @@ def _family_override_matches(
 def _classification_override_for(
     relative_path: str,
     rules: dict[str, Any] | None,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     if not rules:
         return {}
-    exact = rules.get("exact", {})
-    if relative_path in exact:
-        return exact[relative_path]
+    result: dict[str, Any] = {}
     families = rules.get("families", {})
     for family_path in sorted(families, key=lambda item: (-len(item), item)):
         rule = families[family_path]
         if _family_override_matches(relative_path, family_path, rule["extensions"]):
-            return rule["override"]
-    return {}
+            result.update(rule["override"])
+            break
+    result.update(rules.get("exact", {}).get(relative_path, {}))
+    return result
 
 
 def _load_classification_config(
@@ -664,10 +672,10 @@ def _load_classification_config(
         )
         return _empty_classification_rules(), descriptor, warnings
 
-    overrides: dict[str, dict[str, str]] = {}
+    overrides: dict[str, dict[str, Any]] = {}
     for relative_path, override in sorted(raw_overrides.items(), key=lambda item: str(item[0])):
         diagnostic_path = relative_path if isinstance(relative_path, str) else repr(relative_path)
-        semantic_override = _semantic_override(override)
+        semantic_override = _semantic_override(override, allow_state_group=True)
         if not _is_safe_asset_rule_path(relative_path) or semantic_override is None:
             warnings.append(
                 {
@@ -1008,8 +1016,11 @@ def _build_scenes(assets: list[dict[str, Any]], warnings: list[dict[str, str]]) 
 
 
 def _build_state_groups(
-    assets: list[dict[str, Any]], warnings: list[dict[str, str]]
+    assets: list[dict[str, Any]],
+    warnings: list[dict[str, str]],
+    excluded_asset_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
+    excluded_asset_ids = excluded_asset_ids or set()
     groups: dict[str, dict[str, list[dict[str, Any]]]] = {}
     state_pattern = "|".join(re.escape(state) for state in STATE_ALIASES)
     pattern = re.compile(
@@ -1017,7 +1028,7 @@ def _build_state_groups(
     )
 
     for asset in assets:
-        if asset["kind"] != "prop":
+        if asset["kind"] != "prop" or asset["id"] in excluded_asset_ids:
             continue
         stem = PurePosixPath(asset["relativePath"]).stem.casefold()
         match = pattern.match(stem)
@@ -1272,7 +1283,17 @@ def build_manifest(
             )
     documents.sort(key=lambda item: item["relativePath"])
     scenes = _build_scenes(assets, warnings)
-    state_groups = _build_state_groups(assets, warnings)
+    state_group_excluded_ids = {
+        asset["id"]
+        for asset in assets
+        if classification_rules["exact"]
+        .get(asset["relativePath"], {})
+        .get("stateGroup")
+        is False
+    }
+    state_groups = _build_state_groups(
+        assets, warnings, excluded_asset_ids=state_group_excluded_ids
+    )
     consumed_scene_layer_ids = _build_scene_layers(
         assets,
         scenes,

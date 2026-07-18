@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "generator": {
     "name": "caos-campaign-manifest",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "campaign": {
     "id": "mnemosyne",
@@ -13,17 +13,17 @@
   "classification": {
     "configRef": "config/mnemosyne.asset-overrides.json",
     "schemaVersion": 2,
-    "fingerprint": "sha256:3a909a6ffdb93043ad1d66e5228d9f35cbf8a379d1d429594037b08c91c89a3e"
+    "fingerprint": "sha256:bf8f8d966ed3796e3d4b9ed30610c041657e62bcf38e7e1637857b9b36a582fc"
   },
   "summary": {
-    "assetCount": 84,
+    "assetCount": 86,
     "documentCount": 22,
     "sceneCount": 4,
     "sceneLayerCount": 5,
     "stateGroupCount": 0,
-    "totalAssetBytes": 187364453,
+    "totalAssetBytes": 190313782,
     "warningCount": 3,
-    "sourceFingerprint": "2e2ae25458527f72e954c2dbb5a2dc50cc77b7d7045e431cdaedf4ff092f8c98"
+    "sourceFingerprint": "76dc8390ad1a57007c96dfad59c99edc19771e038fe584ff16e19b28a57d1ea6"
   },
   "assets": [
     {
@@ -1168,8 +1168,8 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
-      "kind": "prop",
-      "audience": "players",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1569902,
       "sha256": "f072a58c72af8808ad1a7c615de4982f88b4be5d59b4dafc82a7683742d5ee79",
@@ -1185,11 +1185,45 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
-      "kind": "prop",
-      "audience": "players",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1438908,
       "sha256": "986999abcc0753ce4fde975b7e5fede6a7f7f3deff7837206f6a9eec2835c603",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1532308,
+      "sha256": "30092224422906cf3ac3b4584ec31f94d1685ef1a2fdaa515de608f539d2d5c7",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1417021,
+      "sha256": "544f202ca60d07c8c54725ce22fff0d8a3e0f86dd3d77fd1686b2841394e9edb",
       "mediaType": "image/png",
       "image": {
         "format": "png",
@@ -1689,7 +1723,7 @@
             "id": "scene-layer:emissor-sincronia",
             "key": "emissor-sincronia",
             "label": "Emissor de Sincronia",
-            "defaultState": null,
+            "defaultState": "ativo",
             "states": {
               "ativo": {
                 "label": "Ativo",
@@ -1753,7 +1787,7 @@
             "id": "scene-layer:malha-mnemonica",
             "key": "malha-mnemonica",
             "label": "Malha Mnemônica",
-            "defaultState": null,
+            "defaultState": "ativo",
             "states": {
               "ativo": {
                 "label": "Ativa",
@@ -1830,42 +1864,76 @@
         "gridHint": null,
         "layers": [
           {
+            "id": "scene-layer:base-rele-hematico",
+            "key": "base-rele-hematico",
+            "label": "Relé Hemático",
+            "defaultState": "ativo",
+            "states": {
+              "ativo": {
+                "label": "Ativo",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+                "placements": [
+                  {
+                    "x": 0.507,
+                    "y": 0.499,
+                    "width": 0.42,
+                    "height": 0.42,
+                    "rotation": 0.0
+                  }
+                ]
+              },
+              "desativado": {
+                "label": "Desativado",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
+                "placements": [
+                  {
+                    "x": 0.507,
+                    "y": 0.499,
+                    "width": 0.42,
+                    "height": 0.42,
+                    "rotation": 0.0
+                  }
+                ]
+              }
+            }
+          },
+          {
             "id": "scene-layer:corpos-conectados",
             "key": "corpos-conectados",
             "label": "Corpos Conectados",
-            "defaultState": null,
+            "defaultState": "conectados",
             "states": {
               "conectados": {
                 "label": "Conectados",
                 "assetId": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
                 "placements": [
                   {
-                    "x": 0.39,
-                    "y": 0.35,
-                    "width": 0.125,
-                    "height": 0.125,
-                    "rotation": -45.0
+                    "x": 0.394,
+                    "y": 0.345,
+                    "width": 0.092,
+                    "height": 0.092,
+                    "rotation": -34.0
                   },
                   {
-                    "x": 0.64,
-                    "y": 0.35,
-                    "width": 0.125,
-                    "height": 0.125,
-                    "rotation": 45.0
+                    "x": 0.623,
+                    "y": 0.345,
+                    "width": 0.092,
+                    "height": 0.092,
+                    "rotation": 34.0
                   },
                   {
-                    "x": 0.39,
-                    "y": 0.64,
-                    "width": 0.125,
-                    "height": 0.125,
-                    "rotation": -135.0
+                    "x": 0.392,
+                    "y": 0.627,
+                    "width": 0.092,
+                    "height": 0.092,
+                    "rotation": -142.0
                   },
                   {
-                    "x": 0.64,
-                    "y": 0.64,
-                    "width": 0.125,
-                    "height": 0.125,
-                    "rotation": 135.0
+                    "x": 0.626,
+                    "y": 0.627,
+                    "width": 0.092,
+                    "height": 0.092,
+                    "rotation": 143.0
                   }
                 ]
               }
@@ -1875,28 +1943,15 @@
             "id": "scene-layer:fragmento-mnemosyne",
             "key": "fragmento-mnemosyne",
             "label": "Fragmento Mnemosyne",
-            "defaultState": null,
+            "defaultState": "ritual",
             "states": {
-              "recuperado": {
-                "label": "Recuperado",
-                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-                "placements": [
-                  {
-                    "x": 0.5,
-                    "y": 0.5,
-                    "width": 0.15,
-                    "height": 0.15,
-                    "rotation": 0.0
-                  }
-                ]
-              },
               "removido": {
                 "label": "Removido",
                 "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.5,
-                    "y": 0.5,
+                    "x": 0.507,
+                    "y": 0.49,
                     "width": 1.0,
                     "height": 1.0,
                     "rotation": 0.0
@@ -1908,44 +1963,10 @@
                 "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
                 "placements": [
                   {
-                    "x": 0.5,
-                    "y": 0.5,
-                    "width": 0.18,
-                    "height": 0.18,
-                    "rotation": 0.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:rele-hematico",
-            "key": "rele-hematico",
-            "label": "Relé Hemático",
-            "defaultState": null,
-            "states": {
-              "ativo": {
-                "label": "Ativo",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
-                "placements": [
-                  {
-                    "x": 0.25,
-                    "y": 0.52,
-                    "width": 0.16,
-                    "height": 0.16,
-                    "rotation": 0.0
-                  }
-                ]
-              },
-              "desativado": {
-                "label": "Desativado",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
-                "placements": [
-                  {
-                    "x": 0.25,
-                    "y": 0.52,
-                    "width": 0.16,
-                    "height": 0.16,
+                    "x": 0.507,
+                    "y": 0.49,
+                    "width": 0.165,
+                    "height": 0.165,
                     "rotation": 0.0
                   }
                 ]
@@ -1993,6 +2014,7 @@
       "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
     ],
     "propAssetIds": [
+      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
       "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"
     ],
     "handoutAssetIds": [

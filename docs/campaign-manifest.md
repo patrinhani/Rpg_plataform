@@ -30,6 +30,11 @@ conectado e de Helena na cadeira neural são `prop`, embora os arquivos legados 
 estejam na pasta `assets/tokens`; nomes parecidos ou backups não entram por prefixo.
 Os demais tokens continuam tokens. Entradas que não existem mais ou possuem campos
 inválidos geram avisos explícitos. `controlledBy` aceita somente `gm` ou `players`.
+Um caminho de `assetOverrides` também pode declarar `"stateGroup": false` para manter
+aquele asset fora do agrupamento automático de estados. O controle aceita somente o
+booleano `false` em override exato; famílias não podem defini-lo. A classificação do
+asset não muda e um `prop` que não seja consumido por `sceneLayers` continua listado
+em `collections.propAssetIds`.
 O manifesto registra a
 versão e o SHA-256 dessa configuração, portanto a mesma campanha e a mesma
 configuração sempre produzem a mesma classificação.
