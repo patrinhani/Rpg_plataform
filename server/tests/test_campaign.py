@@ -79,6 +79,13 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
         ("token_gm", "assets/tokens/ameaça-v1.bin", b"token-gm", "token", "gm"),
         ("token_unspecified", "assets/tokens/incógnita-v1.bin", b"token-unknown", "token", "unspecified"),
         ("prop", "assets/objetos/âncora-ativa-objeto-vtt-v1.bin", b"prop", "prop", "players"),
+        (
+            "handout",
+            "assets/handouts/pista-publicada-por-engano-v1.bin",
+            b"segredo",
+            "handout",
+            "players",
+        ),
     )
     assets: list[dict[str, Any]] = []
     ids: dict[str, str] = {}
@@ -143,6 +150,8 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
                 ids["token_gm"],
                 ids["token_unspecified"],
             ],
+            "propAssetIds": [ids["prop"]],
+            "handoutAssetIds": [ids["handout"]],
         },
         "warnings": [],
     }
@@ -184,10 +193,51 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     }
     assert catalog.get_asset(ids["token_player"], "player").controlled_by == "players"
     assert catalog.get_asset(ids["token_public_gm"], "player").controlled_by == "gm"
+    assert [item.asset_id for item in catalog.list_props("master")] == [ids["prop"]]
+    assert [item.asset_id for item in catalog.list_props("player")] == [ids["prop"]]
+    assert [item.asset_id for item in catalog.list_handouts("master")] == [
+        ids["handout"]
+    ]
+    assert catalog.list_handouts("player") == ()
+    with pytest.raises(AssetNotAvailableError):
+        catalog.get_asset(ids["handout"], "player")
     assert "agente-é" in ids["token_player"]
     assert str(source_root) not in repr(player_scenes)
     assert str(source_root) not in repr(catalog.list_tokens("master"))
     assert catalog.hash_cache_size == 0
+
+
+def test_new_asset_collections_are_optional_for_older_manifests(tmp_path: Path) -> None:
+    manifest_path, source_root, manifest, _ids = _campaign_fixture(tmp_path)
+    manifest["collections"].pop("propAssetIds")
+    manifest["collections"].pop("handoutAssetIds")
+    _write_manifest(manifest_path, manifest)
+
+    catalog = _load(manifest_path, source_root)
+
+    assert catalog.list_props("master") == ()
+    assert catalog.list_handouts("master") == ()
+
+
+@pytest.mark.parametrize(
+    ("collection_name", "asset_key", "expected_kind"),
+    (
+        ("propAssetIds", "token_player", "prop"),
+        ("handoutAssetIds", "prop", "handout"),
+    ),
+)
+def test_rejects_collection_ids_with_wrong_asset_kind(
+    tmp_path: Path,
+    collection_name: str,
+    asset_key: str,
+    expected_kind: str,
+) -> None:
+    manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    manifest["collections"][collection_name] = [ids[asset_key]]
+    _write_manifest(manifest_path, manifest)
+
+    with pytest.raises(ManifestValidationError, match=expected_kind):
+        _load(manifest_path, source_root)
 
 
 def test_player_denies_gm_and_unspecified_before_path_resolution(

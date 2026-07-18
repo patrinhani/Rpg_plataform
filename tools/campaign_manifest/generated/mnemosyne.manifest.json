@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "generator": {
     "name": "caos-campaign-manifest",
-    "version": "1.1.0"
+    "version": "1.3.0"
   },
   "campaign": {
     "id": "mnemosyne",
@@ -10,14 +10,19 @@
     "sourceRef": "mnemosyne",
     "sourceMode": "external-read-only"
   },
+  "classification": {
+    "configRef": "config/mnemosyne.asset-overrides.json",
+    "schemaVersion": 2,
+    "fingerprint": "sha256:5fa4baee45f3fd134668d702fb14e53621c4d4f2c0004c2a87da4b09323e0406"
+  },
   "summary": {
-    "assetCount": 73,
+    "assetCount": 84,
     "documentCount": 22,
     "sceneCount": 4,
     "stateGroupCount": 4,
-    "totalAssetBytes": 166115203,
-    "warningCount": 18,
-    "sourceFingerprint": "17cb57fab27787dc224c31f969e70013139d4f84a97e3d988e4152df5e5e40cd"
+    "totalAssetBytes": 187364453,
+    "warningCount": 3,
+    "sourceFingerprint": "2e2ae25458527f72e954c2dbb5a2dc50cc77b7d7045e431cdaedf4ff092f8c98"
   },
   "assets": [
     {
@@ -261,8 +266,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 7601178,
       "sha256": "8c1cc68ae20cf2d65edf5989fe9700b949fce91c2b7ed41df1863046ff682817",
@@ -278,8 +283,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 6979462,
       "sha256": "fa6602e106159ccf2b5376f23eaa6a2a91130d5dffa62f40b4562f3d29c18b7a",
@@ -295,8 +300,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 5141984,
       "sha256": "2f197bba36647cb013cb254e0309272126eb62ec8545d603067efe5541afe465",
@@ -312,8 +317,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 7995007,
       "sha256": "84d8e9181161bbfa2db5ec8395ca616ab80dfa9e452d77285d893f232a54244c",
@@ -329,8 +334,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 3320733,
       "sha256": "65934dbf41f5c4d1598ab38fe2806165552a6070573b9eb4a44b02c59054989e",
@@ -346,8 +351,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 5248812,
       "sha256": "8931b51e737bd00a12f075323471da685722f286ed0d0ab9c187abe09297dd72",
@@ -363,8 +368,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 5261309,
       "sha256": "eb47664b8294a4240f7c300d16e5b126eccbd736c2cf7f95de759981e8a0d2df",
@@ -380,8 +385,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 8108360,
       "sha256": "baa4a3fe8642fc46cb4389f71151db91ee08f3825a4fc2afec12168059a7c139",
@@ -397,8 +402,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 5005665,
       "sha256": "56a4257fbf7a9864f15e92345a6b808da0392b8bc74cbac89191240a3929618d",
@@ -414,8 +419,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 3424267,
       "sha256": "10e342c47d9d39c2016786a6083b50e25a88f7490baf4853dc9f06c8771654e7",
@@ -431,8 +436,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 5140541,
       "sha256": "e6cc797754936fdb45282f76aa999838159775679f6e044130fb38070c842b2b",
@@ -448,8 +453,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 4122870,
       "sha256": "57d548bfddace34e1b76bf7e24299902418c8c8a944ba40652595cb47a046e7e",
@@ -465,8 +470,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 73745,
       "sha256": "4efd63a67b488b008695525dc271cb5c93746b6fdb1b1f5834dfc4d8e585bf82",
@@ -482,8 +487,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 79492,
       "sha256": "db40579273f51a652eb27ca03ef328be2e6b6459893de0f4a424c9331791e1bd",
@@ -499,8 +504,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 20419,
       "sha256": "8516cb39ad37f120f410b0cf550530a9059cbe4183be3f1721acf7ef6e61bc6a",
@@ -516,8 +521,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 20675,
       "sha256": "06b4964d678c059d47b971979374ee83931591578659ee27eefa0bdf28235eea",
@@ -533,8 +538,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 24683,
       "sha256": "4a66160bcaad67b16dac659d222ae6c0c33342c27bd89399a1c45dcaa1d11da2",
@@ -550,8 +555,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 54163,
       "sha256": "b2d117769e598487759ff7c8c0cc8c5d0f4bff2a9508f7a714818254a4197060",
@@ -567,8 +572,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 106690,
       "sha256": "304f749d4cc2bff73885adad7656036a7aaf8627517329928238e8a320015c69",
@@ -584,8 +589,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 74167,
       "sha256": "cba2b29127313ba6e2992c8267967787593e4b5a84e896c62bed11e8ed56bfe4",
@@ -601,8 +606,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 77524,
       "sha256": "46f1662ac02ce04ab10c3a79e10154a1f81b6b280d03288f4ae86ea97e15a47a",
@@ -618,8 +623,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 91777,
       "sha256": "412d60e919c1f17f36d6ed6fd5cd29532ff5160343f67dfc33b676e0d1ca9559",
@@ -635,8 +640,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 28040,
       "sha256": "5d514ab3a465f5797695903c65881b9d78ffb5914c3309c3b35be43c59997365",
@@ -652,8 +657,8 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
-      "kind": "other",
-      "audience": "unspecified",
+      "kind": "handout",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 69300,
       "sha256": "d7d28e2894f1c4a0c89e981611fd72c24ee987b7cc412457d1b0e647c5542f53",
@@ -684,6 +689,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1564630,
+      "sha256": "b9a0c71aee2fe6194e9e922dfa415a4b168ecf4b57b6cb04c6afb910eaa9e09d",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
       "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
       "kind": "map",
@@ -698,6 +720,23 @@
         "height": 1254,
         "hasAlpha": false,
         "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1358158,
+      "sha256": "9fc02d7725abb9bcb8b5559c0ea42db1290e209c62a53b8c0e817971c27e9f1b",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
       }
     },
     {
@@ -718,6 +757,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 1936246,
+      "sha256": "70a860117d503d9a7b03f1b2e9d6db7f386aa9248c72d455c44497e0ffd565d2",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
       "kind": "overlay",
@@ -730,6 +786,23 @@
         "format": "png",
         "width": 1254,
         "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2379495,
+      "sha256": "a9f9c73e47c3048fd3878e54895ff8b1669e3a5a8cf9f62e9965abc291e68ae1",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 3136,
+        "height": 3136,
         "hasAlpha": true,
         "pngColorType": 6
       }
@@ -752,6 +825,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 412834,
+      "sha256": "77172c2ae4ae7f80382c5b6a4037024d745e827c5c3335970a0d4119bdfaf564",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
       "kind": "overlay",
@@ -764,6 +854,23 @@
         "format": "png",
         "width": 1254,
         "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v2.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v2.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 4034215,
+      "sha256": "f53691ab472de421ee8178e13352822a32f1080b3e1e6201fa21fbeffc2f111f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 3136,
+        "height": 3136,
         "hasAlpha": true,
         "pngColorType": 6
       }
@@ -786,6 +893,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v2.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v2.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1184046,
+      "sha256": "14be804e13e5d32ce6e5cec88b305be7ff6bc605783987238bbd366c748dde31",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "kind": "map",
@@ -800,6 +924,23 @@
         "height": 1254,
         "hasAlpha": false,
         "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2079406,
+      "sha256": "ff6c7755faafa6b27a8fdbc70692df7a90e48dd462de5b5155b6a6bb468456d1",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
       }
     },
     {
@@ -820,6 +961,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1657272,
+      "sha256": "5fb0ee2e97930bb7af634e57642d99fa36d33d12a5600a428617d6948087b2f0",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
       "kind": "map",
@@ -834,6 +992,23 @@
         "height": 1254,
         "hasAlpha": false,
         "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2493980,
+      "sha256": "b732bb8a0f7afad59732840f50ddecf58d2a1b40e9f4cb28ebb647bd7a8add54",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
       }
     },
     {
@@ -868,6 +1043,23 @@
         "height": 1254,
         "hasAlpha": false,
         "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+      "relativePath": "assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2148968,
+      "sha256": "2d0f990aad37abf44ccef6a4888d8200b1830d65e2b5b7ec696709f709235a1e",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
       }
     },
     {
@@ -1145,7 +1337,7 @@
     {
       "id": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
       "relativePath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
-      "kind": "token",
+      "kind": "prop",
       "audience": "players",
       "controlledBy": "gm",
       "bytes": 1220682,
@@ -1179,7 +1371,7 @@
     {
       "id": "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
       "relativePath": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
-      "kind": "token",
+      "kind": "prop",
       "audience": "players",
       "controlledBy": "gm",
       "bytes": 2899253,
@@ -1268,8 +1460,8 @@
       "relativePath": "CONTEXTO_CODEX.md",
       "title": "Contexto para continuar com Codex",
       "audienceHint": "gm",
-      "bytes": 7722,
-      "sha256": "79a79c3737a83d74fcf723db71e0e87f890f8adf144254c7513cc2e73578d71f",
+      "bytes": 8011,
+      "sha256": "83c0d7189c2dc058698405b7ae2f426091c33d325fec6a9c7daf5b7c25ff7efa",
       "encoding": "utf-8"
     },
     {
@@ -1305,7 +1497,7 @@
       "title": "Direção de arte",
       "audienceHint": "unspecified",
       "bytes": 7252,
-      "sha256": "16f9c78fa1de81f15e7b8bedc469a764109708b982b4e83baf226cf18dedefd5",
+      "sha256": "9d2a8d5465a1c89d38b894fea046db3782bd987da0beedfe95b622c9a21a3a75",
       "encoding": "utf-8"
     },
     {
@@ -1471,17 +1663,25 @@
           {
             "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
+            "version": 2
           }
         ],
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
+            "version": 2
           }
         ],
         "overlays": [],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
         "gridHint": null
       },
       {
@@ -1491,17 +1691,25 @@
           {
             "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
+            "version": 2
           }
         ],
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
+            "version": 2
           }
         ],
         "overlays": [],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
         "gridHint": null
       },
       {
@@ -1511,38 +1719,46 @@
           {
             "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
+            "version": 2
           }
         ],
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
             "version": 1
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
+            "version": 2
           }
         ],
         "overlays": [
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
             "name": "eletrificacao",
-            "version": 1
+            "version": 2
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v1.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
             "name": "fragmento-removido",
-            "version": 1
+            "version": 2
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v2.png",
             "name": "inundacao",
-            "version": 1
+            "version": 2
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v1.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v2.png",
             "name": "telas-quebradas",
-            "version": 1
+            "version": 2
           }
         ],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
         "gridHint": null
       },
       {
@@ -1556,11 +1772,15 @@
           {
             "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v2.png",
             "version": 2
+          },
+          {
+            "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+            "version": 3
           }
         ],
         "gmGuideMaps": [],
         "overlays": [],
-        "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v2.png",
+        "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
         "activeGmGuideMap": null,
         "gridHint": {
           "type": "square",
@@ -1677,91 +1897,52 @@
       }
     ],
     "tokenAssetIds": [
-      "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
       "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
-      "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
       "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
       "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
       "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
       "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
+    ],
+    "propAssetIds": [
+      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
+      "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
+      "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"
+    ],
+    "handoutAssetIds": [
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png"
     ]
   },
   "warnings": [
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/corpo-conectado-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/eco-indexador-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/otavio-leme-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/raul-moreira-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
-    {
-      "code": "runtime-derivative-recommended",
-      "path": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
-      "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original."
-    },
     {
       "code": "scene-grid-unknown",
       "path": "helix-9-nivel-0",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import struct
 import tempfile
 import unittest
@@ -26,12 +27,24 @@ def _png(width: int, height: int, color_type: int = 6) -> bytes:
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IEND", b"")
 
 
+def _webp(*chunks: tuple[bytes, bytes]) -> bytes:
+    body = bytearray(b"WEBP")
+    for chunk_type, payload in chunks:
+        body.extend(chunk_type)
+        body.extend(struct.pack("<I", len(payload)))
+        body.extend(payload)
+        if len(payload) & 1:
+            body.append(0)
+    return b"RIFF" + struct.pack("<I", len(body)) + bytes(body)
+
+
 class CampaignManifestTests(unittest.TestCase):
     def _campaign(self, root: Path) -> Path:
         campaign = root / "Projeto Memoria"
         (campaign / "assets" / "mapas" / "helix-9" / "vtt-limpo").mkdir(parents=True)
         (campaign / "assets" / "mapas" / "helix-9" / "overlays").mkdir(parents=True)
         (campaign / "assets" / "tokens").mkdir(parents=True)
+        (campaign / "assets" / "handouts" / "one-shot-01").mkdir(parents=True)
         (campaign / "assets" / "objetos" / "ancoras").mkdir(parents=True)
         (campaign / "docs").mkdir(parents=True)
 
@@ -54,6 +67,15 @@ class CampaignManifestTests(unittest.TestCase):
         (campaign / "assets" / "tokens" / "eco-indexador-token-vtt-v1.png").write_bytes(
             _png(64, 64)
         )
+        (campaign / "assets" / "tokens" / "corpo-conectado-token-vtt-v1.png").write_bytes(
+            _png(64, 64)
+        )
+        (campaign / "assets" / "tokens" / "helena-vasconcelos-cadeira-neural-token-vtt-v1.png").write_bytes(
+            _png(64, 64)
+        )
+        (campaign / "assets" / "handouts" / "one-shot-01" / "relatorio-handout-v1.png").write_bytes(
+            _png(96, 128)
+        )
         (campaign / "assets" / "objetos" / "ancoras" / "malha-mnemonica-ativa-objeto-vtt-v1.png").write_bytes(
             _png(64, 64)
         )
@@ -70,7 +92,7 @@ class CampaignManifestTests(unittest.TestCase):
             campaign = self._campaign(Path(temporary))
             manifest = build_manifest(campaign)
 
-            self.assertEqual(manifest["summary"]["assetCount"], 7)
+            self.assertEqual(manifest["summary"]["assetCount"], 10)
             documents = {item["relativePath"]: item for item in manifest["documents"]}
             self.assertEqual(documents["docs/memoria.md"]["title"], "Memória corrompida")
             self.assertEqual(documents["docs/memoria.md"]["audienceHint"], "gm")
@@ -91,6 +113,35 @@ class CampaignManifestTests(unittest.TestCase):
                 any(warning["code"] == "state-duplicate" for warning in manifest["warnings"])
             )
             self.assertEqual(manifest["campaign"]["sourceRef"], "mnemosyne")
+            assets = {item["relativePath"]: item for item in manifest["assets"]}
+            self.assertEqual(
+                assets["assets/tokens/corpo-conectado-token-vtt-v1.png"]["kind"],
+                "prop",
+            )
+            self.assertEqual(
+                assets[
+                    "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"
+                ]["kind"],
+                "prop",
+            )
+            handout = assets["assets/handouts/one-shot-01/relatorio-handout-v1.png"]
+            self.assertEqual((handout["kind"], handout["audience"]), ("handout", "gm"))
+            assets_by_id = {asset["id"]: asset for asset in manifest["assets"]}
+            token_paths = {
+                assets_by_id[asset_id]["relativePath"]
+                for asset_id in manifest["collections"]["tokenAssetIds"]
+            }
+            self.assertEqual(token_paths, {"assets/tokens/eco-indexador-token-vtt-v1.png"})
+            self.assertIn(
+                handout["id"], manifest["collections"]["handoutAssetIds"]
+            )
+            self.assertIn(
+                assets["assets/tokens/corpo-conectado-token-vtt-v1.png"]["id"],
+                manifest["collections"]["propAssetIds"],
+            )
+            self.assertRegex(
+                manifest["classification"]["fingerprint"], r"^sha256:[0-9a-f]{64}$"
+            )
             self.assertNotIn("sourceRoot", manifest["campaign"])
             self.assertNotIn("\\", manifest["assets"][0]["relativePath"])
 
@@ -103,6 +154,139 @@ class CampaignManifestTests(unittest.TestCase):
             second = render_manifest(build_manifest(second_campaign))
             self.assertEqual(first, second)
             self.assertNotIn(str(first_campaign.resolve()), first)
+
+    def test_missing_classification_config_warns_but_folder_rules_still_apply(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            missing_config = root / "missing-overrides.json"
+
+            manifest = build_manifest(campaign, missing_config)
+
+            self.assertIsNone(manifest["classification"]["fingerprint"])
+            self.assertTrue(
+                any(
+                    warning["code"] == "classification-config-missing"
+                    for warning in manifest["warnings"]
+                )
+            )
+            handout = next(
+                asset for asset in manifest["assets"] if asset["kind"] == "handout"
+            )
+            self.assertEqual(handout["audience"], "gm")
+
+    def test_invalid_and_absent_exact_overrides_emit_deterministic_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            config = {
+                "schemaVersion": 2,
+                "campaignId": "mnemosyne",
+                "assetOverrides": {
+                    "assets/tokens/nao-existe-token-vtt-v1.png": {"kind": "prop"},
+                    "../fora.png": {"kind": "token"},
+                    "assets/tokens/eco-indexador-token-vtt-v1.png": {"kind": "invalido"},
+                },
+                "assetFamilyOverrides": {},
+            }
+            first_config = root / "first.json"
+            second_config = root / "second.json"
+            rendered_config = json.dumps(config, ensure_ascii=False, sort_keys=True)
+            first_config.write_text(rendered_config, encoding="utf-8")
+            second_config.write_text(rendered_config, encoding="utf-8")
+
+            first = build_manifest(campaign, first_config)
+            second = build_manifest(campaign, second_config)
+            warning_codes = {warning["code"] for warning in first["warnings"]}
+
+            self.assertIn("classification-override-invalid", warning_codes)
+            self.assertIn("classification-override-missing", warning_codes)
+            self.assertEqual(
+                first["classification"]["fingerprint"],
+                second["classification"]["fingerprint"],
+            )
+
+    def test_versioned_prop_families_apply_to_v2_plus_without_prefix_false_positives(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            campaign = self._campaign(Path(temporary))
+            tokens = campaign / "assets" / "tokens"
+            family_members = (
+                "corpo-conectado-token-vtt-v2.png",
+                "helena-vasconcelos-cadeira-neural-token-vtt-v42.png",
+            )
+            lookalikes = (
+                "corpo-conectado-token-vtt-v02.png",
+                "corpo-conectado-token-vtt-v2-backup.png",
+                "helena-vasconcelos-cadeira-neural-token-vtt-v0.png",
+            )
+            for name in (*family_members, *lookalikes):
+                (tokens / name).write_bytes(_png(64, 64))
+
+            manifest = build_manifest(campaign)
+            assets = {asset["relativePath"]: asset for asset in manifest["assets"]}
+
+            for name in family_members:
+                asset = assets[f"assets/tokens/{name}"]
+                self.assertEqual(asset["kind"], "prop")
+                self.assertIn(asset["id"], manifest["collections"]["propAssetIds"])
+                self.assertNotIn(asset["id"], manifest["collections"]["tokenAssetIds"])
+            for name in lookalikes:
+                asset = assets[f"assets/tokens/{name}"]
+                self.assertEqual(asset["kind"], "token")
+                self.assertIn(asset["id"], manifest["collections"]["tokenAssetIds"])
+
+    def test_shared_controller_is_rejected_and_never_reaches_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            config_path = root / "shared-controller.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "campaignId": "mnemosyne",
+                        "assetOverrides": {
+                            "assets/tokens/eco-indexador-token-vtt-v1.png": {
+                                "controlledBy": "shared"
+                            }
+                        },
+                        "assetFamilyOverrides": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = build_manifest(campaign, config_path)
+
+            self.assertTrue(
+                any(
+                    warning["code"] == "classification-override-invalid"
+                    for warning in manifest["warnings"]
+                )
+            )
+            self.assertEqual(
+                {asset["controlledBy"] for asset in manifest["assets"]},
+                {"gm"},
+            )
+
+    def test_large_tokens_and_props_do_not_request_runtime_derivatives(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            campaign = self._campaign(Path(temporary))
+            (campaign / "assets" / "tokens" / "criatura-grande-token-vtt-v1.png").write_bytes(
+                _png(2048, 2048)
+            )
+            (campaign / "assets" / "objetos" / "objeto-grande-v1.png").write_bytes(
+                _png(2048, 2048)
+            )
+
+            manifest = build_manifest(campaign)
+
+            self.assertFalse(
+                any(
+                    warning["code"] == "runtime-derivative-recommended"
+                    for warning in manifest["warnings"]
+                )
+            )
 
     def test_same_highest_map_version_is_explicitly_ambiguous(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -130,6 +314,88 @@ class CampaignManifestTests(unittest.TestCase):
                     for warning in manifest["warnings"]
                 )
             )
+
+    def test_selects_only_highest_overlay_version_and_warns_only_on_active_tie(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            campaign = self._campaign(Path(temporary))
+            overlays = campaign / "assets" / "mapas" / "helix-9" / "overlays"
+            version_two = overlays / "helix-9-nivel-0-inundacao-overlay-vtt-v2.png"
+            version_two.write_bytes(_png(128, 128))
+
+            manifest = build_manifest(campaign)
+            scene = manifest["collections"]["scenes"][0]
+
+            self.assertEqual(len(scene["overlays"]), 1)
+            self.assertEqual(scene["overlays"][0]["version"], 2)
+            self.assertTrue(
+                any(
+                    asset["relativePath"].endswith("inundacao-overlay-vtt-v1.png")
+                    for asset in manifest["assets"]
+                )
+            )
+            self.assertFalse(
+                any(
+                    warning["code"] == "scene-overlay-ambiguous"
+                    for warning in manifest["warnings"]
+                )
+            )
+
+            (overlays / "helix-9-nivel-0-inundacao-overlay-vtt-v2.svg").write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"/>',
+                encoding="utf-8",
+            )
+            ambiguous = build_manifest(campaign)
+            ambiguous_scene = ambiguous["collections"]["scenes"][0]
+            overlay_warnings = [
+                warning
+                for warning in ambiguous["warnings"]
+                if warning["code"] == "scene-overlay-ambiguous"
+            ]
+
+            self.assertEqual(ambiguous_scene["overlays"], [])
+            self.assertEqual(len(overlay_warnings), 1)
+            self.assertEqual(overlay_warnings[0]["path"], "helix-9-nivel-0/inundacao")
+
+    def test_reads_vp8x_vp8_and_vp8l_webp_metadata_safely(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            width, height = 2048, 1536
+            vp8x_payload = (
+                bytes([0x10, 0, 0, 0])
+                + (width - 1).to_bytes(3, "little")
+                + (height - 1).to_bytes(3, "little")
+            )
+            vp8_payload = (
+                b"\x00\x00\x00\x9d\x01\x2a"
+                + width.to_bytes(2, "little")
+                + height.to_bytes(2, "little")
+            )
+            packed_vp8l = (width - 1) | ((height - 1) << 14) | (1 << 28)
+            vp8l_payload = b"\x2f" + packed_vp8l.to_bytes(4, "little")
+            cases = {
+                "extended.webp": (_webp((b"VP8X", vp8x_payload)), "VP8X", True),
+                "lossy.webp": (_webp((b"VP8 ", vp8_payload)), "VP8", False),
+                "lossless.webp": (_webp((b"VP8L", vp8l_payload)), "VP8L", True),
+            }
+
+            for name, (content, variant, has_alpha) in cases.items():
+                with self.subTest(variant=variant):
+                    path = root / name
+                    path.write_bytes(content)
+                    metadata = generate._image_metadata(path)
+                    self.assertEqual(metadata["format"], "webp")
+                    self.assertEqual((metadata["width"], metadata["height"]), (width, height))
+                    self.assertEqual(metadata["hasAlpha"], has_alpha)
+                    self.assertEqual(metadata["webpVariant"], variant)
+
+    def test_rejects_webp_chunk_outside_declared_riff(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "truncated.webp"
+            body = b"WEBP" + b"VP8X" + struct.pack("<I", 100) + b"\x00" * 10
+            path.write_bytes(b"RIFF" + struct.pack("<I", len(body)) + body)
+
+            with self.assertRaisesRegex(ManifestError, "excede os limites"):
+                generate._image_metadata(path)
 
     def test_refuses_output_inside_source_campaign(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

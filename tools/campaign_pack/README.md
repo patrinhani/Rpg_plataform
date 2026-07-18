@@ -6,7 +6,8 @@ O gerador cria uma cópia autocontida e leve para o VTT. O pack mantém os IDs e
 
 - versões ativas dos mapas de jogador e dos guias privados do Mestre;
 - overlays referenciados pelas cenas;
-- tokens listados em `collections.tokenAssetIds`.
+- tokens listados em `collections.tokenAssetIds`;
+- objetos de mapa listados em `collections.propAssetIds`.
 
 Versões antigas sem seletor no runtime, documentos, grupos de estado e assets sem referência não entram no pack. As listas estruturais `documents` e `stateGroups` permanecem vazias no JSON para compatibilidade com `CampaignCatalog`. Alertas referentes aos assets e cenas selecionados são preservados.
 
@@ -32,4 +33,4 @@ Antes, durante e depois da cópia, a ferramenta confere confinamento, tipo do ar
 
 O pack isolado usa 128 MiB como teto padrão. `--max-bytes N` altera o limite em bytes. O builder portátil fornece sua própria margem configurável por `-MaxCampaignBytes`, atualmente 512 MiB, e sempre informa o peso verificado.
 
-Handouts e documentos são catalogados no manifesto principal, mas permanecem fora deste pack até existir um fluxo de revelação por papel. Isso evita entregar pistas do Mestre antes da hora sem impedir que a campanha continue crescendo.
+Handouts listados em `collections.handoutAssetIds` e documentos são validados e catalogados no manifesto principal, mas permanecem fora deste pack até existir um fluxo de revelação por papel. O manifesto runtime registra `handoutAssetIds` vazio. Isso evita entregar pistas do Mestre antes da hora sem impedir que a campanha continue crescendo.

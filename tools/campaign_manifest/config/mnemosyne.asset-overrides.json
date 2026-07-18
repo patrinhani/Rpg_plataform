@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "campaignId": "mnemosyne",
+  "assetOverrides": {},
+  "assetFamilyOverrides": {
+    "assets/tokens/corpo-conectado-token-vtt": {
+      "extensions": ["png", "webp"],
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt": {
+      "extensions": ["png", "webp"],
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    }
+  }
+}

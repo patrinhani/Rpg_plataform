@@ -1,8 +1,9 @@
 """Build a small, self-contained runtime pack from a schema-2 campaign manifest.
 
-Only assets referenced by scenes or ``tokenAssetIds`` are copied.  The source
-campaign is treated as immutable and every copied byte is checked against the
-size and SHA-256 recorded in the input manifest.
+Only assets referenced by scenes, ``tokenAssetIds`` or ``propAssetIds`` are
+copied. Handouts are validated but deliberately left out until an explicit
+reveal flow exists. The source campaign is treated as immutable and every
+copied byte is checked against the size and SHA-256 recorded in the manifest.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ HASH_CHUNK_SIZE = 1024 * 1024
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _SOURCE_REF_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _ASSET_KINDS = frozenset(
-    {"map", "overlay", "token", "prop", "symbol", "concept", "other"}
+    {"map", "overlay", "token", "prop", "handout", "symbol", "concept", "other"}
 )
 _AUDIENCES = frozenset({"gm", "players", "unspecified"})
 _CONTROLLERS = frozenset({"gm", "players"})
@@ -455,22 +456,89 @@ def _sanitize_runtime_warnings(
     return result
 
 
-def _parse_token_ids(
-    collections: Mapping[str, Any], records: Mapping[str, AssetRecord]
+def _parse_asset_ids(
+    collections: Mapping[str, Any],
+    records: Mapping[str, AssetRecord],
+    *,
+    collection_name: str,
+    expected_kind: str,
+    optional: bool = False,
 ) -> list[str]:
     result: list[str] = []
     seen: set[str] = set()
+    raw_values = collections.get(collection_name)
+    if raw_values is None and optional:
+        raw_values = []
+    context = f"collections.{collection_name}"
     for index, raw_value in enumerate(
-        _expect_list(collections.get("tokenAssetIds"), "collections.tokenAssetIds")
+        _expect_list(raw_values, context)
     ):
-        asset_id = _expect_string(raw_value, f"collections.tokenAssetIds[{index}]")
+        asset_id = _expect_string(raw_value, f"{context}[{index}]")
         record = records.get(asset_id)
-        if record is None or record.payload["kind"] != "token":
-            raise PackManifestError("collections.tokenAssetIds referencia asset que nao e token")
+        if record is None or record.payload["kind"] != expected_kind:
+            raise PackManifestError(
+                f"{context} referencia asset que nao e {expected_kind}"
+            )
         if asset_id in seen:
-            raise PackManifestError("collections.tokenAssetIds contem duplicata")
+            raise PackManifestError(f"{context} contem duplicata")
         seen.add(asset_id)
         result.append(asset_id)
+    return result
+
+
+def _parse_state_groups(
+    collections: Mapping[str, Any],
+    records: Mapping[str, AssetRecord],
+    included_prop_ids: set[str],
+) -> list[dict[str, Any]]:
+    """Keep only validated prop state metadata whose bytes ship in the pack."""
+
+    result: list[dict[str, Any]] = []
+    seen_group_ids: set[str] = set()
+    for group_index, raw_group in enumerate(
+        _expect_list(collections.get("stateGroups"), "collections.stateGroups")
+    ):
+        context = f"collections.stateGroups[{group_index}]"
+        group = _expect_object(raw_group, context)
+        key = _expect_string(group.get("key"), f"{context}.key")
+        group_id = _expect_string(group.get("id"), f"{context}.id")
+        if group_id != f"state-group:{key}" or group_id in seen_group_ids:
+            raise PackManifestError(f"{context}.id invalido ou duplicado")
+        seen_group_ids.add(group_id)
+
+        raw_states = _expect_object(group.get("states"), f"{context}.states")
+        states: dict[str, dict[str, Any]] = {}
+        include_group = True
+        for state_name, raw_state in raw_states.items():
+            state_context = f"{context}.states[{state_name}]"
+            if not isinstance(state_name, str) or not state_name:
+                raise PackManifestError(f"{context}.states contem nome invalido")
+            state = _expect_object(raw_state, state_context)
+            asset_id = _expect_string(state.get("assetId"), f"{state_context}.assetId")
+            version = _expect_nonnegative_int(state.get("version"), f"{state_context}.version")
+            variants = _parse_variant_list(
+                state.get("variants"), f"{state_context}.variants", records, "prop"
+            )
+            if not variants:
+                raise PackManifestError(f"{state_context}.variants nao pode ser vazio")
+            if (asset_id, version) not in {
+                (variant["assetId"], variant["version"]) for variant in variants
+            }:
+                raise PackManifestError(f"{state_context} seleciona variante ausente")
+            if version != max(variant["version"] for variant in variants):
+                raise PackManifestError(f"{state_context} nao seleciona a maior versao")
+            referenced_ids = {variant["assetId"] for variant in variants}
+            if asset_id not in included_prop_ids or not referenced_ids <= included_prop_ids:
+                # Manifests from before propAssetIds remain valid: their state
+                # metadata is omitted together with the prop bytes.
+                include_group = False
+            states[state_name] = {
+                "assetId": asset_id,
+                "version": version,
+                "variants": variants,
+            }
+        if include_group:
+            result.append({"id": group_id, "key": key, "states": states})
     return result
 
 
@@ -514,8 +582,31 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
     records = _parse_assets(raw)
     collections = _expect_object(raw.get("collections"), "collections")
     scenes, selected_ids = _parse_scenes(collections, records)
-    token_ids = _parse_token_ids(collections, records)
+    token_ids = _parse_asset_ids(
+        collections,
+        records,
+        collection_name="tokenAssetIds",
+        expected_kind="token",
+    )
+    prop_ids = _parse_asset_ids(
+        collections,
+        records,
+        collection_name="propAssetIds",
+        expected_kind="prop",
+        optional=True,
+    )
+    state_groups = _parse_state_groups(collections, records, set(prop_ids))
+    # Validar IDs e tipos agora evita que um manifesto defeituoso passe pelo
+    # builder, mas os bytes/IDs nao entram no runtime antes de haver revelacao.
+    _parse_asset_ids(
+        collections,
+        records,
+        collection_name="handoutAssetIds",
+        expected_kind="handout",
+        optional=True,
+    )
     selected_ids.update(token_ids)
+    selected_ids.update(prop_ids)
     selected_records = tuple(
         sorted(
             (records[asset_id] for asset_id in selected_ids),
@@ -546,19 +637,22 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
             "assetCount": len(selected_records),
             "documentCount": 0,
             "sceneCount": len(scenes),
-            "stateGroupCount": 0,
+            "stateGroupCount": len(state_groups),
             "totalAssetBytes": total_bytes,
             "warningCount": len(warnings),
             "sourceFingerprint": _source_fingerprint(selected_records),
         },
         "assets": [record.payload for record in selected_records],
-        # Empty structural collections keep the runtime manifest compatible
-        # with CampaignCatalog while removing all document/state-group content.
+        # Documents and unrevealed handouts stay outside the runtime pack. Prop
+        # state groups are safe metadata and are required to switch scenery
+        # variants such as the connected body without treating it as a token.
         "documents": [],
         "collections": {
             "scenes": scenes,
-            "stateGroups": [],
+            "stateGroups": state_groups,
             "tokenAssetIds": token_ids,
+            "propAssetIds": prop_ids,
+            "handoutAssetIds": [],
         },
         "warnings": warnings,
     }

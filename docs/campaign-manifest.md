@@ -1,6 +1,6 @@
 # Manifesto externo de campanha
 
-A ferramenta `tools/campaign_manifest` inventaria o Projeto Mnemosyne sem alterar a pasta da campanha e sem copiar seus PNG/SVG para este repositório. O manifesto contém somente uma referência lógica da origem, caminhos relativos, hashes SHA-256, dimensões, transparência e agrupamentos úteis ao futuro VTT. O caminho absoluto local nunca integra o JSON versionado.
+A ferramenta `tools/campaign_manifest` inventaria o Projeto Mnemosyne sem alterar a pasta da campanha e sem copiar seus PNG/SVG/WebP para este repositório. O manifesto contém somente uma referência lógica da origem, caminhos relativos, hashes SHA-256, dimensões, transparência e agrupamentos úteis ao futuro VTT. O caminho absoluto local nunca integra o JSON versionado.
 
 ## Gerar
 
@@ -21,6 +21,27 @@ python -m tools.campaign_manifest.generate `
 
 O caminho de saída deve ficar fora da campanha de origem. Essa proteção impede que a ferramenta suje ou modifique acidentalmente o repositório Mnemosyne.
 
+A curadoria semântica fica versionada no aplicativo em
+`tools/campaign_manifest/config/mnemosyne.asset-overrides.json`. Ela aceita caminhos
+relativos exatos e famílias versionadas estruturadas, sem expressões regulares
+configuráveis. Uma família casa apenas `<familia>-vN.ext`, com `N` inteiro positivo
+sem zero à esquerda e extensão em allowlist. Assim, todas as versões do corpo
+conectado e de Helena na cadeira neural são `prop`, embora os arquivos legados ainda
+estejam na pasta `assets/tokens`; nomes parecidos ou backups não entram por prefixo.
+Os demais tokens continuam tokens. Entradas que não existem mais ou possuem campos
+inválidos geram avisos explícitos. `controlledBy` aceita somente `gm` ou `players`.
+O manifesto registra a
+versão e o SHA-256 dessa configuração, portanto a mesma campanha e a mesma
+configuração sempre produzem a mesma classificação.
+
+Para auditar uma configuração alternativa sem alterar o padrão versionado:
+
+```powershell
+python -m tools.campaign_manifest.generate `
+  --source "D:\Campanhas\projeto-mnemosyne-rpg" `
+  --classification-config ".\minha-curadoria.json"
+```
+
 ## Validar sem gravar
 
 ```powershell
@@ -31,16 +52,18 @@ python -m tools.campaign_manifest.generate `
 
 `--check` recalcula tudo em memória e retorna erro se o JSON estiver ausente ou desatualizado. O conteúdo é determinístico: cópias idênticas da campanha produzem os mesmos bytes mesmo quando ficam em raízes locais diferentes.
 
-Use `--strict` para retornar código 2 quando houver avisos de calibração, assets grandes ou arquivos não associados automaticamente.
+Use `--strict` para retornar código 2 quando houver avisos de calibração ou arquivos não associados automaticamente.
 
 ## O que o JSON representa
 
 - `schemaVersion: 2`: contrato que remove caminhos absolutos e representa variantes com versão numérica;
 - `campaign.sourceRef`: identificador lógico que o servidor associa a uma raiz externa por configuração local;
-- `assets`: inventário de mapas, guias do mestre, overlays, tokens, objetos, símbolos e concepts;
+- `classification`: referência portátil, versão e fingerprint SHA-256 da curadoria semântica;
+- `assets`: inventário de mapas, guias do mestre, overlays, tokens, objetos, handouts, símbolos e concepts; qualquer arquivo sob `assets/handouts/` recebe `kind: handout` e `audience: gm` por padrão;
 - `documents`: metadados dos Markdown em UTF-8, sem copiar seu conteúdo integral;
-- `collections.scenes`: mapas de jogadores, guias e overlays agrupados por cena, com versão numérica; `activePlayerMap` aponta para a maior versão quando ela é única e fica nulo quando há ambiguidade;
+- `collections.scenes`: mapas de jogadores, guias e overlays agrupados por cena, com versão numérica; `activePlayerMap` aponta para a maior versão quando ela é única. Para cada nome de overlay, apenas a maior versão integra a cena; versões anteriores permanecem no inventário de assets e um empate na versão mais alta deixa o overlay de fora com aviso explícito;
 - `collections.stateGroups`: pares como âncora ativa/desativada e Fragmento ritual/recuperado; versões repetidas geram aviso e a maior versão numérica é selecionada de forma determinística;
+- `collections.tokenAssetIds`, `propAssetIds` e `handoutAssetIds`: índices semânticos separados para que o VTT não trate objetos de cenário ou documentos privados como criaturas;
 - `warnings`: lacunas que precisam de decisão humana, como a grade ainda desconhecida dos mapas Helix-9.
 
 Os assets permanecem na campanha. Um futuro importador deverá resolver `campaign.sourceRef` por uma configuração local não versionada, anexar `asset.relativePath`, confirmar que o caminho resolvido continua dentro da raiz configurada e validar o SHA-256 antes de servir o arquivo.

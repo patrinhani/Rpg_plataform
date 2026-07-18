@@ -26,7 +26,9 @@ _SOURCE_REF_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _ROLES = frozenset({"master", "player"})
 _AUDIENCES = frozenset({"gm", "players", "unspecified"})
-_ASSET_KINDS = frozenset({"map", "overlay", "token", "prop", "symbol", "concept", "other"})
+_ASSET_KINDS = frozenset(
+    {"map", "overlay", "token", "prop", "handout", "symbol", "concept", "other"}
+)
 _WINDOWS_RESERVED_NAMES = frozenset(
     {
         "con",
@@ -561,20 +563,31 @@ def _validate_state_groups(collections: dict[str, Any], assets: Mapping[str, _As
                 raise ManifestValidationError(f"{state_context} nao seleciona a maior versao")
 
 
-def _parse_token_ids(
-    collections: dict[str, Any], assets: Mapping[str, _AssetRecord]
+def _parse_asset_ids(
+    collections: dict[str, Any],
+    assets: Mapping[str, _AssetRecord],
+    *,
+    collection_name: str,
+    expected_kind: str,
+    optional: bool = False,
 ) -> tuple[str, ...]:
-    values = _expect_list(collections.get("tokenAssetIds"), "collections.tokenAssetIds")
-    token_ids: list[str] = []
+    raw_values = collections.get(collection_name)
+    if raw_values is None and optional:
+        raw_values = []
+    context = f"collections.{collection_name}"
+    values = _expect_list(raw_values, context)
+    asset_ids: list[str] = []
     for index, value in enumerate(values):
-        asset_id = _expect_string(value, f"collections.tokenAssetIds[{index}]")
+        asset_id = _expect_string(value, f"{context}[{index}]")
         record = assets.get(asset_id)
-        if record is None or record.view.kind != "token":
-            raise ManifestValidationError("tokenAssetIds referencia asset que nao e token")
-        token_ids.append(asset_id)
-    if len(token_ids) != len(set(token_ids)):
-        raise ManifestValidationError("tokenAssetIds contem duplicata")
-    return tuple(token_ids)
+        if record is None or record.view.kind != expected_kind:
+            raise ManifestValidationError(
+                f"{collection_name} referencia asset que nao e {expected_kind}"
+            )
+        asset_ids.append(asset_id)
+    if len(asset_ids) != len(set(asset_ids)):
+        raise ManifestValidationError(f"{collection_name} contem duplicata")
+    return tuple(asset_ids)
 
 
 class CampaignCatalog:
@@ -596,6 +609,8 @@ class CampaignCatalog:
         assets: dict[str, _AssetRecord],
         scenes: tuple[SceneView, ...],
         token_ids: tuple[str, ...],
+        prop_ids: tuple[str, ...],
+        handout_ids: tuple[str, ...],
     ) -> None:
         self.campaign_id = campaign_id
         self.campaign_title = campaign_title
@@ -605,6 +620,8 @@ class CampaignCatalog:
         self._assets = assets
         self._scenes = scenes
         self._token_ids = token_ids
+        self._prop_ids = prop_ids
+        self._handout_ids = handout_ids
         self._hash_cache: dict[str, _FileSignature] = {}
         self._hash_cache_lock = threading.Lock()
 
@@ -636,7 +653,26 @@ class CampaignCatalog:
         collections = _expect_object(manifest.get("collections"), "collections")
         scenes = _parse_scenes(collections, assets)
         _validate_state_groups(collections, assets)
-        token_ids = _parse_token_ids(collections, assets)
+        token_ids = _parse_asset_ids(
+            collections,
+            assets,
+            collection_name="tokenAssetIds",
+            expected_kind="token",
+        )
+        prop_ids = _parse_asset_ids(
+            collections,
+            assets,
+            collection_name="propAssetIds",
+            expected_kind="prop",
+            optional=True,
+        )
+        handout_ids = _parse_asset_ids(
+            collections,
+            assets,
+            collection_name="handoutAssetIds",
+            expected_kind="handout",
+            optional=True,
+        )
         return cls(
             campaign_id=campaign_id,
             campaign_title=campaign_title,
@@ -645,6 +681,8 @@ class CampaignCatalog:
             assets=assets,
             scenes=scenes,
             token_ids=token_ids,
+            prop_ids=prop_ids,
+            handout_ids=handout_ids,
         )
 
     @property
@@ -664,7 +702,11 @@ class CampaignCatalog:
 
     @staticmethod
     def _is_authorized(record: _AssetRecord, role: str) -> bool:
-        return role == "master" or record.view.audience == "players"
+        if role == "master":
+            return True
+        # Handouts permanecem privados ate um fluxo explicito de revelacao.
+        # Isso tambem protege contra um audience incorreto no manifesto fonte.
+        return record.view.kind != "handout" and record.view.audience == "players"
 
     def _asset_for_role(self, asset_id: str, role: str) -> _AssetRecord:
         role = self._validate_role(role)
@@ -685,6 +727,26 @@ class CampaignCatalog:
         return tuple(
             record.view
             for asset_id in self._token_ids
+            if (record := self._assets[asset_id]) and self._is_authorized(record, role)
+        )
+
+    def list_props(self, role: str) -> tuple[AssetView, ...]:
+        """Lista objetos de mapa autorizados sem expor caminhos ou hashes."""
+
+        role = self._validate_role(role)
+        return tuple(
+            record.view
+            for asset_id in self._prop_ids
+            if (record := self._assets[asset_id]) and self._is_authorized(record, role)
+        )
+
+    def list_handouts(self, role: str) -> tuple[AssetView, ...]:
+        """Indexa handouts para o Mestre; jogadores nao os conhecem antes da revelacao."""
+
+        role = self._validate_role(role)
+        return tuple(
+            record.view
+            for asset_id in self._handout_ids
             if (record := self._assets[asset_id]) and self._is_authorized(record, role)
         )
 

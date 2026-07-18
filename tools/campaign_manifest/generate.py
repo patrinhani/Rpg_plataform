@@ -22,12 +22,25 @@ from xml.etree import ElementTree
 
 
 SCHEMA_VERSION = 2
-GENERATOR_VERSION = "1.1.0"
+GENERATOR_VERSION = "1.3.0"
 CAMPAIGN_ID = "mnemosyne"
 CAMPAIGN_TITLE = "Projeto Mnemosyne"
 CAMPAIGN_SOURCE_REF = "mnemosyne"
+CLASSIFICATION_CONFIG_SCHEMA_VERSION = 2
+DEFAULT_CLASSIFICATION_CONFIG = (
+    Path(__file__).resolve().parent / "config" / "mnemosyne.asset-overrides.json"
+)
+VALID_ASSET_KINDS = frozenset(
+    {"map", "overlay", "token", "prop", "handout", "symbol", "concept", "other"}
+)
+VALID_AUDIENCES = frozenset({"gm", "players", "unspecified"})
+VALID_CONTROLLERS = frozenset({"gm", "players"})
+VALID_FAMILY_EXTENSIONS = frozenset({"png", "svg", "webp"})
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+WEBP_RIFF_SIGNATURE = b"RIFF"
+WEBP_FORMAT_SIGNATURE = b"WEBP"
 HASH_CHUNK_SIZE = 1024 * 1024
+MAX_WEBP_CHUNK_SIZE = 256 * 1024 * 1024
 KNOWN_OVERLAY_NAMES = (
     "eletrificacao",
     "fragmento-removido",
@@ -201,6 +214,105 @@ def _png_metadata(path: Path) -> dict[str, Any]:
     }
 
 
+def _webp_metadata(path: Path) -> dict[str, Any]:
+    """Extrai dimensoes WebP sem decodificar pixels nem confiar em offsets externos."""
+
+    file_size = path.stat().st_size
+    with path.open("rb") as stream:
+        def read_exact(length: int, label: str) -> bytes:
+            data = stream.read(length)
+            if len(data) != length:
+                raise ManifestError(f"{label} truncado")
+            return data
+
+        header = read_exact(12, "cabecalho WebP")
+        if header[:4] != WEBP_RIFF_SIGNATURE or header[8:] != WEBP_FORMAT_SIGNATURE:
+            raise ManifestError("assinatura WebP invalida")
+
+        riff_size = struct.unpack("<I", header[4:8])[0]
+        declared_end = 8 + riff_size
+        if riff_size < 4 or declared_end != file_size:
+            raise ManifestError("tamanho RIFF WebP inconsistente")
+
+        vp8x: dict[str, Any] | None = None
+        vp8: dict[str, Any] | None = None
+        vp8l: dict[str, Any] | None = None
+        has_alpha_chunk = False
+
+        while stream.tell() < declared_end:
+            remaining = declared_end - stream.tell()
+            if remaining < 8:
+                raise ManifestError("cabecalho de chunk WebP truncado")
+            chunk_header = read_exact(8, "cabecalho de chunk WebP")
+            chunk_type = chunk_header[:4]
+            chunk_size = struct.unpack("<I", chunk_header[4:])[0]
+            if chunk_size > MAX_WEBP_CHUNK_SIZE:
+                raise ManifestError("chunk WebP excede o limite de seguranca")
+
+            chunk_start = stream.tell()
+            chunk_end = chunk_start + chunk_size
+            padded_end = chunk_end + (chunk_size & 1)
+            if chunk_end < chunk_start or padded_end > declared_end:
+                raise ManifestError("chunk WebP excede os limites do RIFF")
+
+            if chunk_type == b"VP8X":
+                if chunk_size != 10:
+                    raise ManifestError("chunk VP8X invalido")
+                data = read_exact(10, "chunk VP8X WebP")
+                width = 1 + int.from_bytes(data[4:7], "little")
+                height = 1 + int.from_bytes(data[7:10], "little")
+                vp8x = {
+                    "format": "webp",
+                    "width": width,
+                    "height": height,
+                    "hasAlpha": bool(data[0] & 0x10),
+                    "webpVariant": "VP8X",
+                }
+            elif chunk_type == b"VP8 ":
+                if chunk_size < 10:
+                    raise ManifestError("chunk VP8 WebP truncado")
+                data = read_exact(10, "chunk VP8 WebP")
+                if data[0] & 0x01 or data[3:6] != b"\x9d\x01\x2a":
+                    raise ManifestError("cabecalho VP8 WebP invalido")
+                width = int.from_bytes(data[6:8], "little") & 0x3FFF
+                height = int.from_bytes(data[8:10], "little") & 0x3FFF
+                if not width or not height:
+                    raise ManifestError("dimensoes VP8 WebP invalidas")
+                vp8 = {
+                    "format": "webp",
+                    "width": width,
+                    "height": height,
+                    "hasAlpha": False,
+                    "webpVariant": "VP8",
+                }
+            elif chunk_type == b"VP8L":
+                if chunk_size < 5:
+                    raise ManifestError("chunk VP8L WebP truncado")
+                data = read_exact(5, "chunk VP8L WebP")
+                if data[0] != 0x2F:
+                    raise ManifestError("assinatura VP8L WebP invalida")
+                packed = int.from_bytes(data[1:5], "little")
+                if packed >> 29:
+                    raise ManifestError("versao VP8L WebP nao suportada")
+                vp8l = {
+                    "format": "webp",
+                    "width": (packed & 0x3FFF) + 1,
+                    "height": ((packed >> 14) & 0x3FFF) + 1,
+                    "hasAlpha": bool((packed >> 28) & 0x01),
+                    "webpVariant": "VP8L",
+                }
+            elif chunk_type == b"ALPH":
+                has_alpha_chunk = True
+
+            stream.seek(padded_end)
+
+    metadata = vp8x or vp8l or vp8
+    if metadata is None:
+        raise ManifestError("WebP sem chunk de imagem reconhecido")
+    metadata["hasAlpha"] = bool(metadata["hasAlpha"] or has_alpha_chunk)
+    return metadata
+
+
 def _svg_metadata(path: Path) -> dict[str, Any]:
     root = ElementTree.fromstring(path.read_text(encoding="utf-8-sig"))
     view_box = root.attrib.get("viewBox")
@@ -216,9 +328,11 @@ def _svg_metadata(path: Path) -> dict[str, Any]:
 
 
 def _classify_asset(relative_path: str) -> tuple[str, str, str]:
-    parts = PurePosixPath(relative_path).parts
+    parts = tuple(part.casefold() for part in PurePosixPath(relative_path).parts)
     lowered = relative_path.casefold()
 
+    if "handouts" in parts:
+        return "handout", "gm", "gm"
     if "mapas" in parts:
         if "guia-mestre" in parts:
             return "map", "gm", "gm"
@@ -236,12 +350,259 @@ def _classify_asset(relative_path: str) -> tuple[str, str, str]:
     return "other", "unspecified", "gm"
 
 
+def _classification_config_ref(path: Path) -> str:
+    """Referencia versionavel sem vazar a raiz absoluta local do aplicativo."""
+
+    if path.name == DEFAULT_CLASSIFICATION_CONFIG.name:
+        return f"config/{path.name}"
+    return path.name
+
+
+def _empty_classification_rules() -> dict[str, Any]:
+    return {"exact": {}, "families": {}}
+
+
+def _is_safe_asset_rule_path(relative_path: object) -> bool:
+    if not isinstance(relative_path, str) or not relative_path or "\\" in relative_path:
+        return False
+    parsed_path = PurePosixPath(relative_path)
+    return bool(
+        not parsed_path.is_absolute()
+        and ".." not in parsed_path.parts
+        and parsed_path.parts
+        and parsed_path.parts[0].casefold() == "assets"
+        and parsed_path.as_posix() == relative_path
+    )
+
+
+def _semantic_override(override: object) -> dict[str, str] | None:
+    if not isinstance(override, dict) or not override:
+        return None
+    validators = {
+        "kind": VALID_ASSET_KINDS,
+        "audience": VALID_AUDIENCES,
+        "controlledBy": VALID_CONTROLLERS,
+    }
+    if set(override).difference(validators):
+        return None
+    if not all(
+        isinstance(value, str) and value in validators[field]
+        for field, value in override.items()
+    ):
+        return None
+    return dict(override)
+
+
+def _family_override_matches(
+    relative_path: str,
+    family_path: str,
+    extensions: tuple[str, ...],
+) -> bool:
+    """Casa apenas `<familia>-vN.ext`, sem regex configuravel nem prefixos frouxos."""
+
+    path = PurePosixPath(relative_path)
+    extension = path.suffix.removeprefix(".").casefold()
+    if extension not in extensions:
+        return False
+    stem_path = path.with_suffix("").as_posix()
+    prefix = f"{family_path}-v"
+    if not stem_path.startswith(prefix):
+        return False
+    version = stem_path[len(prefix) :]
+    return bool(
+        version
+        and version.isascii()
+        and version.isdigit()
+        and version[0] != "0"
+    )
+
+
+def _classification_override_for(
+    relative_path: str,
+    rules: dict[str, Any] | None,
+) -> dict[str, str]:
+    if not rules:
+        return {}
+    exact = rules.get("exact", {})
+    if relative_path in exact:
+        return exact[relative_path]
+    families = rules.get("families", {})
+    for family_path in sorted(families, key=lambda item: (-len(item), item)):
+        rule = families[family_path]
+        if _family_override_matches(relative_path, family_path, rule["extensions"]):
+            return rule["override"]
+    return {}
+
+
+def _load_classification_config(
+    path: Path,
+) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]]]:
+    """Le overrides exatos/familiares; curadoria invalida nunca vira heuristica."""
+
+    warnings: list[dict[str, str]] = []
+    config_ref = _classification_config_ref(path)
+    descriptor: dict[str, Any] = {
+        "configRef": config_ref,
+        "schemaVersion": None,
+        "fingerprint": None,
+    }
+    try:
+        raw = path.read_bytes()
+    except FileNotFoundError:
+        warnings.append(
+            {
+                "code": "classification-config-missing",
+                "path": config_ref,
+                "message": "Configuracao semantica versionada nao encontrada; apenas regras por pasta foram usadas.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+    except OSError as error:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": _safe_diagnostic(error),
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
+    descriptor["fingerprint"] = f"sha256:{hashlib.sha256(raw).hexdigest()}"
+    try:
+        config = json.loads(raw.decode("utf-8-sig"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": f"JSON de configuracao invalido: {error}",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
+    if not isinstance(config, dict):
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": "A raiz da configuracao deve ser um objeto JSON.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
+    descriptor["schemaVersion"] = config.get("schemaVersion")
+    if config.get("schemaVersion") != CLASSIFICATION_CONFIG_SCHEMA_VERSION:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": (
+                    "schemaVersion da configuracao semantica e incompatível; "
+                    f"esperado {CLASSIFICATION_CONFIG_SCHEMA_VERSION}."
+                ),
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+    if config.get("campaignId") != CAMPAIGN_ID:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": f"campaignId deve ser {CAMPAIGN_ID!r}.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
+    raw_overrides = config.get("assetOverrides")
+    if not isinstance(raw_overrides, dict):
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": "assetOverrides deve ser um objeto indexado por caminho relativo exato.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
+    overrides: dict[str, dict[str, str]] = {}
+    for relative_path, override in sorted(raw_overrides.items(), key=lambda item: str(item[0])):
+        diagnostic_path = relative_path if isinstance(relative_path, str) else repr(relative_path)
+        semantic_override = _semantic_override(override)
+        if not _is_safe_asset_rule_path(relative_path) or semantic_override is None:
+            warnings.append(
+                {
+                    "code": "classification-override-invalid",
+                    "path": diagnostic_path,
+                    "message": "Override ignorado: caminho ou campos semanticos invalidos.",
+                }
+            )
+            continue
+        normalized_path = PurePosixPath(relative_path).as_posix()
+        overrides[normalized_path] = semantic_override
+
+    raw_families = config.get("assetFamilyOverrides")
+    if not isinstance(raw_families, dict):
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": "assetFamilyOverrides deve ser um objeto indexado por familia versionada.",
+            }
+        )
+        return {"exact": overrides, "families": {}}, descriptor, warnings
+
+    families: dict[str, dict[str, Any]] = {}
+    for family_path, raw_rule in sorted(raw_families.items(), key=lambda item: str(item[0])):
+        diagnostic_path = family_path if isinstance(family_path, str) else repr(family_path)
+        semantic_fields = (
+            {key: value for key, value in raw_rule.items() if key != "extensions"}
+            if isinstance(raw_rule, dict)
+            else None
+        )
+        semantic_override = _semantic_override(semantic_fields)
+        raw_extensions = raw_rule.get("extensions") if isinstance(raw_rule, dict) else None
+        extensions_are_valid = bool(
+            isinstance(raw_extensions, list)
+            and raw_extensions
+            and all(
+                isinstance(extension, str)
+                and extension == extension.casefold()
+                and extension in VALID_FAMILY_EXTENSIONS
+                for extension in raw_extensions
+            )
+            and len(raw_extensions) == len(set(raw_extensions))
+        )
+        family_path_is_valid = bool(
+            _is_safe_asset_rule_path(family_path)
+            and not PurePosixPath(family_path).suffix
+            and not re.search(r"-v\d+$", family_path, flags=re.IGNORECASE)
+        )
+        if not family_path_is_valid or not extensions_are_valid or semantic_override is None:
+            warnings.append(
+                {
+                    "code": "classification-override-invalid",
+                    "path": diagnostic_path,
+                    "message": "Familia ignorada: caminho, extensoes ou campos semanticos invalidos.",
+                }
+            )
+            continue
+        normalized_family = PurePosixPath(family_path).as_posix()
+        families[normalized_family] = {
+            "extensions": tuple(raw_extensions),
+            "override": semantic_override,
+        }
+
+    return {"exact": overrides, "families": families}, descriptor, warnings
+
+
 def _image_metadata(path: Path) -> dict[str, Any] | None:
     suffix = path.suffix.casefold()
     if suffix == ".png":
         return _png_metadata(path)
     if suffix == ".svg":
         return _svg_metadata(path)
+    if suffix == ".webp":
+        return _webp_metadata(path)
     return None
 
 
@@ -308,11 +669,19 @@ def _document_metadata(path: Path, source_root: Path) -> dict[str, Any]:
     return metadata
 
 
-def _asset_metadata(path: Path, source_root: Path) -> dict[str, Any]:
+def _asset_metadata(
+    path: Path,
+    source_root: Path,
+    classification_rules: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     relative_path = _relative_posix(path, source_root)
     path = _assert_source_file(path, source_root, relative_path)
     before = path.stat()
     kind, audience, controlled_by = _classify_asset(relative_path)
+    override = _classification_override_for(relative_path, classification_rules)
+    kind = override.get("kind", kind)
+    audience = override.get("audience", audience)
+    controlled_by = override.get("controlledBy", controlled_by)
     media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     metadata = {
         "id": _asset_id(relative_path),
@@ -422,6 +791,30 @@ def _build_scenes(assets: list[dict[str, Any]], warnings: list[dict[str, str]]) 
         scene["overlays"].sort(
             key=lambda item: (item["name"], item["version"], item["assetId"])
         )
+        selected_overlays: list[dict[str, Any]] = []
+        overlay_names = sorted({item["name"] for item in scene["overlays"]})
+        for overlay_name in overlay_names:
+            variants = [
+                item for item in scene["overlays"] if item["name"] == overlay_name
+            ]
+            highest_version = max(item["version"] for item in variants)
+            candidates = [
+                item for item in variants if item["version"] == highest_version
+            ]
+            if len(candidates) != 1:
+                warnings.append(
+                    {
+                        "code": "scene-overlay-ambiguous",
+                        "path": f"{scene_key}/{overlay_name}",
+                        "message": (
+                            f"Ha {len(candidates)} overlays na versao ativa v{highest_version}; "
+                            "nenhuma variante foi selecionada."
+                        ),
+                    }
+                )
+                continue
+            selected_overlays.append(candidates[0])
+        scene["overlays"] = selected_overlays
         scene["activePlayerMap"] = _active_variant(
             scene["playerMaps"], warnings, scene_key, "player-map"
         )
@@ -535,7 +928,10 @@ def _source_fingerprint(assets: list[dict[str, Any]], documents: list[dict[str, 
     return digest.hexdigest()
 
 
-def build_manifest(source: Path) -> dict[str, Any]:
+def build_manifest(
+    source: Path,
+    classification_config: Path | None = None,
+) -> dict[str, Any]:
     """Constroi o manifesto em memoria sem escrever na campanha ou no destino."""
 
     source_root = source.expanduser().resolve()
@@ -547,7 +943,10 @@ def build_manifest(source: Path) -> dict[str, Any]:
         raise ManifestError(f"Pasta assets nao encontrada em: {assets_root}")
     _assert_source_directory(assets_root, source_root, "Pasta assets")
 
-    warnings: list[dict[str, str]] = []
+    config_path = classification_config or DEFAULT_CLASSIFICATION_CONFIG
+    classification_rules, classification_descriptor, warnings = (
+        _load_classification_config(config_path)
+    )
     assets: list[dict[str, Any]] = []
     for path in sorted(_iter_source_files(assets_root), key=lambda item: _relative_posix(item, source_root).casefold()):
         relative_path = _relative_posix(path, source_root)
@@ -561,19 +960,8 @@ def build_manifest(source: Path) -> dict[str, Any]:
             )
             continue
         try:
-            asset = _asset_metadata(path, source_root)
+            asset = _asset_metadata(path, source_root, classification_rules)
             assets.append(asset)
-            if asset["kind"] in {"token", "prop"} and (
-                asset["bytes"] > 1024 * 1024
-                or (asset.get("image") or {}).get("width", 0) > 1024
-            ):
-                warnings.append(
-                    {
-                        "code": "runtime-derivative-recommended",
-                        "path": relative_path,
-                        "message": "Asset grande para uso em token/objeto; gere derivado WebP sem alterar o original.",
-                    }
-                )
         except (UnsafeSourceError, SourceChangedError):
             raise
         except (OSError, UnicodeError, ElementTree.ParseError, ManifestError) as error:
@@ -625,6 +1013,28 @@ def build_manifest(source: Path) -> dict[str, Any]:
             )
 
     assets.sort(key=lambda item: item["relativePath"])
+    asset_paths = {asset["relativePath"] for asset in assets}
+    for override_path in sorted(classification_rules["exact"]):
+        if override_path not in asset_paths:
+            warnings.append(
+                {
+                    "code": "classification-override-missing",
+                    "path": override_path,
+                    "message": "Override exato nao corresponde a nenhum asset atual da campanha.",
+                }
+            )
+    for family_path, rule in sorted(classification_rules["families"].items()):
+        if not any(
+            _family_override_matches(asset_path, family_path, rule["extensions"])
+            for asset_path in asset_paths
+        ):
+            warnings.append(
+                {
+                    "code": "classification-override-missing",
+                    "path": family_path,
+                    "message": "Familia versionada nao corresponde a nenhum asset atual da campanha.",
+                }
+            )
     documents.sort(key=lambda item: item["relativePath"])
     scenes = _build_scenes(assets, warnings)
     state_groups = _build_state_groups(assets, warnings)
@@ -642,6 +1052,7 @@ def build_manifest(source: Path) -> dict[str, Any]:
             "sourceRef": CAMPAIGN_SOURCE_REF,
             "sourceMode": "external-read-only",
         },
+        "classification": classification_descriptor,
         "summary": {
             "assetCount": len(assets),
             "documentCount": len(documents),
@@ -657,6 +1068,8 @@ def build_manifest(source: Path) -> dict[str, Any]:
             "scenes": scenes,
             "stateGroups": state_groups,
             "tokenAssetIds": [asset["id"] for asset in assets if asset["kind"] == "token"],
+            "propAssetIds": [asset["id"] for asset in assets if asset["kind"] == "prop"],
+            "handoutAssetIds": [asset["id"] for asset in assets if asset["kind"] == "handout"],
         },
         "warnings": warnings,
     }
@@ -673,6 +1086,24 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         raise ManifestError("campaign.sourceRef ausente")
     if "sourceRoot" in campaign:
         raise ManifestError("campaign.sourceRoot absoluto nao pode integrar o manifesto")
+
+    classification = manifest.get("classification")
+    if not isinstance(classification, dict):
+        raise ManifestError("classification ausente")
+    config_ref = classification.get("configRef")
+    if (
+        not isinstance(config_ref, str)
+        or not config_ref
+        or PurePosixPath(config_ref).is_absolute()
+        or ".." in PurePosixPath(config_ref).parts
+        or "\\" in config_ref
+    ):
+        raise ManifestError("classification.configRef inseguro")
+    config_fingerprint = classification.get("fingerprint")
+    if config_fingerprint is not None and not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", config_fingerprint
+    ):
+        raise ManifestError("classification.fingerprint invalido")
 
     assets = manifest.get("assets")
     documents = manifest.get("documents")
@@ -721,7 +1152,26 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
                 if not isinstance(variant.get("version"), int) or variant["version"] < 0:
                     raise ManifestError(f"versao de variante invalida: {group['id']}")
                 referenced_ids.add(variant["assetId"])
-    referenced_ids.update(manifest["collections"]["tokenAssetIds"])
+    assets_by_id = {asset["id"]: asset for asset in assets}
+    for collection_name, expected_kind in (
+        ("tokenAssetIds", "token"),
+        ("propAssetIds", "prop"),
+        ("handoutAssetIds", "handout"),
+    ):
+        collection_ids = manifest["collections"].get(collection_name)
+        if not isinstance(collection_ids, list) or not all(
+            isinstance(asset_id, str) for asset_id in collection_ids
+        ):
+            raise ManifestError(f"collections.{collection_name} deve ser lista de IDs")
+        if len(collection_ids) != len(set(collection_ids)):
+            raise ManifestError(f"collections.{collection_name} contem IDs duplicados")
+        referenced_ids.update(collection_ids)
+        for asset_id in collection_ids:
+            asset = assets_by_id.get(asset_id)
+            if asset is not None and asset.get("kind") != expected_kind:
+                raise ManifestError(
+                    f"{collection_name} referencia kind diferente de {expected_kind}: {asset_id}"
+                )
 
     unknown_ids = referenced_ids.difference(asset_ids)
     if unknown_ids:
@@ -805,6 +1255,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--source", required=True, type=Path, help="Raiz do repositorio Mnemosyne.")
     parser.add_argument("--output", type=Path, default=_default_output(), help="Arquivo JSON de destino.")
     parser.add_argument(
+        "--classification-config",
+        type=Path,
+        default=DEFAULT_CLASSIFICATION_CONFIG,
+        help="Overrides semanticos exatos, versionados junto ao aplicativo.",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Nao grava; falha se o manifesto existente estiver ausente ou desatualizado.",
@@ -821,7 +1277,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     try:
         source_root = args.source.expanduser().resolve()
-        manifest = build_manifest(source_root)
+        manifest = build_manifest(source_root, args.classification_config)
         rendered = render_manifest(manifest)
 
         if args.check:
