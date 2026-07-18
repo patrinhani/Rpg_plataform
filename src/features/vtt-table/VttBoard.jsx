@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './vtt-board.css';
+import { resolvePropStateOptions } from './prop-state-groups.js';
 
 const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 3.2;
@@ -124,6 +125,7 @@ export default function VttBoard({
   const [selectedAssetId, setSelectedAssetId] = useState('');
   const [selectedPropId, setSelectedPropId] = useState('');
   const [selectedPropAssetId, setSelectedPropAssetId] = useState('');
+  const [selectedPropStateAssetId, setSelectedPropStateAssetId] = useState('');
   const [draftPropPositions, setDraftPropPositions] = useState({});
   const [showGrid, setShowGrid] = useState(true);
   const [isPanning, setIsPanning] = useState(false);
@@ -163,6 +165,18 @@ export default function VttBoard({
     () => (Array.isArray(catalog?.propAssets) ? catalog.propAssets : []),
     [catalog?.propAssets],
   );
+  const propStateGroups = useMemo(
+    () => (Array.isArray(catalog?.propStateGroups) ? catalog.propStateGroups : []),
+    [catalog?.propStateGroups],
+  );
+  const selectedProp = useMemo(
+    () => props.find((item) => item.id === selectedPropId) || null,
+    [props, selectedPropId],
+  );
+  const selectedPropStates = useMemo(
+    () => resolvePropStateOptions(propStateGroups, selectedProp?.assetId),
+    [propStateGroups, selectedProp?.assetId],
+  );
   const isMaster = role === 'master';
   const mapWidth = Math.max(1, Number(scene?.map?.width) || 1);
   const mapHeight = Math.max(1, Number(scene?.map?.height) || 1);
@@ -187,6 +201,7 @@ export default function VttBoard({
     setDraftPositions({});
     setSelectedTokenId('');
     setSelectedPropId('');
+    setSelectedPropStateAssetId('');
     setDraftPropPositions({});
     setIsPanning(false);
     setGuideOpen(false);
@@ -316,6 +331,10 @@ export default function VttBoard({
       setSelectedPropAssetId(propAssets[0].assetId);
     }
   }, [propAssets, selectedPropAssetId]);
+
+  useEffect(() => {
+    setSelectedPropStateAssetId(selectedPropStates?.currentStateAssetId || '');
+  }, [selectedPropId, selectedPropStates?.currentStateAssetId]);
 
   const setZoom = useCallback((nextScale) => {
     setCamera((current) => ({
@@ -1042,18 +1061,36 @@ export default function VttBoard({
                 <button type="button" onClick={handleSpawnProp} disabled={!selectedPropAssetId}>
                   Posicionar objeto
                 </button>
+              </div>
+              <label className="vtt-board__field" htmlFor="vtt-board-prop-state">
+                <span>Estado do objeto selecionado</span>
+                <select
+                  id="vtt-board-prop-state"
+                  value={selectedPropStateAssetId}
+                  onChange={(event) => setSelectedPropStateAssetId(event.target.value)}
+                  disabled={!selectedPropId || !selectedPropStates?.options.length}
+                >
+                  {!selectedPropStates?.options.length && (
+                    <option value="">Este objeto não possui estados alternativos</option>
+                  )}
+                  {selectedPropStates?.options.map((state) => (
+                    <option key={state.assetId} value={state.assetId}>
+                      {state.label}{state.version > 1 ? ` · v${state.version}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="vtt-board__prop-primary-actions">
                 <button
                   type="button"
-                  onClick={() => {
-                    const asset = propAssets.find((item) => item.assetId === selectedPropAssetId);
-                    handleUpdateSelectedProp({
-                      assetId: selectedPropAssetId,
-                      label: asset?.label || humanize(selectedPropAssetId.split('/').pop()),
-                    });
-                  }}
-                  disabled={!selectedPropId || !selectedPropAssetId}
+                  onClick={() => handleUpdateSelectedProp({ assetId: selectedPropStateAssetId })}
+                  disabled={
+                    !selectedPropId
+                    || !selectedPropStateAssetId
+                    || selectedPropStateAssetId === selectedProp?.assetId
+                  }
                 >
-                  Trocar visual
+                  Aplicar estado
                 </button>
               </div>
               <div className="vtt-board__prop-transform" aria-label="Ajustes do objeto selecionado">

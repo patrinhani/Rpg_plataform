@@ -43,6 +43,8 @@ class Settings:
         "http://127.0.0.1:5173",
     )
     ticket_ttl_seconds: int = 60
+    max_pending_tickets_per_room: int = 32
+    max_media_grants_per_room: int = 64
     bind_host: str = "127.0.0.1"
     bind_port: int = 8765
     state_db_path: Path | None = None
@@ -57,6 +59,14 @@ class Settings:
             raise ValueError("CAOS_VTT_ALLOWED_ORIGINS deve listar origens explicitas")
         if not 10 <= self.ticket_ttl_seconds <= 600:
             raise ValueError("CAOS_VTT_TICKET_TTL deve estar entre 10 e 600 segundos")
+        if not 1 <= self.max_pending_tickets_per_room <= 4096:
+            raise ValueError(
+                "CAOS_VTT_MAX_PENDING_TICKETS_PER_ROOM deve estar entre 1 e 4096"
+            )
+        if not 1 <= self.max_media_grants_per_room <= 4096:
+            raise ValueError(
+                "CAOS_VTT_MAX_MEDIA_GRANTS_PER_ROOM deve estar entre 1 e 4096"
+            )
         if not 1 <= self.bind_port <= 65535:
             raise ValueError("CAOS_VTT_PORT invalida")
         if self.bind_host not in {"127.0.0.1", "localhost", "::1"}:
@@ -93,6 +103,12 @@ class Settings:
             host_token=host_token,
             allowed_origins=origins,
             ticket_ttl_seconds=int(os.getenv("CAOS_VTT_TICKET_TTL", "60")),
+            max_pending_tickets_per_room=int(
+                os.getenv("CAOS_VTT_MAX_PENDING_TICKETS_PER_ROOM", "32")
+            ),
+            max_media_grants_per_room=int(
+                os.getenv("CAOS_VTT_MAX_MEDIA_GRANTS_PER_ROOM", "64")
+            ),
             bind_host=os.getenv("CAOS_VTT_HOST", "127.0.0.1"),
             bind_port=int(os.getenv("CAOS_VTT_PORT", "8765")),
             state_db_path=state_db_path,

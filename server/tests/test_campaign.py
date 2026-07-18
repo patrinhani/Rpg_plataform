@@ -164,6 +164,40 @@ def _load(manifest_path: Path, source_root: Path) -> CampaignCatalog:
     return CampaignCatalog.load(manifest_path, {"memoria": source_root})
 
 
+def _add_prop_state_assets(
+    source_root: Path,
+    manifest: dict[str, Any],
+    ids: dict[str, str],
+) -> None:
+    for name, relative_path, data in (
+        (
+            "prop_alt",
+            "assets/objetos/ancora-desativada-objeto-vtt-v1.bin",
+            b"prop-alt",
+        ),
+        (
+            "prop_ungrouped",
+            "assets/objetos/corpo-conectado-objeto-vtt-v1.bin",
+            b"prop-ungrouped",
+        ),
+    ):
+        asset = _asset(
+            source_root,
+            relative_path,
+            data,
+            kind="prop",
+            audience="players",
+        )
+        manifest["assets"].append(asset)
+        manifest["collections"]["propAssetIds"].append(asset["id"])
+        ids[name] = asset["id"]
+    manifest["collections"]["stateGroups"][0]["states"]["desativado"] = {
+        "assetId": ids["prop_alt"],
+        "version": 1,
+        "variants": [{"assetId": ids["prop_alt"], "version": 1}],
+    }
+
+
 def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> None:
     manifest_path, source_root, _manifest, ids = _campaign_fixture(tmp_path)
     catalog = _load(manifest_path, source_root)
@@ -180,24 +214,18 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     master_scene = catalog.list_scenes("master")[0]
     assert master_scene.gm_guide_maps[0].asset_id == ids["gm_map"]
     assert master_scene.active_gm_guide_map == ids["gm_map"]
-
     assert [item.asset_id for item in catalog.list_tokens("player")] == [
         ids["token_player"],
         ids["token_public_gm"],
     ]
     assert {item.asset_id for item in catalog.list_tokens("master")} == {
-        ids["token_player"],
-        ids["token_public_gm"],
-        ids["token_gm"],
-        ids["token_unspecified"],
+        ids["token_player"], ids["token_public_gm"], ids["token_gm"], ids["token_unspecified"],
     }
     assert catalog.get_asset(ids["token_player"], "player").controlled_by == "players"
     assert catalog.get_asset(ids["token_public_gm"], "player").controlled_by == "gm"
     assert [item.asset_id for item in catalog.list_props("master")] == [ids["prop"]]
     assert [item.asset_id for item in catalog.list_props("player")] == [ids["prop"]]
-    assert [item.asset_id for item in catalog.list_handouts("master")] == [
-        ids["handout"]
-    ]
+    assert [item.asset_id for item in catalog.list_handouts("master")] == [ids["handout"]]
     assert catalog.list_handouts("player") == ()
     with pytest.raises(AssetNotAvailableError):
         catalog.get_asset(ids["handout"], "player")
@@ -205,6 +233,41 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     assert str(source_root) not in repr(player_scenes)
     assert str(source_root) not in repr(catalog.list_tokens("master"))
     assert catalog.hash_cache_size == 0
+
+
+def test_prop_state_groups_are_typed_private_and_unambiguous(tmp_path: Path) -> None:
+    manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    _add_prop_state_assets(source_root, manifest, ids)
+    _write_manifest(manifest_path, manifest)
+
+    catalog = _load(manifest_path, source_root)
+    groups = catalog.list_prop_state_groups("master")
+
+    assert catalog.list_prop_state_groups("player") == ()
+    assert len(groups) == 1
+    assert groups[0].group_id == "state-group:ancora"
+    assert [state.name for state in groups[0].states] == ["ativo", "desativado"]
+    assert catalog.can_swap_prop_asset(ids["prop"], ids["prop_alt"])
+    assert catalog.can_swap_prop_asset(ids["prop_alt"], ids["prop"])
+    assert not catalog.can_swap_prop_asset(ids["prop"], ids["prop_ungrouped"])
+    assert not catalog.can_swap_prop_asset(ids["prop_ungrouped"], ids["prop"])
+
+    manifest["collections"]["stateGroups"].append(
+        {
+            "id": "state-group:duplicado",
+            "key": "duplicado",
+            "states": {
+                "ativo": {
+                    "assetId": ids["prop_alt"],
+                    "version": 1,
+                    "variants": [{"assetId": ids["prop_alt"], "version": 1}],
+                }
+            },
+        }
+    )
+    _write_manifest(manifest_path, manifest)
+    with pytest.raises(ManifestValidationError, match="outro estado"):
+        _load(manifest_path, source_root)
 
 
 def test_new_asset_collections_are_optional_for_older_manifests(tmp_path: Path) -> None:
@@ -413,13 +476,17 @@ def _catalog_app(
     tmp_path: Path,
     *,
     two_scenes: bool = False,
+    prop_states: bool = False,
 ) -> tuple[Any, CampaignCatalog, dict[str, str]]:
     manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    if prop_states:
+        _add_prop_state_assets(source_root, manifest, ids)
     if two_scenes:
         second_scene = copy.deepcopy(manifest["collections"]["scenes"][0])
         second_scene["id"] = "scene:salão-memória"
         second_scene["key"] = "salão-memória"
         manifest["collections"]["scenes"].append(second_scene)
+    if two_scenes or prop_states:
         _write_manifest(manifest_path, manifest)
     catalog = _load(manifest_path, source_root)
     app = create_app(
@@ -672,6 +739,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 "scenes",
                 "tokenAssets",
                 "propAssets",
+                "propStateGroups",
             }
             assert [
                 item["assetId"]
@@ -949,6 +1017,79 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             )
             assert second_token_id not in master.receive_json()["state"]["tokens"]
             assert second_token_id not in player.receive_json()["state"]["tokens"]
+
+
+def test_prop_visual_updates_are_restricted_to_states_of_the_same_group(
+    tmp_path: Path,
+) -> None:
+    app, _catalog, ids = _catalog_app(tmp_path, prop_states=True)
+    with TestClient(app) as client:
+        room = _create_room(client, campaignId="memoria")
+        master_access = _issue_access(client, room, "masterInviteToken")
+        player_access = _issue_access(client, room, "playerInviteToken")
+        socket_path = f"/ws/vtt/rooms/{room['roomId']}"
+
+        with client.websocket_connect(
+            f"{socket_path}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master, client.websocket_connect(
+            f"{socket_path}?ticket={player_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player:
+            master_initial = master.receive_json()
+            player.receive_json()
+            groups = master_initial["state"]["catalog"]["propStateGroups"]
+            assert groups[0]["id"] == "state-group:ancora"
+            assert [state["assetId"] for state in groups[0]["states"]] == [
+                ids["prop"],
+                ids["prop_alt"],
+            ]
+
+            master.send_json(
+                {
+                    "type": "prop.spawn",
+                    "commandId": "spawn-stateful-prop",
+                    "payload": {
+                        "assetId": ids["prop"],
+                        "label": "Ancora",
+                        "x": 0.5,
+                        "y": 0.5,
+                    },
+                }
+            )
+            spawned_master = master.receive_json()
+            player.receive_json()
+            prop_id = next(iter(spawned_master["state"]["props"]))
+
+            master.send_json(
+                {
+                    "type": "prop.update",
+                    "commandId": "swap-valid-state",
+                    "payload": {"propId": prop_id, "assetId": ids["prop_alt"]},
+                }
+            )
+            swapped_master = master.receive_json()
+            player.receive_json()
+            assert swapped_master["state"]["props"][prop_id]["assetId"] == ids["prop_alt"]
+            revision = swapped_master["revision"]
+
+            master.send_json(
+                {
+                    "type": "prop.update",
+                    "commandId": "swap-unrelated-prop",
+                    "payload": {
+                        "propId": prop_id,
+                        "assetId": ids["prop_ungrouped"],
+                    },
+                }
+            )
+            rejected = master.receive_json()
+            assert rejected["error"]["code"] == "prop_state_mismatch"
+            runtime_room = app.state.vtt._rooms[room["roomId"]]
+            assert runtime_room.revision == revision
+            assert runtime_room.scene_props[runtime_room.active_scene_id][prop_id].asset_id == ids[
+                "prop_alt"
+            ]
 
 
 def test_catalog_room_enforces_global_token_limit(tmp_path: Path) -> None:

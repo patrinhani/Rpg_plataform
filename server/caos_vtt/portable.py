@@ -29,6 +29,8 @@ DEFAULT_PORT = 8765
 PACKAGED_CAMPAIGN_SOURCE_REF = "mnemosyne"
 PACKAGED_CAMPAIGN_RELATIVE_DIR = Path("campaigns") / "mnemosyne"
 DEMO_MODE_MARKER = "DEMO-MODE.txt"
+PUBLIC_ORIGIN_PLACEHOLDER = "https://SEU-PROJETO.vercel.app"
+MAX_PUBLIC_ORIGIN_FILE_BYTES = 4096
 
 
 def find_frontend_dir() -> Path:
@@ -136,6 +138,25 @@ def build_portable_settings(
     )
 
 
+def read_public_origin_file(path: Path) -> tuple[str, ...]:
+    """Le uma origem editavel sem delegar seu conteudo ao shell do Windows."""
+
+    candidate = path.expanduser()
+    try:
+        if candidate.stat().st_size > MAX_PUBLIC_ORIGIN_FILE_BYTES:
+            raise ValueError("O arquivo de origem web excede 4 KiB")
+        text = candidate.read_text(encoding="utf-8-sig").strip()
+    except OSError as error:
+        raise ValueError(f"Nao foi possivel ler o arquivo de origem web: {candidate}") from error
+    if not text or text == PUBLIC_ORIGIN_PLACEHOLDER:
+        return ()
+    if "\n" in text or "\r" in text or "\x00" in text:
+        raise ValueError("O arquivo de origem web deve conter somente uma URL HTTPS")
+    # Reuse the canonical Settings validation before returning the value.
+    build_portable_settings(DEFAULT_PORT, (text,))
+    return (text,)
+
+
 def default_portable_state_db(
     *,
     frozen: bool | None = None,
@@ -199,6 +220,12 @@ def _parser() -> argparse.ArgumentParser:
         help="origem HTTPS explicita do tunel; pode ser repetida e nunca aceita wildcard",
     )
     parser.add_argument(
+        "--public-origin-file",
+        type=Path,
+        metavar="ARQUIVO",
+        help="arquivo UTF-8 opcional com uma unica origem HTTPS explicita",
+    )
+    parser.add_argument(
         "--tunnel",
         action="store_true",
         help="criar um Cloudflare Quick Tunnel temporario e gratuito",
@@ -245,7 +272,10 @@ def run(argv: Sequence[str] | None = None) -> int:
         raise ValueError("--tunnel-timeout deve estar entre 5 e 180 segundos")
 
     # Reject malformed manual origins before starting any external process.
-    build_portable_settings(args.port, args.public_origin)
+    manual_origins = list(args.public_origin)
+    if args.public_origin_file is not None:
+        manual_origins.extend(read_public_origin_file(args.public_origin_file))
+    build_portable_settings(args.port, manual_origins)
 
     campaign_paths = resolve_campaign_paths(
         args.campaign_manifest,
@@ -273,7 +303,7 @@ def run(argv: Sequence[str] | None = None) -> int:
         )
 
     try:
-        public_origins = list(args.public_origin)
+        public_origins = list(manual_origins)
         if args.tunnel:
             print("\nCriando Cloudflare Quick Tunnel...", flush=True)
             tunnel = QuickTunnel(find_cloudflared_executable())
@@ -309,8 +339,8 @@ def run(argv: Sequence[str] | None = None) -> int:
             print("O endereco online e temporario e muda a cada execucao.")
         print(f"Host token temporario: {settings.host_token}")
         print(f"Sessoes salvas em: {settings.state_db_path}")
-        if args.public_origin:
-            print(f"Origens publicas adicionais: {', '.join(args.public_origin)}")
+        if manual_origins:
+            print(f"Origens publicas adicionais: {', '.join(manual_origins)}")
         print("Copie o token acima para o campo 'Host token' ao criar a sala.")
         print("O token nao foi salvo em disco e muda a cada execucao.")
         print("Fechar esta janela encerra o servidor; salas vinculadas permanecem salvas.")

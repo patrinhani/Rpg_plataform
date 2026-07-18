@@ -12,6 +12,7 @@ import string
 import warnings
 import zlib
 from collections import OrderedDict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -48,6 +49,8 @@ PROTOCOL_VERSION = 1
 DEMO_TOKEN_ID = "demo-token"
 ROOM_ALPHABET = string.ascii_uppercase + string.digits
 MEDIA_TOKEN_TTL_SECONDS = 12 * 60 * 60
+DEFAULT_MAX_PENDING_TICKETS_PER_ROOM = 32
+DEFAULT_MAX_MEDIA_GRANTS_PER_ROOM = 64
 MAX_ROOM_TOKENS = 256
 MAX_ROOM_PROPS = 128
 PROCESSED_COMMAND_LIMIT = 256
@@ -90,6 +93,7 @@ def _command_fingerprint(command: CatalogCommand) -> str:
 class ClientConnection:
     websocket: WebSocket
     role: Role
+    media_digest: bytes
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
     async def send(self, payload: dict[str, Any]) -> None:
@@ -102,6 +106,7 @@ class TicketGrant:
     room_id: str
     role: Role
     expires_at: datetime
+    media_digest: bytes
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +129,14 @@ class IssuedAccess:
 class CatalogCommandFailure:
     code: str
     message: str
+
+
+class AccessCapacityError(Exception):
+    """A sala atingiu o limite temporario de credenciais efemeras."""
+
+
+class PersistedAssetObsoleteError(Exception):
+    """Uma entidade válida referencia um asset que mudou de função no catálogo."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,6 +177,7 @@ class FogState:
     revision: int = 0
     render_revision: int = 0
     map_asset_id: str | None = None
+    map_fingerprint: str | None = None
     mask: bytearray = field(
         default_factory=lambda: bytearray(FOG_MASK_SIZE * FOG_MASK_SIZE)
     )
@@ -207,16 +221,21 @@ class VTTService:
         self,
         *,
         ticket_ttl_seconds: int,
+        max_pending_tickets_per_room: int = DEFAULT_MAX_PENDING_TICKETS_PER_ROOM,
+        max_media_grants_per_room: int = DEFAULT_MAX_MEDIA_GRANTS_PER_ROOM,
         catalog: CampaignCatalog | None = None,
         state_db_path: Path | None = None,
     ) -> None:
         self.ticket_ttl_seconds = ticket_ttl_seconds
         self.media_ttl_seconds = MEDIA_TOKEN_TTL_SECONDS
+        self.max_pending_tickets_per_room = max_pending_tickets_per_room
+        self.max_media_grants_per_room = max_media_grants_per_room
         self.catalog = catalog
         self._rooms: dict[str, Room] = {}
         self._external_rooms: dict[str, str] = {}
         self._tickets: dict[str, TicketGrant] = {}
         self._media_grants: dict[bytes, MediaGrant] = {}
+        self._map_fingerprint_cache: dict[str, str] = {}
         self._fog_render_cache: OrderedDict[tuple[Any, ...], RenderedFogMap] = OrderedDict()
         self._fog_render_inflight: dict[
             tuple[Any, ...], asyncio.Task[RenderedFogMap]
@@ -280,9 +299,21 @@ class VTTService:
                 overlay.asset_id: False for overlay in scene.overlays
             }
             room.scene_fog[scene.scene_id] = FogState(
-                map_asset_id=scene.active_player_map
+                map_asset_id=scene.active_player_map,
+                map_fingerprint=self._map_fingerprint(scene.active_player_map),
             )
         room.active_scene_id = scenes[0].scene_id if scenes else None
+
+    def _map_fingerprint(self, asset_id: str | None) -> str | None:
+        if asset_id is None:
+            return None
+        cached = self._map_fingerprint_cache.get(asset_id)
+        if cached is not None:
+            return cached
+        assert self.catalog is not None
+        fingerprint = self.catalog.get_asset_fingerprint(asset_id, "master")
+        self._map_fingerprint_cache[asset_id] = fingerprint
+        return fingerprint
 
     async def issue_ticket(self, room_id: str, invite_token: str) -> IssuedAccess | None:
         room = self._rooms.get(room_id)
@@ -299,11 +330,13 @@ class VTTService:
 
         ticket = secrets.token_urlsafe(24)
         media_token = secrets.token_urlsafe(32)
+        media_digest = _token_digest(media_token)
         now = datetime.now(UTC)
         ticket_grant = TicketGrant(
             room_id=room_id,
             role=role,
             expires_at=now + timedelta(seconds=self.ticket_ttl_seconds),
+            media_digest=media_digest,
         )
         media_grant = MediaGrant(
             room_id=room_id,
@@ -312,8 +345,19 @@ class VTTService:
         )
         async with self._access_lock:
             self._purge_expired_access(now)
+            pending_tickets = sum(
+                grant.room_id == room_id for grant in self._tickets.values()
+            )
+            media_grants = sum(
+                grant.room_id == room_id for grant in self._media_grants.values()
+            )
+            if (
+                pending_tickets >= self.max_pending_tickets_per_room
+                or media_grants >= self.max_media_grants_per_room
+            ):
+                raise AccessCapacityError
             self._tickets[ticket] = ticket_grant
-            self._media_grants[_token_digest(media_token)] = media_grant
+            self._media_grants[media_digest] = media_grant
         return IssuedAccess(
             ticket=ticket,
             role=role,
@@ -327,6 +371,10 @@ class VTTService:
             now = datetime.now(UTC)
             self._purge_expired_access(now)
             grant = self._tickets.pop(ticket, None)
+            if grant is not None and (
+                grant.room_id != room_id or grant.expires_at <= now
+            ):
+                self._media_grants.pop(grant.media_digest, None)
         if grant is None or grant.room_id != room_id or grant.expires_at <= now:
             return None
         return grant
@@ -519,26 +567,35 @@ class VTTService:
                     self._fog_render_cache.popitem(last=False)
 
     async def connect(
-        self, room_id: str, websocket: WebSocket, role: Role
+        self, room_id: str, websocket: WebSocket, role: Role, media_digest: bytes
     ) -> ClientConnection | None:
         room = self._rooms.get(room_id)
         if room is None:
+            await self._revoke_media_digests((media_digest,))
             return None
-        connection = ClientConnection(websocket=websocket, role=role)
-        async with room.broadcast_lock:
-            async with room.lock:
-                snapshot = self._snapshot(room, role)
-            await connection.send(snapshot)
-            async with room.lock:
-                room.clients.add(connection)
+        connection = ClientConnection(
+            websocket=websocket,
+            role=role,
+            media_digest=media_digest,
+        )
+        try:
+            async with room.broadcast_lock:
+                async with room.lock:
+                    snapshot = self._snapshot(room, role)
+                await connection.send(snapshot)
+                async with room.lock:
+                    room.clients.add(connection)
+        except BaseException:
+            await self._revoke_media_digests((media_digest,))
+            raise
         return connection
 
     async def disconnect(self, room_id: str, connection: ClientConnection) -> None:
         room = self._rooms.get(room_id)
-        if room is None:
-            return
-        async with room.lock:
-            room.clients.discard(connection)
+        if room is not None:
+            async with room.lock:
+                room.clients.discard(connection)
+        await self._revoke_media_digests((connection.media_digest,))
 
     async def move_token(
         self,
@@ -783,6 +840,14 @@ class VTTService:
                     return CatalogCommandFailure("asset_not_found", "Objeto de cenario indisponivel")
                 if asset.kind != "prop":
                     return CatalogCommandFailure("asset_not_prop", "Asset nao e objeto de cenario")
+                if not self.catalog.can_swap_prop_asset(
+                    prop.asset_id,
+                    command.payload.assetId,
+                ):
+                    return CatalogCommandFailure(
+                        "prop_state_mismatch",
+                        "O visual escolhido nao pertence aos estados deste objeto",
+                    )
                 prop.asset_id = command.payload.assetId
             for field_name in ("label", "x", "y", "width", "height", "rotation", "visible"):
                 value = getattr(command.payload, field_name)
@@ -896,6 +961,7 @@ class VTTService:
                     "revision": fog.revision,
                     "renderRevision": fog.render_revision,
                     "mapAssetId": fog.map_asset_id,
+                    "mapFingerprint": fog.map_fingerprint,
                     "maskBase64": base64.b64encode(bytes(fog.mask)).decode("ascii"),
                 },
             }
@@ -1025,8 +1091,12 @@ class VTTService:
             raise ValueError("cenas persistidas invalidas")
         total_tokens = 0
         total_props = 0
-        scene_map_ids = {
-            scene.scene_id: scene.active_player_map for scene in self._master_scenes()
+        scene_maps = {
+            scene.scene_id: (
+                scene.active_player_map,
+                self._map_fingerprint(scene.active_player_map),
+            )
+            for scene in self._master_scenes()
         }
         for scene_id in tuple(room.scene_tokens):
             raw_scene = scenes_payload.get(scene_id, {})
@@ -1048,7 +1118,7 @@ class VTTService:
             for raw_token in raw_tokens:
                 try:
                     token = self._deserialize_token(raw_token)
-                except AssetNotAvailableError:
+                except (AssetNotAvailableError, PersistedAssetObsoleteError):
                     warnings.warn(
                         "Token persistido com asset obsoleto foi ignorado",
                         RuntimeWarning,
@@ -1068,7 +1138,7 @@ class VTTService:
             for raw_prop in raw_props:
                 try:
                     prop = self._deserialize_prop(raw_prop)
-                except AssetNotAvailableError:
+                except (AssetNotAvailableError, PersistedAssetObsoleteError):
                     warnings.warn(
                         "Objeto persistido com asset obsoleto foi ignorado",
                         RuntimeWarning,
@@ -1085,7 +1155,8 @@ class VTTService:
             raw_fog = raw_scene.get("fog")
             if raw_fog is not None:
                 room.scene_fog[scene_id] = self._deserialize_fog(
-                    raw_fog, scene_map_ids.get(scene_id)
+                    raw_fog,
+                    *(scene_maps.get(scene_id) or (None, None)),
                 )
 
         active_scene_id = payload.get("activeSceneId")
@@ -1156,7 +1227,7 @@ class VTTService:
         assert self.catalog is not None
         asset = self.catalog.get_asset(asset_id, "master")
         if asset.kind != "token":
-            raise ValueError("asset persistido nao e token")
+            raise PersistedAssetObsoleteError("asset persistido nao e mais token")
         return CatalogToken(
             token_id=token_id,
             asset_id=asset_id,
@@ -1190,7 +1261,9 @@ class VTTService:
         assert self.catalog is not None
         asset = self.catalog.get_asset(asset_id, "master")
         if asset.kind != "prop":
-            raise ValueError("asset persistido nao e objeto de cenario")
+            raise PersistedAssetObsoleteError(
+                "asset persistido nao e mais objeto de cenario"
+            )
         return CatalogProp(
             prop_id=prop_id,
             asset_id=asset_id,
@@ -1206,7 +1279,11 @@ class VTTService:
         )
 
     @staticmethod
-    def _deserialize_fog(payload: Any, expected_map_asset_id: str | None) -> FogState:
+    def _deserialize_fog(
+        payload: Any,
+        expected_map_asset_id: str | None,
+        expected_map_fingerprint: str | None,
+    ) -> FogState:
         if not isinstance(payload, dict):
             raise ValueError("fog persistido invalido")
         enabled = payload.get("enabled")
@@ -1217,13 +1294,20 @@ class VTTService:
             payload.get("renderRevision", revision), "fog.renderRevision"
         )
         persisted_map_asset_id = payload.get("mapAssetId")
-        if persisted_map_asset_id != expected_map_asset_id:
+        persisted_map_fingerprint = payload.get("mapFingerprint")
+        if (
+            persisted_map_asset_id != expected_map_asset_id
+            or persisted_map_fingerprint != expected_map_fingerprint
+        ):
             warnings.warn(
                 "Mapa da cena mudou; a nevoa foi fechada e reiniciada por seguranca",
                 RuntimeWarning,
                 stacklevel=2,
             )
-            return FogState(map_asset_id=expected_map_asset_id)
+            return FogState(
+                map_asset_id=expected_map_asset_id,
+                map_fingerprint=expected_map_fingerprint,
+            )
         encoded = payload.get("maskBase64")
         if not isinstance(encoded, str) or len(encoded) > 100_000:
             raise ValueError("mascara de fog invalida")
@@ -1235,6 +1319,7 @@ class VTTService:
             revision=revision,
             render_revision=render_revision,
             map_asset_id=expected_map_asset_id,
+            map_fingerprint=expected_map_fingerprint,
             mask=bytearray(mask),
         )
 
@@ -1282,18 +1367,26 @@ class VTTService:
 
     def _purge_expired_access(self, now: datetime) -> None:
         expired_tickets = [
-            token for token, grant in self._tickets.items() if grant.expires_at <= now
+            (token, grant.media_digest)
+            for token, grant in self._tickets.items()
+            if grant.expires_at <= now
         ]
-        for token in expired_tickets:
+        for token, media_digest in expired_tickets:
             self._tickets.pop(token, None)
+            self._media_grants.pop(media_digest, None)
         expired_media = [
             token for token, grant in self._media_grants.items() if grant.expires_at <= now
         ]
         for token in expired_media:
             self._media_grants.pop(token, None)
 
-    @staticmethod
+    async def _revoke_media_digests(self, digests: Iterable[bytes]) -> None:
+        async with self._access_lock:
+            for digest in digests:
+                self._media_grants.pop(digest, None)
+
     async def _send_to_clients(
+        self,
         room: Room,
         payloads: Any,
     ) -> None:
@@ -1323,6 +1416,9 @@ class VTTService:
             async with room.lock:
                 for client in stale:
                     room.clients.discard(client)
+            await self._revoke_media_digests(
+                client.media_digest for client in stale
+            )
 
     def _snapshot(self, room: Room, role: Role) -> dict[str, Any]:
         if self.catalog is None:
@@ -1440,6 +1536,30 @@ class VTTService:
                         "label": self._asset_label(asset.asset_id),
                     }
                     for asset in self.catalog.list_props("master")
+                ],
+                "propStateGroups": [
+                    {
+                        "id": group.group_id,
+                        "key": group.key,
+                        "label": self._humanize(group.key),
+                        "states": [
+                            {
+                                "name": state.name,
+                                "label": self._humanize(state.name),
+                                "assetId": state.asset_id,
+                                "version": state.version,
+                                "variants": [
+                                    {
+                                        "assetId": variant.asset_id,
+                                        "version": variant.version,
+                                    }
+                                    for variant in state.variants
+                                ],
+                            }
+                            for state in group.states
+                        ],
+                    }
+                    for group in self.catalog.list_prop_state_groups("master")
                 ],
             }
             if room.persistence_warning is not None:

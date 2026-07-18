@@ -120,6 +120,21 @@ class SceneView:
 
 
 @dataclass(frozen=True, slots=True)
+class PropStateView:
+    name: str
+    asset_id: str
+    version: int
+    variants: tuple[SceneVariantView, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PropStateGroupView:
+    group_id: str
+    key: str
+    states: tuple[PropStateView, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class ResolvedAsset:
     """Resultado interno autorizado e validado para um endpoint de arquivo."""
 
@@ -522,9 +537,16 @@ def _parse_scenes(
     return tuple(sorted(scenes, key=lambda item: item.key))
 
 
-def _validate_state_groups(collections: dict[str, Any], assets: Mapping[str, _AssetRecord]) -> None:
+def _parse_state_groups(
+    collections: dict[str, Any],
+    assets: Mapping[str, _AssetRecord],
+    prop_ids: tuple[str, ...] | None,
+) -> tuple[PropStateGroupView, ...]:
     raw_groups = _expect_list(collections.get("stateGroups"), "collections.stateGroups")
     group_ids: set[str] = set()
+    grouped_assets: set[str] = set()
+    allowed_prop_ids = None if prop_ids is None else set(prop_ids)
+    groups: list[PropStateGroupView] = []
     for group_index, raw_group in enumerate(raw_groups):
         context = f"collections.stateGroups[{group_index}]"
         group = _expect_object(raw_group, context)
@@ -534,6 +556,7 @@ def _validate_state_groups(collections: dict[str, Any], assets: Mapping[str, _As
             raise ManifestValidationError(f"{context}.id invalido ou duplicado")
         group_ids.add(group_id)
         states = _expect_object(group.get("states"), f"{context}.states")
+        parsed_states: list[PropStateView] = []
         for state_name, raw_state in states.items():
             _expect_string(state_name, f"{context}.states key")
             state_context = f"{context}.states[{state_name}]"
@@ -561,6 +584,34 @@ def _validate_state_groups(collections: dict[str, Any], assets: Mapping[str, _As
                 raise ManifestValidationError(f"{state_context} seleciona variante ausente")
             if selected_version != max(item.version for item in variants):
                 raise ManifestValidationError(f"{state_context} nao seleciona a maior versao")
+            variant_ids = {item.asset_id for item in variants}
+            if allowed_prop_ids is not None and not variant_ids.issubset(allowed_prop_ids):
+                raise ManifestValidationError(
+                    f"{state_context}.variants referencia prop fora de propAssetIds"
+                )
+            if grouped_assets.intersection(variant_ids):
+                raise ManifestValidationError(
+                    f"{state_context}.variants usa asset presente em outro estado"
+                )
+            grouped_assets.update(variant_ids)
+            parsed_states.append(
+                PropStateView(
+                    name=state_name,
+                    asset_id=selected_id,
+                    version=selected_version,
+                    variants=tuple(sorted(variants, key=lambda item: (item.version, item.asset_id))),
+                )
+            )
+        if not parsed_states:
+            raise ManifestValidationError(f"{context}.states nao pode ser vazio")
+        groups.append(
+            PropStateGroupView(
+                group_id=group_id,
+                key=key,
+                states=tuple(sorted(parsed_states, key=lambda item: item.name)),
+            )
+        )
+    return tuple(sorted(groups, key=lambda item: item.key))
 
 
 def _parse_asset_ids(
@@ -608,6 +659,7 @@ class CampaignCatalog:
         source_root: Path,
         assets: dict[str, _AssetRecord],
         scenes: tuple[SceneView, ...],
+        prop_state_groups: tuple[PropStateGroupView, ...],
         token_ids: tuple[str, ...],
         prop_ids: tuple[str, ...],
         handout_ids: tuple[str, ...],
@@ -619,9 +671,20 @@ class CampaignCatalog:
         self._source_root_identity = source_root.stat()
         self._assets = assets
         self._scenes = scenes
+        self._prop_state_groups = prop_state_groups
         self._token_ids = token_ids
         self._prop_ids = prop_ids
         self._handout_ids = handout_ids
+        self._prop_group_by_asset = {
+            variant.asset_id: group.group_id
+            for group in prop_state_groups
+            for state in group.states
+            for variant in state.variants
+        }
+        self._prop_state_targets = {
+            group.group_id: frozenset(state.asset_id for state in group.states)
+            for group in prop_state_groups
+        }
         self._hash_cache: dict[str, _FileSignature] = {}
         self._hash_cache_lock = threading.Lock()
 
@@ -652,7 +715,6 @@ class CampaignCatalog:
         _validate_documents(manifest)
         collections = _expect_object(manifest.get("collections"), "collections")
         scenes = _parse_scenes(collections, assets)
-        _validate_state_groups(collections, assets)
         token_ids = _parse_asset_ids(
             collections,
             assets,
@@ -665,6 +727,11 @@ class CampaignCatalog:
             collection_name="propAssetIds",
             expected_kind="prop",
             optional=True,
+        )
+        prop_state_groups = _parse_state_groups(
+            collections,
+            assets,
+            prop_ids if collections.get("propAssetIds") is not None else None,
         )
         handout_ids = _parse_asset_ids(
             collections,
@@ -680,6 +747,7 @@ class CampaignCatalog:
             source_root=source_root,
             assets=assets,
             scenes=scenes,
+            prop_state_groups=prop_state_groups,
             token_ids=token_ids,
             prop_ids=prop_ids,
             handout_ids=handout_ids,
@@ -720,6 +788,24 @@ class CampaignCatalog:
 
         return self._asset_for_role(asset_id, role).view
 
+    def get_asset_fingerprint(self, asset_id: str, role: str) -> str:
+        """Identifica a revisao declarada do asset sem abrir ou expor seu caminho.
+
+        O valor e destinado apenas ao estado interno do servidor. Ele permite
+        invalidar dados derivados (como a mascara de fog) quando o manifesto
+        passa a apontar para outro conteudo sob o mesmo ``asset_id``.
+        """
+
+        record = self._asset_for_role(asset_id, role)
+        image = record.view.image
+        width = image.width if image is not None and image.width is not None else 0
+        height = image.height if image is not None and image.height is not None else 0
+        payload = (
+            f"sha256:{record.expected_sha256};bytes:{record.expected_bytes};"
+            f"image:{width}x{height}"
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
     def list_tokens(self, role: str) -> tuple[AssetView, ...]:
         """Lista tokens autorizados sem expor relativePath, hash ou raiz local."""
 
@@ -739,6 +825,22 @@ class CampaignCatalog:
             for asset_id in self._prop_ids
             if (record := self._assets[asset_id]) and self._is_authorized(record, role)
         )
+
+    def list_prop_state_groups(self, role: str) -> tuple[PropStateGroupView, ...]:
+        """Lista estados de objetos somente para as ferramentas privadas do Mestre."""
+
+        role = self._validate_role(role)
+        return self._prop_state_groups if role == "master" else ()
+
+    def can_swap_prop_asset(self, source_asset_id: str, target_asset_id: str) -> bool:
+        """Aplica a politica conservadora de transicao entre estados de um objeto."""
+
+        if source_asset_id == target_asset_id:
+            return source_asset_id in self._prop_ids
+        group_id = self._prop_group_by_asset.get(source_asset_id)
+        if group_id is None:
+            return False
+        return target_asset_id in self._prop_state_targets[group_id]
 
     def list_handouts(self, role: str) -> tuple[AssetView, ...]:
         """Indexa handouts para o Mestre; jogadores nao os conhecem antes da revelacao."""

@@ -30,6 +30,8 @@ def create_app(
     app.state.catalog = catalog
     app.state.vtt = VTTService(
         ticket_ttl_seconds=resolved.ticket_ttl_seconds,
+        max_pending_tickets_per_room=resolved.max_pending_tickets_per_room,
+        max_media_grants_per_room=resolved.max_media_grants_per_room,
         catalog=catalog,
         state_db_path=resolved.state_db_path,
     )

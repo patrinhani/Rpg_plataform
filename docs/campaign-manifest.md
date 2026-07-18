@@ -62,7 +62,7 @@ Use `--strict` para retornar código 2 quando houver avisos de calibração ou a
 - `assets`: inventário de mapas, guias do mestre, overlays, tokens, objetos, handouts, símbolos e concepts; qualquer arquivo sob `assets/handouts/` recebe `kind: handout` e `audience: gm` por padrão;
 - `documents`: metadados dos Markdown em UTF-8, sem copiar seu conteúdo integral;
 - `collections.scenes`: mapas de jogadores, guias e overlays agrupados por cena, com versão numérica; `activePlayerMap` aponta para a maior versão quando ela é única. Para cada nome de overlay, apenas a maior versão integra a cena; versões anteriores permanecem no inventário de assets e um empate na versão mais alta deixa o overlay de fora com aviso explícito;
-- `collections.stateGroups`: pares como âncora ativa/desativada e Fragmento ritual/recuperado; versões repetidas geram aviso e a maior versão numérica é selecionada de forma determinística;
+- `collections.stateGroups`: pares como âncora ativa/desativada e Fragmento ritual/recuperado; versões repetidas geram aviso e a maior versão numérica é selecionada de forma determinística. No VTT esses grupos também são a política de transição: o Mestre só pode trocar um objeto por outro estado do mesmo grupo, e assets sem grupo não recebem um fallback para a lista global;
 - `collections.tokenAssetIds`, `propAssetIds` e `handoutAssetIds`: índices semânticos separados para que o VTT não trate objetos de cenário ou documentos privados como criaturas;
 - `warnings`: lacunas que precisam de decisão humana, como a grade ainda desconhecida dos mapas Helix-9.
 

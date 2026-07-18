@@ -8,8 +8,10 @@ import pytest
 from caos_vtt import portable
 from caos_vtt.portable import (
     DEMO_MODE_MARKER,
+    PUBLIC_ORIGIN_PLACEHOLDER,
     build_portable_settings,
     load_portable_catalog,
+    read_public_origin_file,
     resolve_campaign_paths,
 )
 
@@ -37,6 +39,23 @@ def test_portable_settings_accept_only_explicit_tunnel_origins() -> None:
 
     with pytest.raises(ValueError, match="HTTPS"):
         build_portable_settings(8765, ("http://mesa.example.com",))
+
+
+def test_public_origin_file_is_read_inside_the_executable(tmp_path: Path) -> None:
+    origin_file = tmp_path / "ORIGEM-WEB.txt"
+    origin_file.write_text("https://mesa.example.com\n", encoding="utf-8")
+    assert read_public_origin_file(origin_file) == ("https://mesa.example.com",)
+
+    origin_file.write_text(PUBLIC_ORIGIN_PLACEHOLDER, encoding="utf-8")
+    assert read_public_origin_file(origin_file) == ()
+
+    origin_file.write_text("https://mesa.example.com\nhttps://outra.example.com", encoding="utf-8")
+    with pytest.raises(ValueError, match="somente uma URL"):
+        read_public_origin_file(origin_file)
+
+    origin_file.write_text("https://mesa.example.com/caminho", encoding="utf-8")
+    with pytest.raises(ValueError, match="Origem invalida"):
+        read_public_origin_file(origin_file)
 
 
 def _write_empty_campaign_manifest(root: Path, *, source_ref: str = "mnemosyne") -> Path:

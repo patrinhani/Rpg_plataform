@@ -18,6 +18,7 @@ import secrets
 import stat
 import sys
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Mapping, Sequence
@@ -1030,20 +1031,33 @@ def _unique_backup_path(output: Path) -> Path:
     raise OutputSafetyError("Nao foi possivel reservar backup atomico do destino")
 
 
+def _replace_with_retry(source: Path, destination: Path) -> None:
+    """Tolerate short-lived Windows/antivirus handles without hiding real failures."""
+
+    for attempt in range(8):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError:
+            if attempt == 7:
+                raise
+            time.sleep(0.05 * (2**attempt))
+
+
 def _install_atomically(temporary: Path, output: Path) -> None:
     if not output.exists():
-        os.replace(temporary, output)
+        _replace_with_retry(temporary, output)
         return
     _assert_tree_regular(output)
     if not _existing_output_is_managed(output):
         raise OutputSafetyError("O destino deixou de ser um pack gerenciado")
     backup = _unique_backup_path(output)
-    os.replace(output, backup)
+    _replace_with_retry(output, backup)
     try:
-        os.replace(temporary, output)
+        _replace_with_retry(temporary, output)
     except Exception:
         try:
-            os.replace(backup, output)
+            _replace_with_retry(backup, output)
         except Exception as rollback_error:
             raise OutputSafetyError(
                 "Falha ao instalar e ao restaurar o destino; backup preservado"

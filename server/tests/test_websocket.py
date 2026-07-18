@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
@@ -99,3 +101,38 @@ def test_websocket_ticket_is_single_use(client: TestClient, room: dict[str, obje
         with client.websocket_connect(path, headers={"Origin": ORIGIN}):
             pass
     assert reused.value.code == 4401
+
+
+def test_websocket_disconnect_revokes_media_grant_and_releases_capacity(
+    client: TestClient,
+    room: dict[str, object],
+) -> None:
+    response = client.post(
+        f"/api/vtt/rooms/{room['roomId']}/tickets",
+        headers={"Authorization": f"Bearer {room['playerInviteToken']}"},
+    )
+    assert response.status_code == 200
+    access = response.json()
+    media_digest = hashlib.sha256(access["mediaToken"].encode("utf-8")).digest()
+    service = client.app.state.vtt
+    service.max_media_grants_per_room = 1
+    assert media_digest in service._media_grants
+
+    with client.websocket_connect(
+        f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
+        headers={"Origin": ORIGIN},
+    ) as socket:
+        assert socket.receive_json()["type"] == "room.snapshot"
+        assert media_digest in service._media_grants
+        full = client.post(
+            f"/api/vtt/rooms/{room['roomId']}/tickets",
+            headers={"Authorization": f"Bearer {room['playerInviteToken']}"},
+        )
+        assert full.status_code == 429
+
+    assert media_digest not in service._media_grants
+    recovered = client.post(
+        f"/api/vtt/rooms/{room['roomId']}/tickets",
+        headers={"Authorization": f"Bearer {room['playerInviteToken']}"},
+    )
+    assert recovered.status_code == 200

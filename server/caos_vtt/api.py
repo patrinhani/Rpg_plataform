@@ -39,7 +39,12 @@ from .models import (
     TokenRemoveCommand,
     TokenSpawnCommand,
 )
-from .service import PROTOCOL_VERSION, ClientConnection, VTTService
+from .service import (
+    PROTOCOL_VERSION,
+    AccessCapacityError,
+    ClientConnection,
+    VTTService,
+)
 
 
 MAX_WS_MESSAGE_BYTES = 16 * 1024
@@ -154,7 +159,13 @@ def create_router() -> APIRouter:
                 headers={"WWW-Authenticate": "Bearer"},
             )
         service: VTTService = request.app.state.vtt
-        result = await service.issue_ticket(room_id, invite_token)
+        try:
+            result = await service.issue_ticket(room_id, invite_token)
+        except AccessCapacityError:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Limite temporario de acessos da sala atingido",
+            ) from None
         if result is None:
             if not service.room_exists(room_id):
                 raise HTTPException(
@@ -261,7 +272,12 @@ def create_router() -> APIRouter:
             return
 
         await websocket.accept()
-        connection = await service.connect(room_id, websocket, grant.role)
+        connection = await service.connect(
+            room_id,
+            websocket,
+            grant.role,
+            grant.media_digest,
+        )
         if connection is None:
             await websocket.close(code=4404, reason="Room not found")
             return

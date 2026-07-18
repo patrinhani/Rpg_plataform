@@ -340,6 +340,33 @@ def test_output_is_deterministic_and_managed_pack_can_be_replaced(tmp_path: Path
     assert not list(tmp_path.glob(".first-pack.*.tmp"))
 
 
+def test_atomic_install_retries_transient_permission_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    temporary = tmp_path / ".runtime-pack.tmp"
+    output = tmp_path / "runtime-pack"
+    temporary.mkdir()
+    original_replace = pack_module.os.replace
+    attempts = 0
+
+    def transient_replace(source: Path, destination: Path) -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts < 3:
+            raise PermissionError("handle temporario do antivirus")
+        original_replace(source, destination)
+
+    monkeypatch.setattr(pack_module.os, "replace", transient_replace)
+    monkeypatch.setattr(pack_module.time, "sleep", lambda _seconds: None)
+
+    pack_module._install_atomically(temporary, output)
+
+    assert attempts == 3
+    assert output.is_dir()
+    assert not temporary.exists()
+
+
 def test_source_tree_is_unchanged_after_build_and_check(tmp_path: Path) -> None:
     manifest_path, source, _manifest, _ids = _fixture(tmp_path)
     before = _tree_snapshot(source)

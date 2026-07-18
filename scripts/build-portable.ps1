@@ -63,6 +63,62 @@ function Remove-SafeDirectory {
     }
 }
 
+function Copy-VerifiedTree {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination,
+        [Parameter(Mandatory = $true)][string]$ExpectedDestinationParent
+    )
+
+    $resolvedSource = [IO.Path]::GetFullPath($Source)
+    $resolvedDestination = [IO.Path]::GetFullPath($Destination)
+    $resolvedParent = [IO.Path]::GetFullPath($ExpectedDestinationParent).TrimEnd('\', '/')
+    $parentPrefix = $resolvedParent + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolvedDestination.StartsWith($parentPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Copia recusada fora da pasta de artefatos: '$resolvedDestination'."
+    }
+    if (-not (Test-Path -LiteralPath $resolvedSource -PathType Container)) {
+        throw "Origem da copia verificada nao encontrada: '$resolvedSource'."
+    }
+    if (Test-Path -LiteralPath $resolvedDestination) {
+        throw "Destino da copia verificada ja existe: '$resolvedDestination'."
+    }
+
+    $sourcePrefix = $resolvedSource.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    New-Item -ItemType Directory -Path $resolvedDestination | Out-Null
+    try {
+        foreach ($item in @(Get-ChildItem -LiteralPath $resolvedSource -Recurse -Force)) {
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Copia recusou link/junction em '$($item.FullName)'."
+            }
+            $relative = $item.FullName.Substring($sourcePrefix.Length)
+            $target = Join-Path $resolvedDestination $relative
+            if ($item.PSIsContainer) {
+                New-Item -ItemType Directory -Path $target -Force | Out-Null
+                continue
+            }
+            $targetParent = Split-Path -Parent $target
+            New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
+            Copy-Item -LiteralPath $item.FullName -Destination $target
+            $copied = Get-Item -LiteralPath $target
+            if ($copied.Length -ne $item.Length) {
+                throw "Tamanho divergiu ao copiar '$relative'."
+            }
+            $sourceHash = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash
+            $targetHash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+            if ($sourceHash -ne $targetHash) {
+                throw "SHA-256 divergiu ao copiar '$relative'."
+            }
+        }
+    }
+    catch {
+        if (Test-Path -LiteralPath $resolvedDestination) {
+            Remove-SafeDirectory -Path $resolvedDestination -ExpectedParent $resolvedParent
+        }
+        throw
+    }
+}
+
 function Assert-RealPathBelow {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -260,6 +316,8 @@ function Get-VerifiedCloudflared {
 
 $artifactRoot = $null
 $stagingRoot = $null
+$campaignPackTempRoot = $null
+$systemTemp = $null
 $buildLock = $null
 
 try {
@@ -271,6 +329,7 @@ try {
     $frontendIndex = Join-Path $frontendDist 'index.html'
     $launcherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT.cmd'
     $onlineLauncherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT Online.cmd'
+    $webOriginConfigSource = Join-Path $serverDirectory 'packaging\ORIGEM-WEB.txt'
     $cloudflaredLicenseSource = Join-Path $serverDirectory 'packaging\cloudflared\LICENSE-cloudflared.txt'
     $cloudflaredNoticeSource = Join-Path $serverDirectory 'packaging\cloudflared\CLOUDFLARED-NOTICE.txt'
     $readmeSource = Join-Path $serverDirectory 'README-PORTABLE.md'
@@ -279,9 +338,11 @@ try {
     $campaignManifestTool = Join-Path $repoRoot 'tools\campaign_manifest\generate.py'
     $campaignPackTool = Join-Path $repoRoot 'tools\campaign_pack\__main__.py'
     $buildRoot = Join-Path $serverDirectory '.build'
-    $campaignPackBuild = Join-Path $buildRoot 'campaigns\mnemosyne'
     $artifactRoot = Join-Path $serverDirectory '.artifacts'
     $runId = [guid]::NewGuid().ToString('N')
+    $systemTemp = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
+    $campaignPackTempRoot = Join-Path $systemTemp "caos-vtt-campaign-pack-$runId"
+    $campaignPackBuild = Join-Path $campaignPackTempRoot 'mnemosyne'
     $stagingRoot = Join-Path $artifactRoot ".staging-$runId"
     $portableDist = Join-Path $stagingRoot 'portable'
     $portableDirectory = Join-Path $portableDist 'CAOS-VTT'
@@ -315,6 +376,7 @@ try {
         @{ Path = $frontendDist; Parent = $repoRoot },
         @{ Path = $buildRoot; Parent = $serverDirectory },
         @{ Path = $artifactRoot; Parent = $serverDirectory },
+        @{ Path = $campaignPackTempRoot; Parent = $systemTemp },
         @{ Path = $cloudflaredCache; Parent = $serverDirectory }
     )) {
         Assert-RealPathBelow -Path $safePath.Path -ExpectedParent $safePath.Parent
@@ -387,6 +449,7 @@ try {
     if (-not $SkipTunnel) {
         foreach ($requiredTunnelFile in @(
             $onlineLauncherSource,
+            $webOriginConfigSource,
             $cloudflaredLicenseSource,
             $cloudflaredNoticeSource
         )) {
@@ -397,9 +460,12 @@ try {
         if (-not [Environment]::Is64BitOperatingSystem) {
             throw 'O pacote online usa cloudflared Windows AMD64 e precisa ser gerado em Windows x64.'
         }
-        $pythonBitsOutput = & $venvPython -c 'import struct; print(struct.calcsize("P") * 8)' 2>$null | Select-Object -First 1
-        $pythonBits = if ($pythonBitsOutput) { $pythonBitsOutput.Trim() } else { '' }
-        if ($LASTEXITCODE -ne 0 -or $pythonBits -ne '64') {
+        # Evite aspas internas: o Windows pode remove-las ao reconstruir argv
+        # para executaveis nativos e transformar calcsize("P") em calcsize(P).
+        $pythonBitsOutput = & $venvPython -c 'import struct; print(struct.calcsize(chr(80)) * 8)' 2>$null
+        $pythonBitsExitCode = $LASTEXITCODE
+        $pythonBits = if ($pythonBitsOutput) { @($pythonBitsOutput)[0].Trim() } else { '' }
+        if ($pythonBitsExitCode -ne 0 -or $pythonBits -ne '64') {
             throw 'O pacote online precisa de um ambiente .venv-vtt Python 64-bit.'
         }
     }
@@ -463,8 +529,10 @@ try {
     Write-Step 'Preparando area transacional de build'
     Remove-SafeDirectory -Path $buildRoot -ExpectedParent $serverDirectory
     Remove-SafeDirectory -Path $stagingRoot -ExpectedParent $artifactRoot
+    Remove-SafeDirectory -Path $campaignPackTempRoot -ExpectedParent $systemTemp
     New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
     New-Item -ItemType Directory -Path $portableDist -Force | Out-Null
+    New-Item -ItemType Directory -Path $campaignPackTempRoot -Force | Out-Null
 
     if ($SkipCampaign) {
         Write-Step 'Build demo solicitado explicitamente; nenhum asset de campanha sera incluido'
@@ -577,6 +645,7 @@ try {
     if (-not $SkipTunnel) {
         Copy-Item -LiteralPath $cloudflaredBinary -Destination (Join-Path $portableDirectory 'cloudflared.exe') -Force
         Copy-Item -LiteralPath $onlineLauncherSource -Destination $portableDirectory -Force
+        Copy-Item -LiteralPath $webOriginConfigSource -Destination $portableDirectory -Force
         Copy-Item -LiteralPath $cloudflaredLicenseSource -Destination $portableDirectory -Force
         Copy-Item -LiteralPath $cloudflaredNoticeSource -Destination $portableDirectory -Force
 
@@ -605,10 +674,28 @@ try {
     $installedPortable = $false
     $installedZip = $false
     $installedHash = $false
+    $installedPortableDist = $finalPortableDist
+    $installedPortableDirectory = $finalPortableDirectory
+    $copyPortableInsteadOfMove = $false
     try {
         if (Test-Path -LiteralPath $finalPortableDist) {
-            Move-Item -LiteralPath $finalPortableDist -Destination $portableBackup
-            $movedPreviousPortable = $true
+            try {
+                Move-Item `
+                    -LiteralPath $finalPortableDist `
+                    -Destination $portableBackup `
+                    -ErrorAction Stop
+                $movedPreviousPortable = $true
+            }
+            catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+                $installedPortableDist = Join-Path $artifactRoot "portable-$runId"
+                $installedPortableDirectory = Join-Path $installedPortableDist 'CAOS-VTT'
+                $copyPortableInsteadOfMove = $true
+                Write-Warning (
+                    "A pasta portatil anterior esta em uso e foi preservada. " +
+                    "A nova pasta sera instalada em '$installedPortableDist'. " +
+                    'Feche Explorer/terminais nessa pasta antes do proximo build para recuperar o caminho estavel.'
+                )
+            }
         }
         if (Test-Path -LiteralPath $zipPath -PathType Leaf) {
             Move-Item -LiteralPath $zipPath -Destination $zipBackup
@@ -619,7 +706,27 @@ try {
             $movedPreviousHash = $true
         }
 
-        Move-Item -LiteralPath $portableDist -Destination $finalPortableDist
+        if ($copyPortableInsteadOfMove) {
+            Copy-VerifiedTree `
+                -Source $portableDist `
+                -Destination $installedPortableDist `
+                -ExpectedDestinationParent $artifactRoot
+        }
+        else {
+            try {
+                Move-Item `
+                    -LiteralPath $portableDist `
+                    -Destination $installedPortableDist `
+                    -ErrorAction Stop
+            }
+            catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+                Write-Warning 'Rename da nova pasta bloqueado; usando copia integral com SHA-256.'
+                Copy-VerifiedTree `
+                    -Source $portableDist `
+                    -Destination $installedPortableDist `
+                    -ExpectedDestinationParent $artifactRoot
+            }
+        }
         $installedPortable = $true
         if (-not $SkipArchive) {
             Move-Item -LiteralPath $stagingZipPath -Destination $zipPath
@@ -635,8 +742,8 @@ try {
         if ($installedZip -and (Test-Path -LiteralPath $zipPath -PathType Leaf)) {
             Remove-Item -LiteralPath $zipPath -Force
         }
-        if ($installedPortable -and (Test-Path -LiteralPath $finalPortableDist)) {
-            Remove-SafeDirectory -Path $finalPortableDist -ExpectedParent $artifactRoot
+        if ($installedPortable -and (Test-Path -LiteralPath $installedPortableDist)) {
+            Remove-SafeDirectory -Path $installedPortableDist -ExpectedParent $artifactRoot
         }
         if ($movedPreviousPortable -and (Test-Path -LiteralPath $portableBackup)) {
             Move-Item -LiteralPath $portableBackup -Destination $finalPortableDist
@@ -668,8 +775,9 @@ try {
     }
     Remove-SafeDirectory -Path $stagingRoot -ExpectedParent $artifactRoot
     Remove-SafeDirectory -Path $buildRoot -ExpectedParent $serverDirectory
+    Remove-SafeDirectory -Path $campaignPackTempRoot -ExpectedParent $systemTemp
 
-    Write-Host "`nPacote portatil pronto: $finalPortableDirectory" -ForegroundColor Green
+    Write-Host "`nPacote portatil pronto: $installedPortableDirectory" -ForegroundColor Green
     if ($SkipCampaign) {
         Write-Warning 'Este artefato e DEMO e nao contem a campanha Mnemosyne.'
     }
@@ -696,6 +804,18 @@ catch {
     exit 1
 }
 finally {
+    if (
+        $campaignPackTempRoot -and
+        $systemTemp -and
+        (Test-Path -LiteralPath $campaignPackTempRoot)
+    ) {
+        try {
+            Remove-SafeDirectory -Path $campaignPackTempRoot -ExpectedParent $systemTemp
+        }
+        catch {
+            Write-Warning "Nao foi possivel limpar o pack temporario '$campaignPackTempRoot'."
+        }
+    }
     if ($buildLock) {
         $buildLock.Dispose()
     }

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+
 from fastapi.testclient import TestClient
 
 from conftest import HOST_TOKEN
@@ -85,3 +89,58 @@ def test_invalid_invite_is_rejected(client: TestClient, room: dict[str, object])
         headers={"Authorization": "Bearer convite-invalido"},
     )
     assert response.status_code == 401
+
+
+def test_access_capacity_is_per_room_and_expired_ticket_releases_its_media_grant(
+    client: TestClient,
+    room: dict[str, object],
+) -> None:
+    service = client.app.state.vtt
+    service.max_pending_tickets_per_room = 2
+    service.max_media_grants_per_room = 2
+    path = f"/api/vtt/rooms/{room['roomId']}/tickets"
+    headers = {"Authorization": f"Bearer {room['playerInviteToken']}"}
+
+    first = client.post(path, headers=headers)
+    second = client.post(path, headers=headers)
+    assert first.status_code == 200
+    assert second.status_code == 200
+
+    full = client.post(path, headers=headers)
+    assert full.status_code == 429
+    assert full.json() == {
+        "detail": "Limite temporario de acessos da sala atingido"
+    }
+
+    invalid = client.post(
+        path,
+        headers={"Authorization": "Bearer convite-invalido"},
+    )
+    assert invalid.status_code == 401
+
+    other_room = client.post(
+        "/api/vtt/rooms",
+        headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+        json={"name": "Outra mesa"},
+    ).json()
+    other_access = client.post(
+        f"/api/vtt/rooms/{other_room['roomId']}/tickets",
+        headers={"Authorization": f"Bearer {other_room['playerInviteToken']}"},
+    )
+    assert other_access.status_code == 200
+
+    first_access = first.json()
+    ticket = first_access["ticket"]
+    media_digest = hashlib.sha256(
+        first_access["mediaToken"].encode("utf-8")
+    ).digest()
+    service._tickets[ticket] = replace(
+        service._tickets[ticket],
+        expires_at=datetime.now(UTC) - timedelta(seconds=1),
+    )
+    assert media_digest in service._media_grants
+
+    recovered = client.post(path, headers=headers)
+    assert recovered.status_code == 200
+    assert ticket not in service._tickets
+    assert media_digest not in service._media_grants

@@ -35,9 +35,11 @@ Uma sala vinculada pelo `externalMesaId` da Mesa é recuperada ao ser criada nov
 
 O fog começa **ligado e totalmente fechado** em todas as cenas. O Mestre pode revelar ou ocultar áreas com o pincel, fechar tudo, revelar tudo ou desligar o fog conscientemente. Se o mapa ativo da cena mudar entre versões da campanha, a máscara anterior é descartada e a visão volta a ficar fechada para evitar revelações acidentais.
 
-Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays ou dos objetos de cenário. O servidor compõe essas camadas com a máscara e entrega uma única imagem pronta; tokens fora de áreas reveladas também não entram no snapshot do jogador. Os objetos de cenário são independentes dos tokens e podem ser posicionados, redimensionados, girados, ocultados e trocados pelo Mestre.
+Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays ou dos objetos de cenário. O servidor compõe essas camadas com a máscara e entrega uma única imagem pronta; tokens fora de áreas reveladas também não entram no snapshot do jogador. Os objetos de cenário são independentes dos tokens e podem ser posicionados, redimensionados, girados e ocultados. Quando o manifesto define estados, o Mestre pode alternar somente entre visuais do mesmo objeto, como ativo/desativado ou ritual/recuperado; objetos sem estados continuam editáveis, mas não podem virar outro asset por engano.
 
 ## Modo online
+
+O fluxo recomendado é usar a página aberta pelo próprio endereço `trycloudflare`, pois frontend e backend ficam na mesma origem. Para abrir o VTT pelo botão de uma Mesa no sistema hospedado na Vercel, edite `ORIGEM-WEB.txt` uma vez e substitua o exemplo pela origem HTTPS exata do seu app, sem barra ou caminho, como `https://seu-projeto.vercel.app`. Depois inicie o modo online, abra o VTT pela Mesa e cole o endereço `https://*.trycloudflare.com` mostrado no console em **URL do servidor**. O launcher autoriza apenas a origem configurada; valores malformados continuam sendo recusados pelo executável.
 
 `Iniciar C.A.O.S. VTT Online.cmd` executa `CAOS-VTT.exe --tunnel`. O Quick Tunnel é temporário, gratuito, não exige conta e cria um endereço `https://*.trycloudflare.com` diferente a cada execução. Ele é adequado para mesas pessoais, não oferece SLA e pode ser bloqueado por proxy, política corporativa ou antivírus.
 
@@ -102,6 +104,8 @@ Resultados:
 - `server\.artifacts\CAOS-VTT-portable-win.zip`
 - `server\.artifacts\CAOS-VTT-portable-win.zip.sha256`
 
+O ZIP e o hash sempre usam esses nomes estáveis. Se o Explorer, um terminal ou outro processo mantiver a pasta `portable` anterior aberta, o build a preserva e instala a nova pasta como `portable-<id>\CAOS-VTT`; feche o processo que usa a versão antiga antes do build seguinte para recuperar também o caminho estável da pasta.
+
 Opções úteis:
 
 - `-SkipTunnel`: pacote local sem `cloudflared.exe`;
@@ -111,5 +115,17 @@ Opções úteis:
 - `-MaxCampaignBytes N`: altera conscientemente o teto do pack em bytes.
 
 Também é possível definir `CAOS_VTT_CAMPAIGN_ROOT`. O build aceita até 512 MiB por padrão e mostra o peso verificado; `-MaxCampaignBytes` permite acompanhar campanhas maiores sem um teto escondido. A trava existe apenas para detectar crescimento acidental. O build exige que o manifesto versionado corresponda à campanha atual; se o teste de atualização falhar, regenere o manifesto, revise o diff e execute novamente. A fonte original da campanha é apenas lida e não é alterada.
+
+### Atualizar a campanha em crescimento
+
+Quando novos arquivos entrarem na Mnemosyne, regenere o manifesto, valide o pack e revise o diff antes do build:
+
+```powershell
+.\scripts\update-campaign-manifest.ps1 -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
+git diff -- tools/campaign_manifest/generated/mnemosyne.manifest.json
+.\scripts\build-portable.ps1 -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
+```
+
+O script de atualização apenas lê a campanha original, grava o manifesto versionado no projeto e executa a validação seletiva imediatamente.
 
 O build online fixa o `cloudflared` Windows AMD64 2026.7.2 e confere o SHA-256 `cdb5d4432f6ae1595654a692a51308b69d2bf7af961f5578d9391837cf072df9`. A licença Apache 2.0 e o aviso de terceiro acompanham o pacote.

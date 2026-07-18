@@ -39,3 +39,21 @@ def test_origins_are_canonical_and_reject_invalid_ports() -> None:
             host_token="host-token-for-tests-123456",
             allowed_origins=("https://example.com:not-a-port",),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "message"),
+    (
+        (
+            "max_pending_tickets_per_room",
+            "CAOS_VTT_MAX_PENDING_TICKETS_PER_ROOM",
+        ),
+        ("max_media_grants_per_room", "CAOS_VTT_MAX_MEDIA_GRANTS_PER_ROOM"),
+    ),
+)
+def test_access_limits_must_be_bounded(field: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        Settings(
+            host_token="host-token-for-tests-123456",
+            **{field: 0},
+        )

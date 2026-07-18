@@ -2,8 +2,13 @@ C.A.O.S. VTT — INÍCIO RÁPIDO
 
 1. Extraia TODO o conteúdo do ZIP para uma pasta comum.
 2. Para jogar pela internet, abra "Iniciar C.A.O.S. VTT Online.cmd".
+   Se for abrir o VTT pelo sistema hospedado na Vercel, edite antes ORIGEM-WEB.txt e coloque
+   apenas a origem HTTPS do site, por exemplo: https://seu-projeto.vercel.app
 3. Para usar apenas neste computador, abra "Iniciar C.A.O.S. VTT.cmd".
 4. Aguarde o navegador abrir e copie o Host token mostrado na janela preta.
+   O fluxo mais simples usa a página aberta pelo próprio endereço trycloudflare. ORIGEM-WEB.txt
+   só é necessário para abrir o VTT por outro site, como o botão da Mesa na Vercel. Nesse caso,
+   cole também o endereço https://*.trycloudflare.com exibido em "URL do servidor".
 5. Crie a sala, conecte como Mestre e use "Copiar link completo para o jogador".
 6. Compartilhe SOMENTE esse link de jogador — nunca o host token ou convite de Mestre.
 

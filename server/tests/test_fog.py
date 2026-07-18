@@ -121,6 +121,25 @@ def _decoded_mask(snapshot: dict[str, Any]) -> bytes:
     return zlib.decompress(base64.b64decode(fog["data"], validate=True))
 
 
+def _read_persisted_room(state_db: Path, room_id: str) -> dict[str, Any]:
+    with sqlite3.connect(state_db) as connection:
+        row = connection.execute(
+            "SELECT payload_json FROM room_state WHERE room_id = ?", (room_id,)
+        ).fetchone()
+    assert row is not None
+    return json.loads(row[0])
+
+
+def _write_persisted_room(
+    state_db: Path, room_id: str, payload: dict[str, Any]
+) -> None:
+    with sqlite3.connect(state_db) as connection:
+        connection.execute(
+            "UPDATE room_state SET payload_json = ? WHERE room_id = ?",
+            (json.dumps(payload), room_id),
+        )
+
+
 def test_fog_is_server_composited_role_safe_and_hides_tokens(
     tmp_path: Path,
 ) -> None:
@@ -642,6 +661,278 @@ def test_storage_tolerates_legacy_missing_fog_and_corrupt_rows(tmp_path: Path) -
     with pytest.warns(RuntimeWarning, match="sala persistida invalida"):
         ignored = create_app(app.state.settings, catalog=app.state.catalog)
     assert not ignored.state.vtt.room_exists(room["roomId"])
+
+
+@pytest.mark.parametrize("fingerprint_state", ("missing", "divergent"))
+def test_persisted_fog_resets_closed_when_map_fingerprint_is_stale(
+    tmp_path: Path,
+    fingerprint_state: str,
+) -> None:
+    state_db = tmp_path / f"fog-fingerprint-{fingerprint_state}.sqlite3"
+    app, ids = _fog_app(tmp_path, state_db_path=state_db)
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/vtt/rooms",
+            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+            json={
+                "name": "Mesa vinculada ao mapa",
+                "campaignId": "memoria",
+                "externalMesaId": f"mesa-fingerprint-{fingerprint_state}",
+            },
+        )
+        assert response.status_code == 201
+        room = response.json()
+        access = _access(client, room, "masterInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master:
+            master.receive_json()
+            master.send_json(
+                {
+                    "type": "fog.stroke",
+                    "commandId": "reveal-before-map-change",
+                    "payload": {
+                        "points": [{"x": 0.5, "y": 0.5}],
+                        "radius": 0.1,
+                        "reveal": True,
+                    },
+                }
+            )
+            revealed = master.receive_json()
+            assert revealed["state"]["fog"]["revision"] == 1
+            assert _decoded_mask(revealed)[128 * 256 + 128] == 255
+
+    payload = _read_persisted_room(state_db, room["roomId"])
+    scene = payload["scenes"]["scene:salao-vazio"]
+    assert scene["fog"]["mapAssetId"] == ids["map_v2"]
+    if fingerprint_state == "missing":
+        scene["fog"].pop("mapFingerprint")
+    else:
+        scene["fog"]["mapFingerprint"] = "sha256:outro;bytes:1;image:1x1"
+    _write_persisted_room(state_db, room["roomId"], payload)
+
+    with pytest.warns(RuntimeWarning, match="Mapa da cena mudou"):
+        restarted = create_app(app.state.settings, catalog=app.state.catalog)
+    assert restarted.state.vtt.room_exists(room["roomId"])
+
+    with TestClient(restarted) as client:
+        reopened_response = client.post(
+            "/api/vtt/rooms",
+            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+            json={
+                "name": "Mesa recuperada com fog fechado",
+                "campaignId": "memoria",
+                "externalMesaId": f"mesa-fingerprint-{fingerprint_state}",
+            },
+        )
+        assert reopened_response.status_code == 201
+        reopened = reopened_response.json()
+        assert reopened["roomId"] == room["roomId"]
+        access = _access(client, reopened, "masterInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master:
+            restored = master.receive_json()
+            assert restored["state"]["fog"]["enabled"] is True
+            assert restored["state"]["fog"]["revision"] == 0
+            assert restored["state"]["fog"]["renderRevision"] == 0
+            assert _decoded_mask(restored) == bytes(256 * 256)
+
+    with sqlite3.connect(state_db) as connection:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM room_state WHERE room_id = ?", (room["roomId"],)
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM invalid_room_state WHERE room_id = ?",
+            (room["roomId"],),
+        ).fetchone()[0] == 0
+
+
+def test_restore_ignores_entities_whose_asset_kind_changed_without_quarantine(
+    tmp_path: Path,
+) -> None:
+    state_db = tmp_path / "changed-asset-kind.sqlite3"
+    manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+
+    original_prop = next(
+        asset for asset in manifest["assets"] if asset["id"] == ids["prop"]
+    )
+    valid_prop_id = "asset:assets/objetos/ancora-estavel-objeto-vtt-v1.bin"
+    valid_prop_path = source_root.joinpath(
+        *"assets/objetos/ancora-estavel-objeto-vtt-v1.bin".split("/")
+    )
+    valid_prop_path.parent.mkdir(parents=True, exist_ok=True)
+    valid_prop_data = b"prop-estavel"
+    valid_prop_path.write_bytes(valid_prop_data)
+    valid_prop = dict(original_prop)
+    valid_prop.update(
+        {
+            "id": valid_prop_id,
+            "relativePath": "assets/objetos/ancora-estavel-objeto-vtt-v1.bin",
+            "bytes": len(valid_prop_data),
+            "sha256": hashlib.sha256(valid_prop_data).hexdigest(),
+        }
+    )
+    manifest["assets"].append(valid_prop)
+    manifest["collections"]["propAssetIds"].append(valid_prop_id)
+    _write_manifest(manifest_path, manifest)
+
+    initial_catalog = CampaignCatalog.load(manifest_path, {"memoria": source_root})
+    settings = Settings(
+        host_token=HOST_TOKEN,
+        allowed_origins=(ORIGIN,),
+        ticket_ttl_seconds=60,
+        state_db_path=state_db,
+    )
+    initial_app = create_app(settings, catalog=initial_catalog)
+    with TestClient(initial_app) as client:
+        response = client.post(
+            "/api/vtt/rooms",
+            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+            json={
+                "name": "Mesa antes da evolucao do catalogo",
+                "campaignId": "memoria",
+                "externalMesaId": "mesa-assets-kind-evoluido",
+            },
+        )
+        assert response.status_code == 201
+        room = response.json()
+        access = _access(client, room, "masterInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master:
+            master.receive_json()
+            commands = (
+                {
+                    "type": "token.spawn",
+                    "commandId": "spawn-token-kind-obsoleto",
+                    "payload": {
+                        "assetId": ids["token_player"],
+                        "label": "Token com kind alterado",
+                        "x": 0.3,
+                        "y": 0.3,
+                    },
+                },
+                {
+                    "type": "token.spawn",
+                    "commandId": "spawn-token-ainda-valido",
+                    "payload": {
+                        "assetId": ids["token_public_gm"],
+                        "label": "Token ainda valido",
+                        "x": 0.7,
+                        "y": 0.7,
+                    },
+                },
+                {
+                    "type": "prop.spawn",
+                    "commandId": "spawn-prop-kind-obsoleto",
+                    "payload": {
+                        "assetId": ids["prop"],
+                        "label": "Objeto com kind alterado",
+                        "x": 0.35,
+                        "y": 0.35,
+                    },
+                },
+                {
+                    "type": "prop.spawn",
+                    "commandId": "spawn-prop-ainda-valido",
+                    "payload": {
+                        "assetId": valid_prop_id,
+                        "label": "Objeto ainda valido",
+                        "x": 0.65,
+                        "y": 0.65,
+                    },
+                },
+            )
+            snapshots = []
+            for command in commands:
+                master.send_json(command)
+                snapshots.append(master.receive_json())
+
+    last_state = snapshots[-1]["state"]
+    stale_token_id = next(
+        token_id
+        for token_id, token in last_state["tokens"].items()
+        if token["label"] == "Token com kind alterado"
+    )
+    valid_token_id = next(
+        token_id
+        for token_id, token in last_state["tokens"].items()
+        if token["label"] == "Token ainda valido"
+    )
+    stale_prop_id = next(
+        prop_id
+        for prop_id, prop in last_state["props"].items()
+        if prop["label"] == "Objeto com kind alterado"
+    )
+    valid_prop_runtime_id = next(
+        prop_id
+        for prop_id, prop in last_state["props"].items()
+        if prop["label"] == "Objeto ainda valido"
+    )
+
+    assets_by_id = {asset["id"]: asset for asset in manifest["assets"]}
+    assets_by_id[ids["token_player"]]["kind"] = "prop"
+    assets_by_id[ids["prop"]]["kind"] = "token"
+    manifest["collections"]["tokenAssetIds"] = [
+        asset_id
+        for asset_id in manifest["collections"]["tokenAssetIds"]
+        if asset_id != ids["token_player"]
+    ] + [ids["prop"]]
+    manifest["collections"]["propAssetIds"] = [
+        asset_id
+        for asset_id in manifest["collections"]["propAssetIds"]
+        if asset_id != ids["prop"]
+    ] + [ids["token_player"]]
+    manifest["collections"]["stateGroups"] = []
+    _write_manifest(manifest_path, manifest)
+    evolved_catalog = CampaignCatalog.load(manifest_path, {"memoria": source_root})
+
+    with pytest.warns(RuntimeWarning) as warnings_seen:
+        evolved_app = create_app(settings, catalog=evolved_catalog)
+    warning_messages = [str(item.message) for item in warnings_seen]
+    assert any("Token persistido com asset obsoleto" in item for item in warning_messages)
+    assert any("Objeto persistido com asset obsoleto" in item for item in warning_messages)
+    assert evolved_app.state.vtt.room_exists(room["roomId"])
+
+    with TestClient(evolved_app) as client:
+        reopened_response = client.post(
+            "/api/vtt/rooms",
+            headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+            json={
+                "name": "Mesa depois da evolucao do catalogo",
+                "campaignId": "memoria",
+                "externalMesaId": "mesa-assets-kind-evoluido",
+            },
+        )
+        assert reopened_response.status_code == 201
+        reopened = reopened_response.json()
+        assert reopened["roomId"] == room["roomId"]
+        access = _access(client, reopened, "masterInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master:
+            restored = master.receive_json()["state"]
+            assert stale_token_id not in restored["tokens"]
+            assert stale_prop_id not in restored["props"]
+            assert restored["tokens"][valid_token_id]["label"] == "Token ainda valido"
+            assert (
+                restored["props"][valid_prop_runtime_id]["label"]
+                == "Objeto ainda valido"
+            )
+
+    with sqlite3.connect(state_db) as connection:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM room_state WHERE room_id = ?", (room["roomId"],)
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM invalid_room_state WHERE room_id = ?",
+            (room["roomId"],),
+        ).fetchone()[0] == 0
 
 
 def test_file_level_corruption_is_quarantined_and_recreated(tmp_path: Path) -> None:
