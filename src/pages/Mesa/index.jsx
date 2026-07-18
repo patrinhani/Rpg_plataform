@@ -12,6 +12,7 @@ import {
   importarPersonagemParaMesa,
   listarPersonagensPessoais,
   removerJogadorDaMesa,
+  vincularVttMesa,
 } from '../../lib/mesas.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useDialog } from '../../contexts/DialogContext.jsx';
@@ -265,6 +266,25 @@ export default function Mesa() {
   const nomeJogadorAtual = jogadores.find((jogador) => jogador.uid === usuario?.uid)?.nome
     || usuario?.displayName
     || 'Agente';
+
+  const abrirVtt = useCallback(() => {
+    if (!mesaId || !mesaData || !souMestre) return;
+    const campaignId = String(mesaData.vtt?.campaignId || 'mnemosyne');
+    const params = new URLSearchParams({
+      mesaId,
+      campaignId,
+      roomName: String(mesaData.nome || 'Mesa C.A.O.S.'),
+    });
+    window.open(`/vtt-lab?${params.toString()}`, '_blank', 'noopener,noreferrer');
+
+    if (!devVisualMode) {
+      void executarAcao(
+        'vtt-bind',
+        () => vincularVttMesa(mesaId, campaignId),
+        'O VTT abriu, mas não foi possível registrar o vínculo desta mesa.',
+      );
+    }
+  }, [devVisualMode, executarAcao, mesaData, mesaId, souMestre]);
 
   const elementosBestiario = useMemo(() => {
     if (!listaBestiario) return [];
@@ -658,6 +678,17 @@ export default function Mesa() {
           </div>
 
           <div className="mesa-topbar-actions">
+            {souMestre && (
+              <button
+                type="button"
+                className="mesa-vtt-launch"
+                onClick={abrirVtt}
+                disabled={Boolean(actionBusy)}
+              >
+                <AppIcon name="map" size={18} />
+                <span>Abrir VTT</span>
+              </button>
+            )}
             {souMestre && (
               <button
                 type="button"

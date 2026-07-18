@@ -12,6 +12,18 @@ class CreateRoomRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=1, max_length=80)
+    campaignId: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=80,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$",
+    )
+    externalMesaId: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]{1,128}$",
+    )
 
     @field_validator("name")
     @classmethod

@@ -109,6 +109,13 @@
   text-align: center;
 }
 
+.vtt-board__camera-controls > small {
+  color: #5f7d8f;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
 .vtt-board__connection {
   align-items: center;
   display: flex;
@@ -164,6 +171,10 @@
   cursor: grabbing;
 }
 
+.vtt-board__viewport.is-panning .vtt-board__stage {
+  will-change: transform;
+}
+
 .vtt-board__viewport:focus-visible {
   box-shadow: inset 0 0 0 2px rgba(101, 200, 255, 0.8);
   outline: none;
@@ -177,7 +188,6 @@
   position: relative;
   transform-origin: center;
   width: min(100%, calc(100dvh - 210px));
-  will-change: transform;
 }
 
 .vtt-board__map,
@@ -191,7 +201,9 @@
 }
 
 .vtt-board__map {
-  object-fit: fill;
+  display: block;
+  image-rendering: auto;
+  object-fit: contain;
   position: relative;
   transition: opacity 180ms ease;
   user-select: none;
@@ -204,7 +216,8 @@
 }
 
 .vtt-board__overlay {
-  object-fit: fill;
+  image-rendering: auto;
+  object-fit: contain;
   opacity: 0;
   transition: opacity 420ms ease;
   z-index: 2;
@@ -392,11 +405,36 @@
   padding: 10px;
 }
 
-.vtt-board__gm-guide img {
+.vtt-board__gm-guide-preview {
+  background: #020608;
+  border: 0;
   border-top: 1px solid rgba(126, 180, 214, 0.14);
   display: block;
-  height: auto;
+  padding: 0;
+  position: relative;
   width: 100%;
+}
+
+.vtt-board__gm-guide-preview img {
+  display: block;
+  height: auto;
+  image-rendering: auto;
+  width: 100%;
+}
+
+.vtt-board__gm-guide-preview span {
+  background: rgba(0, 5, 8, 0.86);
+  border: 1px solid rgba(112, 198, 249, 0.35);
+  border-radius: 999px;
+  bottom: 10px;
+  color: #d7effc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  left: 50%;
+  padding: 6px 10px;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .vtt-board__gm-guide small {
@@ -405,6 +443,96 @@
   font-size: 0.68rem;
   line-height: 1.45;
   padding: 9px 10px 10px;
+}
+
+.vtt-board__guide-modal {
+  align-items: stretch;
+  background: rgba(0, 3, 5, 0.92);
+  display: flex;
+  flex-direction: column;
+  inset: 0;
+  padding: clamp(10px, 2vw, 24px);
+  position: fixed;
+  z-index: 10000;
+}
+
+.vtt-board__guide-modal > header {
+  align-items: center;
+  background: rgba(5, 14, 21, 0.98);
+  border: 1px solid rgba(126, 180, 214, 0.24);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 10px 14px;
+}
+
+.vtt-board__guide-modal > header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vtt-board__guide-modal > header span {
+  color: #4ebcff;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.vtt-board__guide-modal > header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__guide-actions {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.vtt-board__guide-actions button,
+.vtt-board__guide-actions output {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(126, 180, 214, 0.24);
+  border-radius: 7px;
+  color: #d5e9f4;
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.vtt-board__guide-actions output {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  min-width: 58px;
+  text-align: center;
+}
+
+.vtt-board__guide-canvas {
+  align-items: flex-start;
+  background:
+    linear-gradient(45deg, rgba(80, 130, 158, 0.04) 25%, transparent 25%) 0 0 / 24px 24px,
+    #010304;
+  border: 1px solid rgba(126, 180, 214, 0.24);
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+}
+
+.vtt-board__guide-canvas img {
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.72);
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  image-rendering: auto;
+  max-width: none;
 }
 
 .vtt-board__field {
@@ -562,6 +690,19 @@
 
   .vtt-board__camera-controls output {
     min-width: 0;
+  }
+
+  .vtt-board__camera-controls > small {
+    grid-column: 1 / -1;
+  }
+
+  .vtt-board__guide-modal > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vtt-board__guide-actions {
+    overflow-x: auto;
   }
 
   .vtt-board__layout {

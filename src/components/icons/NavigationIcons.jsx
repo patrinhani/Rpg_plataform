@@ -94,6 +94,13 @@ const ICONS = {
       <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
     </>
   ),
+  map: (
+    <>
+      <path d="m3 6 5-3 8 3 5-3v15l-5 3-8-3-5 3V6Z" />
+      <path d="M8 3v15M16 6v15" />
+      <circle cx="12" cy="11" r="2" />
+    </>
+  ),
 };
 
 export function AppIcon({ name, size = 20 }) {

@@ -114,7 +114,18 @@ def create_router() -> APIRouter:
                 headers={"WWW-Authenticate": "Bearer"},
             )
         service: VTTService = request.app.state.vtt
-        room, master_invite, player_invite = await service.create_room(payload.name)
+        if payload.campaignId:
+            catalog = service.catalog
+            if catalog is None or payload.campaignId != catalog.campaign_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A campanha solicitada nao esta carregada neste servidor",
+                )
+        room, master_invite, player_invite = await service.create_room(
+            payload.name,
+            campaign_id=payload.campaignId,
+            external_mesa_id=payload.externalMesaId,
+        )
         return CreateRoomResponse(
             roomId=room.room_id,
             masterInviteToken=master_invite,

@@ -57,6 +57,18 @@ function getInitialServerUrl() {
   }
 }
 
+function readLaunchContext() {
+  const params = new URLSearchParams(globalThis.location?.search || '');
+  const mesaId = String(params.get('mesaId') || '').trim();
+  const campaignId = String(params.get('campaignId') || '').trim();
+  const roomName = String(params.get('roomName') || '').trim();
+  return {
+    mesaId: /^[A-Za-z0-9_-]{1,128}$/.test(mesaId) ? mesaId : '',
+    campaignId: /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(campaignId) ? campaignId : '',
+    roomName: roomName.slice(0, 80),
+  };
+}
+
 function normalizeServerUrl(value) {
   const trimmedValue = String(value || '').trim();
   if (!trimmedValue) throw new Error('Informe a URL do servidor.');
@@ -238,9 +250,10 @@ function directionLabel(direction) {
 
 export default function VttLab() {
   const [initialPlayerInvite] = useState(readPlayerInviteFragment);
+  const [launchContext] = useState(readLaunchContext);
   const [serverUrl, setServerUrl] = useState(getInitialServerUrl);
   const [hostToken, setHostToken] = useState('');
-  const [roomName, setRoomName] = useState('Mesa C.A.O.S.');
+  const [roomName, setRoomName] = useState(() => launchContext.roomName || 'Mesa C.A.O.S.');
   const [roomId, setRoomId] = useState(initialPlayerInvite.roomId);
   const [masterInviteToken, setMasterInviteToken] = useState('');
   const [playerInviteToken, setPlayerInviteToken] = useState(initialPlayerInvite.inviteToken);
@@ -540,7 +553,11 @@ export default function VttLab() {
           Authorization: `Bearer ${hostToken.trim()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: roomName.trim() }),
+        body: JSON.stringify({
+          name: roomName.trim(),
+          ...(launchContext.mesaId ? { externalMesaId: launchContext.mesaId } : {}),
+          ...(launchContext.campaignId ? { campaignId: launchContext.campaignId } : {}),
+        }),
         signal: requestController.signal,
       }, requestController);
       const data = await readJsonResponse(response);
@@ -874,6 +891,12 @@ export default function VttLab() {
           <span className="vtt-lab__eyebrow">C.A.O.S. · mesa portátil</span>
           <h1 id="vtt-lab-title">Mesa virtual C.A.O.S.</h1>
           <p>Mapas, tokens e efeitos sincronizados. As rolagens continuam nos dados físicos.</p>
+          {launchContext.mesaId && (
+            <div className="vtt-lab__linked-table">
+              <span>Vinculado à mesa {launchContext.roomName || launchContext.mesaId}</span>
+              <a href={`/mesa/${encodeURIComponent(launchContext.mesaId)}`}>Voltar para a mesa</a>
+            </div>
+          )}
         </div>
 
         <div className="vtt-lab__connection-summary" aria-live="polite">

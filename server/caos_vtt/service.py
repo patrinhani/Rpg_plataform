@@ -119,6 +119,8 @@ class Room:
     name: str
     master_invite_digest: bytes
     player_invite_digest: bytes
+    campaign_id: str | None = None
+    external_mesa_id: str | None = None
     revision: int = 0
     token_x: float = 0.5
     token_y: float = 0.5
@@ -154,7 +156,13 @@ class VTTService:
     def has_catalog(self) -> bool:
         return self.catalog is not None
 
-    async def create_room(self, name: str) -> tuple[Room, str, str]:
+    async def create_room(
+        self,
+        name: str,
+        *,
+        campaign_id: str | None = None,
+        external_mesa_id: str | None = None,
+    ) -> tuple[Room, str, str]:
         master_invite = secrets.token_urlsafe(32)
         player_invite = secrets.token_urlsafe(32)
         async with self._rooms_lock:
@@ -164,6 +172,8 @@ class VTTService:
                 name=name.strip(),
                 master_invite_digest=_token_digest(master_invite),
                 player_invite_digest=_token_digest(player_invite),
+                campaign_id=campaign_id or (self.catalog.campaign_id if self.catalog else None),
+                external_mesa_id=external_mesa_id,
             )
             if self.catalog is not None:
                 self._initialize_catalog_room(room)
@@ -595,6 +605,11 @@ class VTTService:
             "tokens": tokens,
         }
         if role == "master":
+            state["table"] = {
+                "name": room.name,
+                "campaignId": room.campaign_id,
+                "externalMesaId": room.external_mesa_id,
+            }
             state["catalog"] = {
                 "scenes": [
                     {

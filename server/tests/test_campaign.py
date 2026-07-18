@@ -383,11 +383,15 @@ def _catalog_app(
     return app, catalog, ids
 
 
-def _create_room(client: TestClient, name: str = "Mesa de catálogo") -> dict[str, Any]:
+def _create_room(
+    client: TestClient,
+    name: str = "Mesa de catálogo",
+    **context: Any,
+) -> dict[str, Any]:
     response = client.post(
         "/api/vtt/rooms",
         headers={"Authorization": f"Bearer {HOST_TOKEN}"},
-        json={"name": name},
+        json={"name": name, **context},
     )
     assert response.status_code == 201
     return response.json()
@@ -564,7 +568,11 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
 ) -> None:
     app, _catalog, ids = _catalog_app(tmp_path, two_scenes=True)
     with TestClient(app) as client:
-        room = _create_room(client)
+        room = _create_room(
+            client,
+            campaignId="memoria",
+            externalMesaId="mesa-firebase-01",
+        )
         master_access = _issue_access(client, room, "masterInviteToken")
         player_access = _issue_access(client, room, "playerInviteToken")
         socket_path = f"/ws/vtt/rooms/{room['roomId']}"
@@ -578,6 +586,12 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
         ) as player:
             master_initial = master.receive_json()
             player_initial = player.receive_json()
+            assert master_initial["state"]["table"] == {
+                "name": "Mesa de catálogo",
+                "campaignId": "memoria",
+                "externalMesaId": "mesa-firebase-01",
+            }
+            assert "table" not in player_initial["state"]
             assert master_initial["state"]["scene"] == {
                 "id": "scene:salao-vazio",
                 "key": "salao-vazio",

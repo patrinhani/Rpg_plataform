@@ -35,6 +35,24 @@ def test_room_creation_requires_host_token(client: TestClient) -> None:
     )
     assert blank_name.status_code == 422
 
+    unavailable_campaign = client.post(
+        "/api/vtt/rooms",
+        headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+        json={
+            "name": "Mesa vinculada",
+            "campaignId": "mnemosyne",
+            "externalMesaId": "mesa-firebase-01",
+        },
+    )
+    assert unavailable_campaign.status_code == 409
+
+    invalid_external_id = client.post(
+        "/api/vtt/rooms",
+        headers={"Authorization": f"Bearer {HOST_TOKEN}"},
+        json={"name": "Mesa", "externalMesaId": "../segredo"},
+    )
+    assert invalid_external_id.status_code == 422
+
 
 def test_room_and_invite_ticket_contract(client: TestClient, room: dict[str, object]) -> None:
     assert set(room) == {

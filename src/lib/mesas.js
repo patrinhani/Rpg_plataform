@@ -230,6 +230,20 @@ export async function criarMesa(nomeMesa, mestreUid, mestreNome) {
   return docRef.id;
 }
 
+export async function vincularVttMesa(mesaId, campaignId = 'mnemosyne') {
+  const normalizedCampaignId = String(campaignId || '').trim();
+  if (!mesaId || !normalizedCampaignId || normalizedCampaignId.length > 80) {
+    throw new Error('Configuração de VTT inválida.');
+  }
+  await updateDoc(doc(db, 'mesas', mesaId), {
+    vtt: {
+      enabled: true,
+      campaignId: normalizedCampaignId,
+      updatedAt: new Date().toISOString(),
+    },
+  });
+}
+
 export async function buscarMinhasMesas(uid) {
   const mesas = [];
   const qMestre = query(collection(db, "mesas"), where("mestre", "==", uid));

@@ -7,6 +7,11 @@ const DEFAULT_TOKEN_SIZE = 0.075;
 const MIN_TOKEN_SIZE = 0.01;
 const MAX_TOKEN_SIZE = 0.25;
 
+function snapToDevicePixel(value) {
+  const ratio = typeof window === 'undefined' ? 1 : Math.max(1, window.devicePixelRatio || 1);
+  return Math.round(Number(value || 0) * ratio) / ratio;
+}
+
 function clamp(value, minimum, maximum) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return minimum;
@@ -74,6 +79,9 @@ export default function VttBoard({
   const [showGrid, setShowGrid] = useState(true);
   const [isPanning, setIsPanning] = useState(false);
   const [mapLoadState, setMapLoadState] = useState('idle');
+  const [nativeZoomLimit, setNativeZoomLimit] = useState(MAX_ZOOM);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideZoom, setGuideZoom] = useState(1);
 
   const tokens = useMemo(
     () => normalizeTokens(state.tokens, role),
@@ -97,6 +105,7 @@ export default function VttBoard({
   const gridColumns = Math.max(1, Number(scene?.gridHint?.columns) || 1);
   const gridRows = Math.max(1, Number(scene?.gridHint?.rows) || 1);
   const hasGrid = scene?.gridHint?.type === 'square';
+  const maximumZoom = clamp(nativeZoomLimit, MIN_ZOOM, MAX_ZOOM);
 
   const emitCommand = useCallback((type, payload = {}) => {
     if (!connected || typeof onCommand !== 'function') return false;
@@ -109,6 +118,8 @@ export default function VttBoard({
     setDraftPositions({});
     setSelectedTokenId('');
     setIsPanning(false);
+    setGuideOpen(false);
+    setGuideZoom(1);
   }, [scene?.id]);
 
   useEffect(() => {
@@ -120,6 +131,36 @@ export default function VttBoard({
   }, [revision]);
 
   useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !scene?.map?.url || typeof ResizeObserver === 'undefined') return undefined;
+
+    const updateNativeZoom = () => {
+      const renderedWidth = stage.offsetWidth;
+      if (!renderedWidth) return;
+      const limit = clamp(mapWidth / renderedWidth, 1, MAX_ZOOM);
+      setNativeZoomLimit(limit);
+      setCamera((current) => ({
+        ...current,
+        scale: Math.min(current.scale, limit),
+      }));
+    };
+
+    updateNativeZoom();
+    const observer = new ResizeObserver(updateNativeZoom);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [mapWidth, scene?.map?.url]);
+
+  useEffect(() => {
+    if (!guideOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setGuideOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [guideOpen]);
+
+  useEffect(() => {
     if (!selectedAssetId && tokenAssets[0]?.assetId) {
       setSelectedAssetId(tokenAssets[0].assetId);
     }
@@ -128,9 +169,9 @@ export default function VttBoard({
   const setZoom = useCallback((nextScale) => {
     setCamera((current) => ({
       ...current,
-      scale: clamp(nextScale, MIN_ZOOM, MAX_ZOOM),
+      scale: clamp(nextScale, MIN_ZOOM, maximumZoom),
     }));
-  }, []);
+  }, [maximumZoom]);
 
   const resetCamera = useCallback(() => {
     setCamera({ x: 0, y: 0, scale: 1 });
@@ -142,7 +183,7 @@ export default function VttBoard({
     const factor = event.deltaY < 0 ? 1.1 : 0.9;
     setCamera((current) => ({
       ...current,
-      scale: clamp(current.scale * factor, MIN_ZOOM, MAX_ZOOM),
+      scale: clamp(current.scale * factor, MIN_ZOOM, maximumZoom),
     }));
   };
 
@@ -336,6 +377,9 @@ export default function VttBoard({
             aria-label="Aumentar zoom"
           >+</button>
           <button type="button" onClick={resetCamera} disabled={!scene}>Enquadrar</button>
+          <small title="Limite antes de ampliar o bitmap">
+            nativo {Math.round(maximumZoom * 100)}%
+          </small>
           {hasGrid && (
             <button
               type="button"
@@ -372,7 +416,7 @@ export default function VttBoard({
               className="vtt-board__stage"
               style={{
                 aspectRatio: `${mapWidth} / ${mapHeight}`,
-                transform: `translate3d(${camera.x}px, ${camera.y}px, 0) scale(${camera.scale})`,
+                transform: `translate3d(${snapToDevicePixel(camera.x)}px, ${snapToDevicePixel(camera.y)}px, 0) scale(${camera.scale})`,
               }}
             >
               <img
@@ -466,11 +510,19 @@ export default function VttBoard({
             {scene?.gmGuideMap?.url && (
               <details className="vtt-board__gm-guide">
                 <summary>Guia privado do Mestre</summary>
-                <img
-                  src={scene.gmGuideMap.url}
-                  alt={`Guia do Mestre para ${scene.label || humanize(scene.key)}`}
-                  draggable="false"
-                />
+                <button
+                  type="button"
+                  className="vtt-board__gm-guide-preview"
+                  onClick={() => setGuideOpen(true)}
+                  aria-label="Abrir guia privado do Mestre em tela cheia"
+                >
+                  <img
+                    src={scene.gmGuideMap.url}
+                    alt={`Guia do Mestre para ${scene.label || humanize(scene.key)}`}
+                    draggable="false"
+                  />
+                  <span>Ampliar guia</span>
+                </button>
                 <small>Esta imagem nunca é enviada aos jogadores.</small>
               </details>
             )}
@@ -545,6 +597,42 @@ export default function VttBoard({
           </aside>
         )}
       </div>
+
+      {isMaster && guideOpen && scene?.gmGuideMap?.url && (
+        <div
+          className="vtt-board__guide-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Guia privado do Mestre para ${scene.label || humanize(scene.key)}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setGuideOpen(false);
+          }}
+        >
+          <header>
+            <div>
+              <span>Somente Mestre</span>
+              <strong>{scene.label || humanize(scene.key)}</strong>
+            </div>
+            <div className="vtt-board__guide-actions">
+              <button type="button" onClick={() => setGuideZoom((value) => clamp(value - 0.25, 0.5, 3))}>−</button>
+              <output>{Math.round(guideZoom * 100)}%</output>
+              <button type="button" onClick={() => setGuideZoom((value) => clamp(value + 0.25, 0.5, 3))}>+</button>
+              <button type="button" onClick={() => setGuideZoom(1)}>Tamanho real</button>
+              <button type="button" onClick={() => setGuideOpen(false)} aria-label="Fechar guia">Fechar</button>
+            </div>
+          </header>
+          <div className="vtt-board__guide-canvas">
+            <img
+              src={scene.gmGuideMap.url}
+              alt={`Guia privado do Mestre para ${scene.label || humanize(scene.key)}`}
+              draggable="false"
+              style={{
+                width: `${Math.max(1, Number(scene.gmGuideMap.width) || mapWidth) * guideZoom}px`,
+              }}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
