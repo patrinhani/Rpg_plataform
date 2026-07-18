@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import math
+import re
 import secrets
 import string
 import warnings
@@ -1834,4 +1835,5 @@ class VTTService:
     def _asset_label(cls, asset_id: str) -> str:
         filename = asset_id.rsplit("/", 1)[-1]
         stem = filename.rsplit(".", 1)[0]
+        stem = re.sub(r"-(?:token|objeto)-vtt-v\d+$", "", stem, flags=re.IGNORECASE)
         return cls._humanize(stem)

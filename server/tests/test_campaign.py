@@ -745,6 +745,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 item["assetId"]
                 for item in master_initial["state"]["catalog"]["propAssets"]
             ] == [ids["prop"]]
+            assert master_initial["state"]["catalog"]["propAssets"][0]["label"] == "Âncora Ativa"
             assert {
                 item["assetId"] for item in master_initial["state"]["catalog"]["tokenAssets"]
             } == {

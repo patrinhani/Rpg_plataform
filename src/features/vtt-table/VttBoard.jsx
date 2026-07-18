@@ -656,9 +656,10 @@ export default function VttBoard({
   const handleSpawnProp = () => {
     if (!selectedPropAssetId) return;
     const asset = propAssets.find((item) => item.assetId === selectedPropAssetId);
+    const stateGroup = resolvePropStateOptions(propStateGroups, selectedPropAssetId);
     emitCommand('prop.spawn', {
       assetId: selectedPropAssetId,
-      label: asset?.label || humanize(selectedPropAssetId.split('/').pop()),
+      label: stateGroup?.groupLabel || asset?.label || humanize(selectedPropAssetId.split('/').pop()),
       x: 0.5,
       y: 0.5,
       width: DEFAULT_PROP_SIZE,
@@ -1083,7 +1084,10 @@ export default function VttBoard({
               <div className="vtt-board__prop-primary-actions">
                 <button
                   type="button"
-                  onClick={() => handleUpdateSelectedProp({ assetId: selectedPropStateAssetId })}
+                  onClick={() => handleUpdateSelectedProp({
+                    assetId: selectedPropStateAssetId,
+                    label: selectedPropStates?.groupLabel || selectedProp?.label,
+                  })}
                   disabled={
                     !selectedPropId
                     || !selectedPropStateAssetId

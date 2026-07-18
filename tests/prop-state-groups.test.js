@@ -34,6 +34,7 @@ test('resolve estados do mesmo grupo e reconhece uma variante antiga', () => {
   const result = resolvePropStateOptions(groups, 'asset:emissor-ativo-v1');
 
   assert.equal(result.groupId, 'state-group:emissor');
+  assert.equal(result.groupLabel, 'Emissor');
   assert.equal(result.currentStateAssetId, 'asset:emissor-ativo-v2');
   assert.deepEqual(
     result.options.map((state) => state.assetId),
