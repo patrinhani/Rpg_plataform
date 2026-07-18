@@ -166,6 +166,10 @@ function hydrateCampaignState(rawState, revision, grant) {
         ...rawScene.map,
         url: assetUrl(rawScene.map.assetId),
       } : null,
+      gmGuideMap: rawScene.gmGuideMap ? {
+        ...rawScene.gmGuideMap,
+        url: assetUrl(rawScene.gmGuideMap.assetId),
+      } : null,
       overlays: Array.isArray(rawScene.overlays)
         ? rawScene.overlays.map((overlay) => ({
           ...overlay,

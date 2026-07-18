@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:vtt": "vite build --mode vtt",
     "lint": "eslint .",
     "test": "node --test",
     "check": "npm run lint && npm test && npm run build",

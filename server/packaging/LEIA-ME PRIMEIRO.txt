@@ -1,0 +1,18 @@
+C.A.O.S. VTT — INÍCIO RÁPIDO
+
+1. Extraia TODO o conteúdo do ZIP para uma pasta comum.
+2. Para jogar pela internet, abra "Iniciar C.A.O.S. VTT Online.cmd".
+3. Para usar apenas neste computador, abra "Iniciar C.A.O.S. VTT.cmd".
+4. Aguarde o navegador abrir e copie o Host token mostrado na janela preta.
+5. Crie a sala, conecte como Mestre e use "Copiar link completo para o jogador".
+6. Compartilhe SOMENTE esse link de jogador — nunca o host token ou convite de Mestre.
+
+Mantenha CAOS-VTT.exe e _internal juntos. Mantenha também campaigns e cloudflared.exe quando
+essas pastas/arquivos estiverem presentes na variante recebida.
+Não execute o programa dentro do ZIP e não feche a janela preta durante a sessão.
+
+As rolagens continuam sendo feitas com dados físicos. Fechar o programa encerra a sala e apaga
+o estado mantido em memória.
+
+Se o Windows mostrar um alerta, não desative o antivírus. Confira o SHA-256 do ZIP e consulte
+README-PORTABLE.md para diagnóstico, modo local e detalhes de segurança.

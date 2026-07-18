@@ -5,7 +5,11 @@ param(
 
     [string]$HostToken = '',
 
-    [string]$AllowedOrigins = ''
+    [string]$AllowedOrigins = '',
+
+    [string]$CampaignManifest = '',
+
+    [string]$CampaignRoot = ''
 )
 
 Set-StrictMode -Version Latest
@@ -51,12 +55,39 @@ try {
         $AllowedOrigins = 'http://localhost:5173,http://127.0.0.1:5173'
     }
 
+    if ([string]::IsNullOrWhiteSpace($CampaignManifest)) {
+        $CampaignManifest = $env:CAOS_VTT_CAMPAIGN_MANIFEST
+    }
+    if ([string]::IsNullOrWhiteSpace($CampaignRoot)) {
+        $CampaignRoot = $env:CAOS_VTT_CAMPAIGN_ROOT
+    }
+    if ([string]::IsNullOrWhiteSpace($CampaignManifest) -ne [string]::IsNullOrWhiteSpace($CampaignRoot)) {
+        throw 'CampaignManifest e CampaignRoot precisam ser informados juntos.'
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CampaignManifest)) {
+        if (-not (Test-Path -LiteralPath $CampaignManifest -PathType Leaf)) {
+            throw "CampaignManifest nao aponta para um arquivo: '$CampaignManifest'."
+        }
+        if (-not (Test-Path -LiteralPath $CampaignRoot -PathType Container)) {
+            throw "CampaignRoot nao aponta para uma pasta: '$CampaignRoot'."
+        }
+        $env:CAOS_VTT_CAMPAIGN_MANIFEST = (Resolve-Path -LiteralPath $CampaignManifest).Path
+        $env:CAOS_VTT_CAMPAIGN_ROOT = (Resolve-Path -LiteralPath $CampaignRoot).Path
+    }
+    else {
+        Remove-Item Env:CAOS_VTT_CAMPAIGN_MANIFEST -ErrorAction SilentlyContinue
+        Remove-Item Env:CAOS_VTT_CAMPAIGN_ROOT -ErrorAction SilentlyContinue
+    }
+
     $env:CAOS_VTT_HOST_TOKEN = $HostToken
     $env:CAOS_VTT_ALLOWED_ORIGINS = $AllowedOrigins
     $env:CAOS_VTT_PORT = $Port.ToString()
     Write-Host "Iniciando backend C.A.O.S na porta $Port" -ForegroundColor Cyan
     Write-Host 'Entrypoint: python -m caos_vtt'
     Write-Host "Origens permitidas: $AllowedOrigins"
+    if (-not [string]::IsNullOrWhiteSpace($CampaignManifest)) {
+        Write-Host "Campanha: $CampaignManifest" -ForegroundColor Green
+    }
     if ($generatedHostToken) {
         Write-Host "Host token temporario: $HostToken" -ForegroundColor Yellow
         Write-Host 'Copie esse token para criar a sala. Ele nao foi salvo em disco.' -ForegroundColor Yellow

@@ -1,108 +1,99 @@
-# C.A.O.S. VTT portatil para Windows
+# C.A.O.S. VTT portátil para Windows
 
-Este pacote roda sem instalar Python, Node.js ou o projeto no computador de destino. Ele nao exige
-permissao de administrador, nao instala servicos e nao grava configuracao no Registro do Windows.
-O executavel inicia o FastAPI apenas em `127.0.0.1`, serve o frontend ja compilado e abre o
-laboratorio VTT no navegador padrao.
+O pacote portátil funciona no Windows x64 sem instalar Python, Node.js, serviços ou dependências. Ele não exige administrador, não altera o Registro e mantém o servidor em `127.0.0.1`; o acesso online é feito por uma conexão de saída do Cloudflare Quick Tunnel. Redes restritas precisam permitir a saída TCP ou UDP usada pelo túnel na porta 7844.
 
-## Modo online de um clique
+## Primeira execução
 
-1. Extraia todo o ZIP para uma pasta comum. Nao execute o programa de dentro do ZIP.
-2. Abra `Iniciar C.A.O.S. VTT Online.cmd`.
-3. Aguarde o navegador abrir em `http://127.0.0.1:8765/vtt-lab`.
-4. Copie da janela preta a **URL PARA COMPARTILHAR** e envie aos jogadores.
-5. Copie o **Host token temporario** e cole no campo correspondente para criar a
-   sala.
-6. Mantenha a janela preta aberta durante a sessao. Feche-a para encerrar servidor e tunel.
+1. Copie o ZIP para o computador da mesa e extraia **todo** o conteúdo para uma pasta comum.
+2. Mantenha juntos `CAOS-VTT.exe`, `_internal`, `campaigns` e `cloudflared.exe`.
+3. Abra `Iniciar C.A.O.S. VTT Online.cmd` para uma mesa pela internet ou `Iniciar C.A.O.S. VTT.cmd` para uso apenas neste computador.
+4. Aguarde o navegador abrir e copie o **Host token temporário** exibido na janela preta.
+5. Na página, informe o nome e o host token, crie a sala e clique em **Conectar como mestre**.
+6. Clique em **Copiar link completo para o jogador** e compartilhe somente esse link.
 
-O token de host e gerado novamente a cada abertura e nunca e salvo em disco. As salas e posicoes
-ainda ficam apenas em memoria; fechar o programa apaga a sessao atual. O prototipo nao faz rolagens
-automaticas de dados.
+Não execute o programa dentro do ZIP e não feche a janela preta durante a sessão. As rolagens continuam com dados físicos.
 
-`CAOS-VTT.exe --tunnel` inicia o `cloudflared.exe` incluido, captura apenas uma origem exata
-`https://*.trycloudflare.com`, autoriza essa origem antes de iniciar o WebSocket e mantem o FastAPI
-preso a `127.0.0.1`. O programa nao exibe os logs de requisicao do cloudflared, portanto tickets e
-convites nao sao escritos no console pelo launcher.
+## O que o pacote inclui
 
-O Cloudflare Quick Tunnel e temporario, gratuito, nao exige conta e muda de endereco a cada
-execucao. Ele suporta WebSocket, nao possui SLA e tem limite documentado de 200 requisicoes
-simultaneas/em voo. E indicado para mesas pessoais e testes, nao para hospedagem permanente.
+- frontend VTT dedicado e leve, sem Firebase, bestiário ou módulos da ficha;
+- servidor FastAPI e WebSocket compilado em formato PyInstaller `onedir` e sem UPX;
+- pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens e guias privados do Mestre;
+- `cloudflared.exe` oficial para o launcher online;
+- guia rápido, documentação, licença e aviso de terceiro.
 
-Ao usar o modo online, voce aceita os termos aplicaveis da Cloudflare, incluindo os
-[Website Terms](https://www.cloudflare.com/website-terms/) e os termos especificos do servico.
-Firewall corporativo, proxy, antivirus ou politica de rede podem bloquear a conexao de saida do
-cloudflared; nesse caso o launcher encerra com timeout e uma mensagem clara. Use
-`--tunnel-timeout SEGUNDOS` para ajustar a espera entre 5 e 180 segundos.
+Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanha antes de aceitar conexões. O jogador recebe somente a cena ativa, os overlays revelados e os tokens visíveis; guias do Mestre e variantes inativas não são expostos.
 
-O `cloudflared.exe` oficial e validado pelo hash fixo antes do empacotamento. O `CAOS-VTT.exe`
-gerado por PyInstaller ainda nao possui assinatura Authenticode e pode receber alerta do
-SmartScreen ou de antivirus com politica restritiva. Nao desative a protecao do computador;
-confira o SHA-256 do ZIP ou use a variante Python/local ate que o executavel seja assinado.
+## Sessão e convites
 
-## Modo somente local
+O host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
 
-Abra `Iniciar C.A.O.S. VTT.cmd` para nao contatar o Quick Tunnel. O navegador abre localmente em
-`http://127.0.0.1:8765/vtt-lab` e nenhum outro computador consegue entrar.
+Salas, posições, overlays e convites permanecem em memória. Fechar o programa encerra o túnel e apaga o estado da sessão. Guarde o convite de Mestre apenas enquanto a sessão estiver aberta e nunca o envie aos jogadores.
 
-### Tunel externo configurado manualmente
+## Modo online
 
-O servidor continua preso a `127.0.0.1`; e o processo do tunel que publica a conexao. Depois de
-obter a URL HTTPS exata do tunel, inicie o VTT informando essa origem sem caminho, query ou
-fragmento:
+`Iniciar C.A.O.S. VTT Online.cmd` executa `CAOS-VTT.exe --tunnel`. O Quick Tunnel é temporário, gratuito, não exige conta e cria um endereço `https://*.trycloudflare.com` diferente a cada execução. Ele é adequado para mesas pessoais, não oferece SLA e pode ser bloqueado por proxy, política corporativa ou antivírus.
 
-```powershell
-.\CAOS-VTT.exe --public-origin https://sua-mesa.exemplo-tunnel.com
-```
+O FastAPI continua preso a `127.0.0.1`; nenhuma porta de entrada do firewall é aberta. O launcher valida a origem HTTPS exata antes de aceitar o WebSocket e encerra o servidor se o processo do túnel cair. Use `--tunnel-timeout SEGUNDOS` para uma espera entre 5 e 180 segundos.
 
-Repita `--public-origin URL` somente se houver mais de uma origem legitima. Wildcard (`*`) nao e
-aceito. Essa opcao apenas autoriza uma origem existente; ela nao inicia o processo de tunel.
+## Modo local e porta alternativa
 
-## Porta alternativa
+`Iniciar C.A.O.S. VTT.cmd` não inicia nem contata o Quick Tunnel. O navegador abre em `http://127.0.0.1:8765/vtt-lab` e outros dispositivos não conseguem entrar.
 
-Se a porta 8765 ja estiver ocupada, abra o PowerShell dentro da pasta extraida e execute:
+Se a porta 8765 estiver ocupada:
 
 ```powershell
 .\CAOS-VTT.exe --port 8766
 ```
 
-Depois abra `http://127.0.0.1:8766/vtt-lab` e altere o campo **URL do servidor** para
-`http://127.0.0.1:8766`. Use `--no-browser` para impedir a abertura automatica do navegador.
+Abra `http://127.0.0.1:8766/vtt-lab`. Use `--no-browser` para não abrir o navegador automaticamente.
 
-## Como gerar o pacote (computador de desenvolvimento)
-
-O empacotamento online precisa ser feito no Windows x64 e herda a arquitetura do Python usado para
-compilar.
-Na raiz do repositorio:
+Para um túnel externo já configurado, autorize somente sua origem HTTPS exata:
 
 ```powershell
-.\scripts\bootstrap-dev.ps1 -SkipFrontend
+.\CAOS-VTT.exe --public-origin https://sua-mesa.exemplo-tunnel.com
+```
+
+Essa opção não inicia o túnel. Wildcards, HTTP, caminhos, query e fragmentos são recusados.
+
+## SmartScreen, antivírus e integridade
+
+O `cloudflared.exe` incluído é o binário oficial, tem assinatura Authenticode válida e é conferido no build pelo SHA-256 fixo. O `CAOS-VTT.exe` é gerado localmente por PyInstaller e ainda não possui assinatura de código; por isso o SmartScreen ou um antivírus com política restritiva pode pedir confirmação.
+
+Não desative a proteção do computador. Obtenha o ZIP e o arquivo `.sha256` juntos e confira no PowerShell:
+
+```powershell
+(Get-FileHash .\CAOS-VTT-portable-win.zip -Algorithm SHA256).Hash.ToLower()
+Get-Content .\CAOS-VTT-portable-win.zip.sha256
+```
+
+Os valores devem ser iguais. Essa comparação detecta corrupção ou troca acidental; para verificar a origem, obtenha o valor esperado também por um canal confiável e independente, como o commit ou release oficial. Se o executável for bloqueado pela política do dispositivo, use o modo de desenvolvimento Python local até que exista uma versão assinada.
+
+## Gerar o pacote em outro computador de desenvolvimento
+
+Pré-requisitos apenas para compilar: Windows x64, Git, Node.js 20.19+ (ou 22.12+) e Python 3.10+. Na raiz do repositório:
+
+```powershell
+.\scripts\bootstrap-dev.ps1
 .\.venv-vtt\Scripts\python.exe -m pip install -r .\server\requirements-build.txt
-.\scripts\build-portable.ps1
+.\scripts\build-portable.ps1 -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
 ```
 
-O script sempre recompila o frontend antes de empacotar. Para reutilizar conscientemente um `dist`
-ja atualizado, use `-SkipFrontendBuild`. Esse atalho compara os bundles referenciados por
-`dist/index.html` com `src`, `public`, `package.json`, `package-lock.json`, `index.html` e
-`vite.config.*`; ele interrompe o processo se qualquer fonte estiver mais nova. Os resultados ficam
-em:
+O computador que executará a mesa não precisa desses programas. O build recompila apenas o frontend dedicado `dist-vtt`, gera e valida o pack da campanha, monta tudo em uma área temporária e só substitui o último artefato válido após concluir.
 
-- `server\.artifacts\portable\CAOS-VTT\` (pasta executavel);
-- `server\.artifacts\CAOS-VTT-portable-win.zip` (arquivo para transporte);
-- `server\.artifacts\CAOS-VTT-portable-win.zip.sha256` (hash de verificacao).
+Resultados:
 
-Por padrao, o build inclui o `cloudflared` oficial Windows AMD64 2026.7.2. Somente no computador de
-desenvolvimento, se o binario ainda nao existir no cache, o script baixa o release oficial e exige
-o SHA-256 `cdb5d4432f6ae1595654a692a51308b69d2bf7af961f5578d9391837cf072df9` antes de copia-lo. A
-licenca Apache 2.0 e o aviso de terceiro acompanham o pacote. O computador da mesa nao baixa nem
-instala o cloudflared.
+- `server\.artifacts\portable\CAOS-VTT\`
+- `server\.artifacts\CAOS-VTT-portable-win.zip`
+- `server\.artifacts\CAOS-VTT-portable-win.zip.sha256`
 
-Para gerar uma variante menor estritamente local, use:
+Opções úteis:
 
-```powershell
-.\scripts\build-portable.ps1 -SkipTunnel
-```
+- `-SkipTunnel`: pacote local sem `cloudflared.exe`;
+- `-SkipCampaign`: build de demonstração explicitamente marcado, sem Mnemosyne;
+- `-SkipArchive`: gera somente a pasta portátil;
+- `-SkipFrontendBuild`: reutiliza `dist-vtt` somente se estiver atualizado e isolado.
+- `-MaxCampaignBytes N`: altera conscientemente o teto do pack em bytes.
 
-Essa variante gera `CAOS-VTT-portable-local-win.zip`, sem `cloudflared.exe` e sem o launcher online.
+Também é possível definir `CAOS_VTT_CAMPAIGN_ROOT`. O build aceita até 512 MiB por padrão e mostra o peso verificado; `-MaxCampaignBytes` permite acompanhar campanhas maiores sem um teto escondido. A trava existe apenas para detectar crescimento acidental. O build exige que o manifesto versionado corresponda à campanha atual; se o teste de atualização falhar, regenere o manifesto, revise o diff e execute novamente. A fonte original da campanha é apenas lida e não é alterada.
 
-O build usa PyInstaller no formato `onedir`, console habilitado e `--noupx`. O formato em pasta evita
-a extracao temporaria e os falsos ganhos de portabilidade do modo `onefile`.
+O build online fixa o `cloudflared` Windows AMD64 2026.7.2 e confere o SHA-256 `cdb5d4432f6ae1595654a692a51308b69d2bf7af961f5578d9391837cf072df9`. A licença Apache 2.0 e o aviso de terceiro acompanham o pacote.

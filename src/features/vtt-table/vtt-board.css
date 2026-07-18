@@ -376,6 +376,37 @@
   font-size: 1rem;
 }
 
+.vtt-board__gm-guide {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(126, 180, 214, 0.14);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vtt-board__gm-guide summary {
+  color: #b7cfdd;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  list-style-position: inside;
+  padding: 10px;
+}
+
+.vtt-board__gm-guide img {
+  border-top: 1px solid rgba(126, 180, 214, 0.14);
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.vtt-board__gm-guide small {
+  color: #78919f;
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  padding: 9px 10px 10px;
+}
+
 .vtt-board__field {
   display: flex;
   flex-direction: column;

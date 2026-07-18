@@ -463,6 +463,18 @@ export default function VttBoard({
               <strong>Direção da cena</strong>
             </div>
 
+            {scene?.gmGuideMap?.url && (
+              <details className="vtt-board__gm-guide">
+                <summary>Guia privado do Mestre</summary>
+                <img
+                  src={scene.gmGuideMap.url}
+                  alt={`Guia do Mestre para ${scene.label || humanize(scene.key)}`}
+                  draggable="false"
+                />
+                <small>Esta imagem nunca é enviada aos jogadores.</small>
+              </details>
+            )}
+
             <label className="vtt-board__field" htmlFor="vtt-board-scene">
               <span>Cena ativa</span>
               <select

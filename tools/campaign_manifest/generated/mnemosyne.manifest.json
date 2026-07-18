@@ -11,13 +11,13 @@
     "sourceMode": "external-read-only"
   },
   "summary": {
-    "assetCount": 49,
-    "documentCount": 21,
+    "assetCount": 73,
+    "documentCount": 22,
     "sceneCount": 4,
     "stateGroupCount": 4,
-    "totalAssetBytes": 98044340,
+    "totalAssetBytes": 166115203,
     "warningCount": 18,
-    "sourceFingerprint": "dd7309fd22266d729389f87cf61da1066fe31d080d1f0e93162359864aeefa14"
+    "sourceFingerprint": "17cb57fab27787dc224c31f969e70013139d4f84a97e3d988e4152df5e5e40cd"
   },
   "assets": [
     {
@@ -256,6 +256,414 @@
         "height": 1254,
         "hasAlpha": false,
         "pngColorType": 2
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 7601178,
+      "sha256": "8c1cc68ae20cf2d65edf5989fe9700b949fce91c2b7ed41df1863046ff682817",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 2546,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 6979462,
+      "sha256": "fa6602e106159ccf2b5376f23eaa6a2a91130d5dffa62f40b4562f3d29c18b7a",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 2546,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5141984,
+      "sha256": "2f197bba36647cb013cb254e0309272126eb62ec8545d603067efe5541afe465",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1400,
+        "height": 1980,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 7995007,
+      "sha256": "84d8e9181161bbfa2db5ec8395ca616ab80dfa9e452d77285d893f232a54244c",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 2546,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 3320733,
+      "sha256": "65934dbf41f5c4d1598ab38fe2806165552a6070573b9eb4a44b02c59054989e",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1131,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5248812,
+      "sha256": "8931b51e737bd00a12f075323471da685722f286ed0d0ab9c187abe09297dd72",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1400,
+        "height": 1980,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5261309,
+      "sha256": "eb47664b8294a4240f7c300d16e5b126eccbd736c2cf7f95de759981e8a0d2df",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1400,
+        "height": 1980,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 8108360,
+      "sha256": "baa4a3fe8642fc46cb4389f71151db91ee08f3825a4fc2afec12168059a7c139",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 2546,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5005665,
+      "sha256": "56a4257fbf7a9864f15e92345a6b808da0392b8bc74cbac89191240a3929618d",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1350,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 3424267,
+      "sha256": "10e342c47d9d39c2016786a6083b50e25a88f7490baf4853dc9f06c8771654e7",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1350,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 5140541,
+      "sha256": "e6cc797754936fdb45282f76aa999838159775679f6e044130fb38070c842b2b",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 2200,
+        "height": 1556,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 4122870,
+      "sha256": "57d548bfddace34e1b76bf7e24299902418c8c8a944ba40652595cb47a046e7e",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 2200,
+        "height": 1556,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 73745,
+      "sha256": "4efd63a67b488b008695525dc271cb5c93746b6fdb1b1f5834dfc4d8e585bf82",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1200,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 79492,
+      "sha256": "db40579273f51a652eb27ca03ef328be2e6b6459893de0f4a424c9331791e1bd",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1000,
+        "height": 1400,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 20419,
+      "sha256": "8516cb39ad37f120f410b0cf550530a9059cbe4183be3f1721acf7ef6e61bc6a",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1200,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 20675,
+      "sha256": "06b4964d678c059d47b971979374ee83931591578659ee27eefa0bdf28235eea",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1200,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 24683,
+      "sha256": "4a66160bcaad67b16dac659d222ae6c0c33342c27bd89399a1c45dcaa1d11da2",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1200,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 54163,
+      "sha256": "b2d117769e598487759ff7c8c0cc8c5d0f4bff2a9508f7a714818254a4197060",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1600,
+        "height": 1200,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 106690,
+      "sha256": "304f749d4cc2bff73885adad7656036a7aaf8627517329928238e8a320015c69",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 2546,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 74167,
+      "sha256": "cba2b29127313ba6e2992c8267967787593e4b5a84e896c62bed11e8ed56bfe4",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1400,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 77524,
+      "sha256": "46f1662ac02ce04ab10c3a79e10154a1f81b6b280d03288f4ae86ea97e15a47a",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1400,
+        "height": 1980,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 91777,
+      "sha256": "412d60e919c1f17f36d6ed6fd5cd29532ff5160343f67dfc33b676e0d1ca9559",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1300,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 28040,
+      "sha256": "5d514ab3a465f5797695903c65881b9d78ffb5914c3309c3b35be43c59997365",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1200,
+        "height": 720,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
+      "kind": "other",
+      "audience": "unspecified",
+      "controlledBy": "gm",
+      "bytes": 69300,
+      "sha256": "d7d28e2894f1c4a0c89e981611fd72c24ee987b7cc412457d1b0e647c5542f53",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1800,
+        "height": 1400,
+        "hasAlpha": true,
+        "pngColorType": 6
       }
     },
     {
@@ -869,8 +1277,8 @@
       "relativePath": "README.md",
       "title": "Projeto Mnemosyne",
       "audienceHint": "unspecified",
-      "bytes": 3452,
-      "sha256": "c2d27a75bdef927a2ff5d81804ac1915a67493bc57536a7df7296533a36ff31f",
+      "bytes": 3574,
+      "sha256": "2547ac7d870dc9e9ca80640708ba51086ae754116c41c56aedab9c257e5c16ac",
       "encoding": "utf-8"
     },
     {
@@ -941,8 +1349,17 @@
       "relativePath": "docs/one-shot-01-criaturas-e-encontros.md",
       "title": "One-shot 01: criaturas e encontros",
       "audienceHint": "gm",
-      "bytes": 15698,
-      "sha256": "0ed49b6d4aa5fcde294ef4f5b1448070edff093f73b7be95e8b6beca47d5fa1a",
+      "bytes": 16378,
+      "sha256": "ef7dc06bfc82ea2cb27b676992cca87d34070f9e4729d4a44be06886c1a1a775",
+      "encoding": "utf-8"
+    },
+    {
+      "id": "document:docs/one-shot-01-fichas-de-mesa",
+      "relativePath": "docs/one-shot-01-fichas-de-mesa.md",
+      "title": "One-shot 01: fichas de mesa",
+      "audienceHint": "unspecified",
+      "bytes": 17302,
+      "sha256": "ee71d6710602462ccfbbab0b8d3b56fcd72216345fe5eb2cdbaab90f2efb6bc8",
       "encoding": "utf-8"
     },
     {
@@ -950,8 +1367,8 @@
       "relativePath": "docs/one-shot-01-memoria-corrompida.md",
       "title": "One-shot 01: Memória Corrompida",
       "audienceHint": "gm",
-      "bytes": 17466,
-      "sha256": "e74d9ca2b998ecc3aa5b7da96ce233f0907cbc8fa232adb1ae60a9973a91bd88",
+      "bytes": 17761,
+      "sha256": "653951ddbf523f7baa66c6446fac5a0126e387a89da55aa363223d6c5eaebf4e",
       "encoding": "utf-8"
     },
     {
@@ -959,8 +1376,8 @@
       "relativePath": "docs/one-shot-01-npcs-e-locais.md",
       "title": "One-shot 01: NPCs e locais",
       "audienceHint": "gm",
-      "bytes": 18125,
-      "sha256": "f340aa04eb6bb1d7ac99f2a18dfa92fbaaa97c64490cdb45d8db489b0548ee92",
+      "bytes": 18309,
+      "sha256": "98cb45a4b25681a98002330db41d3eb0e5bf31eeb5cdaddcc178d2cbe63e71ae",
       "encoding": "utf-8"
     },
     {
@@ -968,8 +1385,8 @@
       "relativePath": "docs/one-shot-01-pistas-e-handouts.md",
       "title": "One-shot 01: pistas e handouts",
       "audienceHint": "gm",
-      "bytes": 9403,
-      "sha256": "3d5b79bbacd1e93802175f46c8281fe13501423c2ed4157ca7976516267eee00",
+      "bytes": 26450,
+      "sha256": "98b9e4ce8b68a6b583dadccec3e20b7df497a8a1977796f2f7982be671deb6b1",
       "encoding": "utf-8"
     },
     {

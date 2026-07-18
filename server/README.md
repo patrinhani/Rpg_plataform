@@ -1,67 +1,48 @@
-# C.A.O.S. VTT Server — prova inicial
+# Servidor C.A.O.S. VTT
 
-Servidor FastAPI mínimo para validar criação de sala e sincronização WebSocket. O estado ainda é
-mantido em memória: encerrar o processo remove salas, tickets e posições. Não há rolagem de dados.
+Backend FastAPI leve para a mesa visual do C.A.O.S. Ele mantém salas em memória, sincroniza cenas e tokens por WebSocket e serve somente os assets autorizados para cada papel. Não existe rolagem automática: as rolagens continuam nos dados físicos.
 
-## Preparação
+## Desenvolvimento
 
-No PowerShell, a partir de `server/`:
+Na raiz do repositório:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt
-$env:CAOS_VTT_HOST_TOKEN = "troque-por-um-segredo-com-16-ou-mais-caracteres"
-$env:CAOS_VTT_ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,https://seu-frontend.vercel.app"
-python -m caos_vtt
+.\scripts\bootstrap-dev.ps1
+.\scripts\start-backend.ps1 `
+  -CampaignManifest .\tools\campaign_manifest\generated\mnemosyne.manifest.json `
+  -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
 ```
 
-O servidor escuta `127.0.0.1:8765` por padrão. `CAOS_VTT_HOST`, `CAOS_VTT_PORT` e
-`CAOS_VTT_TICKET_TTL`
-podem sobrescrever host, porta e validade do ticket. A lista de origens é explícita; curingas são
-rejeitados, assim como origens com query ou fragmento. Por padrão, `localhost:5173` e
-`127.0.0.1:5173` são aceitos. O handshake WebSocket também valida `Origin`, porque CORS não protege
-WebSockets.
+O servidor escuta apenas `127.0.0.1:8765`. O script gera um host token temporário e autoriza `http://localhost:5173` e `http://127.0.0.1:5173`. Use `-Port`, `-HostToken` e `-AllowedOrigins` para substituir esses valores. `CampaignManifest` e `CampaignRoot` precisam ser informados juntos; sem eles o servidor entra no modo de demonstração.
 
-Por segurança, `CAOS_VTT_HOST` aceita somente endereços de loopback. O acesso de outros dispositivos
-será feito pelo túnel, sem expor uma porta de entrada na rede local.
+Variáveis equivalentes: `CAOS_VTT_HOST_TOKEN`, `CAOS_VTT_ALLOWED_ORIGINS`, `CAOS_VTT_PORT`, `CAOS_VTT_CAMPAIGN_MANIFEST` e `CAOS_VTT_CAMPAIGN_ROOT`. Origens com wildcard, caminho, query ou fragmento são recusadas. O handshake WebSocket valida `Origin` separadamente do CORS.
 
-## Contrato HTTP
+## Contrato de acesso
 
 - `GET /api/vtt/health`
-- `POST /api/vtt/rooms`, Bearer `CAOS_VTT_HOST_TOKEN`, corpo `{"name":"Minha mesa"}`
-- `POST /api/vtt/rooms/{roomId}/tickets`, Bearer `masterInviteToken` ou `playerInviteToken`
+- `POST /api/vtt/rooms`, com Bearer do host token e corpo `{"name":"Minha mesa"}`
+- `POST /api/vtt/rooms/{roomId}/tickets`, com Bearer do convite de Mestre ou jogador
+- `GET /api/vtt/assets/{assetId}`, com grant de mídia efêmero emitido junto do ticket
+- `WS /ws/vtt/rooms/{roomId}?ticket=...`, com ticket de uso único e curta duração
 
-Os invites identificam o papel e não expiram nesta prova. O ticket WebSocket expira em 60 segundos
-por padrão e é de uso único.
+O convite define o papel. O snapshot do Mestre contém o catálogo de cenas, assets de token e o guia privado da cena. O snapshot do jogador contém somente a cena ativa, overlays revelados e tokens visíveis. O servidor também bloqueia o download direto de mapas, guias, overlays ocultos e tokens ainda não revelados.
 
-## WebSocket
+## Comandos sincronizados
 
-Conecte em `/ws/vtt/rooms/{roomId}?ticket=...`. A primeira mensagem é `room.snapshot`, protocolo
-1, contendo o papel, a revisão e `state.tokens`. O token inicial usa ID `demo-token` e coordenadas
-normalizadas entre 0 e 1.
+O protocolo atual é a versão 1. A conexão começa por `room.snapshot`. O Mestre pode usar `scene.select`, `overlay.set`, `token.spawn`, `token.move` e `token.remove`. O jogador só move tokens cujo `controlledBy` permita seu papel. `commandId` torna repetições idempotentes dentro da sala; `ping` recebe `pong`.
 
-Movimento enviado pelo cliente:
+Coordenadas de token são normalizadas entre 0 e 1. Mensagens maiores que 16 KiB, payloads inválidos, IDs conflitantes e ações incompatíveis com o papel são recusados com códigos estáveis.
 
-```json
-{"type":"token.move","commandId":"move-1","payload":{"tokenId":"demo-token","x":0.2,"y":0.8}}
-```
+## Estado e limites atuais
 
-Broadcast aceito:
+Salas, convites, tickets, overlays e posições permanecem apenas em memória. Fechar o processo encerra a sessão. O VTT foi desenhado para uma mesa pessoal e não substitui hospedagem multiusuário permanente. Não compartilhe host token nem convite de Mestre; envie aos jogadores somente o link completo produzido pela interface.
 
-```json
-{"type":"token.moved","revision":1,"payload":{"tokenId":"demo-token","x":0.2,"y":0.8}}
-```
-
-`commandId` torna uma repetição idempotente dentro da sala. `{"type":"ping","commandId":"p1"}`
-recebe `pong`. Mensagens inválidas recebem `{"type":"error", ...}` com código estável.
-Mensagens WebSocket acima de 16 KiB são rejeitadas antes do parsing.
-
-## Testes
+## Verificação
 
 ```powershell
-pytest
+.\.venv-vtt\Scripts\python.exe -m pytest server\tests tools\campaign_pack\tests
+npm run lint
+npm test
 ```
 
-Os testes cobrem saúde, autenticação, emissão de tickets, snapshot, ping/pong, validação e
-broadcast de movimento entre Mestre e jogador.
+Consulte [`README-PORTABLE.md`](README-PORTABLE.md) para geração, transporte e uso sem instalação.

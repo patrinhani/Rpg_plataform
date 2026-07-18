@@ -240,6 +240,17 @@ def test_hash_is_lazy_cached_and_reused(tmp_path: Path, monkeypatch: pytest.Monk
     assert catalog.hash_cache_size == 1
 
 
+def test_verify_all_assets_preflights_entire_runtime_pack(tmp_path: Path) -> None:
+    manifest_path, source_root, manifest, _ids = _campaign_fixture(tmp_path)
+    catalog = _load(manifest_path, source_root)
+
+    count, total_bytes = catalog.verify_all_assets()
+
+    assert count == len(manifest["assets"])
+    assert total_bytes == sum(int(item["bytes"]) for item in manifest["assets"])
+    assert catalog.hash_cache_size == count
+
+
 def test_open_asset_returns_validated_stream_at_offset_zero(tmp_path: Path) -> None:
     manifest_path, source_root, _manifest, ids = _campaign_fixture(tmp_path)
     catalog = _load(manifest_path, source_root)
@@ -572,6 +583,11 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 "key": "salao-vazio",
                 "label": "Salao Vazio",
                 "map": {"assetId": ids["map_v2"], "width": None, "height": None},
+                "gmGuideMap": {
+                    "assetId": ids["gm_map"],
+                    "width": None,
+                    "height": None,
+                },
                 "overlays": [
                     {
                         "assetId": ids["overlay"],
@@ -592,6 +608,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 ids["token_unspecified"],
             }
             assert "catalog" not in player_initial["state"]
+            assert "gmGuideMap" not in player_initial["state"]["scene"]
             assert player_initial["state"]["scene"]["overlays"] == []
             player_serialized = json.dumps(player_initial, ensure_ascii=False)
             assert ids["overlay"] not in player_serialized

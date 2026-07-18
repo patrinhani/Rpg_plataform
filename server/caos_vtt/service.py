@@ -641,7 +641,7 @@ class VTTService:
                 "width": map_asset.image.width if map_asset.image is not None else None,
                 "height": map_asset.image.height if map_asset.image is not None else None,
             }
-        return {
+        payload = {
             "id": scene.scene_id,
             "key": scene.key,
             "label": self._humanize(scene.key),
@@ -666,6 +666,26 @@ class VTTService:
                 else None
             ),
         }
+        if role == "master":
+            guide_id = scene.active_gm_guide_map
+            guide_payload: dict[str, Any] | None = None
+            if guide_id is not None:
+                guide_asset = self.catalog.get_asset(guide_id, "master")
+                guide_payload = {
+                    "assetId": guide_id,
+                    "width": (
+                        guide_asset.image.width
+                        if guide_asset.image is not None
+                        else None
+                    ),
+                    "height": (
+                        guide_asset.image.height
+                        if guide_asset.image is not None
+                        else None
+                    ),
+                }
+            payload["gmGuideMap"] = guide_payload
+        return payload
 
     def _master_scenes(self) -> tuple[SceneView, ...]:
         assert self.catalog is not None

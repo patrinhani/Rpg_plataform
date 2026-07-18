@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 import uvicorn
 
+from .campaign import CampaignCatalog, CampaignCatalogError
 from .config import Settings
 from .factory import create_app
 from .tunnel import (
@@ -25,6 +26,9 @@ from .tunnel import (
 
 
 DEFAULT_PORT = 8765
+PACKAGED_CAMPAIGN_SOURCE_REF = "mnemosyne"
+PACKAGED_CAMPAIGN_RELATIVE_DIR = Path("campaigns") / "mnemosyne"
+DEMO_MODE_MARKER = "DEMO-MODE.txt"
 
 
 def find_frontend_dir() -> Path:
@@ -40,6 +44,71 @@ def find_frontend_dir() -> Path:
             return candidate
     searched = ", ".join(str(candidate) for candidate in candidates)
     raise RuntimeError(f"Frontend empacotado nao encontrado. Caminhos verificados: {searched}")
+
+
+def resolve_campaign_paths(
+    campaign_manifest: Path | None,
+    campaign_root: Path | None,
+    *,
+    frozen: bool | None = None,
+    executable: Path | None = None,
+) -> tuple[Path, Path] | None:
+    """Resolve explicit source paths or the pack adjacent to a frozen executable.
+
+    A source checkout intentionally has no implicit campaign fallback: without
+    the explicit pair it runs in demo mode.  A frozen build, on the other hand,
+    must contain either the runtime pack or the marker created by
+    ``build-portable.ps1 -SkipCampaign``.
+    """
+
+    if (campaign_manifest is None) != (campaign_root is None):
+        raise ValueError(
+            "--campaign-manifest e --campaign-root precisam ser informados juntos"
+        )
+    if campaign_manifest is not None and campaign_root is not None:
+        return campaign_manifest.expanduser(), campaign_root.expanduser()
+
+    is_frozen = bool(getattr(sys, "frozen", False)) if frozen is None else frozen
+    if not is_frozen:
+        return None
+
+    executable_path = Path(sys.executable) if executable is None else executable
+    executable_dir = executable_path.expanduser().resolve().parent
+    campaign_dir = executable_dir / PACKAGED_CAMPAIGN_RELATIVE_DIR
+    manifest_path = campaign_dir / "manifest.json"
+    if manifest_path.is_file():
+        return manifest_path, campaign_dir
+
+    demo_marker = executable_dir / DEMO_MODE_MARKER
+    if not campaign_dir.exists() and demo_marker.is_file():
+        return None
+    if campaign_dir.exists():
+        raise RuntimeError(
+            "O pack de campanha empacotado esta incompleto: "
+            f"'{manifest_path}' nao foi encontrado. Extraia novamente o ZIP completo."
+        )
+    raise RuntimeError(
+        "O pack de campanha empacotado nao foi encontrado ao lado do executavel. "
+        "Extraia novamente o ZIP completo; builds sem campanha precisam ser gerados "
+        "explicitamente com -SkipCampaign."
+    )
+
+
+def load_portable_catalog(
+    campaign_paths: tuple[Path, Path] | None,
+) -> CampaignCatalog | None:
+    if campaign_paths is None:
+        return None
+    manifest_path, campaign_root = campaign_paths
+    try:
+        catalog = CampaignCatalog.load(
+            manifest_path,
+            {PACKAGED_CAMPAIGN_SOURCE_REF: campaign_root},
+        )
+        catalog.verify_all_assets()
+        return catalog
+    except CampaignCatalogError as error:
+        raise RuntimeError(f"Falha ao carregar o pack de campanha: {error}") from error
 
 
 def build_portable_settings(
@@ -119,6 +188,18 @@ def _parser() -> argparse.ArgumentParser:
         metavar="SEGUNDOS",
         help=f"tempo para obter a URL publica (padrao: {DEFAULT_TUNNEL_TIMEOUT_SECONDS:g})",
     )
+    parser.add_argument(
+        "--campaign-manifest",
+        type=Path,
+        metavar="ARQUIVO",
+        help="manifesto schema 2 explicito ao executar pelo codigo-fonte",
+    )
+    parser.add_argument(
+        "--campaign-root",
+        type=Path,
+        metavar="PASTA",
+        help="raiz explicita correspondente a --campaign-manifest",
+    )
     return parser
 
 
@@ -135,12 +216,33 @@ def run(argv: Sequence[str] | None = None) -> int:
     if args.tunnel and not 5 <= args.tunnel_timeout <= 180:
         raise ValueError("--tunnel-timeout deve estar entre 5 e 180 segundos")
 
+    # Reject malformed manual origins before starting any external process.
+    build_portable_settings(args.port, args.public_origin)
+
+    campaign_paths = resolve_campaign_paths(
+        args.campaign_manifest,
+        args.campaign_root,
+    )
+    catalog = load_portable_catalog(campaign_paths)
     frontend_dir = find_frontend_dir()
     browser_url = f"http://127.0.0.1:{args.port}/vtt-lab"
     health_url = f"http://127.0.0.1:{args.port}/api/vtt/health"
     tunnel: QuickTunnel | None = None
     tunnel_origin: str | None = None
     tunnel_monitor: threading.Thread | None = None
+
+    if catalog is None:
+        print("Modo demo: nenhuma campanha foi carregada.", flush=True)
+    else:
+        scene_count = len(catalog.list_scenes("master"))
+        token_count = len(catalog.list_tokens("master"))
+        verified_count, verified_bytes = catalog.verify_all_assets()
+        print(
+            f"Campanha carregada: {catalog.campaign_title} "
+            f"({scene_count} cenas, {token_count} tokens, "
+            f"{verified_count} assets / {verified_bytes} bytes verificados).",
+            flush=True,
+        )
 
     try:
         public_origins = list(args.public_origin)
@@ -155,12 +257,18 @@ def run(argv: Sequence[str] | None = None) -> int:
 
         # The public origin is known and canonical before the app/WS routes exist.
         settings = build_portable_settings(args.port, public_origins)
+        share_url = f"{tunnel_origin}/vtt-lab" if tunnel_origin else None
+        browser_open_url = share_url or browser_url
+        browser_health_url = (
+            f"{tunnel_origin}/api/vtt/health" if tunnel_origin else health_url
+        )
 
         print("\nC.A.O.S. VTT PORTATIL")
         print("=" * 64)
         print(f"Endereco local: {browser_url}")
-        if tunnel_origin:
-            print(f"URL PARA COMPARTILHAR: {tunnel_origin}/vtt-lab")
+        if share_url:
+            print(f"Endereco publico do Mestre: {share_url}")
+            print("Compartilhe somente o link de jogador criado dentro da sala.")
             print("O endereco online e temporario e muda a cada execucao.")
         print(f"Host token temporario: {settings.host_token}")
         if args.public_origin:
@@ -173,13 +281,13 @@ def run(argv: Sequence[str] | None = None) -> int:
         if not args.no_browser:
             threading.Thread(
                 target=_open_browser_when_ready,
-                args=(browser_url, health_url),
+                args=(browser_open_url, browser_health_url),
                 daemon=True,
                 name="caos-vtt-browser",
             ).start()
 
         config = uvicorn.Config(
-            create_app(settings, frontend_dir=frontend_dir),
+            create_app(settings, frontend_dir=frontend_dir, catalog=catalog),
             host=settings.bind_host,
             port=settings.bind_port,
             loop="asyncio",

@@ -858,6 +858,15 @@ class CampaignCatalog:
             mtime_ns=signature.mtime_ns,
         )
 
+    def verify_all_assets(self) -> tuple[int, int]:
+        """Eagerly verify every catalog asset before a portable session starts."""
+
+        total_bytes = 0
+        for asset_id in sorted(self._assets):
+            resolved = self.resolve_asset(asset_id, "master")
+            total_bytes += resolved.size
+        return len(self._assets), total_bytes
+
     def open_asset(self, asset_id: str, role: str) -> OpenedAsset:
         """Abre um stream no mesmo descritor autorizado, confinado e validado."""
 
