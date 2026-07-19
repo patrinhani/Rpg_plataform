@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from server.caos_vtt.campaign import CampaignCatalog
+from server.caos_vtt.campaign import AssetNotAvailableError, CampaignCatalog
 from tools.campaign_pack import build as pack_module
 from tools.campaign_pack.build import (
     AssetIntegrityError,
@@ -66,6 +66,13 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, object], dict[str, s
             b"handout-secreto",
             "handout",
             "players",
+        ),
+        (
+            "master_reference",
+            "assets/referencias/alinhamento-mestre-v1.bin",
+            b"referencia-exclusiva-mestre",
+            "concept",
+            "gm",
         ),
     )
     assets: list[dict[str, object]] = []
@@ -134,6 +141,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, object], dict[str, s
             "tokenAssetIds": [ids["token"]],
             "propAssetIds": [ids["prop"]],
             "handoutAssetIds": [ids["handout"]],
+            "masterReferenceAssetIds": [ids["master_reference"]],
         },
         "warnings": [
             {"code": "fixture", "path": "docs/segredo.md", "message": "x"},
@@ -170,14 +178,14 @@ def _pack_tree(root: Path) -> dict[str, bytes]:
     }
 
 
-def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) -> None:
+def test_selects_scene_tokens_props_and_private_handouts(tmp_path: Path) -> None:
     manifest_path, source, _manifest, ids = _fixture(tmp_path)
     output = tmp_path / "runtime-pack"
 
     result = build_pack(manifest_path, source, output)
     runtime = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
 
-    assert result.asset_count == 5
+    assert result.asset_count == 7
     assert result.total_bytes == sum(
         len(value)
         for value in (
@@ -186,6 +194,8 @@ def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) ->
             b"overlay-nevoa",
             b"token-agente",
             b"prop-ancora",
+            b"handout-secreto",
+            b"referencia-exclusiva-mestre",
         )
     )
     assert runtime["campaign"]["sourceRef"] == "fixture"
@@ -205,7 +215,10 @@ def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) ->
     ]
     assert runtime["summary"]["stateGroupCount"] == 1
     assert runtime["collections"]["propAssetIds"] == [ids["prop"]]
-    assert runtime["collections"]["handoutAssetIds"] == []
+    assert runtime["collections"]["handoutAssetIds"] == [ids["handout"]]
+    assert runtime["collections"]["masterReferenceAssetIds"] == [
+        ids["master_reference"]
+    ]
     assert runtime["warnings"] == [
         {
             "code": "runtime-derivative-recommended",
@@ -220,11 +233,16 @@ def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) ->
         ids["overlay"],
         ids["token"],
         ids["prop"],
+        ids["handout"],
+        ids["master_reference"],
     }
     assert not (output / "assets" / "tokens" / "nao-listado-v1.bin").exists()
     assert not (output / "assets" / "mapas" / "cena-player-v1.bin").exists()
     assert (output / "assets" / "objetos" / "ancora-v1.bin").read_bytes() == b"prop-ancora"
-    assert not (output / "assets" / "handouts" / "segredo-v1.bin").exists()
+    assert (output / "assets" / "handouts" / "segredo-v1.bin").read_bytes() == b"handout-secreto"
+    assert (
+        output / "assets" / "referencias" / "alinhamento-mestre-v1.bin"
+    ).read_bytes() == b"referencia-exclusiva-mestre"
     assert not (output / "docs").exists()
     assert str(source.resolve()) not in (output / "manifest.json").read_text(encoding="utf-8")
 
@@ -233,7 +251,10 @@ def test_selects_scene_tokens_and_props_but_excludes_handouts(tmp_path: Path) ->
     assert catalog.list_scenes("player")[0].gm_guide_maps == ()
     assert [item.asset_id for item in catalog.list_tokens("player")] == [ids["token"]]
     assert [item.asset_id for item in catalog.list_props("master")] == [ids["prop"]]
-    assert catalog.list_handouts("master") == ()
+    assert [item.asset_id for item in catalog.list_handouts("master")] == [ids["handout"]]
+    assert catalog.list_handouts("player") == ()
+    with pytest.raises(AssetNotAvailableError):
+        catalog.resolve_asset(ids["handout"], "player")
     assert catalog.resolve_asset(ids["token"], "player").path.read_bytes() == b"token-agente"
 
 
@@ -267,7 +288,7 @@ def test_preserves_scene_layers_and_copies_consumed_assets(tmp_path: Path) -> No
     result = build_pack(manifest_path, source, output)
     runtime = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
 
-    assert result.asset_count == 5
+    assert result.asset_count == 7
     layer = runtime["collections"]["scenes"][0]["layers"][0]
     assert layer["id"] == "scene-layer:ancora"
     assert layer["states"]["ativo"]["assetId"] == ids["prop"]
@@ -327,6 +348,7 @@ def test_builds_older_manifest_without_new_asset_collections(tmp_path: Path) -> 
     collections = manifest["collections"]  # type: ignore[assignment]
     collections.pop("propAssetIds")  # type: ignore[union-attr]
     collections.pop("handoutAssetIds")  # type: ignore[union-attr]
+    collections.pop("masterReferenceAssetIds")  # type: ignore[union-attr]
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     output = tmp_path / "runtime-pack"
@@ -336,8 +358,10 @@ def test_builds_older_manifest_without_new_asset_collections(tmp_path: Path) -> 
     assert result.asset_count == 4
     assert runtime["collections"]["propAssetIds"] == []
     assert runtime["collections"]["handoutAssetIds"] == []
+    assert runtime["collections"]["masterReferenceAssetIds"] == []
     assert ids["prop"] not in {item["id"] for item in runtime["assets"]}
     assert ids["handout"] not in {item["id"] for item in runtime["assets"]}
+    assert ids["master_reference"] not in {item["id"] for item in runtime["assets"]}
 
 
 @pytest.mark.parametrize(
@@ -345,6 +369,7 @@ def test_builds_older_manifest_without_new_asset_collections(tmp_path: Path) -> 
     (
         ("propAssetIds", "token", "prop"),
         ("handoutAssetIds", "prop", "handout"),
+        ("masterReferenceAssetIds", "handout", "concept"),
     ),
 )
 def test_rejects_new_collection_ids_with_wrong_kind(
@@ -358,6 +383,18 @@ def test_rejects_new_collection_ids_with_wrong_kind(
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     with pytest.raises(PackManifestError, match=expected_kind):
+        check_pack(manifest_path, source)
+
+
+def test_rejects_master_reference_without_gm_audience(tmp_path: Path) -> None:
+    manifest_path, source, manifest, ids = _fixture(tmp_path)
+    reference = next(
+        item for item in manifest["assets"] if item["id"] == ids["master_reference"]
+    )
+    reference["audience"] = "players"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(PackManifestError, match="audience.*gm"):
         check_pack(manifest_path, source)
 
 
@@ -459,7 +496,7 @@ def test_source_tree_is_unchanged_after_build_and_check(tmp_path: Path) -> None:
     checked = check_pack(manifest_path, source)
     built = build_pack(manifest_path, source, tmp_path / "runtime-pack")
 
-    assert checked.asset_count == built.asset_count == 5
+    assert checked.asset_count == built.asset_count == 7
     assert _tree_snapshot(source) == before
 
 
@@ -524,7 +561,7 @@ def test_check_cli_writes_nothing_and_output_is_optional(
     )
 
     assert exit_code == 0
-    assert capsys.readouterr().out.startswith("OK: 5 assets")
+    assert capsys.readouterr().out.startswith("OK: 7 assets")
     assert {path.name for path in tmp_path.iterdir()} == {
         "Campanha fonte",
         "manifest.json",

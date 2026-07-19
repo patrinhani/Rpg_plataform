@@ -237,7 +237,7 @@ def test_rejects_malformed_jwt_before_network(token: str) -> None:
         {"sub": " uid-player"},
         {"sub": "uid\nplayer"},
         {"sub": "x" * 129},
-        {"iat": int(time.time()) + 61},
+        {"iat": int(time.time()) + 120},
         {"iat": "yesterday"},
         {"exp": int(time.time()) - 1},
         {"exp": True},

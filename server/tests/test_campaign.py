@@ -86,6 +86,14 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
             "handout",
             "players",
         ),
+        (
+            "master_reference",
+            "assets/conceitos/circuitos-sobrepostos-referencia-mestre-v1.bin",
+            b"referencia-mestre",
+            "concept",
+            # A colecao privada deve prevalecer mesmo se o audience vier errado.
+            "players",
+        ),
     )
     assets: list[dict[str, Any]] = []
     ids: dict[str, str] = {}
@@ -152,6 +160,7 @@ def _campaign_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, Any], dict[
             ],
             "propAssetIds": [ids["prop"]],
             "handoutAssetIds": [ids["handout"]],
+            "masterReferenceAssetIds": [ids["master_reference"]],
         },
         "warnings": [],
     }
@@ -227,8 +236,14 @@ def test_lists_sanitized_scenes_tokens_versions_and_unicode(tmp_path: Path) -> N
     assert [item.asset_id for item in catalog.list_props("player")] == [ids["prop"]]
     assert [item.asset_id for item in catalog.list_handouts("master")] == [ids["handout"]]
     assert catalog.list_handouts("player") == ()
+    assert [item.asset_id for item in catalog.list_master_references("master")] == [
+        ids["master_reference"]
+    ]
+    assert catalog.list_master_references("player") == ()
     with pytest.raises(AssetNotAvailableError):
         catalog.get_asset(ids["handout"], "player")
+    with pytest.raises(AssetNotAvailableError):
+        catalog.get_asset(ids["master_reference"], "player")
     assert str(source_root) not in repr(player_scenes)
     assert str(source_root) not in repr(catalog.list_tokens("master"))
     assert catalog.hash_cache_size == 0
@@ -367,12 +382,14 @@ def test_new_asset_collections_are_optional_for_older_manifests(tmp_path: Path) 
     manifest_path, source_root, manifest, _ids = _campaign_fixture(tmp_path)
     manifest["collections"].pop("propAssetIds")
     manifest["collections"].pop("handoutAssetIds")
+    manifest["collections"].pop("masterReferenceAssetIds")
     _write_manifest(manifest_path, manifest)
 
     catalog = _load(manifest_path, source_root)
 
     assert catalog.list_props("master") == ()
     assert catalog.list_handouts("master") == ()
+    assert catalog.list_master_references("master") == ()
 
 
 @pytest.mark.parametrize(
@@ -380,6 +397,7 @@ def test_new_asset_collections_are_optional_for_older_manifests(tmp_path: Path) 
     (
         ("propAssetIds", "token_player", "prop"),
         ("handoutAssetIds", "prop", "handout"),
+        ("masterReferenceAssetIds", "handout", "concept"),
     ),
 )
 def test_rejects_collection_ids_with_wrong_asset_kind(
@@ -570,6 +588,7 @@ def _catalog_app(
     *,
     two_scenes: bool = False,
     prop_states: bool = False,
+    state_db_path: Path | None = None,
 ) -> tuple[Any, CampaignCatalog, dict[str, str]]:
     manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
     if prop_states:
@@ -587,6 +606,7 @@ def _catalog_app(
             host_token=HOST_TOKEN,
             allowed_origins=(ORIGIN,),
             ticket_ttl_seconds=60,
+            state_db_path=state_db_path,
         ),
         catalog=catalog,
     )
@@ -779,6 +799,225 @@ def test_catalog_asset_endpoint_grants_are_role_room_bound_reusable_and_close_st
     assert all(opened.stream.closed for opened in opened_assets)
 
 
+def test_handout_delivery_is_master_only_room_global_and_revocable(tmp_path: Path) -> None:
+    app, _catalog, ids = _catalog_app(tmp_path, two_scenes=True)
+    handout_id = ids["handout"]
+
+    with TestClient(app) as client:
+        room = _create_room(client)
+        master_access = _issue_access(client, room, "masterInviteToken")
+        player_access = _issue_access(client, room, "playerInviteToken")
+        socket_path = f"/ws/vtt/rooms/{room['roomId']}"
+
+        denied_before_delivery = _asset_request(
+            client,
+            room["roomId"],
+            handout_id,
+            player_access["mediaToken"],
+        )
+        assert denied_before_delivery.status_code == 404
+        assert denied_before_delivery.json() == {"detail": "Asset nao encontrado"}
+
+        with client.websocket_connect(
+            f"{socket_path}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master, client.websocket_connect(
+            f"{socket_path}?ticket={player_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player:
+            master_initial = master.receive_json()
+            player_initial = player.receive_json()
+            assert [
+                item["assetId"]
+                for item in master_initial["state"]["catalog"]["handoutAssets"]
+            ] == [handout_id]
+            assert (
+                master_initial["state"]["catalog"]["handoutAssets"][0]["label"]
+                == "Pista Publicada Por Engano"
+            )
+            assert master_initial["state"]["deliveredHandouts"] == []
+            assert player_initial["state"]["deliveredHandouts"] == []
+            assert handout_id not in json.dumps(player_initial, ensure_ascii=False)
+
+            for index, probed_asset_id in enumerate(
+                (handout_id, "asset:assets/handouts/inexistente.bin")
+            ):
+                player.send_json(
+                    {
+                        "type": "handout.deliver",
+                        "commandId": f"player-handout-probe-{index}",
+                        "payload": {"assetId": probed_asset_id},
+                    }
+                )
+                assert player.receive_json()["error"]["code"] == "master_required"
+
+            master.send_json(
+                {
+                    "type": "handout.deliver",
+                    "commandId": "deliver-handout",
+                    "payload": {"assetId": handout_id},
+                }
+            )
+            master_delivered = master.receive_json()
+            player_delivered = player.receive_json()
+            assert master_delivered["revision"] == player_delivered["revision"] == 1
+            assert player_delivered["state"]["deliveredHandouts"][0]["assetId"] == handout_id
+            assert player_delivered["state"]["deliveredHandouts"][0]["deliveredAt"]
+            assert "catalog" not in player_delivered["state"]
+
+            delivered_asset = _asset_request(
+                client,
+                room["roomId"],
+                handout_id,
+                player_access["mediaToken"],
+            )
+            assert delivered_asset.status_code == 200
+            assert delivered_asset.content == b"segredo"
+            assert delivered_asset.headers["cache-control"] == "no-store, private"
+
+            master.send_json(
+                {
+                    "type": "fog.set_enabled",
+                    "commandId": "enable-fog-after-handout",
+                    "payload": {"enabled": True},
+                }
+            )
+            master.receive_json()
+            player_with_fog = player.receive_json()
+            assert player_with_fog["state"]["deliveredHandouts"][0]["assetId"] == handout_id
+            assert _asset_request(
+                client,
+                room["roomId"],
+                handout_id,
+                player_access["mediaToken"],
+            ).status_code == 200
+
+            master.send_json(
+                {
+                    "type": "handout.revoke",
+                    "commandId": "revoke-handout",
+                    "payload": {"assetId": handout_id},
+                }
+            )
+            master_revoked = master.receive_json()
+            player_revoked = player.receive_json()
+            assert master_revoked["state"]["deliveredHandouts"] == []
+            assert player_revoked["state"]["deliveredHandouts"] == []
+            assert _asset_request(
+                client,
+                room["roomId"],
+                handout_id,
+                player_access["mediaToken"],
+            ).status_code == 404
+
+
+def test_master_references_are_private_openable_by_master_and_never_deliverable(
+    tmp_path: Path,
+) -> None:
+    app, catalog, ids = _catalog_app(tmp_path)
+    reference_id = ids["master_reference"]
+
+    assert [item.asset_id for item in catalog.list_master_references("master")] == [
+        reference_id
+    ]
+    assert catalog.list_master_references("player") == ()
+
+    with TestClient(app) as client:
+        room = _create_room(client)
+        master_access = _issue_access(client, room, "masterInviteToken")
+        player_access = _issue_access(client, room, "playerInviteToken")
+        socket_path = f"/ws/vtt/rooms/{room['roomId']}"
+
+        with client.websocket_connect(
+            f"{socket_path}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master, client.websocket_connect(
+            f"{socket_path}?ticket={player_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player:
+            master_initial = master.receive_json()
+            player_initial = player.receive_json()
+            assert master_initial["state"]["catalog"]["masterReferenceAssets"] == [
+                {
+                    "assetId": reference_id,
+                    "label": "Circuitos Sobrepostos Referencia Mestre",
+                    "mediaType": "application/octet-stream",
+                }
+            ]
+            assert reference_id not in json.dumps(player_initial, ensure_ascii=False)
+
+            master_asset = _asset_request(
+                client,
+                room["roomId"],
+                reference_id,
+                master_access["mediaToken"],
+            )
+            assert master_asset.status_code == 200
+            assert master_asset.content == b"referencia-mestre"
+            assert _asset_request(
+                client,
+                room["roomId"],
+                reference_id,
+                player_access["mediaToken"],
+            ).status_code == 404
+
+            master.send_json(
+                {
+                    "type": "handout.deliver",
+                    "commandId": "do-not-deliver-master-reference",
+                    "payload": {"assetId": reference_id},
+                }
+            )
+            denied = master.receive_json()
+            assert denied["error"]["code"] == "handout_not_found"
+            assert app.state.vtt._rooms[room["roomId"]].delivered_handouts == {}
+            assert _asset_request(
+                client,
+                room["roomId"],
+                reference_id,
+                player_access["mediaToken"],
+            ).status_code == 404
+
+
+def test_delivered_handout_survives_restart_for_future_players(tmp_path: Path) -> None:
+    state_db = tmp_path / "state" / "sessions.sqlite3"
+    app, catalog, ids = _catalog_app(tmp_path, state_db_path=state_db)
+    handout_id = ids["handout"]
+
+    with TestClient(app) as client:
+        room = _create_room(client)
+        master_access = _issue_access(client, room, "masterInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master:
+            master.receive_json()
+            master.send_json(
+                {
+                    "type": "handout.deliver",
+                    "commandId": "persist-handout",
+                    "payload": {"assetId": handout_id},
+                }
+            )
+            assert master.receive_json()["state"]["deliveredHandouts"][0]["assetId"] == handout_id
+
+    restarted = create_app(app.state.settings, catalog=catalog)
+    with TestClient(restarted) as client:
+        player_access = _issue_access(client, room, "playerInviteToken")
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{room['roomId']}?ticket={player_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player:
+            restored = player.receive_json()
+            assert restored["state"]["deliveredHandouts"][0]["assetId"] == handout_id
+            assert _asset_request(
+                client,
+                room["roomId"],
+                handout_id,
+                player_access["mediaToken"],
+            ).content == b"segredo"
+
+
 def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
     tmp_path: Path,
 ) -> None:
@@ -832,6 +1071,8 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                 "tokenAssets",
                 "propAssets",
                 "propStateGroups",
+                "masterReferenceAssets",
+                "handoutAssets",
             }
             assert [
                 item["assetId"]
@@ -854,6 +1095,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             assert ids["gm_map"] not in player_serialized
             assert ids["token_gm"] not in player_serialized
             assert ids["token_unspecified"] not in player_serialized
+            assert ids["master_reference"] not in player_serialized
 
             master.send_json(
                 {

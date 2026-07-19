@@ -382,6 +382,107 @@ class CampaignManifestTests(unittest.TestCase):
             )
             self.assertNotIn("state-group:fragmento-mnemosyne", state_group_ids)
 
+    def test_exact_override_can_mark_private_master_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            reference_path = (
+                "assets/handouts/one-shot-01/"
+                "circuitos-sobrepostos-referencia-mestre-v1.png"
+            )
+            (campaign / reference_path).write_bytes(_png(96, 128))
+            config_path = root / "master-reference.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "campaignId": "mnemosyne",
+                        "assetOverrides": {
+                            reference_path: {
+                                "kind": "concept",
+                                "audience": "gm",
+                                "controlledBy": "gm",
+                                "masterReference": True,
+                            }
+                        },
+                        "assetFamilyOverrides": {},
+                        "sceneLayers": [],
+                    },
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = build_manifest(campaign, config_path)
+            asset = next(
+                item for item in manifest["assets"] if item["relativePath"] == reference_path
+            )
+
+            self.assertEqual((asset["kind"], asset["audience"]), ("concept", "gm"))
+            self.assertEqual(
+                manifest["collections"]["masterReferenceAssetIds"],
+                [asset["id"]],
+            )
+            self.assertNotIn(asset["id"], manifest["collections"]["handoutAssetIds"])
+
+    def test_family_override_cannot_mark_master_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = self._campaign(root)
+            concepts = campaign / "assets" / "conceitos"
+            concepts.mkdir(parents=True)
+            (concepts / "alinhamento-v1.png").write_bytes(_png(64, 64))
+            family_path = "assets/conceitos/alinhamento"
+            config_path = root / "invalid-family-master-reference.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 2,
+                        "campaignId": "mnemosyne",
+                        "assetOverrides": {},
+                        "assetFamilyOverrides": {
+                            family_path: {
+                                "extensions": ["png"],
+                                "kind": "concept",
+                                "audience": "gm",
+                                "controlledBy": "gm",
+                                "masterReference": True,
+                            }
+                        },
+                        "sceneLayers": [],
+                    },
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = build_manifest(campaign, config_path)
+
+            self.assertEqual(manifest["collections"]["masterReferenceAssetIds"], [])
+            self.assertTrue(
+                any(
+                    warning["code"] == "classification-override-invalid"
+                    and warning["path"] == family_path
+                    for warning in manifest["warnings"]
+                )
+            )
+
+    def test_master_reference_collection_requires_concept_with_gm_audience(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            campaign = self._campaign(Path(temporary))
+            manifest = self._build(campaign)
+            handout = next(asset for asset in manifest["assets"] if asset["kind"] == "handout")
+            manifest["collections"]["masterReferenceAssetIds"] = [handout["id"]]
+
+            with self.assertRaisesRegex(ManifestError, "kind diferente de concept"):
+                render_manifest(manifest)
+
+            handout["kind"] = "concept"
+            handout["audience"] = "players"
+            manifest["collections"]["handoutAssetIds"] = []
+            with self.assertRaisesRegex(ManifestError, "audience diferente de gm"):
+                render_manifest(manifest)
+
     def test_family_override_rejects_state_group_opt_out(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -14,6 +14,7 @@ import os
 import re
 import stat
 import threading
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO, Mapping
@@ -820,6 +821,7 @@ class CampaignCatalog:
         token_ids: tuple[str, ...],
         prop_ids: tuple[str, ...],
         handout_ids: tuple[str, ...],
+        master_reference_ids: tuple[str, ...],
     ) -> None:
         self.campaign_id = campaign_id
         self.campaign_title = campaign_title
@@ -832,6 +834,9 @@ class CampaignCatalog:
         self._token_ids = token_ids
         self._prop_ids = prop_ids
         self._handout_ids = handout_ids
+        self._handout_id_set = frozenset(handout_ids)
+        self._master_reference_ids = master_reference_ids
+        self._master_reference_id_set = frozenset(master_reference_ids)
         self._prop_group_by_asset = {
             variant.asset_id: group.group_id
             for group in prop_state_groups
@@ -907,6 +912,13 @@ class CampaignCatalog:
             expected_kind="handout",
             optional=True,
         )
+        master_reference_ids = _parse_asset_ids(
+            collections,
+            assets,
+            collection_name="masterReferenceAssetIds",
+            expected_kind="concept",
+            optional=True,
+        )
         return cls(
             campaign_id=campaign_id,
             campaign_title=campaign_title,
@@ -918,6 +930,7 @@ class CampaignCatalog:
             token_ids=token_ids,
             prop_ids=prop_ids,
             handout_ids=handout_ids,
+            master_reference_ids=master_reference_ids,
         )
 
     @property
@@ -935,13 +948,16 @@ class CampaignCatalog:
             raise AssetNotAvailableError("Papel sem acesso ao catalogo")
         return role
 
-    @staticmethod
-    def _is_authorized(record: _AssetRecord, role: str) -> bool:
+    def _is_authorized(self, record: _AssetRecord, role: str) -> bool:
         if role == "master":
             return True
-        # Handouts permanecem privados ate um fluxo explicito de revelacao.
-        # Isso tambem protege contra um audience incorreto no manifesto fonte.
-        return record.view.kind != "handout" and record.view.audience == "players"
+        # Handouts e referencias privadas permanecem inacessiveis mesmo quando
+        # o manifesto fonte declara audience=players por engano.
+        return (
+            record.view.kind != "handout"
+            and record.view.asset_id not in self._master_reference_id_set
+            and record.view.audience == "players"
+        )
 
     def _asset_for_role(self, asset_id: str, role: str) -> _AssetRecord:
         role = self._validate_role(role)
@@ -1018,6 +1034,31 @@ class CampaignCatalog:
             for asset_id in self._handout_ids
             if (record := self._assets[asset_id]) and self._is_authorized(record, role)
         )
+
+    def list_master_references(self, role: str) -> tuple[AssetView, ...]:
+        """Lista referencias conceituais privadas somente para o Mestre."""
+
+        role = self._validate_role(role)
+        if role != "master":
+            return ()
+        return tuple(self._assets[asset_id].view for asset_id in self._master_reference_ids)
+
+    def is_handout(self, asset_id: str) -> bool:
+        """Confirma internamente se o ID pertence a colecao privada de handouts."""
+
+        return asset_id in self._handout_id_set
+
+    def get_handout_for_delivery(self, asset_id: str) -> AssetView:
+        """Retorna metadados privados somente para o fluxo de entrega da sala.
+
+        Este metodo nao concede acesso ao jogador por si so. O chamador precisa
+        comprovar que o handout foi entregue na sala antes de serializar os
+        metadados ou servir seus bytes.
+        """
+
+        if asset_id not in self._handout_id_set:
+            raise AssetNotAvailableError("Handout indisponivel")
+        return self._assets[asset_id].view
 
     def list_scenes(self, role: str) -> tuple[SceneView, ...]:
         """Lista cenas filtradas; jogadores nunca recebem mapas-guia do mestre."""
@@ -1203,6 +1244,38 @@ class CampaignCatalog:
         """Abre um stream no mesmo descritor autorizado, confinado e validado."""
 
         record = self._asset_for_role(asset_id, role)
+        path = self._resolve_confined_path(record)
+        descriptor, signature = self._open_verified(record, path)
+        try:
+            stream = os.fdopen(descriptor, "rb")
+        except Exception:
+            os.close(descriptor)
+            raise
+        return OpenedAsset(
+            asset=record.view,
+            stream=stream,
+            sha256=record.expected_sha256,
+            size=signature.size,
+            mtime_ns=signature.mtime_ns,
+        )
+
+    def open_delivered_handout(
+        self,
+        asset_id: str,
+        delivered_asset_ids: Collection[str],
+    ) -> OpenedAsset:
+        """Abre um handout depois que o servico validou sua entrega na sala.
+
+        A verificacao exata contra ``handoutAssetIds`` impede que este caminho
+        privilegiado seja reutilizado para mapas, guias ou outros assets do GM.
+        """
+
+        if (
+            asset_id not in self._handout_id_set
+            or asset_id not in delivered_asset_ids
+        ):
+            raise AssetNotAvailableError("Handout indisponivel")
+        record = self._assets[asset_id]
         path = self._resolve_confined_path(record)
         descriptor, signature = self._open_verified(record, path)
         try:

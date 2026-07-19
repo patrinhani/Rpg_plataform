@@ -6,6 +6,7 @@ import {
 import { readVttPersistenceWarning } from '../../lib/vtt-persistence.js';
 import { getIntegratedVttSessionRefreshDelay } from '../../lib/vtt-session.js';
 import VttBoard from '../vtt-table/index.js';
+import { isCampaignVttState } from '../vtt-table/handouts.js';
 import './vtt-lab.css';
 
 const SERVER_URL_STORAGE_KEY = 'caos.vttLab.serverUrl';
@@ -29,6 +30,8 @@ const BOARD_COMMAND_TYPES = new Set([
   'fog.stroke',
   'fog.reset',
   'fog.reveal_all',
+  'handout.deliver',
+  'handout.revoke',
 ]);
 const BOARD_COMMANDS_WITHOUT_PAYLOAD = new Set(['fog.reset', 'fog.reveal_all']);
 
@@ -180,14 +183,16 @@ function buildPlayerInviteUrl(serverUrl, roomId, inviteToken) {
 }
 
 function hydrateCampaignState(rawState, revision, grant) {
-  if (!rawState?.scene || !grant?.token) return null;
+  if (!grant?.token || !isCampaignVttState(rawState)) return null;
   const assetUrl = (assetId) => buildAssetUrl(
     grant.serverUrl,
     grant.roomId,
     grant.token,
     assetId,
   );
-  const rawScene = rawState.scene;
+  const rawScene = rawState.scene && typeof rawState.scene === 'object'
+    ? rawState.scene
+    : null;
   const rawTokens = rawState.tokens && typeof rawState.tokens === 'object'
     ? rawState.tokens
     : {};
@@ -195,11 +200,46 @@ function hydrateCampaignState(rawState, revision, grant) {
     ? rawState.props
     : {};
   const useProtectedMap = grant.role === 'player' && rawState.fog?.enabled;
+  const hydrateHandoutCollection = (rawCollection) => {
+    if (Array.isArray(rawCollection)) {
+      return rawCollection.map((rawItem) => {
+        const item = rawItem && typeof rawItem === 'object'
+          ? rawItem
+          : { assetId: rawItem };
+        return {
+          ...item,
+          url: item.assetId ? assetUrl(item.assetId) : '',
+        };
+      });
+    }
+    if (!rawCollection || typeof rawCollection !== 'object') return [];
+    return Object.fromEntries(Object.entries(rawCollection).map(([key, rawItem]) => {
+      const item = rawItem && typeof rawItem === 'object'
+        ? rawItem
+        : { assetId: rawItem || key };
+      const assetId = item.assetId || key;
+      return [key, {
+        ...item,
+        assetId,
+        url: assetId ? assetUrl(assetId) : '',
+      }];
+    }));
+  };
 
   return {
     ...rawState,
     revision: Number.isFinite(Number(revision)) ? Number(revision) : 0,
-    scene: {
+    deliveredHandouts: hydrateHandoutCollection(rawState.deliveredHandouts),
+    catalog: rawState.catalog && typeof rawState.catalog === 'object'
+      ? {
+        ...rawState.catalog,
+        handoutAssets: hydrateHandoutCollection(rawState.catalog.handoutAssets),
+        masterReferenceAssets: hydrateHandoutCollection(
+          rawState.catalog.masterReferenceAssets,
+        ),
+      }
+      : rawState.catalog,
+    scene: rawScene ? {
       ...rawScene,
       map: rawScene.map ? {
         ...rawScene.map,
@@ -229,7 +269,7 @@ function hydrateCampaignState(rawState, revision, grant) {
           assetUrl: layer.assetId ? assetUrl(layer.assetId) : '',
         }))
         : [],
-    },
+    } : null,
     tokens: Object.fromEntries(Object.entries(rawTokens).map(([key, tokenValue]) => {
       const token = tokenValue && typeof tokenValue === 'object' ? tokenValue : {};
       const id = String(token.id || key);

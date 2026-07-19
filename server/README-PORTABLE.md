@@ -6,7 +6,7 @@ O pacote portátil funciona no Windows x64 sem instalar Python, Node.js, serviç
 
 1. Copie o ZIP para o computador da mesa e extraia **todo** o conteúdo para uma pasta comum.
 2. Mantenha juntos `CAOS-VTT.exe`, `_internal`, `campaigns`, `FIREBASE-PROJECT.txt` e `cloudflared.exe`.
-3. Abra `Iniciar C.A.O.S. VTT Online.cmd` para uma mesa pela internet ou `Iniciar C.A.O.S. VTT.cmd` para uso apenas neste computador.
+3. Abra `Iniciar C.A.O.S. VTT Online.cmd` para uma mesa pela internet ou `Iniciar C.A.O.S. Portatil.bat` para uso apenas neste computador.
 4. Se abrir pelo botão de uma Mesa no sistema, o autor entra como Mestre e os convidados entram como jogadores automaticamente; não é preciso copiar chaves.
 5. Se abrir diretamente a página portátil isolada, use o **Host token de fallback** exibido na janela preta, crie a sala e compartilhe somente o link de jogador gerado por ela.
 
@@ -16,7 +16,7 @@ Não execute o programa dentro do ZIP e não feche a janela preta durante a sess
 
 - frontend VTT dedicado e leve, sem bestiário ou módulos da ficha; a validação Firebase fica no backend e só é ativada quando uma Mesa autenticada solicita acesso;
 - servidor FastAPI e WebSocket compilado em formato PyInstaller `onedir` e sem UPX;
-- pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens, objetos de cenário e guias privados do Mestre;
+- pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens, objetos de cenário, handouts e guias privados do Mestre;
 - `cloudflared.exe` oficial para o launcher online;
 - `FIREBASE-PROJECT.txt`, com somente o identificador público necessário ao acesso autenticado da Mesa;
 - guia rápido, documentação, licença e aviso de terceiro.
@@ -29,7 +29,7 @@ Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanh
 
 O host token e os convites continuam disponíveis somente como fallback para abrir o frontend portátil isolado. Nesse modo, o host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
 
-O estado fica em `data\caos-vtt-state.sqlite3`, ao lado de `CAOS-VTT.exe`. Sala, cena ativa, posições de tokens, objetos de cenário, overlays e máscaras de fog sobrevivem ao fechamento do programa. Tickets e grants de mídia não são recuperados.
+O estado fica em `data\caos-vtt-state.sqlite3`, ao lado de `CAOS-VTT.exe`. Sala, cena ativa, posições de tokens, objetos de cenário, overlays, máscaras de fog e handouts entregues sobrevivem ao fechamento do programa. Tickets e grants de mídia não são recuperados.
 
 Uma sala integrada é recuperada automaticamente pelo ID da Mesa. O servidor mantém o mesmo `roomId` e o estado salvo, mas recusa convites manuais e revoga a sessão se a pessoa deixar de ser membro ou mudar de papel. O ID token Firebase fica somente na memória e é renovado pelo navegador; nunca é gravado no banco local. Salas criadas diretamente no frontend portátil continuam isoladas e usam seus próprios convites de fallback. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
 
@@ -38,6 +38,12 @@ Uma sala integrada é recuperada automaticamente pelo ID da Mesa. O servidor man
 O fog começa **ligado e totalmente fechado** em todas as cenas. O Mestre pode revelar ou ocultar áreas com o pincel, fechar tudo, revelar tudo ou desligar o fog conscientemente. Se o mapa ativo da cena mudar entre versões da campanha, a máscara anterior é descartada e a visão volta a ficar fechada para evitar revelações acidentais.
 
 Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays ou dos objetos de cenário. O servidor compõe essas camadas com a máscara e entrega uma única imagem pronta; tokens fora de áreas reveladas também não entram no snapshot do jogador. Os objetos de cenário são independentes dos tokens e podem ser posicionados, redimensionados, girados e ocultados. Quando o manifesto define estados, o Mestre pode alternar somente entre visuais do mesmo objeto, como ativo/desativado ou ritual/recuperado; objetos sem estados continuam editáveis, mas não podem virar outro asset por engano.
+
+## Handouts
+
+O Mestre abre **Handouts** para visualizar o catálogo privado e entregar um documento a todos os jogadores da sala. O arquivo não aparece nem pode ser baixado antes da entrega, e a entrega independe da cena atual e do fog. **Recolher** bloqueia novos acessos e remove o documento da galeria dos jogadores; não é possível apagar cópias ou capturas feitas antes do recolhimento. A primeira versão entrega para a sala inteira, inclusive jogadores que entrarem depois; entrega individual e temporária podem ser adicionadas futuramente.
+
+Referências exclusivas do Mestre aparecem no mesmo dossiê com identificação própria, mas não oferecem a ação **Entregar**. Seus metadados e bytes nunca são enviados ao jogador; na campanha Mnemosyne isso preserva a referência `10d` usada para alinhar os circuitos sem transformá-la em pista pública.
 
 ## Modo online
 
@@ -116,7 +122,7 @@ Opções úteis:
 
 - `-SkipTunnel`: pacote local sem `cloudflared.exe`;
 - `-SkipCampaign`: build de demonstração explicitamente marcado, sem Mnemosyne;
-- `-SkipArchive`: gera somente a pasta portátil;
+- `-SkipArchive`: gera somente a pasta portátil e não preserva o ZIP nem o `.sha256` anteriores da mesma variante; ambos são removidos para não parecer que correspondem à pasta recém-gerada;
 - `-SkipFrontendBuild`: reutiliza `dist-vtt` somente se estiver atualizado e isolado.
 - `-MaxCampaignBytes N`: altera conscientemente o teto do pack em bytes.
 - `-FirebaseProjectId ID`: define explicitamente o projeto Firebase público usado pela integração com a Mesa.

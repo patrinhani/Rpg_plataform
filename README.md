@@ -10,7 +10,7 @@ O projeto auxilia nos cálculos e no acompanhamento da ficha, mas as rolagens s�
 - Inventário, modificações, rituais, poderes e progressão.
 - Diário e ações de interlúdio.
 - Mesas com participantes, criaturas e iniciativa compartilhada.
-- VTT visual sincronizado com cenas, mapas, overlays e tokens.
+- VTT visual sincronizado com cenas, mapas, overlays, tokens, entrega protegida de handouts e referências privadas do Mestre.
 - Bestiário integrado.
 - Exportação da ficha em JSON e PDF.
 - Sincronização e autenticação das fichas pelo Firebase.
@@ -39,13 +39,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1 
   -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
 ```
 
+Como atalho, dê dois cliques em `Iniciar C.A.O.S. Atual.bat`: ele abre os dois serviços em janelas separadas e carrega `http://localhost:5173`. Se a campanha estiver em outro caminho, defina `CAOS_VTT_CAMPAIGN_ROOT` antes de executar.
+
 O backend gera um host token temporário, mostra o valor no terminal e não grava o segredo em disco. Use `-Port 9000` para trocar a porta ou `-AllowedOrigins "https://seu-app.vercel.app"` para autorizar outro frontend. `CampaignManifest` e `CampaignRoot` sempre são informados juntos; sem ambos o VTT inicia no modo de demonstração.
 
 Abra `http://localhost:5173/vtt-lab`. A mesa nunca faz rolagens automáticas. O link do jogador é gerado dentro da sala e contém apenas o convite de jogador.
 
 ## Pacote portátil
 
-Para o computador da mesa, use o ZIP gerado em vez do ambiente de desenvolvimento. Depois de extraído, ele roda no Windows x64 sem instalar Python, Node.js ou dependências e oferece launchers local e online. As instruções completas estão em [`server/README-PORTABLE.md`](server/README-PORTABLE.md).
+Para o computador da mesa, use o ZIP gerado em vez do ambiente de desenvolvimento. Depois de extraído, ele roda no Windows x64 sem instalar Python, Node.js ou dependências. Abra `Iniciar C.A.O.S. Portatil.bat` para o modo local; o launcher online continua disponível separadamente. As instruções completas estão em [`server/README-PORTABLE.md`](server/README-PORTABLE.md).
 
 ## Verificação
 

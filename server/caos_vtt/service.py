@@ -25,8 +25,10 @@ from PIL import Image, ImageDraw
 
 from .campaign import (
     AssetNotAvailableError,
+    AssetView,
     CampaignCatalog,
     CampaignCatalogError,
+    OpenedAsset,
     SceneView,
 )
 from .models import (
@@ -34,6 +36,8 @@ from .models import (
     FogRevealAllCommand,
     FogSetEnabledCommand,
     FogStrokeCommand,
+    HandoutDeliverCommand,
+    HandoutRevokeCommand,
     MoveCommand,
     OverlaySetCommand,
     PropRemoveCommand,
@@ -76,6 +80,8 @@ CatalogCommand = (
     | FogSetEnabledCommand
     | FogResetCommand
     | FogRevealAllCommand
+    | HandoutDeliverCommand
+    | HandoutRevokeCommand
 )
 
 
@@ -242,6 +248,7 @@ class Room:
     scene_overlays: dict[str, dict[str, bool]] = field(default_factory=dict)
     scene_layers: dict[str, dict[str, str | None]] = field(default_factory=dict)
     scene_fog: dict[str, FogState] = field(default_factory=dict)
+    delivered_handouts: dict[str, str] = field(default_factory=dict)
     persistence_warning: str | None = None
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     broadcast_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
@@ -602,6 +609,10 @@ class VTTService:
             return True
 
         async with room.lock:
+            # Handouts sao estado global da sala: entrega e revogacao nao
+            # dependem de cena ativa, nevoa ou troca de mapa.
+            if catalog.is_handout(asset_id):
+                return asset_id in room.delivered_handouts
             active_scene_id = room.active_scene_id
             if active_scene_id is None:
                 return False
@@ -661,6 +672,35 @@ class VTTService:
                 and self._prop_visible_to_player(room, active_scene_id, prop)
                 for prop in room.scene_props.get(active_scene_id, {}).values()
             )
+
+    async def open_authorized_asset(
+        self,
+        room_id: str,
+        role: Role,
+        asset_id: str,
+    ) -> OpenedAsset:
+        """Autoriza no estado da sala antes de abrir um descritor validado.
+
+        Handouts usam um caminho explicito que exige simultaneamente pertencer
+        ao catalogo privado e constar na fotografia de entregas desta sala.
+        """
+
+        catalog = self.catalog
+        room = self._rooms.get(room_id)
+        if catalog is None or room is None:
+            raise AssetNotAvailableError("Asset indisponivel")
+        if not await self.can_access_asset(room_id, role, asset_id):
+            raise AssetNotAvailableError("Asset indisponivel")
+
+        if role == "player" and catalog.is_handout(asset_id):
+            async with room.lock:
+                delivered = frozenset(room.delivered_handouts)
+            return await asyncio.to_thread(
+                catalog.open_delivered_handout,
+                asset_id,
+                delivered,
+            )
+        return await asyncio.to_thread(catalog.open_asset, asset_id, role)
 
     async def render_player_fog_map(
         self,
@@ -958,6 +998,31 @@ class VTTService:
         role: Role,
         command: CatalogCommand,
     ) -> CatalogCommandFailure | None:
+        if isinstance(command, (HandoutDeliverCommand, HandoutRevokeCommand)):
+            # A funcao do asset so e consultada depois do papel para impedir
+            # que jogadores usem respostas diferentes para sondar o catalogo.
+            if role != "master":
+                return CatalogCommandFailure(
+                    "master_required",
+                    "Somente o mestre entrega ou revoga handouts",
+                )
+            assert self.catalog is not None
+            try:
+                self.catalog.get_handout_for_delivery(command.payload.assetId)
+            except AssetNotAvailableError:
+                return CatalogCommandFailure(
+                    "handout_not_found",
+                    "Handout nao encontrado",
+                )
+            if isinstance(command, HandoutDeliverCommand):
+                room.delivered_handouts.setdefault(
+                    command.payload.assetId,
+                    datetime.now(UTC).isoformat(),
+                )
+            else:
+                room.delivered_handouts.pop(command.payload.assetId, None)
+            return None
+
         if isinstance(
             command,
             (FogStrokeCommand, FogSetEnabledCommand, FogResetCommand, FogRevealAllCommand),
@@ -1261,6 +1326,10 @@ class VTTService:
             "revision": room.revision,
             "demo": {"tokenX": room.token_x, "tokenY": room.token_y},
             "activeSceneId": room.active_scene_id,
+            "deliveredHandouts": [
+                {"assetId": asset_id, "deliveredAt": delivered_at}
+                for asset_id, delivered_at in sorted(room.delivered_handouts.items())
+            ],
             "scenes": scenes,
             "catalogCommands": [
                 {
@@ -1371,6 +1440,9 @@ class VTTService:
             return room
 
         self._initialize_catalog_room(room)
+        room.delivered_handouts = self._deserialize_delivered_handouts(
+            payload.get("deliveredHandouts", [])
+        )
         scenes_payload = payload.get("scenes", {})
         if not isinstance(scenes_payload, dict):
             raise ValueError("cenas persistidas invalidas")
@@ -1528,6 +1600,50 @@ class VTTService:
                 fingerprint=fingerprint.lower(),
             )
         return room
+
+    def _deserialize_delivered_handouts(self, payload: Any) -> dict[str, str]:
+        if not isinstance(payload, list):
+            raise ValueError("handouts entregues persistidos invalidos")
+        assert self.catalog is not None
+        available = {
+            asset.asset_id for asset in self.catalog.list_handouts("master")
+        }
+        if len(payload) > max(1024, len(available)):
+            raise ValueError("limite de handouts entregues persistidos excedido")
+        delivered: dict[str, str] = {}
+        for item in payload:
+            if not isinstance(item, dict) or set(item) != {"assetId", "deliveredAt"}:
+                raise ValueError("handout entregue persistido invalido")
+            asset_id = item.get("assetId")
+            delivered_at = item.get("deliveredAt")
+            if (
+                not isinstance(asset_id, str)
+                or not 7 <= len(asset_id) <= 2048
+                or not asset_id.startswith("asset:")
+                or any(character in asset_id for character in "\x00\r\n")
+                or not isinstance(delivered_at, str)
+                or not 1 <= len(delivered_at) <= 64
+            ):
+                raise ValueError("handout entregue persistido invalido")
+            try:
+                timestamp = datetime.fromisoformat(delivered_at)
+            except ValueError as error:
+                raise ValueError("data de entrega persistida invalida") from error
+            if timestamp.tzinfo is None:
+                raise ValueError("data de entrega persistida sem fuso horario")
+            if asset_id not in available:
+                warnings.warn(
+                    "Handout entregue com asset obsoleto foi ignorado",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                continue
+            # Duplicatas nao ampliam acesso. A primeira entrega valida vence.
+            delivered.setdefault(
+                asset_id,
+                timestamp.astimezone(UTC).isoformat(),
+            )
+        return delivered
 
     def _deserialize_token(self, payload: Any) -> CatalogToken:
         if not isinstance(payload, dict):
@@ -1834,6 +1950,16 @@ class VTTService:
                         "visible": prop.visible,
                     }
 
+        delivered_handouts: list[dict[str, Any]] = []
+        for asset_id, delivered_at in sorted(room.delivered_handouts.items()):
+            try:
+                asset = self.catalog.get_handout_for_delivery(asset_id)
+            except AssetNotAvailableError:
+                continue
+            delivered_handouts.append(
+                self._handout_payload(asset, delivered_at=delivered_at)
+            )
+
         state: dict[str, Any] = {
             "scene": (
                 self._active_scene_payload(room, active_scene, role)
@@ -1843,6 +1969,7 @@ class VTTService:
             "tokens": tokens,
             "props": props,
             "fog": self._fog_payload(room, active_scene, role),
+            "deliveredHandouts": delivered_handouts,
         }
         if role == "master":
             state["table"] = {
@@ -1897,6 +2024,17 @@ class VTTService:
                     }
                     for group in self.catalog.list_prop_state_groups("master")
                 ],
+                "masterReferenceAssets": [
+                    self._master_reference_payload(asset)
+                    for asset in self.catalog.list_master_references("master")
+                ],
+                "handoutAssets": [
+                    self._handout_payload(
+                        asset,
+                        delivered_at=room.delivered_handouts.get(asset.asset_id),
+                    )
+                    for asset in self.catalog.list_handouts("master")
+                ],
             }
             if room.persistence_warning is not None:
                 state["persistence"] = {
@@ -1912,6 +2050,38 @@ class VTTService:
             "revision": room.revision,
             "state": state,
         }
+
+    def _handout_payload(
+        self,
+        asset: AssetView,
+        *,
+        delivered_at: str | None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "assetId": asset.asset_id,
+            "label": self._asset_label(asset.asset_id),
+            "mediaType": asset.media_type,
+            "deliveredAt": delivered_at,
+        }
+        if asset.image is not None:
+            payload["image"] = {
+                "width": asset.image.width,
+                "height": asset.image.height,
+            }
+        return payload
+
+    def _master_reference_payload(self, asset: AssetView) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "assetId": asset.asset_id,
+            "label": self._asset_label(asset.asset_id),
+            "mediaType": asset.media_type,
+        }
+        if asset.image is not None:
+            payload["image"] = {
+                "width": asset.image.width,
+                "height": asset.image.height,
+            }
+        return payload
 
     def _active_scene_payload(
         self,
@@ -2217,5 +2387,11 @@ class VTTService:
     def _asset_label(cls, asset_id: str) -> str:
         filename = asset_id.rsplit("/", 1)[-1]
         stem = filename.rsplit(".", 1)[0]
-        stem = re.sub(r"-(?:token|objeto)-vtt-v\d+$", "", stem, flags=re.IGNORECASE)
+        stem = re.sub(
+            r"-(?:(?:token|objeto)-vtt|handout)-v\d+$",
+            "",
+            stem,
+            flags=re.IGNORECASE,
+        )
+        stem = re.sub(r"-v\d+$", "", stem, flags=re.IGNORECASE)
         return cls._humanize(stem)

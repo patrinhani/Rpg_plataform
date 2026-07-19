@@ -8,9 +8,11 @@ O gerador cria uma cópia autocontida e leve para o VTT. O pack mantém os IDs e
 - overlays referenciados pelas cenas;
 - camadas semânticas de cena e todos os assets de seus estados/posicionamentos;
 - tokens listados em `collections.tokenAssetIds`;
-- objetos de mapa listados em `collections.propAssetIds`.
+- objetos de mapa listados em `collections.propAssetIds`;
+- handouts listados em `collections.handoutAssetIds`;
+- referências exclusivas do Mestre listadas em `collections.masterReferenceAssetIds`.
 
-Versões antigas sem seletor no runtime, documentos, grupos de estado e assets sem referência não entram no pack. Manifests anteriores sem `layers` continuam válidos. Assets assumidos por uma camada deixam de ser props, tokens ou overlays globais, evitando que o mesmo elemento apareça duas vezes. As listas estruturais `documents` e grupos de estado ainda aplicáveis permanecem no JSON para compatibilidade com `CampaignCatalog`. Alertas referentes aos assets e cenas selecionados são preservados.
+Versões antigas sem seletor no runtime, documentos sem handout correspondente, grupos de estado e assets sem referência não entram no pack. Manifests anteriores sem `layers` continuam válidos. Assets assumidos por uma camada deixam de ser props, tokens ou overlays globais, evitando que o mesmo elemento apareça duas vezes. As listas estruturais `documents` e grupos de estado ainda aplicáveis permanecem no JSON para compatibilidade com `CampaignCatalog`. Alertas referentes aos assets e cenas selecionados são preservados.
 
 ## Criar
 
@@ -34,4 +36,6 @@ Antes, durante e depois da cópia, a ferramenta confere confinamento, tipo do ar
 
 O pack isolado usa 128 MiB como teto padrão. `--max-bytes N` altera o limite em bytes. O builder portátil fornece sua própria margem configurável por `-MaxCampaignBytes`, atualmente 512 MiB, e sempre informa o peso verificado.
 
-Handouts listados em `collections.handoutAssetIds` e documentos são validados e catalogados no manifesto principal, mas permanecem fora deste pack até existir um fluxo de revelação por papel. O manifesto runtime registra `handoutAssetIds` vazio. Isso evita entregar pistas do Mestre antes da hora sem impedir que a campanha continue crescendo.
+Os handouts entram no pack para permitir a entrega durante a mesa, mas não são expostos automaticamente. O backend só serve um handout ao jogador depois que o Mestre o entrega para aquela sala; antes disso, a requisição recebe a mesma resposta de um asset inexistente. Recolher bloqueia acessos futuros, mas não pode apagar uma cópia ou captura já feita pelo jogador.
+
+Referências do Mestre entram em uma coleção separada e nunca se tornam handouts. O gerador só aceita `masterReference: true` em `assetOverrides` exatos, e tanto o manifesto quanto o pack exigem que o asset resultante seja `kind: concept` com `audience: gm`.

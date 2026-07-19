@@ -383,3 +383,32 @@ class FogRevealAllCommand(BaseModel):
 
     type: Literal["fog.reveal_all"]
     commandId: str = Field(min_length=1, max_length=100)
+
+
+class HandoutPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    assetId: str = Field(min_length=7, max_length=2048)
+
+    @field_validator("assetId")
+    @classmethod
+    def validate_asset_id(cls, value: str) -> str:
+        if not value.startswith("asset:") or any(character in value for character in "\x00\r\n"):
+            raise ValueError("assetId invalido")
+        return value
+
+
+class HandoutDeliverCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["handout.deliver"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: HandoutPayload
+
+
+class HandoutRevokeCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["handout.revoke"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: HandoutPayload

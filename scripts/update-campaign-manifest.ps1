@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [string]$CampaignRoot = 'F:\RPG\mnemosyne\projeto-mnemosyne-rpg'
+    [string]$CampaignRoot = 'F:\RPG\mnemosyne\projeto-mnemosyne-rpg',
+    [ValidateRange(1, 2147483647)]
+    [int64]$MaxCampaignBytes = 536870912
 )
 
 Set-StrictMode -Version Latest
@@ -29,6 +31,7 @@ try {
     & $python -m tools.campaign_pack `
         --manifest $manifest `
         --source-root $CampaignRoot `
+        --max-bytes $MaxCampaignBytes.ToString([Globalization.CultureInfo]::InvariantCulture) `
         --check
     if ($LASTEXITCODE -ne 0) {
         throw 'O manifesto foi gerado, mas o pack seletivo nao passou na validacao.'

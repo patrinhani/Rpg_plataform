@@ -284,7 +284,9 @@ function Assert-VttFrontendIsIsolated {
 
     foreach ($script in @($files | Where-Object { $_.Extension -eq '.js' })) {
         $content = Get-Content -LiteralPath $script.FullName -Raw
-        if ($content -match '(?i)firebase|firestore|bestiario') {
+        # Textos de interface podem mencionar Firebase porque o backend valida a
+        # Mesa. Bloqueie assinaturas reais do SDK/servicos no bundle dedicado.
+        if ($content -match '(?i)@firebase/|firestore\.googleapis\.com|firebase(?:app|io)\.com|securetoken\.googleapis\.com|identitytoolkit\.googleapis\.com|firebaseinstallations\.googleapis\.com|bestiario') {
             throw "A build VTT isolada contem dependencia proibida em '$($script.Name)'."
         }
     }
@@ -370,6 +372,7 @@ try {
     $frontendDist = Join-Path $repoRoot 'dist-vtt'
     $frontendIndex = Join-Path $frontendDist 'index.html'
     $launcherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT.cmd'
+    $portableBatSource = Join-Path $repoRoot 'Iniciar C.A.O.S. Portatil.bat'
     $onlineLauncherSource = Join-Path $serverDirectory 'packaging\Iniciar C.A.O.S. VTT Online.cmd'
     $webOriginConfigSource = Join-Path $serverDirectory 'packaging\ORIGEM-WEB.txt'
     $firebaseProjectConfigSource = Join-Path $serverDirectory 'packaging\FIREBASE-PROJECT.txt'
@@ -457,6 +460,9 @@ try {
     }
     if (-not (Test-Path -LiteralPath $launcherSource -PathType Leaf)) {
         throw "Launcher portatil nao encontrado: '$launcherSource'."
+    }
+    if (-not (Test-Path -LiteralPath $portableBatSource -PathType Leaf)) {
+        throw "Launcher .bat portatil nao encontrado: '$portableBatSource'."
     }
     if (-not (Test-Path -LiteralPath $readmeSource -PathType Leaf)) {
         throw "Documentacao portatil nao encontrada: '$readmeSource'."
@@ -662,6 +668,7 @@ try {
         throw "PyInstaller concluiu sem gerar '$executable'."
     }
     Copy-Item -LiteralPath $launcherSource -Destination $portableDirectory -Force
+    Copy-Item -LiteralPath $portableBatSource -Destination $portableDirectory -Force
     Copy-Item -LiteralPath $readmeSource -Destination $portableDirectory -Force
     Copy-Item -LiteralPath $quickStartSource -Destination $portableDirectory -Force
     $packagedFirebaseProject = Join-Path $portableDirectory 'FIREBASE-PROJECT.txt'
@@ -852,7 +859,7 @@ try {
         Write-Host 'Campanha Mnemosyne incluida em campaigns\mnemosyne.' -ForegroundColor Green
     }
     if ($SkipTunnel) {
-        Write-Host 'Variante local: abra Iniciar C.A.O.S. VTT.cmd.'
+        Write-Host 'Variante local: abra Iniciar C.A.O.S. Portatil.bat.'
     }
     else {
         Write-Host 'Variante online: abra Iniciar C.A.O.S. VTT Online.cmd.'

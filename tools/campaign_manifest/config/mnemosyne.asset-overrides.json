@@ -14,6 +14,12 @@
       "kind": "concept",
       "audience": "gm",
       "controlledBy": "gm"
+    },
+    "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "masterReference": true
     }
   },
   "assetFamilyOverrides": {

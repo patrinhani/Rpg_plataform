@@ -1,15 +1,15 @@
 C.A.O.S. VTT — INÍCIO RÁPIDO
 
 1. Extraia TODO o conteúdo do ZIP para uma pasta comum.
-2. Para jogar pela internet, abra "Iniciar C.A.O.S. VTT Online.cmd".
+2. Para iniciar localmente, abra "Iniciar C.A.O.S. Portatil.bat". Para jogar pela internet,
+   abra "Iniciar C.A.O.S. VTT Online.cmd".
    Se for abrir o VTT pelo sistema hospedado na Vercel, edite antes ORIGEM-WEB.txt e coloque
    apenas a origem HTTPS do site, por exemplo: https://seu-projeto.vercel.app
    FIREBASE-PROJECT.txt deve conter somente o project ID publico do mesmo Firebase.
-3. Para usar apenas neste computador, abra "Iniciar C.A.O.S. VTT.cmd".
-4. Pelo botao de uma Mesa, o autor entra como Mestre e os convidados como jogadores; nenhuma
+3. Pelo botao de uma Mesa, o autor entra como Mestre e os convidados como jogadores; nenhuma
    chave precisa ser copiada. Informe o endereco https://*.trycloudflare.com como servidor da
    Mesa quando o sistema solicitar.
-5. Se abrir diretamente a pagina trycloudflare, voce esta no fallback isolado: use o Host token
+4. Se abrir diretamente a pagina trycloudflare, voce esta no fallback isolado: use o Host token
    mostrado na janela, crie a sala e compartilhe SOMENTE o link de jogador gerado por ela.
 
 Mantenha CAOS-VTT.exe, _internal e FIREBASE-PROJECT.txt juntos. Mantenha também campaigns e

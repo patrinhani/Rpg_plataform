@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './vtt-board.css';
+import {
+  filterHandouts,
+  resolveHandoutView,
+  resolveMasterReferenceView,
+} from './handouts.js';
 import { resolvePropStateOptions } from './prop-state-groups.js';
 
 const MIN_ZOOM = 0.55;
@@ -141,6 +146,7 @@ export default function VttBoard({
   const propDragRef = useRef(null);
   const fogCanvasRef = useRef(null);
   const fogStrokeRef = useRef(null);
+  const deliveredHandoutIdsRef = useRef(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
   const [draftPositions, setDraftPositions] = useState({});
   const [selectedTokenId, setSelectedTokenId] = useState('');
@@ -161,6 +167,10 @@ export default function VttBoard({
   const [fogMask, setFogMask] = useState(null);
   const [fogMaskError, setFogMaskError] = useState('');
   const [fogDraftPoints, setFogDraftPoints] = useState([]);
+  const [handoutsOpen, setHandoutsOpen] = useState(false);
+  const [handoutQuery, setHandoutQuery] = useState('');
+  const [previewHandoutId, setPreviewHandoutId] = useState('');
+  const [handoutZoom, setHandoutZoom] = useState(0.65);
 
   const tokens = useMemo(
     () => normalizeTokens(state.tokens, role),
@@ -194,6 +204,35 @@ export default function VttBoard({
   const propStateGroups = useMemo(
     () => (Array.isArray(catalog?.propStateGroups) ? catalog.propStateGroups : []),
     [catalog?.propStateGroups],
+  );
+  const handouts = useMemo(
+    () => resolveHandoutView(state, role),
+    [role, state],
+  );
+  const masterReferences = useMemo(
+    () => resolveMasterReferenceView(state, role),
+    [role, state],
+  );
+  const filteredHandouts = useMemo(
+    () => filterHandouts(handouts, handoutQuery),
+    [handoutQuery, handouts],
+  );
+  const filteredMasterReferences = useMemo(
+    () => filterHandouts(masterReferences, handoutQuery),
+    [handoutQuery, masterReferences],
+  );
+  const drawerItems = useMemo(
+    () => [...filteredMasterReferences, ...filteredHandouts],
+    [filteredHandouts, filteredMasterReferences],
+  );
+  const deliveredHandoutCount = useMemo(
+    () => handouts.filter((item) => item.delivered).length,
+    [handouts],
+  );
+  const previewHandout = useMemo(
+    () => [...masterReferences, ...handouts]
+      .find((item) => item.assetId === previewHandoutId) || null,
+    [handouts, masterReferences, previewHandoutId],
   );
   const selectedProp = useMemo(
     () => props.find((item) => item.id === selectedPropId) || null,
@@ -235,6 +274,26 @@ export default function VttBoard({
     setFogEditMode(false);
     setFogDraftPoints([]);
   }, [scene?.id]);
+
+  useEffect(() => {
+    const deliveredIds = new Set(
+      handouts.filter((item) => item.delivered).map((item) => item.assetId),
+    );
+    const previousIds = deliveredHandoutIdsRef.current;
+    deliveredHandoutIdsRef.current = deliveredIds;
+    if (role !== 'player' || previousIds === null) return;
+
+    const newlyDelivered = [...deliveredIds].filter((assetId) => !previousIds.has(assetId));
+    if (newlyDelivered.length > 0) {
+      setHandoutsOpen(true);
+      setPreviewHandoutId(newlyDelivered.at(-1));
+      setHandoutZoom(0.65);
+    }
+  }, [handouts, role]);
+
+  useEffect(() => {
+    if (previewHandoutId && !previewHandout) setPreviewHandoutId('');
+  }, [previewHandout, previewHandoutId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -338,13 +397,20 @@ export default function VttBoard({
   }, [mapWidth, scene?.map?.url]);
 
   useEffect(() => {
-    if (!guideOpen) return undefined;
+    if (!guideOpen && !handoutsOpen && !previewHandoutId) return undefined;
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') setGuideOpen(false);
+      if (event.key !== 'Escape') return;
+      if (previewHandoutId) {
+        setPreviewHandoutId('');
+      } else if (handoutsOpen) {
+        setHandoutsOpen(false);
+      } else {
+        setGuideOpen(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [guideOpen]);
+  }, [guideOpen, handoutsOpen, previewHandoutId]);
 
   useEffect(() => {
     if (!selectedAssetId && tokenAssets[0]?.assetId) {
@@ -705,6 +771,24 @@ export default function VttBoard({
     setSelectedPropId('');
   };
 
+  const openHandoutPreview = (assetId) => {
+    setPreviewHandoutId(String(assetId || ''));
+    setHandoutZoom(0.65);
+  };
+
+  const handleHandoutDelivery = (handout) => {
+    if (!isMaster || !handout?.assetId) return;
+    const isRevoke = Boolean(handout.delivered);
+    const prompt = isRevoke
+      ? `Recolher “${handout.label}”? Novos acessos serão bloqueados, mas cópias ou capturas já salvas pelos jogadores não podem ser apagadas.`
+      : `Entregar “${handout.label}” para todos os jogadores desta mesa, inclusive quem entrar depois?`;
+    if (typeof globalThis.confirm === 'function' && !globalThis.confirm(prompt)) return;
+    emitCommand(
+      isRevoke ? 'handout.revoke' : 'handout.deliver',
+      { assetId: handout.assetId },
+    );
+  };
+
   return (
     <section className="vtt-board" aria-label="Mesa virtual C.A.O.S.">
       <header className="vtt-board__toolbar">
@@ -743,9 +827,25 @@ export default function VttBoard({
           )}
         </div>
 
-        <span className={`vtt-board__connection is-${connected ? 'online' : 'offline'}`}>
+        <div className="vtt-board__session-actions">
+          <button
+            type="button"
+            className="vtt-board__handout-trigger"
+            onClick={() => setHandoutsOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <span aria-hidden="true">▤</span>
+            {isMaster ? 'Handouts' : 'Arquivos'}
+            <strong>
+              {isMaster
+                ? `${deliveredHandoutCount}/${handouts.length}${masterReferences.length ? ` +${masterReferences.length}` : ''}`
+                : handouts.length}
+            </strong>
+          </button>
+          <span className={`vtt-board__connection is-${connected ? 'online' : 'offline'}`}>
           {connected ? (isMaster ? 'Mestre conectado' : 'Jogador conectado') : 'Sem conexão'}
-        </span>
+          </span>
+        </div>
       </header>
 
       <div className={`vtt-board__layout ${isMaster ? 'has-director' : ''}`}>
@@ -1236,6 +1336,183 @@ export default function VttBoard({
           </aside>
         )}
       </div>
+
+      {handoutsOpen && (
+        <div
+          className="vtt-board__handout-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setHandoutsOpen(false);
+          }}
+        >
+          <aside
+            className="vtt-board__handout-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vtt-handouts-title"
+          >
+            <header className="vtt-board__handout-header">
+              <div>
+                <span>{isMaster ? 'Dossiê privado' : 'Evidências recebidas'}</span>
+                <h2 id="vtt-handouts-title">
+                  {isMaster ? 'Handouts e referências' : 'Arquivos da investigação'}
+                </h2>
+                <p>
+                  {isMaster
+                    ? `${deliveredHandoutCount} de ${handouts.length} handouts entregues${masterReferences.length ? ` · ${masterReferences.length} referência privada` : ''}.`
+                    : `${handouts.length} ${handouts.length === 1 ? 'documento liberado' : 'documentos liberados'} pelo Mestre.`}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="vtt-board__handout-close"
+                onClick={() => setHandoutsOpen(false)}
+                aria-label="Fechar arquivos"
+              >×</button>
+            </header>
+
+            <label className="vtt-board__handout-search">
+              <span>Buscar documento</span>
+              <input
+                type="search"
+                value={handoutQuery}
+                onChange={(event) => setHandoutQuery(event.target.value)}
+                placeholder="Nome, código ou pista..."
+                autoComplete="off"
+              />
+            </label>
+
+            <div className="vtt-board__handout-list" aria-live="polite">
+              {drawerItems.length === 0 && (
+                <div className="vtt-board__handout-empty">
+                  <span aria-hidden="true">▤</span>
+                  <strong>
+                    {handouts.length + masterReferences.length === 0
+                      ? 'Nenhum arquivo disponível'
+                      : 'Nenhum resultado'}
+                  </strong>
+                  <p>
+                    {isMaster && handouts.length + masterReferences.length === 0
+                      ? 'O catálogo da campanha ainda não possui handouts.'
+                      : handouts.length === 0 && masterReferences.length === 0
+                        ? 'Os documentos aparecerão aqui assim que o Mestre entregá-los.'
+                        : 'Tente buscar por outro termo.'}
+                  </p>
+                </div>
+              )}
+
+              {drawerItems.map((handout) => (
+                <article
+                  key={handout.assetId}
+                  className={`vtt-board__handout-card ${handout.delivered ? 'is-delivered' : ''} ${handout.privateReference ? 'is-reference' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="vtt-board__handout-thumbnail"
+                    onClick={() => openHandoutPreview(handout.assetId)}
+                    disabled={!handout.url}
+                    aria-label={`Abrir ${handout.label}`}
+                  >
+                    <span aria-hidden="true">▤</span>
+                    <small>{handout.image ? `${handout.image.width} × ${handout.image.height}` : 'Documento'}</small>
+                  </button>
+
+                  <div className="vtt-board__handout-card-body">
+                    <span className="vtt-board__handout-status">
+                      {handout.privateReference
+                        ? 'Referência privada do Mestre'
+                        : handout.delivered
+                          ? 'Entregue à mesa'
+                          : 'Somente Mestre'}
+                    </span>
+                    <strong title={handout.label}>{handout.label}</strong>
+                    <div className="vtt-board__handout-card-actions">
+                      <button
+                        type="button"
+                        onClick={() => openHandoutPreview(handout.assetId)}
+                        disabled={!handout.url}
+                      >
+                        Visualizar
+                      </button>
+                      {isMaster && !handout.privateReference && (
+                        <button
+                          type="button"
+                          className={handout.delivered ? 'is-revoke' : 'is-deliver'}
+                          onClick={() => handleHandoutDelivery(handout)}
+                          disabled={!connected}
+                        >
+                          {handout.delivered ? 'Recolher' : 'Entregar'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <footer className="vtt-board__handout-footer">
+              {isMaster
+                ? 'Referências privadas nunca podem ser entregues. Nos handouts, entregar revela o arquivo para a sala inteira; recolher bloqueia novos acessos, mas não apaga cópias já feitas.'
+                : 'Arquivos recolhidos pelo Mestre deixam de aparecer e não aceitam novos acessos. Cópias ou capturas já salvas não podem ser apagadas.'}
+            </footer>
+          </aside>
+        </div>
+      )}
+
+      {previewHandout && (
+        <div
+          className="vtt-board__handout-preview"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vtt-handout-preview-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPreviewHandoutId('');
+          }}
+        >
+          <header>
+            <div>
+              <span>
+                {previewHandout.privateReference
+                  ? 'Referência privada do Mestre'
+                  : isMaster && !previewHandout.delivered
+                    ? 'Prévia privada'
+                    : 'Documento da investigação'}
+              </span>
+              <strong id="vtt-handout-preview-title">{previewHandout.label}</strong>
+            </div>
+            <div className="vtt-board__handout-preview-actions">
+              <button
+                type="button"
+                onClick={() => setHandoutZoom((value) => clamp(value - 0.15, 0.25, 2))}
+                aria-label="Diminuir documento"
+              >−</button>
+              <output>{Math.round(handoutZoom * 100)}%</output>
+              <button
+                type="button"
+                onClick={() => setHandoutZoom((value) => clamp(value + 0.15, 0.25, 2))}
+                aria-label="Aumentar documento"
+              >+</button>
+              <button type="button" onClick={() => setHandoutZoom(0.65)}>Enquadrar</button>
+              <button type="button" onClick={() => setPreviewHandoutId('')}>Fechar</button>
+            </div>
+          </header>
+          <div className="vtt-board__handout-preview-canvas">
+            {previewHandout.url && previewHandout.mediaType.startsWith('image/') ? (
+              <img
+                src={previewHandout.url}
+                alt={previewHandout.label}
+                draggable="false"
+                style={{
+                  width: `${Math.max(480, previewHandout.image?.width || 1600) * handoutZoom}px`,
+                }}
+              />
+            ) : (
+              <div className="vtt-board__handout-preview-error">
+                Este formato não possui prévia visual no VTT.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {isMaster && guideOpen && scene?.gmGuideMap?.url && (
         <div

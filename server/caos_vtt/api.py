@@ -38,6 +38,8 @@ from .models import (
     FogRevealAllCommand,
     FogSetEnabledCommand,
     FogStrokeCommand,
+    HandoutDeliverCommand,
+    HandoutRevokeCommand,
     MoveCommand,
     MesaAccessRequest,
     MesaAccessResponse,
@@ -408,10 +410,12 @@ def create_router() -> APIRouter:
             raise _asset_not_found()
         if not await _validate_integrated_media_grant(request, service, grant):
             raise _asset_not_found()
-        if not await service.can_access_asset(room_id, grant.role, asset_id):
-            raise _asset_not_found()
         try:
-            opened = await run_in_threadpool(catalog.open_asset, asset_id, grant.role)
+            opened = await service.open_authorized_asset(
+                room_id,
+                grant.role,
+                asset_id,
+            )
         except CampaignCatalogError:
             raise _asset_not_found() from None
 
@@ -599,6 +603,8 @@ async def _handle_socket_message(
         "fog.set_enabled": (FogSetEnabledCommand, "invalid_fog_set_enabled"),
         "fog.reset": (FogResetCommand, "invalid_fog_reset"),
         "fog.reveal_all": (FogRevealAllCommand, "invalid_fog_reveal_all"),
+        "handout.deliver": (HandoutDeliverCommand, "invalid_handout_deliver"),
+        "handout.revoke": (HandoutRevokeCommand, "invalid_handout_revoke"),
     }
     command_definition = catalog_commands.get(message_type)
     if command_definition is not None and service.has_catalog:

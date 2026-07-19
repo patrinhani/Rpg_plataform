@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "generator": {
     "name": "caos-campaign-manifest",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "campaign": {
     "id": "mnemosyne",
@@ -13,7 +13,7 @@
   "classification": {
     "configRef": "config/mnemosyne.asset-overrides.json",
     "schemaVersion": 2,
-    "fingerprint": "sha256:bf8f8d966ed3796e3d4b9ed30610c041657e62bcf38e7e1637857b9b36a582fc"
+    "fingerprint": "sha256:d43b18a4ec43c6b4dde7f5525c0a2e0ff0b9bffcf6ac3631c765808118d9ec16"
   },
   "summary": {
     "assetCount": 86,
@@ -556,7 +556,7 @@
     {
       "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
       "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
-      "kind": "handout",
+      "kind": "concept",
       "audience": "gm",
       "controlledBy": "gm",
       "bytes": 54163,
@@ -2035,13 +2035,15 @@
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
-      "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png"
+    ],
+    "masterReferenceAssetIds": [
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png"
     ]
   },
   "warnings": [

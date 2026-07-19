@@ -1,9 +1,11 @@
 """Build a small, self-contained runtime pack from a schema-2 campaign manifest.
 
-Only assets referenced by scenes, ``tokenAssetIds`` or ``propAssetIds`` are
-copied. Handouts are validated but deliberately left out until an explicit
-reveal flow exists. The source campaign is treated as immutable and every
-copied byte is checked against the size and SHA-256 recorded in the manifest.
+Only assets referenced by scenes or the explicit token, prop, handout and
+private Mestre-reference collections are copied. Handouts remain private at
+runtime until the Mestre delivers them, while Mestre references are never
+deliverable; their verified bytes must still exist in the portable pack. The
+source campaign is treated as immutable and every copied byte is checked
+against the size and SHA-256 recorded in the manifest.
 """
 
 from __future__ import annotations
@@ -26,7 +28,7 @@ from typing import Any, Mapping, Sequence
 
 SCHEMA_VERSION = 2
 PACK_GENERATOR_NAME = "caos-campaign-pack"
-PACK_GENERATOR_VERSION = "1.0.0"
+PACK_GENERATOR_VERSION = "1.2.0"
 MAX_MANIFEST_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_PACK_BYTES = 128 * 1024 * 1024
 HASH_CHUNK_SIZE = 1024 * 1024
@@ -590,6 +592,7 @@ def _parse_asset_ids(
     *,
     collection_name: str,
     expected_kind: str,
+    expected_audience: str | None = None,
     optional: bool = False,
 ) -> list[str]:
     result: list[str] = []
@@ -606,6 +609,14 @@ def _parse_asset_ids(
         if record is None or record.payload["kind"] != expected_kind:
             raise PackManifestError(
                 f"{context} referencia asset que nao e {expected_kind}"
+            )
+        if (
+            expected_audience is not None
+            and record.payload["audience"] != expected_audience
+        ):
+            raise PackManifestError(
+                f"{context} referencia asset com audience diferente de "
+                f"{expected_audience}"
             )
         if asset_id in seen:
             raise PackManifestError(f"{context} contem duplicata")
@@ -743,17 +754,25 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
         set(prop_ids),
         consumed_layer_ids,
     )
-    # Validar IDs e tipos agora evita que um manifesto defeituoso passe pelo
-    # builder, mas os bytes/IDs nao entram no runtime antes de haver revelacao.
-    _parse_asset_ids(
+    handout_ids = _parse_asset_ids(
         collections,
         records,
         collection_name="handoutAssetIds",
         expected_kind="handout",
         optional=True,
     )
+    master_reference_ids = _parse_asset_ids(
+        collections,
+        records,
+        collection_name="masterReferenceAssetIds",
+        expected_kind="concept",
+        expected_audience="gm",
+        optional=True,
+    )
     selected_ids.update(token_ids)
     selected_ids.update(prop_ids)
+    selected_ids.update(handout_ids)
+    selected_ids.update(master_reference_ids)
     selected_records = tuple(
         sorted(
             (records[asset_id] for asset_id in selected_ids),
@@ -791,16 +810,18 @@ def _build_runtime_manifest(raw: dict[str, Any]) -> tuple[dict[str, Any], tuple[
             "sourceFingerprint": _source_fingerprint(selected_records),
         },
         "assets": [record.payload for record in selected_records],
-        # Documents and unrevealed handouts stay outside the runtime pack. Prop
-        # state groups are safe metadata and are required to switch scenery
-        # variants such as the connected body without treating it as a token.
+        # Documents stay outside the runtime pack. Handout bytes are included,
+        # while the runtime service keeps their metadata and media private until
+        # an explicit delivery. Mestre references remain a distinct private
+        # collection. Prop state groups remain safe Mestre metadata.
         "documents": [],
         "collections": {
             "scenes": scenes,
             "stateGroups": state_groups,
             "tokenAssetIds": token_ids,
             "propAssetIds": prop_ids,
-            "handoutAssetIds": [],
+            "handoutAssetIds": handout_ids,
+            "masterReferenceAssetIds": master_reference_ids,
         },
         "warnings": warnings,
     }

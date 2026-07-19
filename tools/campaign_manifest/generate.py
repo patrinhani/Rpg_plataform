@@ -22,7 +22,7 @@ from xml.etree import ElementTree
 
 
 SCHEMA_VERSION = 2
-GENERATOR_VERSION = "1.4.0"
+GENERATOR_VERSION = "1.5.0"
 CAMPAIGN_ID = "mnemosyne"
 CAMPAIGN_TITLE = "Projeto Mnemosyne"
 CAMPAIGN_SOURCE_REF = "mnemosyne"
@@ -505,7 +505,10 @@ def _is_safe_asset_rule_path(relative_path: object) -> bool:
 
 
 def _semantic_override(
-    override: object, *, allow_state_group: bool = False
+    override: object,
+    *,
+    allow_state_group: bool = False,
+    allow_master_reference: bool = False,
 ) -> dict[str, Any] | None:
     if not isinstance(override, dict) or not override:
         return None
@@ -517,6 +520,8 @@ def _semantic_override(
     allowed_fields = set(validators)
     if allow_state_group:
         allowed_fields.add("stateGroup")
+    if allow_master_reference:
+        allowed_fields.add("masterReference")
     if set(override).difference(allowed_fields):
         return None
     if not all(
@@ -526,6 +531,8 @@ def _semantic_override(
     ):
         return None
     if "stateGroup" in override and override["stateGroup"] is not False:
+        return None
+    if "masterReference" in override and override["masterReference"] is not True:
         return None
     return dict(override)
 
@@ -675,7 +682,11 @@ def _load_classification_config(
     overrides: dict[str, dict[str, Any]] = {}
     for relative_path, override in sorted(raw_overrides.items(), key=lambda item: str(item[0])):
         diagnostic_path = relative_path if isinstance(relative_path, str) else repr(relative_path)
-        semantic_override = _semantic_override(override, allow_state_group=True)
+        semantic_override = _semantic_override(
+            override,
+            allow_state_group=True,
+            allow_master_reference=True,
+        )
         if not _is_safe_asset_rule_path(relative_path) or semantic_override is None:
             warnings.append(
                 {
@@ -1291,6 +1302,11 @@ def build_manifest(
         .get("stateGroup")
         is False
     }
+    master_reference_ids = {
+        _asset_id(relative_path)
+        for relative_path, override in classification_rules["exact"].items()
+        if override.get("masterReference") is True and relative_path in asset_paths
+    }
     state_groups = _build_state_groups(
         assets, warnings, excluded_asset_ids=state_group_excluded_ids
     )
@@ -1345,6 +1361,9 @@ def build_manifest(
                 and asset["id"] not in consumed_scene_layer_ids
             ],
             "handoutAssetIds": [asset["id"] for asset in assets if asset["kind"] == "handout"],
+            "masterReferenceAssetIds": [
+                asset["id"] for asset in assets if asset["id"] in master_reference_ids
+            ],
         },
         "warnings": warnings,
     }
@@ -1491,10 +1510,11 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
                 if not isinstance(variant.get("version"), int) or variant["version"] < 0:
                     raise ManifestError(f"versao de variante invalida: {group['id']}")
                 referenced_ids.add(variant["assetId"])
-    for collection_name, expected_kind in (
-        ("tokenAssetIds", "token"),
-        ("propAssetIds", "prop"),
-        ("handoutAssetIds", "handout"),
+    for collection_name, expected_kind, expected_audience in (
+        ("tokenAssetIds", "token", None),
+        ("propAssetIds", "prop", None),
+        ("handoutAssetIds", "handout", None),
+        ("masterReferenceAssetIds", "concept", "gm"),
     ):
         collection_ids = manifest["collections"].get(collection_name)
         if not isinstance(collection_ids, list) or not all(
@@ -1513,6 +1533,15 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             if asset is not None and asset.get("kind") != expected_kind:
                 raise ManifestError(
                     f"{collection_name} referencia kind diferente de {expected_kind}: {asset_id}"
+                )
+            if (
+                asset is not None
+                and expected_audience is not None
+                and asset.get("audience") != expected_audience
+            ):
+                raise ManifestError(
+                    f"{collection_name} referencia audience diferente de "
+                    f"{expected_audience}: {asset_id}"
                 )
 
     for scene in manifest["collections"]["scenes"]:
