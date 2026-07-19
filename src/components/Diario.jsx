@@ -1,10 +1,14 @@
 import React from 'react';
 import NotaCard from './NotaCard.jsx';
 import FichaSectionFrame from './ficha/FichaSectionFrame.jsx';
+import HandoutEvidencePanel from './handouts/HandoutEvidencePanel.jsx';
 import { AppIcon } from './icons/NavigationIcons.jsx';
 
-function Diario({ diarioData, onAbrirModal, onRemoveNota }) {
+function Diario({ diarioData, handoutSession, onAbrirModal, onRemoveNota }) {
   const notas = diarioData || [];
+  const evidencias = Array.isArray(handoutSession?.deliveredHandouts)
+    ? handoutSession.deliveredHandouts
+    : [];
   const palavras = notas.reduce((total, nota) => {
     const conteudo = String(nota.conteudo || nota.texto || '').trim();
     return total + (conteudo ? conteudo.split(/\s+/).length : 0);
@@ -19,9 +23,11 @@ function Diario({ diarioData, onAbrirModal, onRemoveNota }) {
       description="Hipóteses, pistas e registros de campo organizados sem interferir nas regras da ficha."
       metrics={[
         { label: 'Entradas', value: notas.length },
+        handoutSession && { label: 'Evidências', value: evidencias.length },
         { label: 'Palavras', value: palavras },
         { label: 'Última revisão', value: notas.length > 0 ? 'Registrada' : '—' },
       ]}
+      className={handoutSession ? 'ficha-section-view--with-evidence' : ''}
       action={(
         <button type="button" className="ficha-section-action" onClick={() => onAbrirModal(null)}>
           <AppIcon name="plus" size={18} />
@@ -29,6 +35,19 @@ function Diario({ diarioData, onAbrirModal, onRemoveNota }) {
         </button>
       )}
     >
+      {handoutSession && (
+        <div className="journal-evidence-panel">
+          <HandoutEvidencePanel
+            mode="viewer"
+            status={handoutSession.status}
+            role={handoutSession.role}
+            error={handoutSession.error}
+            deliveredHandouts={evidencias}
+            onReconnect={handoutSession.reconnect}
+          />
+        </div>
+      )}
+
       <section className="ficha-record-panel journal-record-panel" id="grid-diario" aria-labelledby="journal-record-title">
         <header className="ficha-record-heading">
           <div>

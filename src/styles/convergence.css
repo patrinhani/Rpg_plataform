@@ -919,6 +919,22 @@
   color: var(--conv-accent-text);
 }
 
+.ficha-aba-evidence-count {
+  align-items: center;
+  background: var(--conv-accent);
+  border-radius: 999px;
+  color: var(--conv-bg);
+  display: inline-flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.6rem;
+  font-weight: 900;
+  justify-content: center;
+  line-height: 1;
+  min-height: 19px;
+  min-width: 19px;
+  padding: 3px 5px;
+}
+
 .ficha-aba-link--interludio { margin-left: auto !important; }
 
 .ficha-content-surface {
@@ -1883,6 +1899,11 @@
   width: 100%;
 }
 
+.ficha-section-view--with-evidence .ficha-section-metrics {
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+  max-width: 720px;
+}
+
 .ficha-section-metrics > div {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1925,6 +1946,11 @@
   display: block;
   font-size: 0.7rem;
   margin-top: 4px;
+}
+
+.journal-evidence-panel {
+  margin-bottom: 18px;
+  min-width: 0;
 }
 
 .ficha-section-action,

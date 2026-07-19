@@ -24,9 +24,11 @@ import { useDialog } from '../../contexts/DialogContext.jsx';
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
 import ElementRail from '../../components/ElementRail.jsx';
 import ModalBase from '../../components/ModalBase.jsx';
+import HandoutEvidencePanel from '../../components/handouts/HandoutEvidencePanel.jsx';
 import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
+import { useMesaHandouts } from '../../features/vtt-handouts/useMesaHandouts.js';
 import Ficha from '../Ficha/index.jsx';
 import '../../styles/mesa.css';
 
@@ -290,6 +292,11 @@ export default function Mesa() {
   const souMestre = mestreUidDaMesa === usuario?.uid;
   const emCombate = Boolean(mesaData?.emCombate);
   const isFichaOpen = Boolean(fichaAbertaId);
+  const handoutSession = useMesaHandouts({
+    mesaId,
+    serverOrigin: mesaData?.vtt?.serverOrigin,
+    enabled: Boolean(mesaData && (souMestre || isFichaOpen)),
+  });
   const meuPersonagem = fichasDaMesa.find((ficha) => ficha.uid === usuario?.uid);
   const agentes = jogadores.filter((jogador) => jogador.uid !== mesaData?.mestre);
   const nomeJogadorAtual = jogadores.find((jogador) => jogador.uid === usuario?.uid)?.nome
@@ -652,6 +659,7 @@ export default function Mesa() {
           <Ficha
             fichaId={fichaAbertaId}
             mesaContexto={mesaId}
+            handoutSession={handoutSession}
             onBack={() => setFichaAbertaId(null)}
             onOpenTracker={emCombate ? () => setShowTrackerModal(true) : undefined}
           />
@@ -756,6 +764,23 @@ export default function Mesa() {
             <button type="button" onClick={() => setActionError('')} aria-label="Fechar aviso de erro">
               <span aria-hidden="true">×</span>
             </button>
+          </div>
+        )}
+
+        {souMestre && (
+          <div className="mesa-handout-panel">
+            <HandoutEvidencePanel
+              mode="manager"
+              status={handoutSession.status}
+              role={handoutSession.role}
+              error={handoutSession.error}
+              deliveredHandouts={handoutSession.deliveredHandouts}
+              handoutCatalog={handoutSession.handoutCatalog}
+              masterReferences={handoutSession.masterReferences}
+              onDeliver={handoutSession.deliverHandout}
+              onRevoke={handoutSession.revokeHandout}
+              onReconnect={handoutSession.reconnect}
+            />
           </div>
         )}
 

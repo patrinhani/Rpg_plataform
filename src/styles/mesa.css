@@ -952,6 +952,10 @@ body.modo-economia .initiative-card__health > span {
   grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.55fr);
 }
 
+.mesa-handout-panel {
+  min-width: 0;
+}
+
 .mesa-hero-panel {
   align-items: stretch;
   display: grid;

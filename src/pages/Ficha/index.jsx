@@ -168,7 +168,7 @@ function aguardarComLimite(promessa, limite = TEMPO_LIMITE_SALVAMENTO) {
     });
 }
 
-export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOpenTracker }) {
+export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSession, onBack, onOpenTracker }) {
   const { fichaId: paramFichaId } = useParams();
   const navigate = useNavigate();
   const { usuario, devVisualMode } = useAuth(); 
@@ -188,6 +188,9 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
   const idAlvo = propFichaId || paramFichaId || usuario?.uid;
   const isModoMesa = !!mesaContexto;
   const podeExcluirFicha = !isModoMesa || propFichaId === usuario?.uid;
+  const evidenceCount = Array.isArray(handoutSession?.deliveredHandouts)
+    ? handoutSession.deliveredHandouts.length
+    : 0;
 
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
@@ -734,6 +737,14 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
                 >
                     <AppIcon name={aba.icon} size={19} />
                     <span>{aba.label}</span>
+                    {aba.id === 'diario' && evidenceCount > 0 && (
+                      <span
+                        className="ficha-aba-evidence-count"
+                        aria-label={`${evidenceCount} ${evidenceCount === 1 ? 'evidência recebida' : 'evidências recebidas'}`}
+                      >
+                        {evidenceCount > 99 ? '99+' : evidenceCount}
+                      </span>
+                    )}
                 </button>
             ))}
             <button type="button" className="ficha-aba-link ficha-aba-link--interludio" onClick={openInterludio}>
@@ -766,7 +777,12 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, onBack, onOp
           <ProgressaoHabilidades classe={personagem.info.classe} trilha={personagem.info.trilha} nexString={personagem.info.nex} progressaoClasses={progressaoClasses} progressaoTrilhas={trilhasUnificadas} info={personagem.info} onCriarTrilha={openTrilha} />
         )}
         {abaAtiva === 'diario' && (
-          <Diario diarioData={personagem.diario || []} onAbrirModal={openEditNota} onRemoveNota={removeNota} />
+          <Diario
+            diarioData={personagem.diario || []}
+            handoutSession={handoutSession}
+            onAbrirModal={openEditNota}
+            onRemoveNota={removeNota}
+          />
         )}
 
         {abaAtiva === 'configuracoes' && (

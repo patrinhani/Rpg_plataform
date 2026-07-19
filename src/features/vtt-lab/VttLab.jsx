@@ -30,8 +30,6 @@ const BOARD_COMMAND_TYPES = new Set([
   'fog.stroke',
   'fog.reset',
   'fog.reveal_all',
-  'handout.deliver',
-  'handout.revoke',
 ]);
 const BOARD_COMMANDS_WITHOUT_PAYLOAD = new Set(['fog.reset', 'fog.reveal_all']);
 
@@ -200,45 +198,18 @@ function hydrateCampaignState(rawState, revision, grant) {
     ? rawState.props
     : {};
   const useProtectedMap = grant.role === 'player' && rawState.fog?.enabled;
-  const hydrateHandoutCollection = (rawCollection) => {
-    if (Array.isArray(rawCollection)) {
-      return rawCollection.map((rawItem) => {
-        const item = rawItem && typeof rawItem === 'object'
-          ? rawItem
-          : { assetId: rawItem };
-        return {
-          ...item,
-          url: item.assetId ? assetUrl(item.assetId) : '',
-        };
-      });
-    }
-    if (!rawCollection || typeof rawCollection !== 'object') return [];
-    return Object.fromEntries(Object.entries(rawCollection).map(([key, rawItem]) => {
-      const item = rawItem && typeof rawItem === 'object'
-        ? rawItem
-        : { assetId: rawItem || key };
-      const assetId = item.assetId || key;
-      return [key, {
-        ...item,
-        assetId,
-        url: assetId ? assetUrl(assetId) : '',
-      }];
-    }));
-  };
+  const boardState = { ...rawState };
+  delete boardState.deliveredHandouts;
+  if (boardState.catalog && typeof boardState.catalog === 'object') {
+    boardState.catalog = { ...boardState.catalog };
+    delete boardState.catalog.handoutAssets;
+    delete boardState.catalog.masterReferenceAssets;
+  }
+
 
   return {
-    ...rawState,
+    ...boardState,
     revision: Number.isFinite(Number(revision)) ? Number(revision) : 0,
-    deliveredHandouts: hydrateHandoutCollection(rawState.deliveredHandouts),
-    catalog: rawState.catalog && typeof rawState.catalog === 'object'
-      ? {
-        ...rawState.catalog,
-        handoutAssets: hydrateHandoutCollection(rawState.catalog.handoutAssets),
-        masterReferenceAssets: hydrateHandoutCollection(
-          rawState.catalog.masterReferenceAssets,
-        ),
-      }
-      : rawState.catalog,
     scene: rawScene ? {
       ...rawScene,
       map: rawScene.map ? {

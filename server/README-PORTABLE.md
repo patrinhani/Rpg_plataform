@@ -41,9 +41,9 @@ Com o fog ligado, o jogador não recebe os arquivos brutos do mapa, dos overlays
 
 ## Handouts
 
-O Mestre abre **Handouts** para visualizar o catálogo privado e entregar um documento a todos os jogadores da sala. O arquivo não aparece nem pode ser baixado antes da entrega, e a entrega independe da cena atual e do fog. **Recolher** bloqueia novos acessos e remove o documento da galeria dos jogadores; não é possível apagar cópias ou capturas feitas antes do recolhimento. A primeira versão entrega para a sala inteira, inclusive jogadores que entrarem depois; entrega individual e temporária podem ser adicionadas futuramente.
+O Mestre gerencia e entrega as evidências na própria **Mesa**, fora do tabuleiro VTT. Os jogadores consultam o material recebido em **Ficha > Diário**, junto das anotações da investigação. O arquivo não aparece nem pode ser baixado antes da entrega, e a entrega independe da cena atual e do fog. **Recolher** bloqueia novos acessos e remove o documento das fichas dos jogadores; não é possível apagar cópias ou capturas feitas antes do recolhimento. A primeira versão entrega para a sala inteira, inclusive jogadores que entrarem depois; entrega individual e temporária podem ser adicionadas futuramente.
 
-Referências exclusivas do Mestre aparecem no mesmo dossiê com identificação própria, mas não oferecem a ação **Entregar**. Seus metadados e bytes nunca são enviados ao jogador; na campanha Mnemosyne isso preserva a referência `10d` usada para alinhar os circuitos sem transformá-la em pista pública.
+Referências exclusivas do Mestre aparecem apenas no painel privado da Mesa e não oferecem a ação **Entregar**. Seus metadados e bytes nunca são enviados ao jogador; na campanha Mnemosyne isso preserva a referência `10d` usada para alinhar os circuitos sem transformá-la em pista pública.
 
 ## Modo online
 
