@@ -6,6 +6,7 @@ import io
 import json
 import sqlite3
 import zlib
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,7 @@ from PIL import Image
 from caos_vtt import create_app
 from caos_vtt.campaign import CampaignCatalog
 from caos_vtt.config import Settings
-from caos_vtt.firestore_auth import VerifiedMesaMember
+from caos_vtt.firestore_auth import VerifiedMesaGrant
 from conftest import HOST_TOKEN, ORIGIN
 from test_campaign import _campaign_fixture, _write_manifest
 
@@ -497,37 +498,49 @@ def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> N
             assert master.receive_json()["state"]["props"] == {}
 
 
-def test_integrated_room_and_fog_survive_restart_without_persisting_firebase_tokens(
+def test_integrated_room_and_fog_survive_restart_without_persisting_access_grants(
     tmp_path: Path,
 ) -> None:
     class RoleVerifier:
         def __init__(self, room_name: str) -> None:
             self.room_name = room_name
+            self.role = "master"
+            self.challenges: list[str] = []
 
-        def verify(self, id_token: str, mesa_id: str) -> VerifiedMesaMember:
-            role = "master" if id_token == "firebase-master-token" else "player"
-            return VerifiedMesaMember(
+        def verify(self, challenge: str, mesa_id: str) -> VerifiedMesaGrant:
+            now = datetime.now(UTC)
+            self.challenges.append(challenge)
+            return VerifiedMesaGrant(
                 mesa_id=mesa_id,
-                uid="uid-mestre" if role == "master" else "uid-jogador",
-                role=role,
+                uid="uid-mestre" if self.role == "master" else "uid-jogador",
+                role=self.role,
                 room_name=self.room_name,
                 campaign_id="memoria",
-                linked_room_id=None,
-                server_origin=None,
+                issued_at=now,
+                expires_at=now + timedelta(minutes=5),
             )
 
-    def integrated_access(client: TestClient, id_token: str):
+    def integrated_access(client: TestClient, verifier: RoleVerifier, role: str):
+        verifier.role = role
+        challenge_response = client.post(
+            "/api/vtt/mesa-challenges",
+            json={"mesaId": "mesa-firebase-persistente"},
+        )
+        assert challenge_response.status_code == 200
         return client.post(
             "/api/vtt/mesa-access",
-            headers={"Authorization": f"Bearer {id_token}"},
-            json={"mesaId": "mesa-firebase-persistente"},
+            json={
+                "mesaId": "mesa-firebase-persistente",
+                "challenge": challenge_response.json()["challenge"],
+            },
         )
 
     state_db = tmp_path / "state" / "sessions.sqlite3"
     first_app, ids = _fog_app(tmp_path, state_db_path=state_db)
-    first_app.state.mesa_verifier = RoleVerifier("Mnemosyne persistente")
+    first_verifier = RoleVerifier("Mnemosyne persistente")
+    first_app.state.mesa_grant_verifier = first_verifier
     with TestClient(first_app) as client:
-        response = integrated_access(client, "firebase-master-token")
+        response = integrated_access(client, first_verifier, "master")
         assert response.status_code == 200
         master_access = response.json()
         room_id = master_access["roomId"]
@@ -568,13 +581,14 @@ def test_integrated_room_and_fog_survive_restart_without_persisting_firebase_tok
         persisted_fog_revision = persisted_snapshot["state"]["fog"]["revision"]
 
     raw_database = state_db.read_bytes()
-    assert b"firebase-master-token" not in raw_database
+    assert all(challenge.encode("utf-8") not in raw_database for challenge in first_verifier.challenges)
 
     restarted_app = create_app(
         first_app.state.settings,
         catalog=first_app.state.catalog,
     )
-    restarted_app.state.mesa_verifier = RoleVerifier("Mnemosyne recuperada")
+    restarted_verifier = RoleVerifier("Mnemosyne recuperada")
+    restarted_app.state.mesa_grant_verifier = restarted_verifier
     with TestClient(restarted_app) as client:
         assert restarted_app.state.vtt.room_exists(room_id)
         legacy_invite = client.post(
@@ -583,10 +597,10 @@ def test_integrated_room_and_fog_survive_restart_without_persisting_firebase_tok
         )
         assert legacy_invite.status_code == 403
 
-        recovered = integrated_access(client, "firebase-master-token")
+        recovered = integrated_access(client, restarted_verifier, "master")
         assert recovered.status_code == 200
         fresh_master = recovered.json()
-        fresh_player_response = integrated_access(client, "firebase-player-token")
+        fresh_player_response = integrated_access(client, restarted_verifier, "player")
         assert fresh_player_response.status_code == 200
         fresh_player = fresh_player_response.json()
         assert fresh_master["roomId"] == room_id

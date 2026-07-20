@@ -42,6 +42,21 @@ class TicketResponse(BaseModel):
     mediaExpiresIn: int
 
 
+class MesaChallengeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mesaId: str = Field(
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]{1,128}$",
+    )
+
+
+class MesaChallengeResponse(BaseModel):
+    challenge: str
+    expiresIn: int = Field(gt=0)
+
+
 class MesaAccessRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -49,6 +64,11 @@ class MesaAccessRequest(BaseModel):
         min_length=1,
         max_length=128,
         pattern=r"^[A-Za-z0-9_-]{1,128}$",
+    )
+    challenge: str = Field(
+        min_length=32,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_-]{32,128}$",
     )
 
 

@@ -14,7 +14,7 @@ Não execute o programa dentro do ZIP e não feche a janela preta durante a sess
 
 ## O que o pacote inclui
 
-- frontend VTT dedicado e leve, sem bestiário ou módulos da ficha; a validação Firebase fica no backend e só é ativada quando uma Mesa autenticada solicita acesso;
+- frontend VTT dedicado e leve, sem bestiário ou módulos da ficha; a autorização integrada usa um grant descartável criado pela sessão autenticada e validado pelas regras do Firestore;
 - servidor FastAPI e WebSocket compilado em formato PyInstaller `onedir` e sem UPX;
 - pack seletivo da campanha Mnemosyne, com mapas ativos, overlays, tokens, objetos de cenário, handouts e guias privados do Mestre;
 - `cloudflared.exe` oficial para o launcher online;
@@ -25,13 +25,13 @@ Na abertura, o programa verifica tamanho e SHA-256 de todos os assets da campanh
 
 ## Acesso pela Mesa e fallback isolado
 
-`FIREBASE-PROJECT.txt` contém apenas o project ID público do Firebase — nunca uma API key, conta de serviço ou segredo. Quando ele corresponde ao projeto do sistema hospedado, o backend valida o ID token recebido pelo navegador e consulta a Mesa: o autor é Mestre e os membros convidados são jogadores. O papel não é aceito da URL nem escolhido pelo cliente.
+`FIREBASE-PROJECT.txt` contém apenas o project ID público do Firebase — nunca uma API key, conta de serviço ou segredo. Quando ele corresponde ao projeto do sistema hospedado, a sessão autenticada cria no Firestore um grant aleatório de cinco minutos. As regras confirmam a participação e derivam o papel: quem criou a Mesa é Mestre e os demais membros são jogadores. O VTT consulta somente esse grant de uso único; ele nunca recebe o ID token Firebase, e o papel não é aceito da URL nem escolhido livremente pelo cliente.
 
 O host token e os convites continuam disponíveis somente como fallback para abrir o frontend portátil isolado. Nesse modo, o host token muda a cada abertura e não é salvo. O link do jogador guarda o convite no fragmento `#` da URL, que não é enviado na requisição e é removido da barra após preencher a tela. O endereço público exibido no console é para o Mestre abrir a interface; compartilhe com jogadores somente o link criado dentro da sala.
 
 O estado fica em `data\caos-vtt-state.sqlite3`, ao lado de `CAOS-VTT.exe`. Sala, cena ativa, posições de tokens, objetos de cenário, overlays, máscaras de fog e handouts entregues sobrevivem ao fechamento do programa. Tickets e grants de mídia não são recuperados.
 
-Uma sala integrada é recuperada automaticamente pelo ID da Mesa. O servidor mantém o mesmo `roomId` e o estado salvo, mas recusa convites manuais e revoga a sessão se a pessoa deixar de ser membro ou mudar de papel. O ID token Firebase fica somente na memória e é renovado pelo navegador; nunca é gravado no banco local. Salas criadas diretamente no frontend portátil continuam isoladas e usam seus próprios convites de fallback. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
+Uma sala integrada é recuperada automaticamente pelo ID da Mesa. O servidor mantém o mesmo `roomId` e o estado salvo, mas recusa convites manuais. O grant expira em cinco minutos e o navegador o renova a cada quatro minutos; quem sair da Mesa ou mudar de papel não consegue emitir a próxima autorização. Desafios, grants, tickets e tokens de mídia ficam somente em memória e nunca são gravados no banco local. Salas criadas diretamente no frontend portátil continuam isoladas e usam seus próprios convites de fallback. Para transportar ou fazer backup das sessões, copie também a pasta `data` com o programa fechado.
 
 ## Fog of war e objetos de cenário
 
@@ -48,6 +48,8 @@ Referências exclusivas do Mestre aparecem apenas no painel privado da Mesa e n�
 ## Modo online
 
 O fluxo recomendado é abrir o VTT pelo botão da própria Mesa no sistema hospedado. Edite `ORIGEM-WEB.txt` uma vez e substitua o exemplo pela origem HTTPS exata do seu app, sem barra ou caminho, como `https://seu-projeto.vercel.app`. Confirme também que `FIREBASE-PROJECT.txt` contém somente o project ID desse mesmo Firebase. Depois inicie o modo online, abra o VTT pela Mesa e informe o endereço `https://*.trycloudflare.com` mostrado no console como servidor da Mesa quando solicitado. O launcher autoriza apenas a origem configurada; valores malformados continuam sendo recusados pelo executável.
+
+Antes de publicar esta versão do frontend ou do VTT, implante também o arquivo `firestore.rules` do mesmo commit (`firebase deploy --only firestore:rules`). Sem essas regras, o Firestore recusará a criação do grant integrado.
 
 Também é possível usar a página aberta pelo próprio endereço `trycloudflare`; por ser o frontend portátil isolado, ela usa o host token e os convites de fallback. Isso é útil para uma sessão sem integração com o restante do sistema.
 

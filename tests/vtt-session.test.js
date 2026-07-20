@@ -5,8 +5,8 @@ import {
   VTT_INTEGRATED_SESSION_REFRESH_MS,
 } from '../src/lib/vtt-session.js';
 
-test('agenda renovação integrada aos 45 minutos somente enquanto conectado', () => {
-  assert.equal(VTT_INTEGRATED_SESSION_REFRESH_MS, 45 * 60 * 1000);
+test('agenda renovação integrada aos 4 minutos somente enquanto conectado', () => {
+  assert.equal(VTT_INTEGRATED_SESSION_REFRESH_MS, 4 * 60 * 1000);
   assert.equal(getIntegratedVttSessionRefreshDelay({
     usesAutomaticAccess: true,
     connectionStatus: 'connected',
@@ -17,7 +17,7 @@ test('agenda renovação integrada aos 45 minutos somente enquanto conectado', (
   }), null);
 });
 
-test('modo portátil nunca agenda renovação Firebase', () => {
+test('modo portátil nunca agenda renovação integrada', () => {
   assert.equal(getIntegratedVttSessionRefreshDelay({
     usesAutomaticAccess: false,
     connectionStatus: 'connected',

@@ -10,7 +10,6 @@ import math
 import re
 import secrets
 import string
-import time
 import warnings
 import zlib
 from collections import OrderedDict
@@ -56,6 +55,8 @@ PROTOCOL_VERSION = 1
 DEMO_TOKEN_ID = "demo-token"
 ROOM_ALPHABET = string.ascii_uppercase + string.digits
 MEDIA_TOKEN_TTL_SECONDS = 12 * 60 * 60
+MESA_CHALLENGE_TTL_SECONDS = 2 * 60
+DEFAULT_MAX_PENDING_MESA_CHALLENGES = 256
 DEFAULT_MAX_PENDING_TICKETS_PER_ROOM = 32
 DEFAULT_MAX_MEDIA_GRANTS_PER_ROOM = 64
 MAX_ROOM_TOKENS = 256
@@ -114,25 +115,20 @@ class ClientConnection:
 
 @dataclass(eq=False, slots=True)
 class MesaSession:
-    """Ephemeral proof tying an integrated VTT grant to one Mesa member.
-
-    The Firebase token intentionally lives only in memory. It is never included
-    in room snapshots or persistence and is discarded as soon as the session is
-    revoked.
-    """
+    """Ephemeral VTT session derived from a rules-validated Firestore grant."""
 
     room_id: str
     mesa_id: str
     uid: str
     role: Role
-    id_token: str = field(repr=False)
-    last_verified_at: float = field(default_factory=time.monotonic)
-    transient_failures: int = 0
+    expires_at: datetime
     revoked: bool = False
-    verification_lock: asyncio.Lock = field(
-        default_factory=asyncio.Lock,
-        repr=False,
-    )
+
+
+@dataclass(frozen=True, slots=True)
+class PendingMesaChallenge:
+    mesa_id: str
+    expires_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,6 +269,7 @@ class VTTService:
         self._external_rooms: dict[str, str] = {}
         self._tickets: dict[str, TicketGrant] = {}
         self._media_grants: dict[bytes, MediaGrant] = {}
+        self._mesa_challenges: dict[str, PendingMesaChallenge] = {}
         self._map_fingerprint_cache: dict[str, str] = {}
         self._fog_render_cache: OrderedDict[tuple[Any, ...], RenderedFogMap] = OrderedDict()
         self._fog_render_inflight: dict[
@@ -423,7 +420,7 @@ class VTTService:
         *,
         mesa_id: str,
         uid: str,
-        id_token: str,
+        expires_at: datetime,
     ) -> IssuedAccess | None:
         room = self._rooms.get(room_id)
         if room is None or room.external_mesa_id != mesa_id:
@@ -433,9 +430,36 @@ class VTTService:
             mesa_id=mesa_id,
             uid=uid,
             role=role,
-            id_token=id_token,
+            expires_at=expires_at.astimezone(UTC),
         )
         return await self._issue_access(room, role, mesa_session=mesa_session)
+
+    async def issue_mesa_challenge(self, mesa_id: str) -> tuple[str, int]:
+        now = datetime.now(UTC)
+        async with self._access_lock:
+            self._purge_expired_access(now)
+            if len(self._mesa_challenges) >= DEFAULT_MAX_PENDING_MESA_CHALLENGES:
+                raise AccessCapacityError
+            while True:
+                challenge = secrets.token_urlsafe(32)
+                if challenge not in self._mesa_challenges:
+                    break
+            self._mesa_challenges[challenge] = PendingMesaChallenge(
+                mesa_id=mesa_id,
+                expires_at=now + timedelta(seconds=MESA_CHALLENGE_TTL_SECONDS),
+            )
+        return challenge, MESA_CHALLENGE_TTL_SECONDS
+
+    async def consume_mesa_challenge(self, mesa_id: str, challenge: str) -> bool:
+        now = datetime.now(UTC)
+        async with self._access_lock:
+            self._purge_expired_access(now)
+            pending = self._mesa_challenges.pop(challenge, None)
+        return bool(
+            pending is not None
+            and pending.mesa_id == mesa_id
+            and pending.expires_at > now
+        )
 
     async def _issue_access(
         self,
@@ -451,17 +475,24 @@ class VTTService:
         media_token = secrets.token_urlsafe(32)
         media_digest = _token_digest(media_token)
         now = datetime.now(UTC)
+        if mesa_session is not None and mesa_session.expires_at <= now:
+            raise ValueError("grant integrado expirado")
+        ticket_expires_at = now + timedelta(seconds=self.ticket_ttl_seconds)
+        media_expires_at = now + timedelta(seconds=self.media_ttl_seconds)
+        if mesa_session is not None:
+            ticket_expires_at = min(ticket_expires_at, mesa_session.expires_at)
+            media_expires_at = min(media_expires_at, mesa_session.expires_at)
         ticket_grant = TicketGrant(
             room_id=room.room_id,
             role=role,
-            expires_at=now + timedelta(seconds=self.ticket_ttl_seconds),
+            expires_at=ticket_expires_at,
             media_digest=media_digest,
             mesa_session=mesa_session,
         )
         media_grant = MediaGrant(
             room_id=room.room_id,
             role=role,
-            expires_at=now + timedelta(seconds=self.media_ttl_seconds),
+            expires_at=media_expires_at,
             mesa_session=mesa_session,
         )
         async with self._access_lock:
@@ -482,9 +513,9 @@ class VTTService:
         return IssuedAccess(
             ticket=ticket,
             role=role,
-            ticket_expires_in=self.ticket_ttl_seconds,
+            ticket_expires_in=max(1, int((ticket_expires_at - now).total_seconds())),
             media_token=media_token,
-            media_expires_in=self.media_ttl_seconds,
+            media_expires_in=max(1, int((media_expires_at - now).total_seconds())),
         )
 
     async def consume_ticket(self, room_id: str, ticket: str) -> TicketGrant | None:
@@ -495,14 +526,14 @@ class VTTService:
             if grant is not None and (
                 grant.room_id != room_id
                 or grant.expires_at <= now
-                or (grant.mesa_session is not None and grant.mesa_session.revoked)
+                or self._mesa_session_inactive(grant.mesa_session, now)
             ):
                 self._media_grants.pop(grant.media_digest, None)
         if (
             grant is None
             or grant.room_id != room_id
             or grant.expires_at <= now
-            or (grant.mesa_session is not None and grant.mesa_session.revoked)
+            or self._mesa_session_inactive(grant.mesa_session, now)
         ):
             return None
         return grant
@@ -516,17 +547,16 @@ class VTTService:
             grant is None
             or grant.room_id != room_id
             or grant.expires_at <= now
-            or (grant.mesa_session is not None and grant.mesa_session.revoked)
+            or self._mesa_session_inactive(grant.mesa_session, now)
             or room_id not in self._rooms
         ):
             return None
         return grant
 
     async def revoke_mesa_session(self, session: MesaSession) -> None:
-        """Revoke every ephemeral credential/socket backed by one Firebase proof."""
+        """Revoke every ephemeral credential/socket backed by one Mesa grant."""
 
         session.revoked = True
-        session.id_token = ""
         async with self._access_lock:
             expired_tickets = [
                 token
@@ -1818,19 +1848,37 @@ class VTTService:
                 return room_id
 
     def _purge_expired_access(self, now: datetime) -> None:
+        expired_challenges = [
+            challenge
+            for challenge, pending in self._mesa_challenges.items()
+            if pending.expires_at <= now
+        ]
+        for challenge in expired_challenges:
+            self._mesa_challenges.pop(challenge, None)
         expired_tickets = [
             (token, grant.media_digest)
             for token, grant in self._tickets.items()
             if grant.expires_at <= now
+            or self._mesa_session_inactive(grant.mesa_session, now)
         ]
         for token, media_digest in expired_tickets:
             self._tickets.pop(token, None)
             self._media_grants.pop(media_digest, None)
         expired_media = [
-            token for token, grant in self._media_grants.items() if grant.expires_at <= now
+            token
+            for token, grant in self._media_grants.items()
+            if grant.expires_at <= now
+            or self._mesa_session_inactive(grant.mesa_session, now)
         ]
         for token in expired_media:
             self._media_grants.pop(token, None)
+
+    @staticmethod
+    def _mesa_session_inactive(
+        session: MesaSession | None,
+        now: datetime,
+    ) -> bool:
+        return bool(session is not None and (session.revoked or session.expires_at <= now))
 
     async def _revoke_media_digests(self, digests: Iterable[bytes]) -> None:
         async with self._access_lock:

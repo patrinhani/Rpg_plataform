@@ -14,6 +14,9 @@ O projeto auxilia nos cálculos e no acompanhamento da ficha, mas as rolagens s�
 - Bestiário integrado.
 - Exportação da ficha em JSON e PDF.
 - Sincronização e autenticação das fichas pelo Firebase.
+- Acesso integrado ao VTT por grants descartáveis do Firestore: a sessão define
+  automaticamente o criador como Mestre e os demais membros como jogadores,
+  sem entregar o ID token Firebase ao servidor da Mesa.
 
 ## Desenvolvimento
 

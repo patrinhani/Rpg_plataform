@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import secrets
-import time
 from collections.abc import Iterator
 from contextlib import suppress
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import (
@@ -25,11 +25,9 @@ from starlette.responses import Response, StreamingResponse
 from .campaign import CampaignCatalogError, OpenedAsset
 from .config import Settings
 from .firestore_auth import (
-    FirestoreMesaVerifier,
+    FirestoreMesaGrantVerifier,
     FirestoreUnavailableError,
-    InvalidTokenError,
-    MesaAccessForbiddenError,
-    MesaNotFoundError,
+    InvalidGrantError,
 )
 from .models import (
     CreateRoomRequest,
@@ -43,6 +41,8 @@ from .models import (
     MoveCommand,
     MesaAccessRequest,
     MesaAccessResponse,
+    MesaChallengeRequest,
+    MesaChallengeResponse,
     OverlaySetCommand,
     PingCommand,
     PropRemoveCommand,
@@ -66,7 +66,6 @@ from .service import (
 
 MAX_WS_MESSAGE_BYTES = 16 * 1024
 ASSET_STREAM_CHUNK_BYTES = 64 * 1024
-INTEGRATED_SESSION_REVALIDATE_SECONDS = 60.0
 SAFE_ASSET_MEDIA_TYPES = frozenset(
     {
         "image/avif",
@@ -111,76 +110,14 @@ def _asset_not_found() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset nao encontrado")
 
 
-async def _revalidate_mesa_session(
-    verifier: FirestoreMesaVerifier,
-    session: MesaSession,
-    *,
-    force: bool = False,
-) -> bool:
-    """Refresh one in-memory membership proof without exposing its ID token."""
-
-    if session.revoked or not session.id_token:
-        return False
-    now = time.monotonic()
-    if (
-        not force
-        and now - session.last_verified_at < INTEGRATED_SESSION_REVALIDATE_SECONDS
-    ):
-        return True
-
-    async with session.verification_lock:
-        if session.revoked or not session.id_token:
-            return False
-        now = time.monotonic()
-        if (
-            not force
-            and now - session.last_verified_at
-            < INTEGRATED_SESSION_REVALIDATE_SECONDS
-        ):
-            return True
-        try:
-            member = await run_in_threadpool(
-                verifier.verify,
-                session.id_token,
-                session.mesa_id,
-            )
-        except FirestoreUnavailableError:
-            session.transient_failures += 1
-            session.last_verified_at = time.monotonic()
-            if session.transient_failures < 3:
-                return True
-            session.revoked = True
-            return False
-        except (InvalidTokenError, MesaAccessForbiddenError, MesaNotFoundError):
-            session.revoked = True
-            return False
-        except Exception:
-            session.revoked = True
-            return False
-
-        valid = (
-            member.mesa_id == session.mesa_id
-            and member.uid == session.uid
-            and member.role == session.role
-        )
-        if not valid:
-            session.revoked = True
-            return False
-        session.transient_failures = 0
-        session.last_verified_at = time.monotonic()
-        return True
-
-
 async def _validate_integrated_media_grant(
-    request: Request,
     service: VTTService,
     grant: MediaGrant,
 ) -> bool:
     session = grant.mesa_session
     if session is None:
         return True
-    verifier: FirestoreMesaVerifier | None = request.app.state.mesa_verifier
-    if verifier is not None and await _revalidate_mesa_session(verifier, session):
+    if not session.revoked and session.expires_at > datetime.now(UTC):
         return True
     await service.revoke_mesa_session(session)
     return False
@@ -188,15 +125,12 @@ async def _validate_integrated_media_grant(
 
 async def _watch_mesa_session(
     service: VTTService,
-    verifier: FirestoreMesaVerifier,
     session: MesaSession,
 ) -> None:
-    while not session.revoked:
-        await asyncio.sleep(INTEGRATED_SESSION_REVALIDATE_SECONDS)
-        if await _revalidate_mesa_session(verifier, session, force=True):
-            continue
+    delay = max(0.0, (session.expires_at - datetime.now(UTC)).total_seconds())
+    await asyncio.sleep(delay)
+    if not session.revoked:
         await service.revoke_mesa_session(session)
-        return
 
 
 def _stream_asset(opened: OpenedAsset) -> Iterator[bytes]:
@@ -214,42 +148,56 @@ def create_router() -> APIRouter:
     async def health() -> dict[str, Any]:
         return {"status": "ok", "protocolVersion": PROTOCOL_VERSION}
 
+    @router.post(
+        "/api/vtt/mesa-challenges",
+        response_model=MesaChallengeResponse,
+    )
+    async def mesa_challenge(
+        payload: MesaChallengeRequest,
+        request: Request,
+    ) -> MesaChallengeResponse:
+        if request.app.state.mesa_grant_verifier is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="A entrada integrada pela Mesa nao esta configurada neste servidor",
+            )
+        service: VTTService = request.app.state.vtt
+        try:
+            challenge, expires_in = await service.issue_mesa_challenge(payload.mesaId)
+        except AccessCapacityError:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Limite temporario de desafios de acesso atingido",
+            ) from None
+        return MesaChallengeResponse(challenge=challenge, expiresIn=expires_in)
+
     @router.post("/api/vtt/mesa-access", response_model=MesaAccessResponse)
     async def mesa_access(
         payload: MesaAccessRequest,
         request: Request,
-        authorization: Annotated[str | None, Header()] = None,
     ) -> MesaAccessResponse:
-        id_token = _bearer_token(authorization)
-        if id_token is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Autenticacao Firebase ausente",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        verifier: FirestoreMesaVerifier | None = request.app.state.mesa_verifier
+        verifier: FirestoreMesaGrantVerifier | None = request.app.state.mesa_grant_verifier
         if verifier is None:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="A entrada integrada pela Mesa nao esta configurada neste servidor",
             )
-        try:
-            member = await run_in_threadpool(verifier.verify, id_token, payload.mesaId)
-        except InvalidTokenError:
+        service: VTTService = request.app.state.vtt
+        if not await service.consume_mesa_challenge(payload.mesaId, payload.challenge):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Sessao Firebase invalida ou expirada",
-                headers={"WWW-Authenticate": "Bearer"},
-            ) from None
-        except MesaAccessForbiddenError:
+                detail="Desafio VTT invalido, expirado ou ja utilizado",
+            )
+        try:
+            member = await run_in_threadpool(
+                verifier.verify,
+                payload.challenge,
+                payload.mesaId,
+            )
+        except InvalidGrantError:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Voce nao participa desta Mesa",
-            ) from None
-        except MesaNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Mesa nao encontrada",
+                detail="A Mesa nao autorizou este acesso VTT",
             ) from None
         except FirestoreUnavailableError:
             raise HTTPException(
@@ -257,19 +205,17 @@ def create_router() -> APIRouter:
                 detail="Nao foi possivel validar a Mesa no Firestore agora",
             ) from None
 
-        service: VTTService = request.app.state.vtt
         catalog = service.catalog
         if catalog is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Este servidor nao carregou uma campanha VTT",
             )
-        if member.campaign_id is not None and member.campaign_id != catalog.campaign_id:
+        if member.campaign_id != catalog.campaign_id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A campanha desta Mesa nao esta carregada neste servidor",
             )
-
         if member.role == "master":
             room = await service.ensure_room_for_mesa(
                 member.room_name,
@@ -290,12 +236,17 @@ def create_router() -> APIRouter:
                 member.role,
                 mesa_id=member.mesa_id,
                 uid=member.uid,
-                id_token=id_token,
+                expires_at=member.expires_at,
             )
         except AccessCapacityError:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Limite temporario de acessos da sala atingido",
+            ) from None
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="A autorizacao VTT expirou antes de concluir o acesso",
             ) from None
         if access is None:
             raise HTTPException(
@@ -408,7 +359,7 @@ def create_router() -> APIRouter:
         grant = await service.validate_media_grant(room_id, access)
         if catalog is None or grant is None:
             raise _asset_not_found()
-        if not await _validate_integrated_media_grant(request, service, grant):
+        if not await _validate_integrated_media_grant(service, grant):
             raise _asset_not_found()
         try:
             opened = await service.open_authorized_asset(
@@ -447,7 +398,7 @@ def create_router() -> APIRouter:
         grant = await service.validate_media_grant(room_id, access)
         if grant is None:
             raise _asset_not_found()
-        if not await _validate_integrated_media_grant(request, service, grant):
+        if not await _validate_integrated_media_grant(service, grant):
             raise _asset_not_found()
         rendered = await service.render_player_fog_map(room_id, grant.role)
         if rendered is None:
@@ -486,17 +437,6 @@ def create_router() -> APIRouter:
             return
 
         mesa_watchdog: asyncio.Task[None] | None = None
-        if grant.mesa_session is not None:
-            verifier: FirestoreMesaVerifier | None = websocket.app.state.mesa_verifier
-            if verifier is None or not await _revalidate_mesa_session(
-                verifier,
-                grant.mesa_session,
-                force=True,
-            ):
-                await service.revoke_mesa_session(grant.mesa_session)
-                await websocket.close(code=4403, reason="Mesa access revoked")
-                return
-
         await websocket.accept()
         connection = await service.connect(
             room_id,
@@ -510,9 +450,8 @@ def create_router() -> APIRouter:
             return
 
         if grant.mesa_session is not None:
-            assert verifier is not None
             mesa_watchdog = asyncio.create_task(
-                _watch_mesa_session(service, verifier, grant.mesa_session)
+                _watch_mesa_session(service, grant.mesa_session)
             )
 
         try:

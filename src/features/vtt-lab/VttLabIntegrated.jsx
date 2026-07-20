@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { db } from '../../lib/firebase.js';
 import { vincularVttMesa } from '../../lib/vtt-mesa-link.js';
 import { normalizeVttServerOrigin, readVttLaunchContext } from '../../lib/vtt-link.js';
+import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
 import VttLab from './VttLab.jsx';
 
 export default function VttLabIntegrated() {
@@ -32,7 +33,7 @@ export default function VttLabIntegrated() {
       })
       .catch(() => {
         // A leitura serve apenas para recuperar a origem. A autorização real
-        // continua sendo feita pelo backend com o token Firebase.
+        // continua sendo feita pelo grant curto validado no Firestore.
       })
       .finally(() => {
         if (active) setOriginReady(true);
@@ -43,20 +44,18 @@ export default function VttLabIntegrated() {
     };
   }, [devVisualMode, launchContext.mesaId, usuario?.uid]);
 
-  const getIdToken = useCallback(async () => {
-    if (!usuario || typeof usuario.getIdToken !== 'function') {
-      throw new Error('Sua sessão não pode autenticar o VTT. Entre novamente na conta.');
-    }
-    return usuario.getIdToken(true);
-  }, [usuario]);
-
   const automaticAccess = useMemo(() => ({
     enabled: Boolean(launchContext.mesaId) && !devVisualMode,
-    getIdToken,
+    requestAccess: ({ mesaId, serverOrigin, signal }) => requestMesaVttAccess({
+      mesaId,
+      serverOrigin,
+      usuario,
+      signal,
+    }),
     initialServerUrl: resolvedOrigin,
     autoStart: Boolean(resolvedOrigin),
     canEditServerUrl,
-  }), [canEditServerUrl, devVisualMode, getIdToken, launchContext.mesaId, resolvedOrigin]);
+  }), [canEditServerUrl, devVisualMode, launchContext.mesaId, resolvedOrigin, usuario]);
 
   if (!devVisualMode && launchContext.mesaId && !originReady) {
     return (

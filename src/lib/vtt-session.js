@@ -1,4 +1,4 @@
-export const VTT_INTEGRATED_SESSION_REFRESH_MS = 45 * 60 * 1000;
+export const VTT_INTEGRATED_SESSION_REFRESH_MS = 4 * 60 * 1000;
 
 export function getIntegratedVttSessionRefreshDelay({
   usesAutomaticAccess = false,

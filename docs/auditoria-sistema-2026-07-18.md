@@ -7,21 +7,25 @@ Projeto auditado: `F:\Projetos\Rpg_plataform`
 Branch: `codex/vtt-mvp`
 Commit da integração de evidências: `c816dd3`
 
+Atualização de segurança: 19/07/2026 — o achado P0 do ID token foi corrigido na
+branch `codex/vtt-mvp`. A sessão Firebase continua definindo a identidade, mas o
+servidor VTT recebe somente um grant aleatório, curto e vinculado à Mesa.
+
 ## Resumo executivo
 
 O projeto tem uma base técnica melhor do que a média para um sistema pessoal/portátil: mantém o backend em loopback, restringe origens, usa credenciais efêmeras, limita mensagens e entidades, protege mídia, valida caminhos e hashes da campanha, persiste o VTT de forma atômica e possui boa cobertura de regras determinísticas e do backend.
 
-Há, porém, um bloqueador de segurança antes de unir o VTT à `main`: o navegador envia um ID token Firebase amplo para um endereço de VTT controlado pelo Mestre. Um servidor alterado pode capturar essa credencial e agir como o jogador no Firebase durante a validade do token, inclusive fora da Mesa atual. A arquitetura deve trocar esse token por uma credencial curta e restrita à Mesa/VTT, emitida por um serviço confiável.
+O bloqueador original de segurança foi removido: o navegador não envia mais o ID token Firebase ao endereço VTT controlado pelo Mestre. As regras do Firestore transformam a sessão autenticada em uma capacidade curta e restrita à Mesa; o VTT consome essa capacidade uma única vez e deriva dela seus próprios tickets efêmeros.
 
 Também há lacunas relevantes em funcionamento offline, testes reais das regras Firestore, conflitos de edição simultânea, proteção operacional e recuperação de falhas do frontend.
 
 ## Evidências de validação
 
 - `npm run lint`: aprovado.
-- `npm test`: 82 aprovados, 0 falhas.
-- suíte Python crítica: 54 aprovados, 1 pulado.
-- suíte Python completa, incluindo manifesto e pack: 211 aprovados, 3 pulados e 3 subtestes aprovados.
-- `npm run build`: aprovado; build Vite concluído em 10,57 s.
+- `npm test`: 85 aprovados, 0 falhas.
+- suíte Python completa, incluindo backend, manifesto e pack: 176 aprovados e 3 pulados.
+- `npm run build`: aprovado.
+- `npm run build:vtt`: aprovado.
 - `npm audit --omit=dev`: 0 vulnerabilidades conhecidas.
 - `npm audit`: 0 vulnerabilidades conhecidas nas 293 dependências contabilizadas.
 - `pip check`: nenhuma dependência Python quebrada.
@@ -30,7 +34,20 @@ Também há lacunas relevantes em funcionamento offline, testes reais das regras
 
 ## Achados priorizados
 
-### P0 — ID token Firebase é enviado a um servidor controlado pelo Mestre
+### P0 corrigido — ID token Firebase não é mais enviado ao servidor do Mestre
+
+Implementação de 19/07/2026:
+
+1. O VTT emite um desafio aleatório de uso único, válido por dois minutos.
+2. A sessão Firebase grava `vttAccessGrants/{challenge}` pelo SDK confiável do navegador.
+3. `firestore.rules` confirma `uid`, participação e Mesa; `mesa.mestre` produz `master` e qualquer outro membro válido produz `player`.
+4. O backend lê anonimamente apenas o documento de capacidade imprevisível, sem cabeçalho Firebase, e o vincula ao desafio pendente.
+5. O grant e toda a sessão derivada expiram em cinco minutos; o navegador renova aos quatro. Quem saiu da Mesa não consegue criar a próxima autorização.
+6. Desafios, tickets, grants de mídia e sessões continuam apenas em memória e não entram no SQLite.
+
+Cobertura adicionada para falsificação de papel, replay, Mesa divergente, expiração, relógio futuro, falhas do Firestore, fechamento do WebSocket e ausência de ID token no fluxo integrado.
+
+O trecho abaixo registra o risco histórico que motivou a correção.
 
 Fluxo atual:
 
@@ -58,7 +75,7 @@ Recomendação estrutural:
 - o VTT nunca recebe nem armazena o ID token Firebase;
 - tickets WebSocket e grants de mídia continuam derivados em memória como hoje.
 
-Até essa troca, não unir `codex/vtt-mvp` à `main` e não distribuir o fluxo integrado para jogadores não confiáveis.
+A troca foi concluída. A implantação precisa publicar `firestore.rules` junto com o frontend/backend; sem isso o novo grant será negado. O merge na `main` ainda deve aguardar a validação funcional/manual combinada com o responsável pelo projeto.
 
 ### P1 — “Offline” não sobrevive a fechar ou recarregar a página
 
@@ -98,7 +115,7 @@ Recomendação: adicionar cabeçalhos de forma incremental e testada. A CSP prec
 
 ### P1 — Sem limitação de taxa no endpoint público de autenticação
 
-O backend limita tickets e grants por sala, mas `/api/vtt/mesa-access` pode receber tentativas repetidas e cada validação pode provocar trabalho de rede no Firestore. Em Quick Tunnel público isso permite consumo de CPU/rede e indisponibilidade local.
+O backend limita desafios pendentes, tickets e grants por sala, mas `/api/vtt/mesa-challenges` e `/api/vtt/mesa-access` ainda podem receber tentativas repetidas. Cada grant válido provoca trabalho de rede no Firestore. Em Quick Tunnel público isso permite consumo de CPU/rede e indisponibilidade local.
 
 Recomendação: limite por IP/origem/mesa com janela curta, limite global de concorrência e respostas uniformes; manter os limites internos já existentes.
 
@@ -166,7 +183,7 @@ Recomendação: limpar comentários, alinhar documentação, padronizar diálogo
 - CORS usa origens explícitas e WebSocket valida `Origin`.
 - Tickets são de uso único; tokens/grants ficam em memória e têm capacidade limitada.
 - Tokens são comparados por digest/tempo constante e não entram em logs de acesso.
-- ID token não é serializado no SQLite (o problema é recebê-lo do cliente, não persistência acidental).
+- ID token Firebase não é recebido pelo VTT; os grants curtos e desafios também não são serializados no SQLite.
 - Mensagens WebSocket, tokens, props, caches de fog e mídia têm limites.
 - Fog do jogador é composto no servidor e não expõe camadas brutas.
 - Mídia usa `no-store`, `nosniff`, CSP restritiva e tipos permitidos.
@@ -178,12 +195,11 @@ Recomendação: limpar comentários, alinhar documentação, padronizar diálogo
 
 ## Ordem sugerida de execução
 
-1. Redesenhar a autenticação integrada para não entregar ID token ao VTT.
-2. Adicionar testes reais das regras Firestore e decidir a política de e-mail verificado.
-3. Implementar cache offline persistente e estratégia de conflitos.
-4. Adicionar rate limit, headers de deploy e Error Boundary.
-5. Criar CI e E2E Mestre/jogador com mobile e cinco temas.
-6. Corrigir concorrência/exclusões e só depois modularizar por manutenção/performance.
+1. Implantar e testar no Firebase Emulator a nova regra de grants e decidir a política de e-mail verificado.
+2. Implementar cache offline persistente e estratégia de conflitos.
+3. Adicionar rate limit, headers de deploy e Error Boundary.
+4. Criar CI e E2E Mestre/jogador com mobile e cinco temas.
+5. Corrigir concorrência/exclusões e só depois modularizar por manutenção/performance.
 
 ## Estado da entrega de evidências
 
@@ -193,5 +209,5 @@ Recomendação: limpar comentários, alinhar documentação, padronizar diálogo
 - Evidências ficam separadas de anotações editáveis.
 - Ficha pessoal fora de Mesa não recebe a sessão de evidências.
 - Commit local: `c816dd3`.
-- Push não realizado: o ambiente bloqueou a exportação para o remoto e exige confirmação explícita do usuário.
-- Merge em `main`: não recomendado antes da correção P0 e da aprovação visual/funcional manual.
+- Branch de trabalho: `codex/vtt-mvp`.
+- Merge em `main`: aguarda validação funcional/manual e decisão explícita do responsável; o P0 técnico foi corrigido.

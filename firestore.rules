@@ -32,6 +32,45 @@ service cloud.firestore {
       return membroDaMesa(dados) && dados.mestre == request.auth.uid;
     }
 
+    function campanhaVttDaMesa(dados) {
+      return 'vtt' in dados
+        && dados.vtt is map
+        && 'campaignId' in dados.vtt
+        && dados.vtt.campaignId is string
+        ? dados.vtt.campaignId
+        : 'mnemosyne';
+    }
+
+    function criacaoGrantVttValida(grantId) {
+      let mesa = get(
+        /databases/$(database)/documents/mesas/$(request.resource.data.mesaId)
+      ).data;
+      return autenticado()
+        && grantId.matches('^[A-Za-z0-9_-]{32,128}$')
+        && request.resource.data.keys().hasOnly([
+          'challenge',
+          'mesaId',
+          'uid',
+          'role',
+          'roomName',
+          'campaignId',
+          'issuedAt'
+        ])
+        && request.resource.data.challenge == grantId
+        && request.resource.data.mesaId is string
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.issuedAt == request.time
+        && membroDaMesa(mesa)
+        && request.resource.data.roomName == mesa.nome
+        && request.resource.data.campaignId.matches(
+          '^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$'
+        )
+        && request.resource.data.campaignId == campanhaVttDaMesa(mesa)
+        && request.resource.data.role == (
+          mesa.mestre == request.auth.uid ? 'master' : 'player'
+        );
+    }
+
     function alterouSomente(campos) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos);
     }
@@ -76,6 +115,16 @@ service cloud.firestore {
     function atualizacaoDoMestreValida() {
       return mestreDaMesa(resource.data)
         && estruturaMembrosValida(request.resource.data);
+    }
+
+    // Capacidade aleatoria e curta: o VTT pode ler um grant especifico, mas nao
+    // recebe o token Firebase do usuario e nao pode enumerar grants existentes.
+    match /vttAccessGrants/{grantId} {
+      allow create: if criacaoGrantVttValida(grantId);
+      allow get: if resource.data.issuedAt is timestamp
+        && request.time < resource.data.issuedAt + duration.value(5, 'm');
+      allow list, update: if false;
+      allow delete: if autenticado() && resource.data.uid == request.auth.uid;
     }
 
     match /users/{userId} {

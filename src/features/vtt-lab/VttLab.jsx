@@ -824,7 +824,7 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
       appendLog('error', 'server.url.untrusted', errorMessage);
       return;
     }
-    if (typeof automaticAccess?.getIdToken !== 'function') {
+    if (typeof automaticAccess?.requestAccess !== 'function') {
       const errorMessage = 'A autenticação da Mesa não está disponível nesta sessão.';
       setLastError(errorMessage);
       setConnectionStatus('error');
@@ -844,26 +844,18 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
     requestControllerRef.current = requestController;
     setBusyAction('automatic-access');
     setLastError('');
+    let requestTimedOut = false;
+    const requestTimer = globalThis.setTimeout(() => {
+      requestTimedOut = true;
+      requestController.abort();
+    }, REST_REQUEST_TIMEOUT_MS);
 
     try {
-      const idToken = String(await automaticAccess.getIdToken()).trim();
-      if (!idToken) throw new Error('A sessão Firebase não forneceu uma credencial válida.');
-      if (requestController.signal.aborted) return;
-
-      const response = await fetchWithTimeout(
-        buildHttpUrl(normalizedServerUrl, '/api/vtt/mesa-access'),
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ mesaId: launchContext.mesaId }),
-          signal: requestController.signal,
-        },
-        requestController,
-      );
-      const data = await readJsonResponse(response);
+      const data = await automaticAccess.requestAccess({
+        mesaId: launchContext.mesaId,
+        serverOrigin: normalizedServerUrl,
+        signal: requestController.signal,
+      });
 
       if (
         !mountedRef.current
@@ -900,14 +892,17 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
       }
       openSocket(normalizedServerUrl, nextRoomId, String(data.ticket), nextRole);
     } catch (error) {
-      if (error.name === 'AbortError' || !mountedRef.current) return;
-      const errorMessage = error instanceof Error
-        ? error.message
-        : 'Não foi possível validar o acesso desta Mesa.';
+      if ((error.name === 'AbortError' && !requestTimedOut) || !mountedRef.current) return;
+      const errorMessage = requestTimedOut
+        ? 'O servidor não respondeu em 12 segundos.'
+        : (error instanceof Error
+          ? error.message
+          : 'Não foi possível validar o acesso desta Mesa.');
       setConnectionStatus('error');
       setLastError(errorMessage);
       appendLog('error', 'mesa.access.error', errorMessage);
     } finally {
+      globalThis.clearTimeout(requestTimer);
       if (requestControllerRef.current === requestController) {
         requestControllerRef.current = null;
         if (mountedRef.current) setBusyAction('');

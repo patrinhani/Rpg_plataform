@@ -6,6 +6,7 @@ import {
   normalizeVttServerOrigin,
 } from '../../lib/vtt-link.js';
 import { VTT_INTEGRATED_SESSION_REFRESH_MS } from '../../lib/vtt-session.js';
+import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
 import { projectMesaHandoutSnapshot } from './mesa-handouts.js';
 
 const REQUEST_TIMEOUT_MS = 12_000;
@@ -33,21 +34,6 @@ function buildWebSocketUrl(serverOrigin, roomId, ticket) {
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   url.searchParams.set('ticket', ticket);
   return url.toString();
-}
-
-async function readJsonResponse(response) {
-  let payload = null;
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
-
-  if (!response.ok) {
-    const detail = payload?.detail || payload?.message || payload?.error;
-    throw new Error(detail || `O servidor respondeu com HTTP ${response.status}.`);
-  }
-  return payload || {};
 }
 
 function closeOpenSocket(socket, reason) {
@@ -135,7 +121,7 @@ export function useMesaHandouts({
       fail('O servidor VTT desta Mesa ainda não foi configurado.');
       return false;
     }
-    if (!usuario || typeof usuario.getIdToken !== 'function') {
+    if (!usuario?.uid) {
       fail('Sua sessão não pode autenticar os documentos da Mesa. Entre novamente na conta.');
       return false;
     }
@@ -157,23 +143,12 @@ export function useMesaHandouts({
     }, REQUEST_TIMEOUT_MS);
 
     try {
-      const idToken = String(await usuario.getIdToken(true)).trim();
-      if (!idToken) throw new Error('A sessão Firebase não forneceu uma credencial válida.');
-      if (requestController.signal.aborted) {
-        if (requestTimedOut) throw new Error('O servidor não respondeu em 12 segundos.');
-        return false;
-      }
-
-      const response = await fetch(`${normalizedServerOrigin}/api/vtt/mesa-access`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ mesaId: normalizedMesaId }),
+      const data = await requestMesaVttAccess({
+        mesaId: normalizedMesaId,
+        serverOrigin: normalizedServerOrigin,
+        usuario,
         signal: requestController.signal,
       });
-      const data = await readJsonResponse(response);
 
       if (
         !mountedRef.current
