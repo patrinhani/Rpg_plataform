@@ -3,6 +3,8 @@ chcp 65001 >nul
 setlocal
 cd /d "%~dp0"
 
+set "FRONTEND_START_TIMEOUT_SECONDS=90"
+
 set "CAMPAIGN_ROOT=F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
 if defined CAOS_VTT_CAMPAIGN_ROOT set "CAMPAIGN_ROOT=%CAOS_VTT_CAMPAIGN_ROOT%"
 
@@ -72,8 +74,8 @@ if "%ERRORLEVEL%"=="0" (
     start "C.A.O.S. Frontend" /D "%~dp0" cmd.exe /k "npm run dev -- --host 127.0.0.1 --port 5173 --strictPort"
 )
 
-echo Aguardando o frontend responder em http://localhost:5173/ ...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$deadline=(Get-Date).AddSeconds(25); do { try { $response=Invoke-WebRequest -Uri 'http://localhost:5173/' -UseBasicParsing -TimeoutSec 1; if ($response.StatusCode -lt 500 -and $response.Content -match '<title>\s*C\.A\.O\.S\s*</title>') { Start-Process 'http://localhost:5173/'; exit 0 } } catch {}; Start-Sleep -Milliseconds 350 } while ((Get-Date) -lt $deadline); exit 1"
+echo Aguardando o frontend responder em http://localhost:5173/ por ate %FRONTEND_START_TIMEOUT_SECONDS% segundos ...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$deadline=(Get-Date).AddSeconds(%FRONTEND_START_TIMEOUT_SECONDS%); do { try { $response=Invoke-WebRequest -Uri 'http://localhost:5173/' -UseBasicParsing -TimeoutSec 3; if ($response.StatusCode -lt 500 -and $response.Content -match '<title>\s*C\.A\.O\.S\s*</title>') { Start-Process 'http://localhost:5173/'; exit 0 } } catch {}; Start-Sleep -Milliseconds 350 } while ((Get-Date) -lt $deadline); exit 1"
 if not "%ERRORLEVEL%"=="0" (
     echo O frontend C.A.O.S. nao respondeu na porta 5173. Confira a janela do frontend.
     pause
