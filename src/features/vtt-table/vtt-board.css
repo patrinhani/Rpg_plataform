@@ -176,7 +176,7 @@
 }
 
 .vtt-board__layout.has-director {
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 310px);
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 286px);
 }
 
 .vtt-board__viewport {
@@ -192,6 +192,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  overscroll-behavior: contain;
   padding: 16px;
   position: relative;
   touch-action: none;
@@ -532,15 +533,261 @@
   border-left: 1px solid var(--vtt-board-border);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   min-width: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px;
 }
 
 .vtt-board__director-heading strong {
   font-family: "Special Elite", ui-monospace, monospace;
   font-size: 1rem;
+}
+
+.vtt-board__master-hub {
+  background:
+    radial-gradient(circle at 85% -10%, rgba(48, 174, 250, 0.16), transparent 52%),
+    rgba(2, 9, 14, 0.92);
+  border: 1px solid rgba(70, 180, 247, 0.28);
+  border-radius: 12px;
+  box-shadow: inset 0 0 28px rgba(35, 145, 210, 0.045);
+  display: grid;
+  gap: 10px;
+  padding: 11px;
+}
+
+.vtt-board__master-hub-heading,
+.vtt-board__master-effects > div:first-child {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.vtt-board__master-hub-heading > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vtt-board__master-hub-heading span,
+.vtt-board__master-quick-actions > span,
+.vtt-board__master-effects span {
+  color: #65c8ff;
+  font-size: 0.59rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vtt-board__master-hub-heading strong {
+  color: #deeff8;
+  font-family: "Special Elite", ui-monospace, monospace;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__master-live {
+  align-items: center;
+  border: 1px solid rgba(119, 145, 159, 0.25);
+  border-radius: 999px;
+  color: #78909d;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 4px 7px;
+}
+
+.vtt-board__master-live::before {
+  background: currentColor;
+  border-radius: 50%;
+  content: '';
+  height: 6px;
+  width: 6px;
+}
+
+.vtt-board__master-live.is-online {
+  border-color: rgba(87, 225, 143, 0.26);
+  color: #78e8a3;
+}
+
+.vtt-board__master-metrics {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vtt-board__master-metrics button {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(126, 180, 214, 0.13);
+  border-radius: 8px;
+  color: #8eabbc;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 46px;
+  padding: 7px 8px;
+  text-align: left;
+}
+
+.vtt-board__master-metrics button:hover,
+.vtt-board__master-metrics button:focus-visible {
+  background: rgba(54, 170, 238, 0.09);
+  border-color: rgba(93, 193, 249, 0.32);
+}
+
+.vtt-board__master-metrics span {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vtt-board__master-metrics strong {
+  color: #d9edf7;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.76rem;
+}
+
+.vtt-board__master-quick-actions {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vtt-board__master-quick-actions > span {
+  grid-column: 1 / -1;
+}
+
+.vtt-board__master-quick-actions button,
+.vtt-board__master-effects button {
+  background: rgba(40, 142, 204, 0.08);
+  border: 1px solid rgba(79, 181, 241, 0.22);
+  border-radius: 7px;
+  color: #b9d9ea;
+  font-size: 0.62rem;
+  min-height: 34px;
+  padding: 6px 7px;
+}
+
+.vtt-board__master-quick-actions button.is-active,
+.vtt-board__master-effects button.is-active {
+  background: rgba(60, 182, 245, 0.2);
+  border-color: rgba(101, 200, 255, 0.52);
+  color: #e6f7ff;
+}
+
+.vtt-board__master-effects {
+  border-top: 1px solid rgba(126, 180, 214, 0.12);
+  display: grid;
+  gap: 7px;
+  padding-top: 9px;
+}
+
+.vtt-board__master-effects small,
+.vtt-board__master-effects p {
+  color: #718b9a;
+  font-size: 0.59rem;
+  margin: 0;
+}
+
+.vtt-board__master-effects > div:last-child {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vtt-board__director-section {
+  background: rgba(2, 8, 12, 0.66);
+  border: 1px solid rgba(126, 180, 214, 0.13);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.vtt-board__director-section.is-open {
+  border-color: rgba(83, 184, 244, 0.28);
+  box-shadow: inset 0 1px 0 rgba(109, 206, 255, 0.035);
+}
+
+.vtt-board__director-section-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #d5e8f2;
+  display: grid;
+  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) auto 15px;
+  min-height: 54px;
+  padding: 8px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.vtt-board__director-section-toggle:hover,
+.vtt-board__director-section-toggle:focus-visible {
+  background: rgba(52, 166, 232, 0.075);
+}
+
+.vtt-board__director-section-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vtt-board__director-section-copy strong {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vtt-board__director-section-copy small {
+  color: #7390a1;
+  font-size: 0.59rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__director-section-badge {
+  background: rgba(49, 157, 221, 0.1);
+  border: 1px solid rgba(84, 185, 243, 0.18);
+  border-radius: 999px;
+  color: #91cce9;
+  font-size: 0.55rem;
+  max-width: 76px;
+  overflow: hidden;
+  padding: 4px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__director-section-chevron {
+  color: #74aac7;
+  display: block;
+  font-size: 0.9rem;
+  transform: rotate(-90deg);
+  transition: transform 150ms ease;
+}
+
+.vtt-board__director-section.is-open .vtt-board__director-section-chevron {
+  transform: rotate(0deg);
+}
+
+.vtt-board__director-section-body {
+  border-top: 1px solid rgba(126, 180, 214, 0.12);
+  display: grid;
+  gap: 11px;
+  padding: 11px;
+}
+
+.vtt-board__director-section-body > .vtt-board__effects,
+.vtt-board__director-section-body > .vtt-board__layers,
+.vtt-board__director-section-body > .vtt-board__fog-controls,
+.vtt-board__director-section-body > .vtt-board__prop-editor {
+  border: 0;
+  padding: 0;
 }
 
 .vtt-board__gm-guide {
@@ -996,6 +1243,8 @@
   }
 
   .vtt-board__director-heading,
+  .vtt-board__master-hub,
+  .vtt-board__director-section,
   .vtt-board__director-note,
   .vtt-board__fog-controls,
   .vtt-board__prop-editor {

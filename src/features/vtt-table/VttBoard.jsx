@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './vtt-board.css';
+import { constrainVttCamera, zoomVttCameraAtPoint } from './camera.js';
 import { resolvePropStateOptions } from './prop-state-groups.js';
 
 const MIN_ZOOM = 0.55;
@@ -125,6 +126,40 @@ function normalizeProps(rawProps, role) {
     .filter((prop) => prop.id);
 }
 
+function DirectorSection({
+  id,
+  title,
+  summary,
+  badge,
+  open,
+  onToggle,
+  children,
+}) {
+  return (
+    <section className={`vtt-board__director-section ${open ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        className="vtt-board__director-section-toggle"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={`${id}-content`}
+      >
+        <span className="vtt-board__director-section-copy">
+          <strong>{title}</strong>
+          <small>{summary}</small>
+        </span>
+        {badge && <span className="vtt-board__director-section-badge">{badge}</span>}
+        <span className="vtt-board__director-section-chevron" aria-hidden="true">⌄</span>
+      </button>
+      {open && (
+        <div id={`${id}-content`} className="vtt-board__director-section-body">
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function VttBoard({
   state = {},
   role = 'player',
@@ -158,6 +193,12 @@ export default function VttBoard({
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideZoom, setGuideZoom] = useState(1);
   const [directorOpen, setDirectorOpen] = useState(true);
+  const [directorSections, setDirectorSections] = useState({
+    scene: false,
+    fog: false,
+    tokens: false,
+    props: false,
+  });
   const [fogEditMode, setFogEditMode] = useState(false);
   const [fogRevealMode, setFogRevealMode] = useState(true);
   const [fogBrushRadius, setFogBrushRadius] = useState(DEFAULT_FOG_BRUSH_RADIUS);
@@ -220,6 +261,7 @@ export default function VttBoard({
     [propStateGroups, selectedProp?.assetId],
   );
   const isMaster = role === 'master';
+  const activeOverlayCount = overlays.filter((overlay) => overlay.enabled).length;
   const controlledTokenCount = isMaster
     ? 0
     : tokens.filter((token) => token.movable !== false).length;
@@ -229,6 +271,19 @@ export default function VttBoard({
   const gridRows = Math.max(1, Number(scene?.gridHint?.rows) || 1);
   const hasGrid = scene?.gridHint?.type === 'square';
   const maximumZoom = clamp(nativeZoomLimit, MIN_ZOOM, MAX_ZOOM);
+
+  const constrainCamera = useCallback((candidate) => {
+    const viewport = viewportRef.current;
+    const stage = stageRef.current;
+    return constrainVttCamera(candidate, {
+      minimumZoom: MIN_ZOOM,
+      maximumZoom: MAX_ZOOM,
+      stageWidth: stage?.offsetWidth || 0,
+      stageHeight: stage?.offsetHeight || 0,
+      viewportWidth: viewport?.clientWidth || 0,
+      viewportHeight: viewport?.clientHeight || 0,
+    });
+  }, []);
 
   const emitCommand = useCallback((type, payload = {}) => {
     if (!connected || typeof onCommand !== 'function') return false;
@@ -240,6 +295,29 @@ export default function VttBoard({
     if (typeof globalThis.confirm === 'function' && !globalThis.confirm(message)) return false;
     return emitCommand(type, payload);
   }, [emitCommand]);
+
+  const toggleDirectorSection = useCallback((section) => {
+    setDirectorSections((current) => ({
+      ...current,
+      [section]: !current[section],
+    }));
+  }, []);
+
+  const openDirectorSection = useCallback((section) => {
+    setDirectorSections((current) => ({
+      ...current,
+      [section]: true,
+    }));
+  }, []);
+
+  const handleFogEnabledChange = useCallback((enabled) => {
+    if (enabled) return emitCommand('fog.set_enabled', { enabled: true });
+    return confirmMasterCommand(
+      'Desativar a névoa libera o mapa completo, os efeitos e os objetos para todos os jogadores. Continuar?',
+      'fog.set_enabled',
+      { enabled: false },
+    );
+  }, [confirmMasterCommand, emitCommand]);
 
   useEffect(() => {
     setCamera({ x: 0, y: 0, scale: 1 });
@@ -344,7 +422,7 @@ export default function VttBoard({
       if (!renderedWidth) return;
       const limit = clamp(mapWidth / renderedWidth, 1, MAX_ZOOM);
       setNativeZoomLimit(limit);
-      setCamera((current) => ({
+      setCamera((current) => constrainCamera({
         ...current,
         scale: Math.min(current.scale, limit),
       }));
@@ -354,7 +432,7 @@ export default function VttBoard({
     const observer = new ResizeObserver(updateNativeZoom);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [mapWidth, scene?.map?.url]);
+  }, [constrainCamera, mapWidth, scene?.map?.url]);
 
   useEffect(() => {
     if (!guideOpen) return undefined;
@@ -386,6 +464,18 @@ export default function VttBoard({
   }, [selectedToken, selectedTokenId]);
 
   useEffect(() => {
+    if (selectedTokenId) openDirectorSection('tokens');
+  }, [openDirectorSection, selectedTokenId]);
+
+  useEffect(() => {
+    if (selectedPropId) openDirectorSection('props');
+  }, [openDirectorSection, selectedPropId]);
+
+  useEffect(() => {
+    if (fogEditMode) openDirectorSection('fog');
+  }, [fogEditMode, openDirectorSection]);
+
+  useEffect(() => {
     if (!selectedPropAssetId && propAssets[0]?.assetId) {
       setSelectedPropAssetId(propAssets[0].assetId);
     }
@@ -396,25 +486,45 @@ export default function VttBoard({
   }, [selectedPropId, selectedPropStates?.currentStateAssetId]);
 
   const setZoom = useCallback((nextScale) => {
-    setCamera((current) => ({
+    setCamera((current) => constrainCamera({
       ...current,
       scale: clamp(nextScale, MIN_ZOOM, maximumZoom),
     }));
-  }, [maximumZoom]);
+  }, [constrainCamera, maximumZoom]);
 
   const resetCamera = useCallback(() => {
     setCamera({ x: 0, y: 0, scale: 1 });
   }, []);
 
-  const handleWheel = (event) => {
+  const handleWheel = useCallback((event) => {
     if (!scene) return;
     event.preventDefault();
-    const factor = event.deltaY < 0 ? 1.1 : 0.9;
-    setCamera((current) => ({
-      ...current,
-      scale: clamp(current.scale * factor, MIN_ZOOM, maximumZoom),
+    event.stopPropagation();
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const rect = viewport.getBoundingClientRect();
+    const pointerX = event.clientX - (rect.left + rect.width / 2);
+    const pointerY = event.clientY - (rect.top + rect.height / 2);
+    const stage = stageRef.current;
+    setCamera((current) => zoomVttCameraAtPoint(current, {
+      pointerX,
+      pointerY,
+      deltaY: event.deltaY,
+      minimumZoom: MIN_ZOOM,
+      maximumZoom,
+      stageWidth: stage?.offsetWidth || 0,
+      stageHeight: stage?.offsetHeight || 0,
+      viewportWidth: viewport.clientWidth,
+      viewportHeight: viewport.clientHeight,
     }));
-  };
+  }, [maximumZoom, scene]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return undefined;
+    viewport.addEventListener('wheel', handleWheel, { passive: false });
+    return () => viewport.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   const handleViewportKeyDown = (event) => {
     if (event.target !== event.currentTarget || !scene) return;
@@ -433,7 +543,7 @@ export default function VttBoard({
     if (!direction) return;
     event.preventDefault();
     const step = event.shiftKey ? 50 : 20;
-    setCamera((current) => ({
+    setCamera((current) => constrainCamera({
       ...current,
       x: current.x + direction[0] * step,
       y: current.y + direction[1] * step,
@@ -457,7 +567,7 @@ export default function VttBoard({
   const handlePanPointerMove = (event) => {
     const pan = panRef.current;
     if (!pan || pan.pointerId !== event.pointerId) return;
-    setCamera((current) => ({
+    setCamera((current) => constrainCamera({
       ...current,
       x: pan.cameraX + event.clientX - pan.startX,
       y: pan.cameraY + event.clientY - pan.startY,
@@ -813,7 +923,6 @@ export default function VttBoard({
         <div
           ref={viewportRef}
           className={`vtt-board__viewport ${isPanning ? 'is-panning' : ''}`}
-          onWheel={handleWheel}
           onPointerDown={handlePanPointerDown}
           onPointerMove={handlePanPointerMove}
           onPointerUp={finishPan}
@@ -973,8 +1082,91 @@ export default function VttBoard({
           <aside className="vtt-board__director" aria-label="Painel de direção do Mestre">
             <div className="vtt-board__director-heading">
               <span>Controle do Mestre</span>
-              <strong>Direção da cena</strong>
+              <strong>Central de direção</strong>
             </div>
+
+            <section className="vtt-board__master-hub" aria-labelledby="vtt-board-master-hub-title">
+              <div className="vtt-board__master-hub-heading">
+                <div>
+                  <span id="vtt-board-master-hub-title">Visão geral</span>
+                  <strong>{scene?.label || 'Nenhuma cena ativa'}</strong>
+                </div>
+                <span className={`vtt-board__master-live ${connected ? 'is-online' : ''}`}>
+                  {connected ? 'Ao vivo' : 'Offline'}
+                </span>
+              </div>
+
+              <div className="vtt-board__master-metrics">
+                <button type="button" onClick={() => openDirectorSection('scene')}>
+                  <span>Cena</span>
+                  <strong>{scenes.length}</strong>
+                </button>
+                <button type="button" onClick={() => openDirectorSection('fog')}>
+                  <span>Névoa</span>
+                  <strong>{fog?.enabled ? 'Ativa' : 'Livre'}</strong>
+                </button>
+                <button type="button" onClick={() => openDirectorSection('tokens')}>
+                  <span>Tokens</span>
+                  <strong>{tokens.length}</strong>
+                </button>
+                <button type="button" onClick={() => openDirectorSection('props')}>
+                  <span>Objetos</span>
+                  <strong>{props.length}</strong>
+                </button>
+              </div>
+
+              <div className="vtt-board__master-quick-actions">
+                <span>Ações rápidas</span>
+                <button
+                  type="button"
+                  className={fog?.enabled ? 'is-active' : ''}
+                  onClick={() => handleFogEnabledChange(!fog?.enabled)}
+                  disabled={!connected || !scene}
+                >
+                  {fog?.enabled ? 'Desativar névoa' : 'Ativar névoa'}
+                </button>
+                <button type="button" onClick={resetCamera} disabled={!scene}>
+                  Enquadrar mapa
+                </button>
+              </div>
+
+              <div className="vtt-board__master-effects" aria-label="Efeitos rápidos">
+                <div>
+                  <span>Efeitos rápidos</span>
+                  <small>{activeOverlayCount}/{overlays.length} ativos</small>
+                </div>
+                {overlays.length === 0 ? (
+                  <p>Esta cena não possui efeitos alternáveis.</p>
+                ) : (
+                  <div>
+                    {overlays.map((overlay) => (
+                      <button
+                        key={overlay.assetId}
+                        type="button"
+                        className={overlay.enabled ? 'is-active' : ''}
+                        onClick={() => emitCommand('overlay.set', {
+                          assetId: overlay.assetId,
+                          enabled: !overlay.enabled,
+                        })}
+                        aria-pressed={Boolean(overlay.enabled)}
+                        disabled={!connected}
+                      >
+                        {overlay.label || humanize(overlay.name)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <DirectorSection
+              id="vtt-board-scene-section"
+              title="Cena e efeitos"
+              summary={scene?.label || 'Escolha o mapa ativo'}
+              badge={activeOverlayCount > 0 ? `${activeOverlayCount} efeito${activeOverlayCount === 1 ? '' : 's'}` : 'Cena'}
+              open={directorSections.scene}
+              onToggle={() => toggleDirectorSection('scene')}
+            >
 
             {scene?.gmGuideMap?.url && (
               <details className="vtt-board__gm-guide">
@@ -1053,24 +1245,24 @@ export default function VttBoard({
               ))}
             </fieldset>
 
+            </DirectorSection>
+
+            <DirectorSection
+              id="vtt-board-fog-section"
+              title="Névoa de guerra"
+              summary={fog?.enabled ? 'Proteção ativa' : 'Mapa liberado'}
+              badge={fog?.enabled ? `Rev. ${Number(fog.revision || 0)}` : 'Livre'}
+              open={directorSections.fog}
+              onToggle={() => toggleDirectorSection('fog')}
+            >
+
             <fieldset className="vtt-board__fog-controls" disabled={!connected || !scene}>
               <legend>Névoa de guerra</legend>
               <label className="vtt-board__fog-toggle">
                 <input
                   type="checkbox"
                   checked={Boolean(fog?.enabled)}
-                  onChange={(event) => {
-                    const enabled = event.target.checked;
-                    if (enabled) {
-                      emitCommand('fog.set_enabled', { enabled: true });
-                      return;
-                    }
-                    confirmMasterCommand(
-                      'Desativar a névoa libera o mapa completo, os efeitos e os objetos para todos os jogadores. Continuar?',
-                      'fog.set_enabled',
-                      { enabled: false },
-                    );
-                  }}
+                  onChange={(event) => handleFogEnabledChange(event.target.checked)}
                 />
                 <span>
                   <strong>{fog?.enabled ? 'Proteção ativa' : 'Proteção desativada'}</strong>
@@ -1136,6 +1328,17 @@ export default function VttBoard({
                 </>
               )}
             </fieldset>
+
+            </DirectorSection>
+
+            <DirectorSection
+              id="vtt-board-tokens-section"
+              title="Tokens e jogadores"
+              summary={selectedToken?.label || 'Posicionar e atribuir peças'}
+              badge={`${tokens.length} ${tokens.length === 1 ? 'peça' : 'peças'}`}
+              open={directorSections.tokens}
+              onToggle={() => toggleDirectorSection('tokens')}
+            >
 
             <div className="vtt-board__spawn">
               <label className="vtt-board__field" htmlFor="vtt-board-token-asset">
@@ -1214,6 +1417,17 @@ export default function VttBoard({
             >
               Remover token selecionado
             </button>
+
+            </DirectorSection>
+
+            <DirectorSection
+              id="vtt-board-props-section"
+              title="Objetos de cenário"
+              summary={selectedProp?.label || 'Posicionar e ajustar objetos'}
+              badge={`${props.length} ${props.length === 1 ? 'objeto' : 'objetos'}`}
+              open={directorSections.props}
+              onToggle={() => toggleDirectorSection('props')}
+            >
 
             <div className="vtt-board__prop-editor">
               <label className="vtt-board__field" htmlFor="vtt-board-prop-asset">
@@ -1340,6 +1554,8 @@ export default function VttBoard({
                 Remover objeto selecionado
               </button>
             </div>
+
+            </DirectorSection>
 
             <p className="vtt-board__director-note">
               A mesa sincroniza posições e efeitos. Rolagens continuam sendo feitas com dados físicos.
