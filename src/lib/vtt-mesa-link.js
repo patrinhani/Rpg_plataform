@@ -9,7 +9,7 @@ import {
 
 export async function vincularVttMesa(
   mesaId,
-  campaignId = 'mnemosyne',
+  campaignId = 'caos-empty',
   roomId = '',
   serverOrigin = undefined,
 ) {

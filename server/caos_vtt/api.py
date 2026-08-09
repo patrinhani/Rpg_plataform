@@ -205,13 +205,8 @@ def create_router() -> APIRouter:
                 detail="Nao foi possivel validar a Mesa no Firestore agora",
             ) from None
 
-        catalog = service.catalog
-        if catalog is None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Este servidor nao carregou uma campanha VTT",
-            )
-        if member.campaign_id != catalog.campaign_id:
+        active_campaign_id = service.active_campaign_id
+        if member.campaign_id != active_campaign_id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A campanha desta Mesa nao esta carregada neste servidor",
@@ -219,7 +214,7 @@ def create_router() -> APIRouter:
         if member.role == "master":
             room = await service.ensure_room_for_mesa(
                 member.room_name,
-                campaign_id=catalog.campaign_id,
+                campaign_id=active_campaign_id,
                 external_mesa_id=member.mesa_id,
             )
         else:
@@ -282,8 +277,7 @@ def create_router() -> APIRouter:
             )
         service: VTTService = request.app.state.vtt
         if payload.campaignId:
-            catalog = service.catalog
-            if catalog is None or payload.campaignId != catalog.campaign_id:
+            if payload.campaignId != service.active_campaign_id:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="A campanha solicitada nao esta carregada neste servidor",

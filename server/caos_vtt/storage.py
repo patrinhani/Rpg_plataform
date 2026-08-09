@@ -4,12 +4,26 @@ import json
 import sqlite3
 import threading
 import warnings
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 
 DATABASE_SCHEMA_VERSION = 1
+FIRESTORE_STORAGE_ENCODING = "zlib-json-v1"
+MAX_FIRESTORE_COMPRESSED_BYTES = 900_000
+MAX_FIRESTORE_DECOMPRESSED_BYTES = 8 * 1024 * 1024
+
+
+class RoomStateStoreBackend(Protocol):
+    """Persistence contract used by the VTT independently of its provider."""
+
+    def load_all(self) -> tuple[tuple[str, dict[str, Any]], ...]: ...
+
+    def save(self, payload: dict[str, Any]) -> None: ...
+
+    def quarantine(self, room_id: str, payload: dict[str, Any] | str, reason: str) -> None: ...
 
 
 class RoomStateStore:
@@ -173,4 +187,119 @@ class RoomStateStore:
         return quarantined
 
 
-__all__ = ["RoomStateStore"]
+def _encode_firestore_payload(payload: dict[str, Any]) -> bytes:
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    compressed = zlib.compress(encoded, level=9)
+    if len(compressed) > MAX_FIRESTORE_COMPRESSED_BYTES:
+        raise ValueError("Estado da sala excede o limite seguro de um documento Firestore")
+    return compressed
+
+
+def _decode_firestore_payload(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes()
+    if not isinstance(raw, bytes) or len(raw) > MAX_FIRESTORE_COMPRESSED_BYTES:
+        raise ValueError("Payload Firestore invalido")
+
+    decompressor = zlib.decompressobj()
+    decoded = decompressor.decompress(raw, MAX_FIRESTORE_DECOMPRESSED_BYTES + 1)
+    if (
+        len(decoded) > MAX_FIRESTORE_DECOMPRESSED_BYTES
+        or decompressor.unconsumed_tail
+        or not decompressor.eof
+    ):
+        raise ValueError("Payload Firestore excede o limite descompactado")
+    try:
+        payload = json.loads(decoded.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("Payload Firestore nao contem JSON valido") from error
+    if not isinstance(payload, dict):
+        raise ValueError("Payload Firestore nao e um objeto")
+    return payload
+
+
+class FirestoreRoomStateStore:
+    """Durable room snapshots for ephemeral cloud runtimes such as Render."""
+
+    def __init__(
+        self,
+        project_id: str,
+        collection_name: str = "vttRoomStates",
+        *,
+        client: Any | None = None,
+    ) -> None:
+        if client is None:
+            try:
+                from google.cloud import firestore
+            except ImportError as error:  # pragma: no cover - installation failure
+                raise RuntimeError(
+                    "Instale google-cloud-firestore para usar persistencia Firestore"
+                ) from error
+            client = firestore.Client(project=project_id)
+        self._rooms = client.collection(collection_name)
+        self._quarantine = client.collection(f"{collection_name}Quarantine")
+
+    def load_all(self) -> tuple[tuple[str, dict[str, Any]], ...]:
+        payloads: list[tuple[str, dict[str, Any]]] = []
+        for snapshot in self._rooms.stream():
+            room_id = str(snapshot.id)
+            document = snapshot.to_dict()
+            try:
+                if not isinstance(document, dict):
+                    raise ValueError("Documento Firestore invalido")
+                if document.get("encoding") != FIRESTORE_STORAGE_ENCODING:
+                    raise ValueError("Codificacao Firestore desconhecida")
+                if document.get("roomId") != room_id:
+                    raise ValueError("roomId diverge do documento Firestore")
+                payload = _decode_firestore_payload(document.get("payload"))
+            except (TypeError, ValueError, zlib.error) as error:
+                warnings.warn(
+                    f"Uma sala Firestore invalida foi ignorada: {error}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self.quarantine(room_id, str(document), str(error))
+                continue
+            payloads.append((room_id, payload))
+        payloads.sort(key=lambda item: item[0])
+        return tuple(payloads)
+
+    def save(self, payload: dict[str, Any]) -> None:
+        room_id = str(payload["roomId"])
+        self._rooms.document(room_id).set(
+            {
+                "encoding": FIRESTORE_STORAGE_ENCODING,
+                "roomId": room_id,
+                "externalMesaId": payload.get("externalMesaId"),
+                "payload": _encode_firestore_payload(payload),
+                "updatedAt": datetime.now(UTC),
+            }
+        )
+
+    def quarantine(self, room_id: str, payload: dict[str, Any] | str, reason: str) -> None:
+        encoded = (
+            payload
+            if isinstance(payload, str)
+            else json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        )
+        self._quarantine.document().set(
+            {
+                "roomId": room_id,
+                "payloadPreview": encoded[:32_000],
+                "reason": str(reason)[:1_000],
+                "quarantinedAt": datetime.now(UTC),
+            }
+        )
+        self._rooms.document(room_id).delete()
+
+
+__all__ = [
+    "FirestoreRoomStateStore",
+    "RoomStateStore",
+    "RoomStateStoreBackend",
+]

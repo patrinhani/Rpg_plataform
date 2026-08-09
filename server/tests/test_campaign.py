@@ -173,6 +173,17 @@ def _load(manifest_path: Path, source_root: Path) -> CampaignCatalog:
     return CampaignCatalog.load(manifest_path, {"memoria": source_root})
 
 
+def test_load_single_root_uses_manifest_source_ref(tmp_path: Path) -> None:
+    manifest_path, source_root, manifest, _ids = _campaign_fixture(tmp_path)
+    manifest["campaign"]["sourceRef"] = "campanha-personalizada"
+    _write_manifest(manifest_path, manifest)
+
+    catalog = CampaignCatalog.load_single_root(manifest_path, source_root)
+
+    assert catalog.source_ref == "campanha-personalizada"
+    assert catalog.campaign_id == "memoria"
+
+
 def _add_prop_state_assets(
     source_root: Path,
     manifest: dict[str, Any],

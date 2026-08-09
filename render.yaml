@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: caos-vtt
+    runtime: python
+    region: virginia
+    plan: free
+    rootDir: server
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m caos_vtt
+    healthCheckPath: /api/vtt/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: CAOS_VTT_HOST_TOKEN
+        generateValue: true
+      - key: CAOS_VTT_ALLOWED_ORIGINS
+        sync: false
+      - key: CAOS_VTT_FIREBASE_PROJECT_ID
+        value: sistemarpg-14d7d
+      - key: CAOS_VTT_STATE_BACKEND
+        value: firestore
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-service-account.json

@@ -48,11 +48,12 @@ from .models import (
     TokenRemoveCommand,
     TokenSpawnCommand,
 )
-from .storage import RoomStateStore
+from .storage import RoomStateStore, RoomStateStoreBackend
 
 
 PROTOCOL_VERSION = 1
 DEMO_TOKEN_ID = "demo-token"
+EMPTY_CAMPAIGN_ID = "caos-empty"
 ROOM_ALPHABET = string.ascii_uppercase + string.digits
 MEDIA_TOKEN_TTL_SECONDS = 12 * 60 * 60
 MESA_CHALLENGE_TTL_SECONDS = 2 * 60
@@ -259,7 +260,10 @@ class VTTService:
         max_media_grants_per_room: int = DEFAULT_MAX_MEDIA_GRANTS_PER_ROOM,
         catalog: CampaignCatalog | None = None,
         state_db_path: Path | None = None,
+        state_store: RoomStateStoreBackend | None = None,
     ) -> None:
+        if state_db_path is not None and state_store is not None:
+            raise ValueError("Informe state_db_path ou state_store, nunca ambos")
         self.ticket_ttl_seconds = ticket_ttl_seconds
         self.media_ttl_seconds = MEDIA_TOKEN_TTL_SECONDS
         self.max_pending_tickets_per_room = max_pending_tickets_per_room
@@ -278,13 +282,19 @@ class VTTService:
         self._fog_cache_lock = asyncio.Lock()
         self._rooms_lock = asyncio.Lock()
         self._access_lock = asyncio.Lock()
-        self._store = RoomStateStore(state_db_path) if state_db_path is not None else None
+        self._store = state_store
+        if self._store is None and state_db_path is not None:
+            self._store = RoomStateStore(state_db_path)
         if self._store is not None:
             self._restore_rooms()
 
     @property
     def has_catalog(self) -> bool:
         return self.catalog is not None
+
+    @property
+    def active_campaign_id(self) -> str:
+        return self.catalog.campaign_id if self.catalog is not None else EMPTY_CAMPAIGN_ID
 
     async def create_room(
         self,
@@ -326,8 +336,7 @@ class VTTService:
                     name=name.strip(),
                     master_invite_digest=_token_digest(master_invite),
                     player_invite_digest=_token_digest(player_invite),
-                    campaign_id=campaign_id
-                    or (self.catalog.campaign_id if self.catalog else None),
+                    campaign_id=campaign_id or self.active_campaign_id,
                     external_mesa_id=external_mesa_id,
                 )
                 if self.catalog is not None:
@@ -1277,7 +1286,7 @@ class VTTService:
             await asyncio.to_thread(self._store.save, payload)
         except Exception as error:
             room.persistence_warning = (
-                "A sessao continua ativa, mas a ultima alteracao nao foi salva no disco."
+                "A sessao continua ativa, mas a ultima alteracao nao foi salva no armazenamento."
             )
             warnings.warn(
                 f"Nao foi possivel persistir a sala {room.room_id}: {error}",
@@ -1375,7 +1384,7 @@ class VTTService:
     def _restore_rooms(self) -> None:
         assert self._store is not None
         for stored_room_id, payload in self._store.load_all():
-            expected_campaign = self.catalog.campaign_id if self.catalog is not None else None
+            expected_campaign = self.active_campaign_id
             if payload.get("campaignId") != expected_campaign:
                 # Keep rooms from another campaign intact for a later matching launch.
                 continue
@@ -1431,7 +1440,7 @@ class VTTService:
         campaign_id = payload.get("campaignId")
         if campaign_id is not None and not isinstance(campaign_id, str):
             raise ValueError("campaignId invalido")
-        expected_campaign = self.catalog.campaign_id if self.catalog is not None else None
+        expected_campaign = self.active_campaign_id
         if campaign_id != expected_campaign:
             raise ValueError("sala pertence a outra campanha")
 

@@ -69,7 +69,7 @@ export async function requestMesaVttAccess({
   }
   const role = mesa.mestre === uid ? 'master' : 'player';
   const roomName = String(mesa.nome || '').trim();
-  const campaignId = String(mesa.vtt?.campaignId || 'mnemosyne').trim();
+  const campaignId = String(mesa.vtt?.campaignId || 'caos-empty').trim();
   if (!roomName) throw new Error('A Mesa nao possui um nome valido.');
 
   const grantRef = doc(db, 'vttAccessGrants', challenge);

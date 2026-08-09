@@ -11,6 +11,17 @@ from .config import Settings
 from .frontend import mount_frontend
 from .firestore_auth import FirestoreMesaGrantVerifier
 from .service import VTTService
+from .storage import FirestoreRoomStateStore, RoomStateStoreBackend
+
+
+def _state_store(settings: Settings) -> RoomStateStoreBackend | None:
+    if settings.state_backend != "firestore":
+        return None
+    assert settings.firebase_project_id is not None
+    return FirestoreRoomStateStore(
+        settings.firebase_project_id,
+        settings.firestore_state_collection,
+    )
 
 
 def create_app(
@@ -29,6 +40,7 @@ def create_app(
     )
     app.state.settings = resolved
     app.state.catalog = catalog
+    app.state.persistence_backend = resolved.state_backend
     app.state.mesa_grant_verifier = (
         FirestoreMesaGrantVerifier(resolved.firebase_project_id)
         if resolved.firebase_project_id is not None
@@ -39,7 +51,10 @@ def create_app(
         max_pending_tickets_per_room=resolved.max_pending_tickets_per_room,
         max_media_grants_per_room=resolved.max_media_grants_per_room,
         catalog=catalog,
-        state_db_path=resolved.state_db_path,
+        state_db_path=(
+            resolved.state_db_path if resolved.state_backend == "sqlite" else None
+        ),
+        state_store=_state_store(resolved),
     )
     app.add_middleware(
         CORSMiddleware,

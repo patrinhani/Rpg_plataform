@@ -19,9 +19,9 @@ def _catalog_from_env() -> CampaignCatalog | None:
         )
     if not manifest_value:
         return None
-    return CampaignCatalog.load(
+    return CampaignCatalog.load_single_root(
         Path(manifest_value),
-        {"mnemosyne": Path(root_value)},
+        Path(root_value),
     )
 
 

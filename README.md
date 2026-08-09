@@ -36,7 +36,7 @@ Depois, abra dois terminais na raiz do projeto:
 # Terminal 1 — frontend em http://localhost:5173
 npm run dev
 
-# Terminal 2 — backend na porta 8765 com a campanha
+# Terminal 2 — backend na porta 8765 com uma campanha de exemplo opcional
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1 `
   -CampaignManifest .\tools\campaign_manifest\generated\mnemosyne.manifest.json `
   -CampaignRoot "F:\RPG\mnemosyne\projeto-mnemosyne-rpg"
@@ -44,7 +44,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1 
 
 Como atalho, dê dois cliques em `Iniciar C.A.O.S. Atual.bat`: ele abre os dois serviços em janelas separadas e carrega `http://localhost:5173`. Se a campanha estiver em outro caminho, defina `CAOS_VTT_CAMPAIGN_ROOT` antes de executar.
 
-O backend gera um host token temporário, mostra o valor no terminal e não grava o segredo em disco. Use `-Port 9000` para trocar a porta ou `-AllowedOrigins "https://seu-app.vercel.app"` para autorizar outro frontend. `CampaignManifest` e `CampaignRoot` sempre são informados juntos; sem ambos o VTT inicia no modo de demonstração.
+O backend gera um host token temporário, mostra o valor no terminal e não grava o segredo em disco. Use `-Port 9000` para trocar a porta ou `-AllowedOrigins "https://seu-app.vercel.app"` para autorizar outro frontend. `CampaignManifest` e `CampaignRoot` sempre são informados juntos; sem ambos o VTT inicia no espaço genérico `caos-empty`. A campanha Mnemosyne acima é apenas um exemplo opcional para uma mesa e não faz parte fixa da plataforma.
 
 Abra `http://localhost:5173/vtt-lab`. A mesa nunca faz rolagens automáticas. O link do jogador é gerado dentro da sala e contém apenas o convite de jogador.
 

@@ -11,6 +11,7 @@ export default defineConfig([
     'server/.artifacts',
     'server/.build',
     'server/.cache',
+    '**/.pytest_cache',
   ]),
   {
     files: ['**/*.{js,jsx}'],

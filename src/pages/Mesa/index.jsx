@@ -305,7 +305,7 @@ export default function Mesa() {
 
   const abrirVtt = useCallback(() => {
     if (!mesaId || !mesaData) return;
-    const campaignId = String(mesaData.vtt?.campaignId || 'mnemosyne');
+    const campaignId = String(mesaData.vtt?.campaignId || 'caos-empty');
     const linkedRoomId = normalizeVttRoomId(mesaData.vtt?.roomId);
     const serverOrigin = normalizeVttServerOrigin(mesaData.vtt?.serverOrigin);
     if (!souMestre && !serverOrigin) {

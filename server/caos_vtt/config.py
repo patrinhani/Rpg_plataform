@@ -8,6 +8,8 @@ from urllib.parse import urlsplit
 
 
 _FIREBASE_PROJECT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
+_FIRESTORE_COLLECTION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+_STATE_BACKENDS = frozenset({"firestore", "memory", "sqlite"})
 
 
 def _normalise_origin(value: str) -> str:
@@ -51,8 +53,11 @@ class Settings:
     max_media_grants_per_room: int = 64
     bind_host: str = "127.0.0.1"
     bind_port: int = 8765
+    allow_public_bind: bool = False
+    state_backend: str = "sqlite"
     state_db_path: Path | None = None
     firebase_project_id: str | None = None
+    firestore_state_collection: str = "vttRoomStates"
 
     def __post_init__(self) -> None:
         token = self.host_token.strip()
@@ -74,10 +79,19 @@ class Settings:
             )
         if not 1 <= self.bind_port <= 65535:
             raise ValueError("CAOS_VTT_PORT invalida")
-        if self.bind_host not in {"127.0.0.1", "localhost", "::1"}:
+        allowed_bind_hosts = {"127.0.0.1", "localhost", "::1"}
+        if self.allow_public_bind:
+            allowed_bind_hosts.add("0.0.0.0")
+        if self.bind_host not in allowed_bind_hosts:
             raise ValueError("CAOS_VTT_HOST deve permanecer restrito ao loopback")
 
+        state_backend = self.state_backend.strip().lower()
+        if state_backend not in _STATE_BACKENDS:
+            raise ValueError("CAOS_VTT_STATE_BACKEND deve ser firestore, memory ou sqlite")
+
         state_db_path = self.state_db_path
+        if state_backend != "sqlite" and state_db_path is not None:
+            raise ValueError("CAOS_VTT_STATE_DB so pode ser usado com backend sqlite")
         if state_db_path is not None:
             state_db_path = state_db_path.expanduser().resolve(strict=False)
             if state_db_path.exists() and not state_db_path.is_file():
@@ -88,29 +102,63 @@ class Settings:
             firebase_project_id = firebase_project_id.strip()
             if not _FIREBASE_PROJECT_ID_PATTERN.fullmatch(firebase_project_id):
                 raise ValueError("CAOS_VTT_FIREBASE_PROJECT_ID invalido")
+        if state_backend == "firestore" and firebase_project_id is None:
+            raise ValueError(
+                "CAOS_VTT_FIREBASE_PROJECT_ID e obrigatorio com persistencia Firestore"
+            )
 
+        firestore_state_collection = self.firestore_state_collection.strip()
+        if not _FIRESTORE_COLLECTION_PATTERN.fullmatch(firestore_state_collection):
+            raise ValueError("CAOS_VTT_FIRESTORE_STATE_COLLECTION invalida")
+
+        object.__setattr__(self, "state_backend", state_backend)
         object.__setattr__(self, "host_token", token)
         object.__setattr__(self, "allowed_origins", origins)
         object.__setattr__(self, "state_db_path", state_db_path)
         object.__setattr__(self, "firebase_project_id", firebase_project_id)
+        object.__setattr__(
+            self,
+            "firestore_state_collection",
+            firestore_state_collection,
+        )
 
     @classmethod
     def from_env(cls) -> "Settings":
+        render_mode = os.getenv("RENDER", "").strip().lower() == "true"
         host_token = os.getenv("CAOS_VTT_HOST_TOKEN", "").strip()
         if not host_token:
             raise RuntimeError("Defina CAOS_VTT_HOST_TOKEN antes de iniciar o servidor")
 
-        raw_origins = os.getenv(
-            "CAOS_VTT_ALLOWED_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173",
-        )
+        raw_origins = os.getenv("CAOS_VTT_ALLOWED_ORIGINS", "").strip()
+        if not raw_origins:
+            if render_mode:
+                raise RuntimeError(
+                    "Defina CAOS_VTT_ALLOWED_ORIGINS com a origem HTTPS da aplicacao"
+                )
+            raw_origins = "http://localhost:5173,http://127.0.0.1:5173"
         origins = tuple(item for item in raw_origins.split(",") if item.strip())
+        state_backend = os.getenv(
+            "CAOS_VTT_STATE_BACKEND",
+            "firestore" if render_mode else "sqlite",
+        ).strip().lower()
         raw_state_db = os.getenv("CAOS_VTT_STATE_DB", "").strip()
-        state_db_path = (
-            Path(raw_state_db)
-            if raw_state_db
-            else Path(".artifacts") / "caos-vtt-state.sqlite3"
-        )
+        state_db_path = None
+        if state_backend == "sqlite":
+            state_db_path = (
+                Path(raw_state_db)
+                if raw_state_db
+                else Path(".artifacts") / "caos-vtt-state.sqlite3"
+            )
+        elif raw_state_db:
+            raise RuntimeError("CAOS_VTT_STATE_DB nao pode ser usado fora do backend sqlite")
+
+        firebase_project_id = os.getenv(
+            "CAOS_VTT_FIREBASE_PROJECT_ID",
+            "",
+        ).strip() or None
+        raw_port = os.getenv("CAOS_VTT_PORT", "").strip()
+        if not raw_port:
+            raw_port = os.getenv("PORT", "10000" if render_mode else "8765").strip()
         return cls(
             host_token=host_token,
             allowed_origins=origins,
@@ -121,11 +169,18 @@ class Settings:
             max_media_grants_per_room=int(
                 os.getenv("CAOS_VTT_MAX_MEDIA_GRANTS_PER_ROOM", "64")
             ),
-            bind_host=os.getenv("CAOS_VTT_HOST", "127.0.0.1"),
-            bind_port=int(os.getenv("CAOS_VTT_PORT", "8765")),
+            bind_host=os.getenv(
+                "CAOS_VTT_HOST",
+                "0.0.0.0" if render_mode else "127.0.0.1",
+            ),
+            bind_port=int(raw_port),
+            allow_public_bind=render_mode,
+            state_backend=state_backend,
             state_db_path=state_db_path,
-            firebase_project_id=(
-                os.getenv("CAOS_VTT_FIREBASE_PROJECT_ID", "").strip() or None
+            firebase_project_id=firebase_project_id,
+            firestore_state_collection=os.getenv(
+                "CAOS_VTT_FIRESTORE_STATE_COLLECTION",
+                "vttRoomStates",
             ),
         )
 

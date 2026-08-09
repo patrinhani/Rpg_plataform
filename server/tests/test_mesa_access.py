@@ -110,6 +110,33 @@ def test_mesa_access_derives_role_and_reuses_room_without_receiving_firebase_tok
     assert calls[0][0] != calls[1][0]
 
 
+def test_integrated_mesa_can_use_generic_empty_workspace() -> None:
+    app = create_app(
+        Settings(
+            host_token=HOST_TOKEN,
+            allowed_origins=(ORIGIN,),
+            ticket_ttl_seconds=60,
+        )
+    )
+    app.state.mesa_grant_verifier = _FakeVerifier(
+        member=_member("master", campaign_id="caos-empty")
+    )
+
+    with TestClient(app) as client:
+        access = _request(client)
+        assert access.status_code == 200
+        payload = access.json()
+        assert payload["role"] == "master"
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{payload['roomId']}?ticket={payload['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as socket:
+            snapshot = socket.receive_json()
+            assert snapshot["role"] == "master"
+            assert snapshot["roomId"] == payload["roomId"]
+            assert snapshot["state"]["tokens"]["demo-token"]["label"] == "Agente de teste"
+
+
 def test_player_cannot_create_a_mesa_room_before_master(tmp_path: Path) -> None:
     app, _catalog, _ids = _catalog_app(tmp_path)
     app.state.mesa_grant_verifier = _FakeVerifier(member=_member("player"))

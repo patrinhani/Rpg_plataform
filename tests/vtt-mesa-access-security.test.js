@@ -38,6 +38,20 @@ test('regras derivam master ou player da Mesa e bloqueiam enumeracao', async () 
   assert.match(rules, /allow get: if resource\.data\.issuedAt is timestamp/);
   assert.match(rules, /allow list, update: if false/);
   assert.match(rules, /duration\.value\(5, 'm'\)/);
+  assert.match(rules, /: 'caos-empty';/);
+  assert.doesNotMatch(rules, /: 'mnemosyne';/);
+});
+
+test('mesa sem pacote usa workspace vazio sem fixar campanha de exemplo', async () => {
+  const [grantHelper, mesaLink, mesaPage] = await Promise.all([
+    read('../src/lib/vtt-mesa-access.js'),
+    read('../src/lib/vtt-mesa-link.js'),
+    read('../src/pages/Mesa/index.jsx'),
+  ]);
+  const runtime = [grantHelper, mesaLink, mesaPage].join('\n');
+
+  assert.match(runtime, /caos-empty/);
+  assert.doesNotMatch(runtime, /\|\| 'mnemosyne'/);
 });
 
 test('backend consulta grant anonimo sem cabecalho Firebase', async () => {

@@ -10,6 +10,45 @@ def test_server_is_restricted_to_loopback() -> None:
         Settings(host_token="host-token-for-tests-123456", bind_host="0.0.0.0")
 
 
+def test_render_environment_uses_public_port_and_firestore(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RENDER", "true")
+    monkeypatch.setenv("PORT", "10000")
+    monkeypatch.setenv("CAOS_VTT_HOST_TOKEN", "host-token-for-tests-123456")
+    monkeypatch.setenv("CAOS_VTT_ALLOWED_ORIGINS", "https://caos.example.test")
+    monkeypatch.setenv("CAOS_VTT_FIREBASE_PROJECT_ID", "sistemarpg-14d7d")
+    monkeypatch.delenv("CAOS_VTT_STATE_BACKEND", raising=False)
+    monkeypatch.delenv("CAOS_VTT_STATE_DB", raising=False)
+
+    settings = Settings.from_env()
+
+    assert settings.bind_host == "0.0.0.0"
+    assert settings.bind_port == 10000
+    assert settings.allow_public_bind is True
+    assert settings.state_backend == "firestore"
+    assert settings.state_db_path is None
+
+
+def test_render_requires_explicit_browser_origin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RENDER", "true")
+    monkeypatch.setenv("CAOS_VTT_HOST_TOKEN", "host-token-for-tests-123456")
+    monkeypatch.delenv("CAOS_VTT_ALLOWED_ORIGINS", raising=False)
+
+    with pytest.raises(RuntimeError, match="CAOS_VTT_ALLOWED_ORIGINS"):
+        Settings.from_env()
+
+
+def test_firestore_state_requires_project_id() -> None:
+    with pytest.raises(ValueError, match="CAOS_VTT_FIREBASE_PROJECT_ID"):
+        Settings(
+            host_token="host-token-for-tests-123456",
+            state_backend="firestore",
+        )
+
+
 def test_origins_reject_query_and_fragment() -> None:
     with pytest.raises(ValueError, match="Origem invalida"):
         Settings(

@@ -933,6 +933,21 @@ class CampaignCatalog:
             master_reference_ids=master_reference_ids,
         )
 
+    @classmethod
+    def load_single_root(
+        cls,
+        manifest_path: str | os.PathLike[str],
+        source_root: str | os.PathLike[str],
+    ) -> "CampaignCatalog":
+        """Loads any valid campaign without hard-coding its logical source name."""
+
+        manifest = _read_manifest(manifest_path)
+        campaign = _expect_object(manifest.get("campaign"), "campaign")
+        source_ref = _expect_string(campaign.get("sourceRef"), "campaign.sourceRef")
+        if not _SOURCE_REF_PATTERN.fullmatch(source_ref):
+            raise ManifestValidationError("campaign.sourceRef nao e uma referencia logica valida")
+        return cls.load(manifest_path, {source_ref: source_root})
+
     @property
     def hash_cache_size(self) -> int:
         with self._hash_cache_lock:

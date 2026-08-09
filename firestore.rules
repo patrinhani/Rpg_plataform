@@ -38,7 +38,7 @@ service cloud.firestore {
         && 'campaignId' in dados.vtt
         && dados.vtt.campaignId is string
         ? dados.vtt.campaignId
-        : 'mnemosyne';
+        : 'caos-empty';
     }
 
     function criacaoGrantVttValida(grantId) {
