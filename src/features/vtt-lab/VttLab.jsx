@@ -21,6 +21,7 @@ const BOARD_COMMAND_TYPES = new Set([
   'overlay.set',
   'layer.set',
   'token.spawn',
+  'token.assign',
   'token.move',
   'token.remove',
   'prop.spawn',
@@ -1482,7 +1483,11 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
             <div className="vtt-lab__panel-heading vtt-lab__board-heading">
               <div>
                 <span>Sessão ativa</span>
-                <h2>{campaignState ? 'Mesa Mnemosyne' : 'Aguardando cena'}</h2>
+                <h2>
+                  {campaignState
+                    ? (campaignState.table?.name || launchContext.roomName || 'Mesa virtual')
+                    : 'Aguardando cena'}
+                </h2>
               </div>
               <div className="vtt-lab__board-actions">
                 <button type="button" onClick={handlePing} disabled={!isConnected}>Verificar</button>
@@ -1495,6 +1500,7 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
                 state={campaignState}
                 role={connectedRole || 'player'}
                 connected={isConnected}
+                members={automaticAccess?.members || []}
                 onCommand={sendBoardCommand}
               />
             ) : (

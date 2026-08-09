@@ -63,7 +63,7 @@ No fluxo integrado, o papel vem da Mesa validada: o autor é Mestre e os membros
 
 ## Comandos sincronizados
 
-O protocolo atual é a versão 1. A conexão começa por `room.snapshot`. O Mestre pode usar `scene.select`, `overlay.set`, `token.spawn`, `token.move`, `token.remove`, `prop.spawn`, `prop.update`, `prop.remove`, `fog.set_enabled`, `fog.stroke`, `fog.reset` e `fog.reveal_all`. O jogador só move tokens cujo `controlledBy` permita seu papel. `commandId` torna repetições idempotentes dentro da sala; `ping` recebe `pong`.
+O protocolo atual é a versão 1. A conexão começa por `room.snapshot`. O Mestre pode usar `scene.select`, `overlay.set`, `token.spawn`, `token.assign`, `token.move`, `token.remove`, `prop.spawn`, `prop.update`, `prop.remove`, `fog.set_enabled`, `fog.stroke`, `fog.reset` e `fog.reveal_all`. Em salas integradas a uma Mesa, `token.assign` vincula a instância ao UID de um jogador e o servidor só aceita `token.move` desse controlador; o UID completo aparece apenas no snapshot do Mestre. Salas legadas sem Mesa preservam o controle coletivo definido por `controlledBy`. `commandId` torna repetições idempotentes dentro da sala; `ping` recebe `pong`.
 
 Coordenadas de token são normalizadas entre 0 e 1. Mensagens maiores que 16 KiB, payloads inválidos, IDs conflitantes e ações incompatíveis com o papel são recusados com códigos estáveis.
 

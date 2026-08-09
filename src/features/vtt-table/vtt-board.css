@@ -40,7 +40,7 @@
   border-bottom: 1px solid var(--vtt-board-border);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1fr) auto minmax(150px, 1fr);
+  grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr);
   min-height: 70px;
   padding: 10px 14px;
 }
@@ -146,6 +146,28 @@
   gap: 12px;
   justify-content: flex-end;
   min-width: 0;
+}
+
+.vtt-board__ownership-summary {
+  background: rgba(85, 225, 141, 0.07);
+  border: 1px solid rgba(85, 225, 141, 0.24);
+  border-radius: 999px;
+  color: #89e9ad;
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.vtt-board__director-toggle {
+  background: rgba(43, 167, 244, 0.08);
+  border: 1px solid rgba(74, 186, 255, 0.3);
+  border-radius: 8px;
+  color: #acdfff;
+  font-size: 0.68rem;
+  min-height: 34px;
+  padding: 6px 9px;
+  white-space: nowrap;
 }
 
 .vtt-board__layout {
@@ -388,6 +410,17 @@
   z-index: 6;
 }
 
+.vtt-board__token.is-owned {
+  border-color: #68e59a;
+  box-shadow: 0 5px 13px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(85, 225, 141, 0.24);
+  cursor: move;
+}
+
+.vtt-board__token.is-locked {
+  cursor: not-allowed;
+  filter: saturate(0.72);
+}
+
 .vtt-board__token > img {
   border-radius: inherit;
   height: 100%;
@@ -419,6 +452,22 @@
   top: calc(100% + 5px);
   transform: translateX(-50%);
   white-space: nowrap;
+}
+
+.vtt-board__token-owner-marker {
+  background: #173f2a;
+  border: 1px solid rgba(137, 233, 173, 0.72);
+  border-radius: 999px;
+  color: #baf4cf;
+  font-size: clamp(0.38rem, 0.56vw, 0.5rem);
+  font-style: normal;
+  font-weight: 900;
+  padding: 2px 4px;
+  pointer-events: none;
+  position: absolute;
+  right: -7px;
+  text-transform: uppercase;
+  top: -7px;
 }
 
 .vtt-board__token:hover,
@@ -829,6 +878,42 @@
   gap: 8px;
 }
 
+.vtt-board__token-controller {
+  background: linear-gradient(145deg, rgba(41, 168, 255, 0.08), rgba(1, 7, 11, 0.72));
+  border: 1px solid rgba(79, 181, 241, 0.24);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 11px;
+}
+
+.vtt-board__token-controller > div {
+  display: grid;
+  gap: 3px;
+}
+
+.vtt-board__token-controller > div > span {
+  color: #65c8ff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.vtt-board__token-controller > div > strong {
+  color: #d7ebf6;
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__token-controller > small {
+  color: #7895a6;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
 .vtt-board__spawn button {
   background: linear-gradient(135deg, rgba(19, 128, 196, 0.75), rgba(8, 74, 113, 0.9));
   border-color: rgba(72, 181, 247, 0.45);
@@ -915,6 +1000,10 @@
   .vtt-board__fog-controls,
   .vtt-board__prop-editor {
     grid-column: 1 / -1;
+  }
+
+  .vtt-board__token-controller {
+    align-self: start;
   }
 }
 

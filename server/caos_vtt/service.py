@@ -45,6 +45,7 @@ from .models import (
     Role,
     SceneLayerSetCommand,
     SceneSelectCommand,
+    TokenAssignCommand,
     TokenRemoveCommand,
     TokenSpawnCommand,
 )
@@ -74,6 +75,7 @@ CatalogCommand = (
     | OverlaySetCommand
     | SceneLayerSetCommand
     | TokenSpawnCommand
+    | TokenAssignCommand
     | TokenRemoveCommand
     | PropSpawnCommand
     | PropUpdateCommand
@@ -189,6 +191,7 @@ class CatalogToken:
     size: float
     movable: bool
     visible: bool
+    controller_uid: str | None = None
 
 
 @dataclass(slots=True)
@@ -926,7 +929,11 @@ class VTTService:
         try:
             async with room.broadcast_lock:
                 async with room.lock:
-                    snapshot = self._snapshot(room, role)
+                    snapshot = self._snapshot(
+                        room,
+                        role,
+                        mesa_session.uid if mesa_session is not None else None,
+                    )
                 await connection.send(snapshot)
                 async with room.lock:
                     room.clients.add(connection)
@@ -1013,15 +1020,26 @@ class VTTService:
                             "command_id_conflict",
                             "commandId ja foi usado por outro comando",
                         )
-                    replay = self._catalog_snapshot(room, sender.role)
+                    replay = self._catalog_snapshot(
+                        room,
+                        sender.role,
+                        self._connection_uid(sender),
+                    )
                     payloads = ((sender, replay),)
                 else:
-                    failure = self._apply_catalog_mutation(room, sender.role, command)
+                    failure = self._apply_catalog_mutation(room, sender, command)
                     if failure is not None:
                         return failure
                     room.revision += 1
                     payload_list = [
-                        (client, self._catalog_snapshot(room, client.role))
+                        (
+                            client,
+                            self._catalog_snapshot(
+                                room,
+                                client.role,
+                                self._connection_uid(client),
+                            ),
+                        )
                         for client in room.clients
                     ]
                     room.catalog_commands[command.commandId] = ProcessedCatalogCommand(
@@ -1052,9 +1070,11 @@ class VTTService:
     def _apply_catalog_mutation(
         self,
         room: Room,
-        role: Role,
+        sender: ClientConnection,
         command: CatalogCommand,
     ) -> CatalogCommandFailure | None:
+        role = sender.role
+        sender_uid = self._connection_uid(sender)
         if isinstance(command, (HandoutDeliverCommand, HandoutRevokeCommand)):
             # A funcao do asset so e consultada depois do papel para impedir
             # que jogadores usem respostas diferentes para sondar o catalogo.
@@ -1160,6 +1180,11 @@ class VTTService:
         if isinstance(command, TokenSpawnCommand):
             if role != "master":
                 return CatalogCommandFailure("forbidden", "Somente o mestre cria tokens")
+            if command.payload.controllerUid is not None and room.external_mesa_id is None:
+                return CatalogCommandFailure(
+                    "integrated_mesa_required",
+                    "Controlador individual exige acesso por uma Mesa",
+                )
             tokens = room.scene_tokens.get(room.active_scene_id or "")
             if tokens is None:
                 return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
@@ -1184,10 +1209,37 @@ class VTTService:
                 size=command.payload.size,
                 movable=(
                     command.payload.movable
-                    and asset.controlled_by == "players"
+                    and (
+                        asset.controlled_by == "players"
+                        or command.payload.controllerUid is not None
+                    )
                 ),
                 visible=command.payload.visible,
+                controller_uid=command.payload.controllerUid,
             )
+            return None
+
+        if isinstance(command, TokenAssignCommand):
+            if role != "master":
+                return CatalogCommandFailure(
+                    "master_required",
+                    "Somente o mestre atribui tokens",
+                )
+            if room.external_mesa_id is None:
+                return CatalogCommandFailure(
+                    "integrated_mesa_required",
+                    "Controlador individual exige acesso por uma Mesa",
+                )
+            tokens = room.scene_tokens.get(room.active_scene_id or "")
+            if tokens is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            token = tokens.get(command.payload.tokenId)
+            if token is None:
+                return CatalogCommandFailure("token_not_found", "Token nao encontrado")
+            assert self.catalog is not None
+            asset = self.catalog.get_asset(token.asset_id, "master")
+            token.controller_uid = command.payload.controllerUid
+            token.movable = bool(command.payload.controllerUid) or asset.controlled_by == "players"
             return None
 
         if isinstance(command, PropSpawnCommand):
@@ -1289,6 +1341,10 @@ class VTTService:
                     self.catalog.get_asset(token.asset_id, "player")
                 except AssetNotAvailableError:
                     return CatalogCommandFailure("token_forbidden", "Token nao pode ser movido")
+                if room.external_mesa_id is not None and (
+                    sender_uid is None or token.controller_uid != sender_uid
+                ):
+                    return CatalogCommandFailure("token_forbidden", "Token nao pode ser movido")
             token.x = command.payload.x
             token.y = command.payload.y
             return None
@@ -1338,6 +1394,7 @@ class VTTService:
                         "size": token.size,
                         "movable": token.movable,
                         "visible": token.visible,
+                        "controllerUid": token.controller_uid,
                     }
                     for token in sorted(
                         room.scene_tokens.get(scene_id, {}).values(),
@@ -1709,6 +1766,7 @@ class VTTService:
         size = payload.get("size")
         movable = payload.get("movable")
         visible = payload.get("visible")
+        controller_uid = payload.get("controllerUid")
         if (
             not isinstance(token_id, str)
             or not 1 <= len(token_id) <= 64
@@ -1720,6 +1778,14 @@ class VTTService:
             or any(ord(character) < 32 for character in label)
             or not isinstance(movable, bool)
             or not isinstance(visible, bool)
+            or (
+                controller_uid is not None
+                and (
+                    not isinstance(controller_uid, str)
+                    or not 1 <= len(controller_uid.strip()) <= 128
+                    or any(ord(character) < 32 for character in controller_uid)
+                )
+            )
         ):
             raise ValueError("token persistido invalido")
         if isinstance(size, bool) or not isinstance(size, (int, float)):
@@ -1738,8 +1804,13 @@ class VTTService:
             y=self._normalised_float(payload.get("y"), "token.y"),
             label=label.strip(),
             size=size_float,
-            movable=movable and asset.controlled_by == "players",
+            movable=movable and (
+                asset.controlled_by == "players" or controller_uid is not None
+            ),
             visible=visible,
+            controller_uid=(
+                controller_uid.strip() if isinstance(controller_uid, str) else None
+            ),
         )
 
     def _deserialize_prop(self, payload: Any) -> CatalogProp:
@@ -1905,6 +1976,11 @@ class VTTService:
     ) -> bool:
         return bool(session is not None and (session.revoked or session.expires_at <= now))
 
+    @staticmethod
+    def _connection_uid(connection: ClientConnection) -> str | None:
+        session = connection.mesa_session
+        return session.uid if session is not None else None
+
     async def _revoke_media_digests(self, digests: Iterable[bytes]) -> None:
         async with self._access_lock:
             for digest in digests:
@@ -1945,10 +2021,15 @@ class VTTService:
                 client.media_digest for client in stale
             )
 
-    def _snapshot(self, room: Room, role: Role) -> dict[str, Any]:
+    def _snapshot(
+        self,
+        room: Room,
+        role: Role,
+        uid: str | None = None,
+    ) -> dict[str, Any]:
         if not self._room_uses_catalog(room):
             return self._demo_snapshot(room, role)
-        return self._catalog_snapshot(room, role)
+        return self._catalog_snapshot(room, role, uid)
 
     @staticmethod
     def _demo_snapshot(room: Room, role: Role) -> dict[str, Any]:
@@ -1970,7 +2051,12 @@ class VTTService:
             },
         }
 
-    def _catalog_snapshot(self, room: Room, role: Role) -> dict[str, Any]:
+    def _catalog_snapshot(
+        self,
+        room: Room,
+        role: Role,
+        uid: str | None = None,
+    ) -> dict[str, Any]:
         assert self._room_uses_catalog(room)
         scenes = self.catalog.list_scenes(role)
         scene_by_id = {scene.scene_id: scene for scene in scenes}
@@ -1994,9 +2080,18 @@ class VTTService:
                     "y": token.y,
                     "label": token.label,
                     "size": token.size,
-                    "movable": token.movable,
+                    "movable": (
+                        token.movable
+                        and (
+                            role == "master"
+                            or room.external_mesa_id is None
+                            or token.controller_uid == uid
+                        )
+                    ),
                     "visible": token.visible,
                 }
+                if role == "master":
+                    tokens[token.token_id]["controllerUid"] = token.controller_uid
             active_fog = room.scene_fog.get(active_scene.scene_id)
             compose_props_for_player = (
                 role == "player" and active_fog is not None and active_fog.enabled

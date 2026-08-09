@@ -188,6 +188,7 @@ class TokenSpawnPayload(BaseModel):
     size: float = Field(default=0.08, ge=0.01, le=0.25)
     movable: StrictBool = True
     visible: StrictBool = True
+    controllerUid: str | None = Field(default=None, min_length=1, max_length=128)
 
     @field_validator("assetId")
     @classmethod
@@ -203,6 +204,16 @@ class TokenSpawnPayload(BaseModel):
         if not label or any(ord(character) < 32 for character in label):
             raise ValueError("label invalido")
         return label
+
+    @field_validator("controllerUid")
+    @classmethod
+    def validate_controller_uid(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        uid = value.strip()
+        if not uid or any(ord(character) < 32 for character in uid):
+            raise ValueError("controllerUid invalido")
+        return uid
 
 
 class TokenSpawnCommand(BaseModel):
@@ -229,6 +240,35 @@ class TokenRemoveCommand(BaseModel):
     type: Literal["token.remove"]
     commandId: str = Field(min_length=1, max_length=100)
     payload: TokenRemovePayload
+
+
+class TokenAssignPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    tokenId: str = Field(
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$",
+    )
+    controllerUid: str | None = Field(default=None, min_length=1, max_length=128)
+
+    @field_validator("controllerUid")
+    @classmethod
+    def validate_controller_uid(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        uid = value.strip()
+        if not uid or any(ord(character) < 32 for character in uid):
+            raise ValueError("controllerUid invalido")
+        return uid
+
+
+class TokenAssignCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["token.assign"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: TokenAssignPayload
 
 
 class PropSpawnPayload(BaseModel):

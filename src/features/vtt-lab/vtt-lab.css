@@ -253,6 +253,47 @@
   max-width: 1700px;
 }
 
+.vtt-lab.is-session-active {
+  padding: clamp(10px, 1.25vw, 20px);
+}
+
+.vtt-lab.is-session-active .vtt-lab__header,
+.vtt-lab.is-session-active .vtt-lab__layout,
+.vtt-lab.is-session-active .vtt-lab__error,
+.vtt-lab.is-session-active .vtt-lab__persistence-warning {
+  max-width: none;
+}
+
+.vtt-lab.is-session-active .vtt-lab__header {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.vtt-lab.is-session-active .vtt-lab__header h1 {
+  font-size: clamp(1.25rem, 2vw, 1.9rem);
+}
+
+.vtt-lab.is-session-active .vtt-lab__header > div > p {
+  display: none;
+}
+
+.vtt-lab.is-session-active .vtt-lab__layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vtt-lab.is-session-active .vtt-lab__control-column,
+.vtt-lab.is-session-active .vtt-lab__log-panel {
+  display: none;
+}
+
+.vtt-lab.is-session-active .vtt-lab__board-panel {
+  padding: 10px;
+}
+
+.vtt-lab.is-session-active .vtt-board__layout {
+  min-height: clamp(520px, calc(100dvh - 235px), 920px);
+}
+
 .vtt-lab__control-column,
 .vtt-lab__workspace {
   display: flex;

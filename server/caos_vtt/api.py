@@ -51,6 +51,7 @@ from .models import (
     SceneLayerSetCommand,
     SceneSelectCommand,
     TicketResponse,
+    TokenAssignCommand,
     TokenRemoveCommand,
     TokenSpawnCommand,
 )
@@ -538,6 +539,7 @@ async def _handle_socket_message(
         "overlay.set": (OverlaySetCommand, "invalid_overlay_set"),
         "layer.set": (SceneLayerSetCommand, "invalid_layer_set"),
         "token.spawn": (TokenSpawnCommand, "invalid_token_spawn"),
+        "token.assign": (TokenAssignCommand, "invalid_token_assign"),
         "token.remove": (TokenRemoveCommand, "invalid_token_remove"),
         "prop.spawn": (PropSpawnCommand, "invalid_prop_spawn"),
         "prop.update": (PropUpdateCommand, "invalid_prop_update"),

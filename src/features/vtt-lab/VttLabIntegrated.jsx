@@ -1,11 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { db } from '../../lib/firebase.js';
 import { vincularVttMesa } from '../../lib/vtt-mesa-link.js';
 import { normalizeVttServerOrigin, readVttLaunchContext } from '../../lib/vtt-link.js';
 import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
 import VttLab from './VttLab.jsx';
+
+const DEV_VTT_MEMBERS = [
+  { uid: 'dev-rafael', name: 'Rafael Nunes' },
+  { uid: 'dev-helena', name: 'Helena Vargas' },
+];
+
+function normalizeMesaPlayers(mesa) {
+  const masterUid = String(mesa?.mestre || '').trim();
+  const seen = new Set();
+  return (Array.isArray(mesa?.jogadores) ? mesa.jogadores : [])
+    .map((member) => ({
+      uid: String(member?.uid || '').trim(),
+      name: String(member?.nome || '').trim() || 'Agente',
+    }))
+    .filter((member) => (
+      member.uid
+      && member.uid !== masterUid
+      && !seen.has(member.uid)
+      && seen.add(member.uid)
+    ));
+}
 
 export default function VttLabIntegrated() {
   const { usuario, devVisualMode } = useAuth();
@@ -15,6 +36,7 @@ export default function VttLabIntegrated() {
   );
   const [resolvedOrigin, setResolvedOrigin] = useState('');
   const [canEditServerUrl, setCanEditServerUrl] = useState(false);
+  const [members, setMembers] = useState(() => (devVisualMode ? DEV_VTT_MEMBERS : []));
   const [originReady, setOriginReady] = useState(
     () => devVisualMode || !launchContext.mesaId,
   );
@@ -22,26 +44,34 @@ export default function VttLabIntegrated() {
   useEffect(() => {
     if (devVisualMode || !launchContext.mesaId) return undefined;
 
-    let active = true;
-    void getDoc(doc(db, 'mesas', launchContext.mesaId))
-      .then((snapshot) => {
-        if (!active || !snapshot.exists()) return;
+    let firstSnapshotResolved = false;
+    const markOriginReady = () => {
+      if (firstSnapshotResolved) return;
+      firstSnapshotResolved = true;
+      setOriginReady(true);
+    };
+    const unsubscribe = onSnapshot(
+      doc(db, 'mesas', launchContext.mesaId),
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          markOriginReady();
+          return;
+        }
         const mesa = snapshot.data();
         const origin = normalizeVttServerOrigin(mesa?.vtt?.serverOrigin);
         setCanEditServerUrl(mesa?.mestre === usuario?.uid);
+        setMembers(normalizeMesaPlayers(mesa));
         if (origin) setResolvedOrigin(origin);
-      })
-      .catch(() => {
+        markOriginReady();
+      },
+      () => {
         // A leitura serve apenas para recuperar a origem. A autorização real
         // continua sendo feita pelo grant curto validado no Firestore.
-      })
-      .finally(() => {
-        if (active) setOriginReady(true);
-      });
+        markOriginReady();
+      },
+    );
 
-    return () => {
-      active = false;
-    };
+    return unsubscribe;
   }, [devVisualMode, launchContext.mesaId, usuario?.uid]);
 
   const automaticAccess = useMemo(() => ({
@@ -55,7 +85,8 @@ export default function VttLabIntegrated() {
     initialServerUrl: resolvedOrigin,
     autoStart: Boolean(resolvedOrigin),
     canEditServerUrl,
-  }), [canEditServerUrl, devVisualMode, launchContext.mesaId, resolvedOrigin, usuario]);
+    members,
+  }), [canEditServerUrl, devVisualMode, launchContext.mesaId, members, resolvedOrigin, usuario]);
 
   if (!devVisualMode && launchContext.mesaId && !originReady) {
     return (

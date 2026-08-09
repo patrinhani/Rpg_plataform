@@ -41,11 +41,12 @@ def _member(
     mesa_id: str = "mesa-integrada",
     expires_in: float = 300,
     campaign_id: str = "memoria",
+    uid: str | None = None,
 ) -> VerifiedMesaGrant:
     now = datetime.now(UTC)
     return VerifiedMesaGrant(
         mesa_id=mesa_id,
-        uid="uid-mestre" if role == "master" else "uid-jogador",
+        uid=uid or ("uid-mestre" if role == "master" else "uid-jogador"),
         role=role,
         room_name="Mnemosyne",
         campaign_id=campaign_id,
@@ -184,6 +185,135 @@ def test_catalog_is_isolated_to_the_linked_integrated_mesa(tmp_path: Path) -> No
             snapshot = socket.receive_json()
             assert snapshot["state"]["table"]["campaignId"] == "memoria"
             assert "catalog" in snapshot["state"]
+
+
+def test_integrated_token_control_is_bound_to_the_assigned_player_uid(
+    tmp_path: Path,
+) -> None:
+    app, _catalog, ids = _catalog_app(tmp_path)
+    verifier = _FakeVerifier(member=_member("master"))
+    app.state.mesa_grant_verifier = verifier
+
+    with TestClient(app) as client:
+        master_access = _request(client).json()
+        verifier.member = _member("player", uid="uid-jogador-1")
+        player_one_access = _request(client).json()
+        verifier.member = _member("player", uid="uid-jogador-2")
+        player_two_access = _request(client).json()
+        socket_path = f"/ws/vtt/rooms/{master_access['roomId']}"
+
+        with client.websocket_connect(
+            f"{socket_path}?ticket={master_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as master, client.websocket_connect(
+            f"{socket_path}?ticket={player_one_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player_one, client.websocket_connect(
+            f"{socket_path}?ticket={player_two_access['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as player_two:
+            master.receive_json()
+            player_one.receive_json()
+            player_two.receive_json()
+
+            master.send_json(
+                {
+                    "type": "fog.set_enabled",
+                    "commandId": "disable-fog-for-token-ownership-test",
+                    "payload": {"enabled": False},
+                }
+            )
+            master.receive_json()
+            player_one.receive_json()
+            player_two.receive_json()
+
+            master.send_json(
+                {
+                    "type": "token.spawn",
+                    "commandId": "spawn-assigned-token",
+                    "payload": {
+                        "tokenId": "assigned-agent",
+                        "assetId": ids["token_public_gm"],
+                        "label": "Agente atribuido",
+                        "x": 0.4,
+                        "y": 0.4,
+                        "controllerUid": "uid-jogador-1",
+                    },
+                }
+            )
+            master_spawn = master.receive_json()
+            player_one_spawn = player_one.receive_json()
+            player_two_spawn = player_two.receive_json()
+            assert master_spawn["state"]["tokens"]["assigned-agent"]["controllerUid"] == (
+                "uid-jogador-1"
+            )
+            assert player_one_spawn["state"]["tokens"]["assigned-agent"]["movable"] is True
+            assert player_two_spawn["state"]["tokens"]["assigned-agent"]["movable"] is False
+            assert "controllerUid" not in player_one_spawn["state"]["tokens"]["assigned-agent"]
+
+            player_two.send_json(
+                {
+                    "type": "token.move",
+                    "commandId": "wrong-player-move",
+                    "payload": {"tokenId": "assigned-agent", "x": 0.6, "y": 0.6},
+                }
+            )
+            assert player_two.receive_json()["error"]["code"] == "token_forbidden"
+
+            player_one.send_json(
+                {
+                    "type": "token.move",
+                    "commandId": "owner-move",
+                    "payload": {"tokenId": "assigned-agent", "x": 0.55, "y": 0.45},
+                }
+            )
+            master.receive_json()
+            player_one.receive_json()
+            player_two.receive_json()
+
+            master.send_json(
+                {
+                    "type": "token.assign",
+                    "commandId": "transfer-token",
+                    "payload": {
+                        "tokenId": "assigned-agent",
+                        "controllerUid": "uid-jogador-2",
+                    },
+                }
+            )
+            master_transfer = master.receive_json()
+            player_one_transfer = player_one.receive_json()
+            player_two_transfer = player_two.receive_json()
+            assert master_transfer["state"]["tokens"]["assigned-agent"]["controllerUid"] == (
+                "uid-jogador-2"
+            )
+            assert player_one_transfer["state"]["tokens"]["assigned-agent"]["movable"] is False
+            assert player_two_transfer["state"]["tokens"]["assigned-agent"]["movable"] is True
+
+            player_one.send_json(
+                {
+                    "type": "token.assign",
+                    "commandId": "player-cannot-transfer",
+                    "payload": {
+                        "tokenId": "assigned-agent",
+                        "controllerUid": "uid-jogador-1",
+                    },
+                }
+            )
+            assert player_one.receive_json()["error"]["code"] == "master_required"
+
+            player_two.send_json(
+                {
+                    "type": "token.move",
+                    "commandId": "new-owner-move",
+                    "payload": {"tokenId": "assigned-agent", "x": 0.65, "y": 0.5},
+                }
+            )
+            moved_master = master.receive_json()
+            player_one.receive_json()
+            moved_player_two = player_two.receive_json()
+            assert moved_master["state"]["tokens"]["assigned-agent"]["x"] == 0.65
+            assert moved_player_two["state"]["tokens"]["assigned-agent"]["movable"] is True
 
 
 def test_player_cannot_create_a_mesa_room_before_master(tmp_path: Path) -> None:

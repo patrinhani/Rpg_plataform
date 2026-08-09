@@ -129,6 +129,7 @@ export default function VttBoard({
   state = {},
   role = 'player',
   connected = false,
+  members = [],
   onCommand,
 }) {
   const scene = state.scene || null;
@@ -145,6 +146,7 @@ export default function VttBoard({
   const [draftPositions, setDraftPositions] = useState({});
   const [selectedTokenId, setSelectedTokenId] = useState('');
   const [selectedAssetId, setSelectedAssetId] = useState('');
+  const [newTokenControllerUid, setNewTokenControllerUid] = useState('');
   const [selectedPropId, setSelectedPropId] = useState('');
   const [selectedPropAssetId, setSelectedPropAssetId] = useState('');
   const [selectedPropStateAssetId, setSelectedPropStateAssetId] = useState('');
@@ -155,6 +157,7 @@ export default function VttBoard({
   const [nativeZoomLimit, setNativeZoomLimit] = useState(MAX_ZOOM);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideZoom, setGuideZoom] = useState(1);
+  const [directorOpen, setDirectorOpen] = useState(true);
   const [fogEditMode, setFogEditMode] = useState(false);
   const [fogRevealMode, setFogRevealMode] = useState(true);
   const [fogBrushRadius, setFogBrushRadius] = useState(DEFAULT_FOG_BRUSH_RADIUS);
@@ -195,6 +198,19 @@ export default function VttBoard({
     () => (Array.isArray(catalog?.propStateGroups) ? catalog.propStateGroups : []),
     [catalog?.propStateGroups],
   );
+  const controllerMembers = useMemo(() => {
+    const seen = new Set();
+    return (Array.isArray(members) ? members : [])
+      .map((member) => ({
+        uid: String(member?.uid || '').trim(),
+        name: String(member?.name || member?.nome || '').trim() || 'Agente',
+      }))
+      .filter((member) => member.uid && !seen.has(member.uid) && seen.add(member.uid));
+  }, [members]);
+  const selectedToken = useMemo(
+    () => tokens.find((item) => item.id === selectedTokenId) || null,
+    [selectedTokenId, tokens],
+  );
   const selectedProp = useMemo(
     () => props.find((item) => item.id === selectedPropId) || null,
     [props, selectedPropId],
@@ -204,6 +220,9 @@ export default function VttBoard({
     [propStateGroups, selectedProp?.assetId],
   );
   const isMaster = role === 'master';
+  const controlledTokenCount = isMaster
+    ? 0
+    : tokens.filter((token) => token.movable !== false).length;
   const mapWidth = Math.max(1, Number(scene?.map?.width) || 1);
   const mapHeight = Math.max(1, Number(scene?.map?.height) || 1);
   const gridColumns = Math.max(1, Number(scene?.gridHint?.columns) || 1);
@@ -352,6 +371,19 @@ export default function VttBoard({
       setSelectedAssetId(tokenAssets[0].assetId);
     }
   }, [selectedAssetId, tokenAssets]);
+
+  useEffect(() => {
+    if (
+      newTokenControllerUid
+      && !controllerMembers.some((member) => member.uid === newTokenControllerUid)
+    ) {
+      setNewTokenControllerUid('');
+    }
+  }, [controllerMembers, newTokenControllerUid]);
+
+  useEffect(() => {
+    if (selectedTokenId && !selectedToken) setSelectedTokenId('');
+  }, [selectedToken, selectedTokenId]);
 
   useEffect(() => {
     if (!selectedPropAssetId && propAssets[0]?.assetId) {
@@ -671,6 +703,15 @@ export default function VttBoard({
       x: 0.5,
       y: 0.5,
       size: DEFAULT_TOKEN_SIZE,
+      ...(newTokenControllerUid ? { controllerUid: newTokenControllerUid } : {}),
+    });
+  };
+
+  const handleAssignSelectedToken = (controllerUid) => {
+    if (!selectedTokenId) return;
+    emitCommand('token.assign', {
+      tokenId: selectedTokenId,
+      controllerUid: controllerUid || null,
     });
   };
 
@@ -745,13 +786,30 @@ export default function VttBoard({
         </div>
 
         <div className="vtt-board__session-actions">
+          {!isMaster && connected && (
+            <span className="vtt-board__ownership-summary">
+              {controlledTokenCount === 0
+                ? 'Nenhuma peça atribuída'
+                : `${controlledTokenCount} ${controlledTokenCount === 1 ? 'peça sua' : 'peças suas'}`}
+            </span>
+          )}
           <span className={`vtt-board__connection is-${connected ? 'online' : 'offline'}`}>
           {connected ? (isMaster ? 'Mestre conectado' : 'Jogador conectado') : 'Sem conexão'}
           </span>
+          {isMaster && (
+            <button
+              type="button"
+              className="vtt-board__director-toggle"
+              onClick={() => setDirectorOpen((current) => !current)}
+              aria-expanded={directorOpen}
+            >
+              {directorOpen ? 'Ocultar direção' : 'Abrir direção'}
+            </button>
+          )}
         </div>
       </header>
 
-      <div className={`vtt-board__layout ${isMaster ? 'has-director' : ''}`}>
+      <div className={`vtt-board__layout ${isMaster && directorOpen ? 'has-director' : ''}`}>
         <div
           ref={viewportRef}
           className={`vtt-board__viewport ${isPanning ? 'is-panning' : ''}`}
@@ -867,7 +925,7 @@ export default function VttBoard({
                   <button
                     key={token.id}
                     type="button"
-                    className={`vtt-board__token ${selected ? 'is-selected' : ''} ${token.visible === false ? 'is-hidden' : ''}`}
+                    className={`vtt-board__token ${selected ? 'is-selected' : ''} ${token.visible === false ? 'is-hidden' : ''} ${!isMaster && token.movable !== false ? 'is-owned' : ''} ${!isMaster && token.movable === false ? 'is-locked' : ''}`}
                     style={{
                       '--vtt-token-x': `${position.x * 100}%`,
                       '--vtt-token-y': `${position.y * 100}%`,
@@ -890,6 +948,9 @@ export default function VttBoard({
                       />
                     )}
                     <span aria-hidden="true">{tokenInitials(token.label)}</span>
+                    {!isMaster && token.movable !== false && (
+                      <i className="vtt-board__token-owner-marker" aria-hidden="true">Sua</i>
+                    )}
                     <small>{token.label}</small>
                   </button>
                 );
@@ -908,7 +969,7 @@ export default function VttBoard({
           </div>
         </div>
 
-        {isMaster && (
+        {isMaster && directorOpen && (
           <aside className="vtt-board__director" aria-label="Painel de direção do Mestre">
             <div className="vtt-board__director-heading">
               <span>Controle do Mestre</span>
@@ -1093,10 +1154,57 @@ export default function VttBoard({
                   ))}
                 </select>
               </label>
+              {controllerMembers.length > 0 && (
+                <label className="vtt-board__field" htmlFor="vtt-board-new-token-controller">
+                  <span>Controle inicial</span>
+                  <select
+                    id="vtt-board-new-token-controller"
+                    value={newTokenControllerUid}
+                    onChange={(event) => setNewTokenControllerUid(event.target.value)}
+                    disabled={!connected}
+                  >
+                    <option value="">Somente Mestre</option>
+                    {controllerMembers.map((member) => (
+                      <option key={member.uid} value={member.uid}>{member.name}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <button type="button" onClick={handleSpawn} disabled={!connected || !selectedAssetId}>
                 Posicionar no centro
               </button>
             </div>
+
+            <section className="vtt-board__token-controller" aria-labelledby="vtt-board-token-controller-title">
+              <div>
+                <span id="vtt-board-token-controller-title">Token selecionado</span>
+                <strong>{selectedToken?.label || 'Selecione uma peça no mapa'}</strong>
+              </div>
+              <label className="vtt-board__field" htmlFor="vtt-board-token-controller">
+                <span>Quem pode movimentar</span>
+                <select
+                  id="vtt-board-token-controller"
+                  value={selectedToken?.controllerUid || ''}
+                  onChange={(event) => handleAssignSelectedToken(event.target.value)}
+                  disabled={!connected || !selectedToken || controllerMembers.length === 0}
+                >
+                  <option value="">Somente Mestre</option>
+                  {selectedToken?.controllerUid
+                    && !controllerMembers.some((member) => member.uid === selectedToken.controllerUid)
+                    && (
+                      <option value={selectedToken.controllerUid}>Jogador indisponível</option>
+                    )}
+                  {controllerMembers.map((member) => (
+                    <option key={member.uid} value={member.uid}>{member.name}</option>
+                  ))}
+                </select>
+              </label>
+              <small>
+                {controllerMembers.length === 0
+                  ? 'Os jogadores da Mesa aparecerão aqui quando o acesso for integrado.'
+                  : 'A atribuição vale somente para esta peça e é validada pelo servidor.'}
+              </small>
+            </section>
 
             <button
               type="button"
