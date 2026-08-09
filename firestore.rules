@@ -138,10 +138,11 @@ service cloud.firestore {
     match /mesas/{mesaId} {
       allow create: if criacaoDeMesaValida();
       allow get: if membroDaMesa(resource.data);
-      // A consulta com array-contains consegue provar esta condição sem ler a
-      // coleção inteira. A validação estrutural completa ocorre no cliente e nos
-      // updates; regras não podem usar condições adicionais como filtros.
-      allow list: if uidDeclaradoMembro(resource.data);
+      // A consulta do painel usa array-contains com o UID autenticado. Para list,
+      // a regra precisa refletir exatamente esse filtro; validações estruturais
+      // adicionais não podem ser usadas como filtro pelo Firestore.
+      allow list: if autenticado()
+        && request.auth.uid in resource.data.membroUids;
       // A iniciativa permanece no documento da mesa. Como uma regra não consegue
       // isolar com segurança um único item desse array, apenas o mestre pode
       // alterá-la; o jogador informa o resultado obtido com os dados físicos.

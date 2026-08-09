@@ -46,12 +46,32 @@ export default function Dashboard() {
     }
 
     try {
-      const [listaMesas, listaFichas] = await Promise.all([
+      const [resultadoMesas, resultadoFichas] = await Promise.allSettled([
         buscarMinhasMesas(usuario.uid),
         listarPersonagensPessoais(usuario.uid)
       ]);
-      setMesas(listaMesas);
-      setFichasPessoais(listaFichas);
+
+      if (resultadoMesas.status === 'fulfilled') {
+        setMesas(resultadoMesas.value);
+      } else {
+        setMesas([]);
+        console.error('Falha ao sincronizar Mesas:', resultadoMesas.reason);
+      }
+
+      if (resultadoFichas.status === 'fulfilled') {
+        setFichasPessoais(resultadoFichas.value);
+      } else {
+        setFichasPessoais([]);
+        console.error('Falha ao sincronizar fichas pessoais:', resultadoFichas.reason);
+      }
+
+      if (resultadoMesas.status === 'rejected' && resultadoFichas.status === 'rejected') {
+        setLoadError('Não foi possível sincronizar suas mesas e fichas.');
+      } else if (resultadoMesas.status === 'rejected') {
+        setLoadError('Suas fichas foram carregadas, mas não foi possível sincronizar as mesas.');
+      } else if (resultadoFichas.status === 'rejected') {
+        setLoadError('Suas mesas foram carregadas, mas não foi possível sincronizar as fichas.');
+      }
     } catch (error) {
       console.error(error);
       setLoadError('Não foi possível sincronizar suas mesas e fichas.');
