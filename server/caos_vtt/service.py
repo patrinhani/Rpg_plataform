@@ -294,7 +294,17 @@ class VTTService:
 
     @property
     def active_campaign_id(self) -> str:
+        """Campanha padrao da API manual protegida pelo token do host."""
+
         return self.catalog.campaign_id if self.catalog is not None else EMPTY_CAMPAIGN_ID
+
+    def supports_campaign(self, campaign_id: str) -> bool:
+        return campaign_id == EMPTY_CAMPAIGN_ID or (
+            self.catalog is not None and campaign_id == self.catalog.campaign_id
+        )
+
+    def _room_uses_catalog(self, room: Room) -> bool:
+        return self.catalog is not None and room.campaign_id == self.catalog.campaign_id
 
     async def create_room(
         self,
@@ -303,6 +313,9 @@ class VTTService:
         campaign_id: str | None = None,
         external_mesa_id: str | None = None,
     ) -> tuple[Room, str, str]:
+        requested_campaign_id = campaign_id or self.active_campaign_id
+        if not self.supports_campaign(requested_campaign_id):
+            raise ValueError("A campanha solicitada nao esta carregada neste servidor")
         # Invite secrets are generated even for integrated rooms so persisted
         # legacy digests are overwritten with values that were never disclosed.
         master_invite = secrets.token_urlsafe(32)
@@ -314,6 +327,8 @@ class VTTService:
                 existing_id = self._external_rooms.get(external_mesa_id)
                 existing = self._rooms.get(existing_id or "")
                 if existing is not None:
+                    if existing.campaign_id != requested_campaign_id:
+                        raise ValueError("A Mesa ja possui uma sala de outra campanha")
                     async with existing.broadcast_lock:
                         async with existing.lock:
                             existing.name = name.strip()
@@ -336,10 +351,10 @@ class VTTService:
                     name=name.strip(),
                     master_invite_digest=_token_digest(master_invite),
                     player_invite_digest=_token_digest(player_invite),
-                    campaign_id=campaign_id or self.active_campaign_id,
+                    campaign_id=requested_campaign_id,
                     external_mesa_id=external_mesa_id,
                 )
-                if self.catalog is not None:
+                if self._room_uses_catalog(room):
                     self._initialize_catalog_room(room)
                 self._rooms[room_id] = room
                 if external_mesa_id is not None:
@@ -372,7 +387,7 @@ class VTTService:
         return self._rooms.get(room_id or "")
 
     def _initialize_catalog_room(self, room: Room) -> None:
-        assert self.catalog is not None
+        assert self._room_uses_catalog(room)
         scenes = self.catalog.list_scenes("master")
         for scene in scenes:
             room.scene_tokens[scene.scene_id] = {}
@@ -642,7 +657,7 @@ class VTTService:
         """Restrict player media to assets currently revealed in the active scene."""
         catalog = self.catalog
         room = self._rooms.get(room_id)
-        if catalog is None or room is None:
+        if catalog is None or room is None or not self._room_uses_catalog(room):
             return False
         if role == "master":
             return True
@@ -726,7 +741,7 @@ class VTTService:
 
         catalog = self.catalog
         room = self._rooms.get(room_id)
-        if catalog is None or room is None:
+        if catalog is None or room is None or not self._room_uses_catalog(room):
             raise AssetNotAvailableError("Asset indisponivel")
         if not await self.can_access_asset(room_id, role, asset_id):
             raise AssetNotAvailableError("Asset indisponivel")
@@ -750,7 +765,12 @@ class VTTService:
 
         catalog = self.catalog
         room = self._rooms.get(room_id)
-        if catalog is None or room is None or role != "player":
+        if (
+            catalog is None
+            or room is None
+            or not self._room_uses_catalog(room)
+            or role != "player"
+        ):
             return None
 
         async with room.lock:
@@ -933,10 +953,8 @@ class VTTService:
     ) -> dict[str, Any] | None:
         """Mantem o contrato demo legado; catalog mode usa execute_catalog_command."""
 
-        if self.catalog is not None:
-            return None
         room = self._rooms.get(room_id)
-        if room is None:
+        if room is None or self._room_uses_catalog(room):
             return None
 
         async with room.broadcast_lock:
@@ -977,7 +995,7 @@ class VTTService:
     ) -> CatalogCommandFailure | None:
         catalog = self.catalog
         room = self._rooms.get(room_id)
-        if catalog is None or room is None:
+        if catalog is None or room is None or not self._room_uses_catalog(room):
             return CatalogCommandFailure("catalog_unavailable", "Catalogo indisponivel")
 
         message_type = command.type
@@ -1384,8 +1402,7 @@ class VTTService:
     def _restore_rooms(self) -> None:
         assert self._store is not None
         for stored_room_id, payload in self._store.load_all():
-            expected_campaign = self.active_campaign_id
-            if payload.get("campaignId") != expected_campaign:
+            if not self.supports_campaign(payload.get("campaignId")):
                 # Keep rooms from another campaign intact for a later matching launch.
                 continue
             try:
@@ -1440,8 +1457,7 @@ class VTTService:
         campaign_id = payload.get("campaignId")
         if campaign_id is not None and not isinstance(campaign_id, str):
             raise ValueError("campaignId invalido")
-        expected_campaign = self.active_campaign_id
-        if campaign_id != expected_campaign:
+        if not self.supports_campaign(campaign_id):
             raise ValueError("sala pertence a outra campanha")
 
         external_id = payload.get("externalMesaId")
@@ -1475,7 +1491,7 @@ class VTTService:
         room.token_x = self._normalised_float(demo.get("tokenX", 0.5), "tokenX")
         room.token_y = self._normalised_float(demo.get("tokenY", 0.5), "tokenY")
 
-        if self.catalog is None:
+        if not self._room_uses_catalog(room):
             return room
 
         self._initialize_catalog_room(room)
@@ -1930,7 +1946,7 @@ class VTTService:
             )
 
     def _snapshot(self, room: Room, role: Role) -> dict[str, Any]:
-        if self.catalog is None:
+        if not self._room_uses_catalog(room):
             return self._demo_snapshot(room, role)
         return self._catalog_snapshot(room, role)
 
@@ -1955,7 +1971,7 @@ class VTTService:
         }
 
     def _catalog_snapshot(self, room: Room, role: Role) -> dict[str, Any]:
-        assert self.catalog is not None
+        assert self._room_uses_catalog(room)
         scenes = self.catalog.list_scenes(role)
         scene_by_id = {scene.scene_id: scene for scene in scenes}
         active_scene = scene_by_id.get(room.active_scene_id or "")
@@ -2146,7 +2162,7 @@ class VTTService:
         scene: SceneView,
         role: Role,
     ) -> dict[str, Any]:
-        assert self.catalog is not None
+        assert self._room_uses_catalog(room)
         states = room.scene_overlays.get(scene.scene_id, {})
         selected_layers = room.scene_layers.get(scene.scene_id, {})
         fog = room.scene_fog.get(scene.scene_id)

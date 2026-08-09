@@ -16,6 +16,10 @@ services:
         sync: false
       - key: CAOS_VTT_FIREBASE_PROJECT_ID
         value: sistemarpg-14d7d
+      - key: CAOS_VTT_CAMPAIGN_MANIFEST
+        value: campaigns/mnemosyne/manifest.json
+      - key: CAOS_VTT_CAMPAIGN_ROOT
+        value: campaigns/mnemosyne
       - key: CAOS_VTT_STATE_BACKEND
         value: firestore
       - key: GOOGLE_APPLICATION_CREDENTIALS

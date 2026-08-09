@@ -137,6 +137,55 @@ def test_integrated_mesa_can_use_generic_empty_workspace() -> None:
             assert snapshot["state"]["tokens"]["demo-token"]["label"] == "Agente de teste"
 
 
+def test_catalog_is_isolated_to_the_linked_integrated_mesa(tmp_path: Path) -> None:
+    app, _catalog, ids = _catalog_app(tmp_path)
+    verifier = _FakeVerifier(
+        member=_member(
+            "master",
+            mesa_id="mesa-generica",
+            campaign_id="caos-empty",
+        )
+    )
+    app.state.mesa_grant_verifier = verifier
+
+    with TestClient(app) as client:
+        generic_access = _request(client, mesa_id="mesa-generica")
+        assert generic_access.status_code == 200
+        generic = generic_access.json()
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{generic['roomId']}?ticket={generic['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as socket:
+            snapshot = socket.receive_json()
+            assert "catalog" not in snapshot["state"]
+            assert snapshot["state"]["tokens"]["demo-token"]["label"] == "Agente de teste"
+
+        leaked_asset = client.get(
+            f"/api/vtt/rooms/{generic['roomId']}/assets",
+            params={
+                "assetId": ids["map_v2"],
+                "access": generic["mediaToken"],
+            },
+        )
+        assert leaked_asset.status_code == 404
+
+        verifier.member = _member(
+            "master",
+            mesa_id="mesa-mnemosyne",
+            campaign_id="memoria",
+        )
+        campaign_access = _request(client, mesa_id="mesa-mnemosyne")
+        assert campaign_access.status_code == 200
+        campaign = campaign_access.json()
+        with client.websocket_connect(
+            f"/ws/vtt/rooms/{campaign['roomId']}?ticket={campaign['ticket']}",
+            headers={"Origin": ORIGIN},
+        ) as socket:
+            snapshot = socket.receive_json()
+            assert snapshot["state"]["table"]["campaignId"] == "memoria"
+            assert "catalog" in snapshot["state"]
+
+
 def test_player_cannot_create_a_mesa_room_before_master(tmp_path: Path) -> None:
     app, _catalog, _ids = _catalog_app(tmp_path)
     app.state.mesa_grant_verifier = _FakeVerifier(member=_member("player"))

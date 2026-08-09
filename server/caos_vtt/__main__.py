@@ -18,7 +18,22 @@ def _catalog_from_env() -> CampaignCatalog | None:
             "CAOS_VTT_CAMPAIGN_MANIFEST e CAOS_VTT_CAMPAIGN_ROOT precisam ser definidos juntos"
         )
     if not manifest_value:
-        return None
+        if os.getenv("RENDER", "").strip().lower() != "true":
+            return None
+        campaigns_dir = Path(__file__).resolve().parent.parent / "campaigns"
+        bundled_manifests = sorted(campaigns_dir.glob("*/manifest.json"))
+        if not bundled_manifests:
+            return None
+        if len(bundled_manifests) > 1:
+            raise RuntimeError(
+                "Ha mais de um pacote embarcado; defina explicitamente "
+                "CAOS_VTT_CAMPAIGN_MANIFEST e CAOS_VTT_CAMPAIGN_ROOT"
+            )
+        bundled_manifest = bundled_manifests[0]
+        return CampaignCatalog.load_single_root(
+            bundled_manifest,
+            bundled_manifest.parent,
+        )
     return CampaignCatalog.load_single_root(
         Path(manifest_value),
         Path(root_value),

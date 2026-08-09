@@ -205,24 +205,34 @@ def create_router() -> APIRouter:
                 detail="Nao foi possivel validar a Mesa no Firestore agora",
             ) from None
 
-        active_campaign_id = service.active_campaign_id
-        if member.campaign_id != active_campaign_id:
+        if not service.supports_campaign(member.campaign_id):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A campanha desta Mesa nao esta carregada neste servidor",
             )
         if member.role == "master":
-            room = await service.ensure_room_for_mesa(
-                member.room_name,
-                campaign_id=active_campaign_id,
-                external_mesa_id=member.mesa_id,
-            )
+            try:
+                room = await service.ensure_room_for_mesa(
+                    member.room_name,
+                    campaign_id=member.campaign_id,
+                    external_mesa_id=member.mesa_id,
+                )
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A sala vinculada pertence a outra campanha",
+                ) from None
         else:
             room = service.room_for_external_mesa(member.mesa_id)
             if room is None:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="O mestre ainda precisa abrir o VTT desta Mesa neste servidor",
+                )
+            if room.campaign_id != member.campaign_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A sala vinculada pertence a outra campanha",
                 )
 
         try:
@@ -277,7 +287,7 @@ def create_router() -> APIRouter:
             )
         service: VTTService = request.app.state.vtt
         if payload.campaignId:
-            if payload.campaignId != service.active_campaign_id:
+            if not service.supports_campaign(payload.campaignId):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="A campanha solicitada nao esta carregada neste servidor",
