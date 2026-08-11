@@ -6,6 +6,10 @@ import {
   canOpenTokenCharacterSheet,
   normalizeCharacterSheetUids,
 } from './token-sheets.js';
+import {
+  overlayMotionLabel,
+  resolveOverlayMotionPreset,
+} from './overlay-motion.js';
 
 const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 3.2;
@@ -64,15 +68,30 @@ async function decodeFogMask(fog) {
 
 function VttOverlayImage({ overlay }) {
   const [loaded, setLoaded] = useState(false);
+  const motionPreset = resolveOverlayMotionPreset(overlay);
+  const motionLabel = overlayMotionLabel(motionPreset);
   return (
-    <img
-      className={`vtt-board__overlay ${loaded ? 'is-loaded' : ''}`}
-      src={overlay.url}
-      alt=""
+    <span
+      className={`vtt-board__overlay-frame is-motion-${motionPreset} ${loaded ? 'is-loaded' : ''}`}
+      title={motionLabel || undefined}
       aria-hidden="true"
-      draggable="false"
-      onLoad={() => setLoaded(true)}
-    />
+    >
+      <img
+        className="vtt-board__overlay"
+        src={overlay.url}
+        alt=""
+        draggable="false"
+        onLoad={() => setLoaded(true)}
+      />
+      {motionPreset !== 'none' && (
+        <img
+          className="vtt-board__overlay-motion"
+          src={overlay.url}
+          alt=""
+          draggable="false"
+        />
+      )}
+    </span>
   );
 }
 

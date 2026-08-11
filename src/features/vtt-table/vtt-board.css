@@ -223,7 +223,9 @@
 }
 
 .vtt-board__map,
+.vtt-board__overlay-frame,
 .vtt-board__overlay,
+.vtt-board__overlay-motion,
 .vtt-board__grid,
 .vtt-board__fog-mask {
   height: 100%;
@@ -263,17 +265,43 @@
   opacity: 0;
 }
 
-.vtt-board__overlay {
+.vtt-board__overlay-frame {
   image-rendering: auto;
-  object-fit: contain;
   opacity: 0;
   transition: opacity 420ms ease;
   z-index: 2;
 }
 
-.vtt-board__overlay.is-loaded {
+.vtt-board__overlay-frame.is-loaded {
   animation: vtt-overlay-reveal 420ms ease both;
   opacity: 1;
+}
+
+.vtt-board__overlay,
+.vtt-board__overlay-motion {
+  object-fit: contain;
+  user-select: none;
+}
+
+.vtt-board__overlay-motion {
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.vtt-board__overlay-frame.is-loaded.is-motion-electric .vtt-board__overlay-motion {
+  animation: vtt-electric-pulse 2.35s steps(1, end) infinite;
+  filter: brightness(1.28) contrast(1.12) saturate(1.18);
+}
+
+.vtt-board__overlay-frame.is-loaded.is-motion-water .vtt-board__overlay-motion {
+  animation: vtt-water-shimmer 4.8s ease-in-out infinite;
+  filter: brightness(1.12) saturate(1.08) hue-rotate(-5deg);
+  mix-blend-mode: soft-light;
+}
+
+.vtt-board__overlay-frame.is-loaded.is-motion-glitch .vtt-board__overlay-motion {
+  animation: vtt-screen-interference 3.1s steps(1, end) infinite;
+  filter: brightness(1.24) contrast(1.15) saturate(0.82);
 }
 
 .vtt-board__scene-layer {
@@ -317,6 +345,25 @@
 @keyframes vtt-overlay-reveal {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes vtt-electric-pulse {
+  0%, 9%, 14%, 42%, 47%, 76%, 100% { opacity: 0.05; }
+  10%, 12%, 43%, 45%, 77% { opacity: 0.34; }
+  11%, 44%, 78% { opacity: 0.16; }
+}
+
+@keyframes vtt-water-shimmer {
+  0%, 100% { opacity: 0.05; filter: brightness(1.05) saturate(1.04) hue-rotate(-5deg); }
+  50% { opacity: 0.19; filter: brightness(1.2) saturate(1.14) hue-rotate(4deg); }
+}
+
+@keyframes vtt-screen-interference {
+  0%, 17%, 21%, 68%, 72%, 100% { opacity: 0.04; transform: translate3d(0, 0, 0); }
+  18% { opacity: 0.24; transform: translate3d(0.08%, 0, 0); }
+  19% { opacity: 0.11; transform: translate3d(-0.06%, 0, 0); }
+  69% { opacity: 0.2; transform: translate3d(-0.05%, 0.04%, 0); }
+  70% { opacity: 0.08; transform: translate3d(0.04%, -0.03%, 0); }
 }
 
 .vtt-board__grid {
@@ -1650,12 +1697,22 @@
   .vtt-board *::before,
   .vtt-board *::after {
     scroll-behavior: auto !important;
+    animation: none !important;
     transition: none !important;
+  }
+
+  .vtt-board__overlay-motion {
+    display: none;
   }
 }
 
 body.modo-economia .vtt-board *,
 body.modo-economia .vtt-board *::before,
 body.modo-economia .vtt-board *::after {
+  animation: none !important;
   transition: none !important;
+}
+
+body.modo-economia .vtt-board__overlay-motion {
+  display: none;
 }
