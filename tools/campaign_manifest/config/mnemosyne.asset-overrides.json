@@ -2,18 +2,56 @@
   "schemaVersion": 2,
   "campaignId": "mnemosyne",
   "assetOverrides": {
+    "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
     "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png": {
       "stateGroup": false
     },
     "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png": {
       "kind": "concept",
       "audience": "gm",
-      "controlledBy": "gm"
+      "controlledBy": "gm",
+      "stateGroup": false
     },
     "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png": {
       "kind": "concept",
       "audience": "gm",
-      "controlledBy": "gm"
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
+    },
+    "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png": {
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "stateGroup": false
     },
     "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png": {
       "kind": "concept",
@@ -45,12 +83,12 @@
       "states": {
         "ativo": {
           "label": "Ativo",
-          "assetPath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+          "assetPath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
           "placements": [{"x": 0.41, "y": 0.18, "width": 0.15, "height": 0.15, "rotation": 0}]
         },
         "desativado": {
           "label": "Desativado",
-          "assetPath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+          "assetPath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
           "placements": [{"x": 0.41, "y": 0.18, "width": 0.15, "height": 0.15, "rotation": 0}]
         }
       }
@@ -63,12 +101,12 @@
       "states": {
         "ativo": {
           "label": "Ativa",
-          "assetPath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+          "assetPath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
           "placements": [{"x": 0.49, "y": 0.36, "width": 0.2, "height": 0.2, "rotation": 0}]
         },
         "desativado": {
           "label": "Desativada",
-          "assetPath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+          "assetPath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
           "placements": [{"x": 0.49, "y": 0.36, "width": 0.2, "height": 0.2, "rotation": 0}]
         }
       }
@@ -81,13 +119,13 @@
       "states": {
         "ativo": {
           "label": "Ativo",
-          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
-          "placements": [{"x": 0.507, "y": 0.499, "width": 0.42, "height": 0.42, "rotation": 0}]
+          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
+          "placements": [{"x": 0.259, "y": 0.519, "width": 0.18, "height": 0.18, "rotation": 0}]
         },
         "desativado": {
           "label": "Desativado",
-          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
-          "placements": [{"x": 0.507, "y": 0.499, "width": 0.42, "height": 0.42, "rotation": 0}]
+          "assetPath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
+          "placements": [{"x": 0.259, "y": 0.519, "width": 0.18, "height": 0.18, "rotation": 0}]
         }
       }
     },

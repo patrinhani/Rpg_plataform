@@ -13,17 +13,17 @@
   "classification": {
     "configRef": "config/mnemosyne.asset-overrides.json",
     "schemaVersion": 2,
-    "fingerprint": "sha256:d43b18a4ec43c6b4dde7f5525c0a2e0ff0b9bffcf6ac3631c765808118d9ec16"
+    "fingerprint": "sha256:79c1e307906eb3552fa8c72e3da6f3695f2401937e93370556909ef6d8033483"
   },
   "summary": {
-    "assetCount": 86,
+    "assetCount": 93,
     "documentCount": 22,
     "sceneCount": 4,
     "sceneLayerCount": 5,
     "stateGroupCount": 0,
-    "totalAssetBytes": 190313782,
+    "totalAssetBytes": 198746359,
     "warningCount": 3,
-    "sourceFingerprint": "76dc8390ad1a57007c96dfad59c99edc19771e038fe584ff16e19b28a57d1ea6"
+    "sourceFingerprint": "ef9b556d282310fa64590d8703da46ca9280820252fa76883d65dba6028a8dce"
   },
   "assets": [
     {
@@ -911,6 +911,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v3.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v3.png",
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1171197,
+      "sha256": "a34a56a8b8c03b5ae9e07b54ef5fbe2d190f34fa8aa8289e620d697f103682ac",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 3136,
+        "height": 3136,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "kind": "map",
@@ -1100,8 +1117,8 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
-      "kind": "prop",
-      "audience": "players",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 2229059,
       "sha256": "8cd8b9df5c7ba307477e54a2d1e9c0358b4d90b8e54cc351b7a00da5271cd0da",
@@ -1115,10 +1132,27 @@
       }
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
       "kind": "prop",
       "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1434507,
+      "sha256": "20466180976a7b7dd415b3d16692b450697b03ec78f5b0dde727f6943a521ebb",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1952942,
       "sha256": "96981c006458f6b8c08a990d36bf070d37169c727c35a9ec69cbf7353a557e8f",
@@ -1132,10 +1166,27 @@
       }
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
       "kind": "prop",
       "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1274813,
+      "sha256": "70990224e2be504341ea41b52204ac6c8df2d34e6b438f21afa2dbd0ef1b893e",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1664499,
       "sha256": "43477682117afdf9810d6eaf8c09593c0257756cb7266d05e065f4cfe573d6db",
@@ -1149,13 +1200,47 @@
       }
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
       "kind": "prop",
       "audience": "players",
       "controlledBy": "gm",
+      "bytes": 1325425,
+      "sha256": "ebaefbbbda60d075b12c59ec7045eedc0bb2278a21ad609a63421372d8915392",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+      "kind": "concept",
+      "audience": "gm",
+      "controlledBy": "gm",
       "bytes": 1459483,
       "sha256": "7259b4f46ad350095f0686f500974bc19a56d86c16381b3f2022aac50d3ac257",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1226285,
+      "sha256": "2ae693d73e21ee4aa71e028f19595d71c7bb93190420db686a67415b9083d6b9",
       "mediaType": "image/png",
       "image": {
         "format": "png",
@@ -1183,6 +1268,23 @@
       }
     },
     {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 1030795,
+      "sha256": "150b94effa19f4a9f8c7824387d81f4199a933a4adf57702d65af99251243f0f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
       "kind": "concept",
@@ -1200,10 +1302,27 @@
       }
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
       "kind": "prop",
       "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 969555,
+      "sha256": "6e1d5aae254b5d430422535c4451d1c823d15f8e387f821921699602426520b2",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1532308,
       "sha256": "30092224422906cf3ac3b4584ec31f94d1685ef1a2fdaa515de608f539d2d5c7",
@@ -1219,8 +1338,8 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
-      "kind": "prop",
-      "audience": "players",
+      "kind": "concept",
+      "audience": "gm",
       "controlledBy": "gm",
       "bytes": 1417021,
       "sha256": "544f202ca60d07c8c54725ce22fff0d8a3e0f86dd3d77fd1686b2841394e9edb",
@@ -1727,7 +1846,7 @@
             "states": {
               "ativo": {
                 "label": "Ativo",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
                 "placements": [
                   {
                     "x": 0.41,
@@ -1740,7 +1859,7 @@
               },
               "desativado": {
                 "label": "Desativado",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
                 "placements": [
                   {
                     "x": 0.41,
@@ -1791,7 +1910,7 @@
             "states": {
               "ativo": {
                 "label": "Ativa",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
                 "placements": [
                   {
                     "x": 0.49,
@@ -1804,7 +1923,7 @@
               },
               "desativado": {
                 "label": "Desativada",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
                 "placements": [
                   {
                     "x": 0.49,
@@ -1854,9 +1973,9 @@
             "version": 2
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v2.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v3.png",
             "name": "telas-quebradas",
-            "version": 2
+            "version": 3
           }
         ],
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
@@ -1871,26 +1990,26 @@
             "states": {
               "ativo": {
                 "label": "Ativo",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.507,
-                    "y": 0.499,
-                    "width": 0.42,
-                    "height": 0.42,
+                    "x": 0.259,
+                    "y": 0.519,
+                    "width": 0.18,
+                    "height": 0.18,
                     "rotation": 0.0
                   }
                 ]
               },
               "desativado": {
                 "label": "Desativado",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-desativado-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.507,
-                    "y": 0.499,
-                    "width": 0.42,
-                    "height": 0.42,
+                    "x": 0.259,
+                    "y": 0.519,
+                    "width": 0.18,
+                    "height": 0.18,
                     "rotation": 0.0
                   }
                 ]
