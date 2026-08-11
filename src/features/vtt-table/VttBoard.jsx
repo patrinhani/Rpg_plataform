@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './vtt-board.css';
 import { constrainVttCamera, zoomVttCameraAtPoint } from './camera.js';
 import { resolvePropStateOptions } from './prop-state-groups.js';
+import {
+  canOpenTokenCharacterSheet,
+  normalizeCharacterSheetUids,
+} from './token-sheets.js';
 
 const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 3.2;
@@ -165,6 +169,8 @@ export default function VttBoard({
   role = 'player',
   connected = false,
   members = [],
+  characterSheetUids = [],
+  onOpenCharacterSheet,
   onCommand,
 }) {
   const scene = state.scene || null;
@@ -248,6 +254,23 @@ export default function VttBoard({
       }))
       .filter((member) => member.uid && !seen.has(member.uid) && seen.add(member.uid));
   }, [members]);
+  const controllerByUid = useMemo(
+    () => new Map(controllerMembers.map((member) => [member.uid, member])),
+    [controllerMembers],
+  );
+  const characterSheetUidSet = useMemo(
+    () => normalizeCharacterSheetUids(characterSheetUids),
+    [characterSheetUids],
+  );
+  const characterSheetMembers = useMemo(
+    () => controllerMembers
+      .filter((member) => characterSheetUidSet.has(member.uid))
+      .map((member) => ({
+        ...member,
+        tokenCount: tokens.filter((token) => token.controllerUid === member.uid).length,
+      })),
+    [characterSheetUidSet, controllerMembers, tokens],
+  );
   const selectedToken = useMemo(
     () => tokens.find((item) => item.id === selectedTokenId) || null,
     [selectedTokenId, tokens],
@@ -260,7 +283,11 @@ export default function VttBoard({
     () => resolvePropStateOptions(propStateGroups, selectedProp?.assetId),
     [propStateGroups, selectedProp?.assetId],
   );
+  const selectedTokenController = selectedToken?.controllerUid
+    ? controllerByUid.get(selectedToken.controllerUid) || null
+    : null;
   const isMaster = role === 'master';
+  const canBrowseCharacterSheets = isMaster && typeof onOpenCharacterSheet === 'function';
   const activeOverlayCount = overlays.filter((overlay) => overlay.enabled).length;
   const controlledTokenCount = isMaster
     ? 0
@@ -825,6 +852,21 @@ export default function VttBoard({
     });
   };
 
+  const handleOpenCharacterSheet = (uid) => {
+    const normalizedUid = String(uid || '').trim();
+    if (
+      !isMaster
+      || !normalizedUid
+      || !canOpenTokenCharacterSheet({
+        role,
+        controllerUid: normalizedUid,
+        characterSheetUids: characterSheetUidSet,
+      })
+      || typeof onOpenCharacterSheet !== 'function'
+    ) return;
+    onOpenCharacterSheet(normalizedUid);
+  };
+
   const handleRemoveSelected = () => {
     if (!selectedTokenId) return;
     emitCommand('token.remove', { tokenId: selectedTokenId });
@@ -1341,7 +1383,46 @@ export default function VttBoard({
             >
 
             <div className="vtt-board__spawn">
-              <label className="vtt-board__field" htmlFor="vtt-board-token-asset">
+              <div className="vtt-board__token-gallery-heading">
+                <span>Galeria de tokens</span>
+                <small>{tokenAssets.length} disponíveis</small>
+              </div>
+              <div
+                className="vtt-board__token-gallery"
+                role="listbox"
+                aria-label="Tokens disponíveis para adicionar"
+                aria-disabled={!connected || tokenAssets.length === 0}
+              >
+                {tokenAssets.length === 0 && (
+                  <p>Nenhum token disponível nesta campanha.</p>
+                )}
+                {tokenAssets.map((asset) => {
+                  const label = asset.label || humanize(asset.assetId.split('/').pop());
+                  const selected = selectedAssetId === asset.assetId;
+                  return (
+                    <button
+                      key={asset.assetId}
+                      type="button"
+                      role="option"
+                      className={selected ? 'is-selected' : ''}
+                      aria-selected={selected}
+                      onClick={() => setSelectedAssetId(asset.assetId)}
+                      disabled={!connected}
+                    >
+                      <span className="vtt-board__token-gallery-image">
+                        {asset.assetUrl
+                          ? <img src={asset.assetUrl} alt="" loading="lazy" decoding="async" />
+                          : <span aria-hidden="true">{tokenInitials(label)}</span>}
+                      </span>
+                      <span className="vtt-board__token-gallery-copy">
+                        <strong>{label}</strong>
+                        <small>{selected ? 'Selecionado' : 'Selecionar'}</small>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <label className="vtt-board__token-asset-select" htmlFor="vtt-board-token-asset">
                 <span>Adicionar token</span>
                 <select
                   id="vtt-board-token-asset"
@@ -1378,6 +1459,100 @@ export default function VttBoard({
               </button>
             </div>
 
+            <section className="vtt-board__token-roster" aria-labelledby="vtt-board-token-roster-title">
+              <div className="vtt-board__token-roster-heading">
+                <span id="vtt-board-token-roster-title">Peças em cena</span>
+                <small>{tokens.length}</small>
+              </div>
+              {tokens.length === 0 ? (
+                <p>Adicione um token para vinculá-lo a um jogador e à ficha dele.</p>
+              ) : (
+                <div className="vtt-board__token-roster-list">
+                  {tokens.map((token) => {
+                    const controller = token.controllerUid
+                      ? controllerByUid.get(token.controllerUid) || null
+                      : null;
+                    const hasSheet = canBrowseCharacterSheets && canOpenTokenCharacterSheet({
+                      role,
+                      controllerUid: controller?.uid,
+                      characterSheetUids: characterSheetUidSet,
+                    });
+                    return (
+                      <article
+                        key={token.id}
+                        className={selectedTokenId === token.id ? 'is-selected' : ''}
+                      >
+                        <button
+                          type="button"
+                          className="vtt-board__token-roster-select"
+                          onClick={() => setSelectedTokenId(token.id)}
+                        >
+                          <span className="vtt-board__token-roster-image">
+                            {token.assetUrl
+                              ? <img src={token.assetUrl} alt="" loading="lazy" decoding="async" />
+                              : <span aria-hidden="true">{tokenInitials(token.label)}</span>}
+                          </span>
+                          <span>
+                            <strong>{token.label}</strong>
+                            <small>{controller?.name || 'Somente Mestre'}</small>
+                          </span>
+                        </button>
+                        {hasSheet ? (
+                          <button
+                            type="button"
+                            className="vtt-board__token-sheet-button"
+                            onClick={() => handleOpenCharacterSheet(controller.uid)}
+                            aria-label={`Abrir ficha de ${controller.name}`}
+                          >
+                            Ficha
+                          </button>
+                        ) : (
+                          <span className="vtt-board__token-sheet-status">
+                            {controller ? 'Sem ficha' : 'Mestre'}
+                          </span>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {canBrowseCharacterSheets && characterSheetMembers.length > 0 && (
+              <section
+                className="vtt-board__linked-sheets"
+                aria-labelledby="vtt-board-linked-sheets-title"
+              >
+                <div className="vtt-board__token-roster-heading">
+                  <span id="vtt-board-linked-sheets-title">Fichas vinculadas</span>
+                  <small>{characterSheetMembers.length}</small>
+                </div>
+                <div className="vtt-board__linked-sheets-list">
+                  {characterSheetMembers.map((member) => (
+                    <button
+                      key={member.uid}
+                      type="button"
+                      onClick={() => handleOpenCharacterSheet(member.uid)}
+                      aria-label={`Abrir ficha de ${member.name}`}
+                    >
+                      <span className="vtt-board__linked-sheet-avatar" aria-hidden="true">
+                        {tokenInitials(member.name)}
+                      </span>
+                      <span className="vtt-board__linked-sheet-copy">
+                        <strong>{member.name}</strong>
+                        <small>
+                          {member.tokenCount === 0
+                            ? 'Nenhuma peça atribuída'
+                            : `${member.tokenCount} ${member.tokenCount === 1 ? 'peça atribuída' : 'peças atribuídas'}`}
+                        </small>
+                      </span>
+                      <span className="vtt-board__linked-sheet-action">Abrir ficha</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section className="vtt-board__token-controller" aria-labelledby="vtt-board-token-controller-title">
               <div>
                 <span id="vtt-board-token-controller-title">Token selecionado</span>
@@ -1402,6 +1577,19 @@ export default function VttBoard({
                   ))}
                 </select>
               </label>
+              {canBrowseCharacterSheets && selectedTokenController && canOpenTokenCharacterSheet({
+                role,
+                controllerUid: selectedTokenController.uid,
+                characterSheetUids: characterSheetUidSet,
+              }) && (
+                <button
+                  type="button"
+                  className="vtt-board__token-open-sheet"
+                  onClick={() => handleOpenCharacterSheet(selectedTokenController.uid)}
+                >
+                  Abrir ficha de {selectedTokenController.name}
+                </button>
+              )}
               <small>
                 {controllerMembers.length === 0
                   ? 'Os jogadores da Mesa aparecerão aqui quando o acesso for integrado.'

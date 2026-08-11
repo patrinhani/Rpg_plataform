@@ -1,11 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { FichaProvider } from '../../contexts/FichaContext.jsx';
 import { db } from '../../lib/firebase.js';
 import { vincularVttMesa } from '../../lib/vtt-mesa-link.js';
 import { normalizeVttServerOrigin, readVttLaunchContext } from '../../lib/vtt-link.js';
 import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
 import VttLab from './VttLab.jsx';
+
+const Ficha = lazy(() => import('../../pages/Ficha/index.jsx'));
 
 const DEV_VTT_MEMBERS = [
   { uid: 'dev-rafael', name: 'Rafael Nunes' },
@@ -37,6 +40,10 @@ export default function VttLabIntegrated() {
   const [resolvedOrigin, setResolvedOrigin] = useState('');
   const [canEditServerUrl, setCanEditServerUrl] = useState(false);
   const [members, setMembers] = useState(() => (devVisualMode ? DEV_VTT_MEMBERS : []));
+  const [characterSheetUids, setCharacterSheetUids] = useState(
+    () => (devVisualMode ? DEV_VTT_MEMBERS.map((member) => member.uid) : []),
+  );
+  const [activeCharacterSheetUid, setActiveCharacterSheetUid] = useState('');
   const [originReady, setOriginReady] = useState(
     () => devVisualMode || !launchContext.mesaId,
   );
@@ -74,6 +81,32 @@ export default function VttLabIntegrated() {
     return unsubscribe;
   }, [devVisualMode, launchContext.mesaId, usuario?.uid]);
 
+  useEffect(() => {
+    if (devVisualMode) {
+      setCharacterSheetUids(DEV_VTT_MEMBERS.map((member) => member.uid));
+      return undefined;
+    }
+    if (!canEditServerUrl || !launchContext.mesaId) {
+      setCharacterSheetUids([]);
+      return undefined;
+    }
+    const unsubscribe = onSnapshot(
+      collection(db, 'mesas', launchContext.mesaId, 'personagens'),
+      (snapshot) => setCharacterSheetUids(snapshot.docs.map((item) => item.id)),
+      () => setCharacterSheetUids([]),
+    );
+    return unsubscribe;
+  }, [canEditServerUrl, devVisualMode, launchContext.mesaId]);
+
+  useEffect(() => {
+    if (
+      activeCharacterSheetUid
+      && !characterSheetUids.includes(activeCharacterSheetUid)
+    ) {
+      setActiveCharacterSheetUid('');
+    }
+  }, [activeCharacterSheetUid, characterSheetUids]);
+
   const automaticAccess = useMemo(() => ({
     enabled: Boolean(launchContext.mesaId) && !devVisualMode,
     requestAccess: ({ mesaId, serverOrigin, signal }) => requestMesaVttAccess({
@@ -86,7 +119,20 @@ export default function VttLabIntegrated() {
     autoStart: Boolean(resolvedOrigin),
     canEditServerUrl,
     members,
-  }), [canEditServerUrl, devVisualMode, launchContext.mesaId, members, resolvedOrigin, usuario]);
+    characterSheetUids,
+  }), [
+    canEditServerUrl,
+    characterSheetUids,
+    devVisualMode,
+    launchContext.mesaId,
+    members,
+    resolvedOrigin,
+    usuario,
+  ]);
+  const sheetIsOpen = Boolean(
+    activeCharacterSheetUid
+    && characterSheetUids.includes(activeCharacterSheetUid),
+  );
 
   if (!devVisualMode && launchContext.mesaId && !originReady) {
     return (
@@ -103,9 +149,42 @@ export default function VttLabIntegrated() {
   }
 
   return (
-    <VttLab
-      automaticAccess={automaticAccess}
-      onPersistLinkedRoom={vincularVttMesa}
-    />
+    <>
+      <div
+        className="vtt-integrated-session"
+        aria-hidden={sheetIsOpen ? true : undefined}
+        inert={sheetIsOpen ? true : undefined}
+      >
+        <VttLab
+          automaticAccess={automaticAccess}
+          onOpenCharacterSheet={(uid) => {
+            const normalizedUid = String(uid || '').trim();
+            if (
+              normalizedUid
+              && characterSheetUids.includes(normalizedUid)
+            ) {
+              setActiveCharacterSheetUid(normalizedUid);
+            }
+          }}
+          onPersistLinkedRoom={vincularVttMesa}
+        />
+      </div>
+
+      {sheetIsOpen && (
+        <div className="vtt-integrated-sheet-overlay">
+          <Suspense fallback={<div className="ficha-loading" role="status">Abrindo ficha...</div>}>
+            <FichaProvider>
+              <div className="mesa-ficha-shell">
+                <Ficha
+                  fichaId={activeCharacterSheetUid}
+                  mesaContexto={launchContext.mesaId}
+                  onBack={() => setActiveCharacterSheetUid('')}
+                />
+              </div>
+            </FichaProvider>
+          </Suspense>
+        </div>
+      )}
+    </>
   );
 }

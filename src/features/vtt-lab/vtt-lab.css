@@ -899,3 +899,12 @@ body.modo-economia .vtt-lab *::before,
 body.modo-economia .vtt-lab *::after {
   transition: none !important;
 }
+
+.vtt-integrated-sheet-overlay {
+  background: #02070b;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  position: fixed;
+  z-index: 1200;
+}

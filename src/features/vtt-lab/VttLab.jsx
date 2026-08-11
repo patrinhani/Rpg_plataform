@@ -202,7 +202,15 @@ function hydrateCampaignState(rawState, revision, grant) {
   const boardState = { ...rawState };
   delete boardState.deliveredHandouts;
   if (boardState.catalog && typeof boardState.catalog === 'object') {
-    boardState.catalog = { ...boardState.catalog };
+    boardState.catalog = {
+      ...boardState.catalog,
+      tokenAssets: Array.isArray(boardState.catalog.tokenAssets)
+        ? boardState.catalog.tokenAssets.map((tokenAsset) => ({
+          ...tokenAsset,
+          assetUrl: tokenAsset.assetId ? assetUrl(tokenAsset.assetId) : '',
+        }))
+        : [],
+    };
     delete boardState.catalog.handoutAssets;
     delete boardState.catalog.masterReferenceAssets;
   }
@@ -310,7 +318,11 @@ function directionLabel(direction) {
   return 'Sistema';
 }
 
-export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) {
+export default function VttLab({
+  onPersistLinkedRoom,
+  automaticAccess = null,
+  onOpenCharacterSheet,
+}) {
   const [launchContext] = useState(readLaunchContext);
   const usesAutomaticAccess = Boolean(automaticAccess?.enabled && launchContext.mesaId);
   const integratedPlayerMissingServerOrigin = Boolean(
@@ -1501,6 +1513,8 @@ export default function VttLab({ onPersistLinkedRoom, automaticAccess = null }) 
                 role={connectedRole || 'player'}
                 connected={isConnected}
                 members={automaticAccess?.members || []}
+                characterSheetUids={automaticAccess?.characterSheetUids || []}
+                onOpenCharacterSheet={onOpenCharacterSheet}
                 onCommand={sendBoardCommand}
               />
             ) : (
