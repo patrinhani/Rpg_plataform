@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import secrets
 from collections.abc import Iterator
 from contextlib import suppress
@@ -146,8 +147,16 @@ def create_router() -> APIRouter:
     router = APIRouter()
 
     @router.get("/api/vtt/health")
-    async def health() -> dict[str, Any]:
-        return {"status": "ok", "protocolVersion": PROTOCOL_VERSION}
+    async def health(request: Request) -> dict[str, Any]:
+        service: VTTService = request.app.state.vtt
+        deployment_commit = os.getenv("RENDER_GIT_COMMIT", "").strip()
+        return {
+            "status": "ok",
+            "protocolVersion": PROTOCOL_VERSION,
+            "activeCampaignId": service.active_campaign_id,
+            "campaignLoaded": service.has_catalog,
+            "deploymentCommit": deployment_commit or None,
+        }
 
     @router.post(
         "/api/vtt/mesa-challenges",

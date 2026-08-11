@@ -18,7 +18,13 @@ def test_public_api_documentation_is_disabled(client) -> None:
 def test_health(client: TestClient) -> None:
     response = client.get("/api/vtt/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "protocolVersion": 1}
+    assert response.json() == {
+        "status": "ok",
+        "protocolVersion": 1,
+        "activeCampaignId": "caos-empty",
+        "campaignLoaded": False,
+        "deploymentCommit": None,
+    }
 
 
 def test_room_creation_requires_host_token(client: TestClient) -> None:
