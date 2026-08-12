@@ -707,6 +707,22 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 1529060,
+      "sha256": "cb3d9f5384799fcf42e34908aadbe369772610dfcf62222a1603e304aaa08955",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
       "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
       "kind": "map",
@@ -739,6 +755,22 @@
         "hasAlpha": false,
         "webpVariant": "VP8"
       }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 1317672,
+      "sha256": "b4b94e7cbbf473819079f378549ab9d7ef63510dd3ba47abfd867d95dbb4a13a",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
@@ -775,6 +807,22 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 1894680,
+      "sha256": "d7c480918036b5a037366abd9df17411fc05f8da4c9e37643ee33ccb983382e9",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v1.png",
       "kind": "overlay",
@@ -794,19 +842,18 @@
     {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
       "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
-      "kind": "overlay",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 2379495,
       "sha256": "a9f9c73e47c3048fd3878e54895ff8b1669e3a5a8cf9f62e9965abc291e68ae1",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 3136,
         "height": 3136,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v1.png",
@@ -828,19 +875,18 @@
     {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
       "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
-      "kind": "overlay",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 412834,
       "sha256": "77172c2ae4ae7f80382c5b6a4037024d745e827c5c3335970a0d4119bdfaf564",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 3136,
         "height": 3136,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v1.png",
@@ -875,6 +921,22 @@
         "hasAlpha": true,
         "pngColorType": 6
       }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
+      "version": 3,
+      "mediaType": "image/png",
+      "bytes": 2703267,
+      "sha256": "c882daf8dfc4998e7481d483bd96fdcbb959bb94511026f69e95db81e501b805",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGBA"
+      },
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v1.png",
@@ -928,6 +990,22 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
+      "version": 4,
+      "mediaType": "image/png",
+      "bytes": 65186,
+      "sha256": "352a77a138fb833ee612b994f4dfdbe2e08725a8c8c6072ab152dafab45207d2",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGBA"
+      },
+      "kind": "overlay",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "kind": "map",
@@ -960,6 +1038,22 @@
         "hasAlpha": false,
         "webpVariant": "VP8"
       }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 2238022,
+      "sha256": "cce7be74b8f1e55302a5da8125412ed5129f6b36669f0bf3ed7307020273a7ca",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
@@ -996,6 +1090,22 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 1810540,
+      "sha256": "797438f31195037fb3e6b43b3d30af13e4c8128b34451564f25dc20e173bee8a",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
       "kind": "map",
@@ -1028,6 +1138,22 @@
         "hasAlpha": false,
         "webpVariant": "VP8"
       }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+      "version": 3,
+      "mediaType": "image/webp",
+      "bytes": 2632436,
+      "sha256": "11c148b56df03c7eee60eed97a3be4f85b9a38ce6c3dbcfb2f28e0c7c9ca3569",
+      "image": {
+        "width": 3136,
+        "height": 3136,
+        "mode": "RGB"
+      },
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v1.png",
@@ -1115,6 +1241,22 @@
       }
     },
     {
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
+      "version": 2,
+      "mediaType": "image/png",
+      "bytes": 315746,
+      "sha256": "e994167b62c86ff8cd1b183a7e490319d249307b3dc52133e3495b613a88434c",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v1.png",
       "kind": "concept",
@@ -1134,19 +1276,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 1434507,
       "sha256": "20466180976a7b7dd415b3d16692b450697b03ec78f5b0dde727f6943a521ebb",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v1.png",
@@ -1168,19 +1309,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 1274813,
       "sha256": "70990224e2be504341ea41b52204ac6c8df2d34e6b438f21afa2dbd0ef1b893e",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v1.png",
@@ -1202,19 +1342,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 1325425,
       "sha256": "ebaefbbbda60d075b12c59ec7045eedc0bb2278a21ad609a63421372d8915392",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v1.png",
@@ -1236,19 +1375,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 1226285,
       "sha256": "2ae693d73e21ee4aa71e028f19595d71c7bb93190420db686a67415b9083d6b9",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v1.png",
@@ -1270,19 +1408,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 1030795,
       "sha256": "150b94effa19f4a9f8c7824387d81f4199a933a4adf57702d65af99251243f0f",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v1.png",
@@ -1304,19 +1441,18 @@
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
       "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
+      "version": 2,
+      "mediaType": "image/png",
       "bytes": 969555,
       "sha256": "6e1d5aae254b5d430422535c4451d1c823d15f8e387f821921699602426520b2",
-      "mediaType": "image/png",
       "image": {
-        "format": "png",
         "width": 1254,
         "height": 1254,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-nucleo-ativo-objeto-vtt-v1.png",
@@ -1487,6 +1623,70 @@
         "description": "Uma única marca de Síntese cortada em quatro fragmentos diferentes que se recompõem sem alterações.",
         "hasAlpha": true
       }
+    },
+    {
+      "id": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
+      "relativePath": "assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
+      "version": 2,
+      "mediaType": "image/png",
+      "bytes": 664141,
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
+      "id": "asset:assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
+      "relativePath": "assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
+      "version": 2,
+      "mediaType": "image/png",
+      "bytes": 664141,
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
+      "id": "asset:assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
+      "relativePath": "assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
+      "version": 2,
+      "mediaType": "image/png",
+      "bytes": 664141,
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
+      "id": "asset:assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
+      "relativePath": "assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
+      "version": 2,
+      "mediaType": "image/png",
+      "bytes": 664141,
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
     },
     {
       "id": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
@@ -1815,27 +2015,19 @@
         "key": "helix-9-nivel-0",
         "playerMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+            "version": 3
           }
         ],
         "gmGuideMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+            "version": 3
           }
         ],
         "overlays": [],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v2.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v2.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
         "gridHint": null,
         "layers": [
           {
@@ -1849,11 +2041,11 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.41,
+                    "x": 0.417,
                     "y": 0.18,
-                    "width": 0.15,
-                    "height": 0.15,
-                    "rotation": 0.0
+                    "width": 0.125,
+                    "height": 0.125,
+                    "rotation": 0
                   }
                 ]
               },
@@ -1862,11 +2054,11 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.41,
+                    "x": 0.417,
                     "y": 0.18,
-                    "width": 0.15,
-                    "height": 0.15,
-                    "rotation": 0.0
+                    "width": 0.125,
+                    "height": 0.125,
+                    "rotation": 0
                   }
                 ]
               }
@@ -1879,27 +2071,19 @@
         "key": "helix-9-subsolo-1",
         "playerMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+            "version": 3
           }
         ],
         "gmGuideMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+            "version": 3
           }
         ],
         "overlays": [],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v2.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v2.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
         "gridHint": null,
         "layers": [
           {
@@ -1913,11 +2097,11 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.49,
-                    "y": 0.36,
-                    "width": 0.2,
-                    "height": 0.2,
-                    "rotation": 0.0
+                    "x": 0.466,
+                    "y": 0.327,
+                    "width": 0.15,
+                    "height": 0.15,
+                    "rotation": 0
                   }
                 ]
               },
@@ -1926,11 +2110,11 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.49,
-                    "y": 0.36,
-                    "width": 0.2,
-                    "height": 0.2,
-                    "rotation": 0.0
+                    "x": 0.466,
+                    "y": 0.327,
+                    "width": 0.15,
+                    "height": 0.15,
+                    "rotation": 0
                   }
                 ]
               }
@@ -1943,22 +2127,14 @@
         "key": "helix-9-subsolo-2-camara",
         "playerMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+            "version": 3
           }
         ],
         "gmGuideMaps": [
           {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v1.png",
-            "version": 1
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
-            "version": 2
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+            "version": 3
           }
         ],
         "overlays": [
@@ -1968,18 +2144,18 @@
             "version": 2
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v2.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
             "name": "inundacao",
-            "version": 2
+            "version": 3
           },
           {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v3.png",
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
             "name": "telas-quebradas",
-            "version": 3
+            "version": 4
           }
         ],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v2.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v2.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
         "gridHint": null,
         "layers": [
           {
@@ -1993,11 +2169,11 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.259,
-                    "y": 0.519,
-                    "width": 0.18,
-                    "height": 0.18,
-                    "rotation": 0.0
+                    "x": 0.256,
+                    "y": 0.506,
+                    "width": 0.15,
+                    "height": 0.15,
+                    "rotation": 0
                   }
                 ]
               },
@@ -2006,53 +2182,95 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.259,
-                    "y": 0.519,
-                    "width": 0.18,
-                    "height": 0.18,
-                    "rotation": 0.0
+                    "x": 0.256,
+                    "y": 0.506,
+                    "width": 0.15,
+                    "height": 0.15,
+                    "rotation": 0
                   }
                 ]
               }
             }
           },
           {
-            "id": "scene-layer:corpos-conectados",
-            "key": "corpos-conectados",
-            "label": "Corpos Conectados",
-            "defaultState": "conectados",
+            "id": "scene-layer:corpo-conectado-nordeste",
+            "key": "corpo-conectado-nordeste",
+            "label": "Corpo Conectado — Nordeste",
+            "defaultState": "conectado",
             "states": {
-              "conectados": {
-                "label": "Conectados",
-                "assetId": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+              "conectado": {
+                "label": "Conectado",
+                "assetId": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.394,
-                    "y": 0.345,
-                    "width": 0.092,
-                    "height": 0.092,
-                    "rotation": -34.0
-                  },
+                    "x": 0.619,
+                    "y": 0.344,
+                    "width": 0.088,
+                    "height": 0.088,
+                    "rotation": 34
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "scene-layer:corpo-conectado-noroeste",
+            "key": "corpo-conectado-noroeste",
+            "label": "Corpo Conectado — Noroeste",
+            "defaultState": "conectado",
+            "states": {
+              "conectado": {
+                "label": "Conectado",
+                "assetId": "asset:assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
+                "placements": [
                   {
-                    "x": 0.623,
-                    "y": 0.345,
-                    "width": 0.092,
-                    "height": 0.092,
-                    "rotation": 34.0
-                  },
+                    "x": 0.397,
+                    "y": 0.344,
+                    "width": 0.088,
+                    "height": 0.088,
+                    "rotation": -34
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "scene-layer:corpo-conectado-sudeste",
+            "key": "corpo-conectado-sudeste",
+            "label": "Corpo Conectado — Sudeste",
+            "defaultState": "conectado",
+            "states": {
+              "conectado": {
+                "label": "Conectado",
+                "assetId": "asset:assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
+                "placements": [
                   {
-                    "x": 0.392,
-                    "y": 0.627,
-                    "width": 0.092,
-                    "height": 0.092,
-                    "rotation": -142.0
-                  },
+                    "x": 0.62,
+                    "y": 0.626,
+                    "width": 0.088,
+                    "height": 0.088,
+                    "rotation": 143
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "scene-layer:corpo-conectado-sudoeste",
+            "key": "corpo-conectado-sudoeste",
+            "label": "Corpo Conectado — Sudoeste",
+            "defaultState": "conectado",
+            "states": {
+              "conectado": {
+                "label": "Conectado",
+                "assetId": "asset:assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
+                "placements": [
                   {
-                    "x": 0.626,
-                    "y": 0.627,
-                    "width": 0.092,
-                    "height": 0.092,
-                    "rotation": 143.0
+                    "x": 0.397,
+                    "y": 0.626,
+                    "width": 0.088,
+                    "height": 0.088,
+                    "rotation": -142
                   }
                 ]
               }
@@ -2071,22 +2289,22 @@
                   {
                     "x": 0.507,
                     "y": 0.49,
-                    "width": 1.0,
-                    "height": 1.0,
-                    "rotation": 0.0
+                    "width": 1,
+                    "height": 1,
+                    "rotation": 0
                   }
                 ]
               },
               "ritual": {
                 "label": "Ritual",
-                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
                 "placements": [
                   {
                     "x": 0.507,
                     "y": 0.49,
-                    "width": 0.165,
-                    "height": 0.165,
-                    "rotation": 0.0
+                    "width": 0.1,
+                    "height": 0.1,
+                    "rotation": 0
                   }
                 ]
               }
@@ -2181,5 +2399,6 @@
       "path": "helix-9-subsolo-2-camara",
       "message": "A campanha nao informa escala/origem de grade para esta cena."
     }
-  ]
+  ],
+  "sourceFingerprint": "sha256:52601e8e761482cb4405851e014791a1d045f9f40b9a05a1caf1e8ec763b358a"
 }
