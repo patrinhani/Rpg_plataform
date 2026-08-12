@@ -1224,6 +1224,22 @@
       }
     },
     {
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
+      "version": 3,
+      "mediaType": "image/png",
+      "bytes": 6175,
+      "sha256": "d6ed27a2b5980b3c26d4bd1e591e7c806228d6a42ad8867f86cf39051d622bdd",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "kind": "prop",
+      "audience": "players",
+      "controlledBy": "gm"
+    },
+    {
       "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
       "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
       "kind": "prop",
@@ -2043,8 +2059,8 @@
                   {
                     "x": 0.417,
                     "y": 0.18,
-                    "width": 0.125,
-                    "height": 0.125,
+                    "width": 0.115,
+                    "height": 0.115,
                     "rotation": 0
                   }
                 ]
@@ -2056,8 +2072,8 @@
                   {
                     "x": 0.417,
                     "y": 0.18,
-                    "width": 0.125,
-                    "height": 0.125,
+                    "width": 0.115,
+                    "height": 0.115,
                     "rotation": 0
                   }
                 ]
@@ -2099,8 +2115,8 @@
                   {
                     "x": 0.466,
                     "y": 0.327,
-                    "width": 0.15,
-                    "height": 0.15,
+                    "width": 0.14,
+                    "height": 0.14,
                     "rotation": 0
                   }
                 ]
@@ -2112,8 +2128,8 @@
                   {
                     "x": 0.466,
                     "y": 0.327,
-                    "width": 0.15,
-                    "height": 0.15,
+                    "width": 0.14,
+                    "height": 0.14,
                     "rotation": 0
                   }
                 ]
@@ -2169,10 +2185,10 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.256,
-                    "y": 0.506,
-                    "width": 0.15,
-                    "height": 0.15,
+                    "x": 0.25,
+                    "y": 0.512,
+                    "width": 0.135,
+                    "height": 0.135,
                     "rotation": 0
                   }
                 ]
@@ -2182,10 +2198,10 @@
                 "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
                 "placements": [
                   {
-                    "x": 0.256,
-                    "y": 0.506,
-                    "width": 0.15,
-                    "height": 0.15,
+                    "x": 0.25,
+                    "y": 0.512,
+                    "width": 0.135,
+                    "height": 0.135,
                     "rotation": 0
                   }
                 ]
@@ -2205,8 +2221,8 @@
                   {
                     "x": 0.619,
                     "y": 0.344,
-                    "width": 0.088,
-                    "height": 0.088,
+                    "width": 0.074,
+                    "height": 0.074,
                     "rotation": 34
                   }
                 ]
@@ -2226,8 +2242,8 @@
                   {
                     "x": 0.397,
                     "y": 0.344,
-                    "width": 0.088,
-                    "height": 0.088,
+                    "width": 0.074,
+                    "height": 0.074,
                     "rotation": -34
                   }
                 ]
@@ -2247,8 +2263,8 @@
                   {
                     "x": 0.62,
                     "y": 0.626,
-                    "width": 0.088,
-                    "height": 0.088,
+                    "width": 0.074,
+                    "height": 0.074,
                     "rotation": 143
                   }
                 ]
@@ -2268,8 +2284,8 @@
                   {
                     "x": 0.397,
                     "y": 0.626,
-                    "width": 0.088,
-                    "height": 0.088,
+                    "width": 0.074,
+                    "height": 0.074,
                     "rotation": -142
                   }
                 ]
@@ -2284,13 +2300,13 @@
             "states": {
               "removido": {
                 "label": "Removido",
-                "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
                 "placements": [
                   {
                     "x": 0.507,
                     "y": 0.49,
-                    "width": 1,
-                    "height": 1,
+                    "width": 0.1,
+                    "height": 0.1,
                     "rotation": 0
                   }
                 ]
@@ -2400,5 +2416,5 @@
       "message": "A campanha nao informa escala/origem de grade para esta cena."
     }
   ],
-  "sourceFingerprint": "sha256:52601e8e761482cb4405851e014791a1d045f9f40b9a05a1caf1e8ec763b358a"
+  "sourceFingerprint": "sha256:5eae297686249352714d030d838bd6d328753a0b7d596dbff75518803c644bb4"
 }
