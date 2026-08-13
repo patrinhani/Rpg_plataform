@@ -534,6 +534,50 @@
   color: #b7c9d4;
 }
 
+.vtt-lab__scene-loading {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background:
+    radial-gradient(circle at center, rgba(24, 92, 132, 0.13), transparent 48%),
+    #02070b;
+  border: 1px solid rgba(98, 174, 222, 0.2);
+  border-radius: 12px;
+  color: #819dab;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-height: 330px;
+  padding: 32px;
+  text-align: center;
+}
+
+.vtt-lab__scene-loading strong {
+  color: #c7dfeb;
+  font-family: "Special Elite", ui-monospace, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vtt-lab__scene-loading p {
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.vtt-lab__scene-loading-indicator {
+  animation: vtt-scene-loading 900ms linear infinite;
+  border: 2px solid rgba(101, 200, 255, 0.16);
+  border-radius: 50%;
+  border-top-color: #65c8ff;
+  height: 30px;
+  width: 30px;
+}
+
+@keyframes vtt-scene-loading {
+  to { transform: rotate(360deg); }
+}
+
 .vtt-lab__board {
   --vtt-token-size: clamp(48px, 6vw, 68px);
   aspect-ratio: 16 / 9;

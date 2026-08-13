@@ -9,6 +9,7 @@ export default defineConfig([
     'dist',
     'dist-vtt',
     'server/.artifacts',
+    '.artifacts',
     'server/.build',
     'server/.cache',
     '**/.pytest_cache',

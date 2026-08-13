@@ -570,6 +570,7 @@ export default function VttLab({
 
     setConnectionStatus('connecting');
     setConnectedRole(role);
+    setCampaignState(null);
     setLastError('');
 
     const socket = new WebSocket(buildWebSocketUrl(
@@ -1155,6 +1156,9 @@ export default function VttLab({
       : (busyAction.startsWith('connect-') ? 'Solicitando ticket' : ''));
   const statusLabel = operationLabel || STATUS_LABELS[connectionStatus] || connectionStatus;
   const statusVisualState = operationLabel ? 'working' : connectionStatus;
+  const integratedSceneStatus = connectionStatus === 'error'
+    ? 'Não foi possível carregar a sessão atual.'
+    : 'Sincronizando a sessão atual com o servidor...';
 
   return (
     <main
@@ -1480,7 +1484,7 @@ export default function VttLab({
                 <h2>
                   {campaignState
                     ? (campaignState.table?.name || launchContext.roomName || 'Mesa virtual')
-                    : 'Aguardando cena'}
+                    : (usesAutomaticAccess ? 'Carregando sessão' : 'Aguardando cena')}
                 </h2>
               </div>
               <div className="vtt-lab__board-actions">
@@ -1499,6 +1503,12 @@ export default function VttLab({
                 onOpenCharacterSheet={onOpenCharacterSheet}
                 onCommand={sendBoardCommand}
               />
+            ) : usesAutomaticAccess ? (
+              <div className="vtt-lab__scene-loading" role="status" aria-live="polite">
+                <span className="vtt-lab__scene-loading-indicator" aria-hidden="true" />
+                <strong>{connectionStatus === 'error' ? 'Sessão indisponível' : 'Preparando a mesa'}</strong>
+                <p>{integratedSceneStatus}</p>
+              </div>
             ) : (
               <>
                 <div
