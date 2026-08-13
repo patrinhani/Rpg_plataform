@@ -28,7 +28,10 @@ const BOARD_COMMAND_TYPES = new Set([
   'prop.update',
   'prop.remove',
   'fog.set_enabled',
-  'fog.stroke',
+  'fog.region.create',
+  'fog.region.update',
+  'fog.region.set_revealed',
+  'fog.region.remove',
   'fog.reset',
   'fog.reveal_all',
 ]);
@@ -146,18 +149,6 @@ function buildAssetUrl(serverUrl, roomId, mediaToken, assetId) {
   return url.toString();
 }
 
-function buildFogMapUrl(serverUrl, roomId, mediaToken, sceneId, fogRevision) {
-  if (!mediaToken) return '';
-  const url = new URL(buildHttpUrl(
-    serverUrl,
-    `/api/vtt/rooms/${encodeURIComponent(roomId)}/fog-map`,
-  ));
-  url.searchParams.set('access', String(mediaToken));
-  url.searchParams.set('scene', String(sceneId || ''));
-  url.searchParams.set('revision', String(Math.max(0, Number(fogRevision) || 0)));
-  return url.toString();
-}
-
 function readPlayerInviteFragment() {
   const location = globalThis.location;
   if (!location?.hash) return { roomId: '', inviteToken: '', present: false };
@@ -198,7 +189,6 @@ function hydrateCampaignState(rawState, revision, grant) {
   const rawProps = rawState.props && typeof rawState.props === 'object'
     ? rawState.props
     : {};
-  const useProtectedMap = grant.role === 'player' && rawState.fog?.enabled;
   const boardState = { ...rawState };
   delete boardState.deliveredHandouts;
   if (boardState.catalog && typeof boardState.catalog === 'object') {
@@ -223,15 +213,7 @@ function hydrateCampaignState(rawState, revision, grant) {
       ...rawScene,
       map: rawScene.map ? {
         ...rawScene.map,
-        url: useProtectedMap
-          ? buildFogMapUrl(
-              grant.serverUrl,
-              grant.roomId,
-              grant.token,
-              rawScene.id,
-              rawState.fog?.renderRevision ?? revision,
-            )
-          : assetUrl(rawScene.map.assetId),
+        url: assetUrl(rawScene.map.assetId),
       } : null,
       gmGuideMap: rawScene.gmGuideMap ? {
         ...rawScene.gmGuideMap,

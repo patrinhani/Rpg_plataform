@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import io
 import json
 import sqlite3
-import zlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -110,19 +108,6 @@ def _asset(client: TestClient, room_id: str, asset_id: str, access: str):
     )
 
 
-def _fog_map(client: TestClient, room_id: str, access: str, revision: int):
-    return client.get(
-        f"/api/vtt/rooms/{room_id}/fog-map",
-        params={"access": access, "revision": revision},
-    )
-
-
-def _decoded_mask(snapshot: dict[str, Any]) -> bytes:
-    fog = snapshot["state"]["fog"]
-    assert fog["encoding"] == "zlib-base64"
-    return zlib.decompress(base64.b64decode(fog["data"], validate=True))
-
-
 def _read_persisted_room(state_db: Path, room_id: str) -> dict[str, Any]:
     with sqlite3.connect(state_db) as connection:
         row = connection.execute(
@@ -142,7 +127,7 @@ def _write_persisted_room(
         )
 
 
-def test_fog_is_server_composited_role_safe_and_hides_tokens(
+def test_fog_regions_are_role_safe_and_filter_tokens_without_server_rendering(
     tmp_path: Path,
 ) -> None:
     app, ids = _fog_app(tmp_path)
@@ -159,10 +144,10 @@ def test_fog_is_server_composited_role_safe_and_hides_tokens(
         ) as player:
             master_initial = master.receive_json()
             player_initial = player.receive_json()
-            assert len(_decoded_mask(master_initial)) == 256 * 256
-            assert _decoded_mask(master_initial) == bytes(256 * 256)
-            assert "data" not in player_initial["state"]["fog"]
+            assert master_initial["state"]["fog"]["mode"] == "regions"
+            assert master_initial["state"]["fog"]["regions"] == []
             assert player_initial["state"]["fog"]["enabled"] is True
+            assert player_initial["state"]["fog"]["regions"] == []
 
             master.send_json(
                 {
@@ -181,7 +166,6 @@ def test_fog_is_server_composited_role_safe_and_hides_tokens(
             token_id = next(iter(master_spawn["state"]["tokens"]))
             assert token_id in master_spawn["state"]["tokens"]
             assert player_spawn["state"]["tokens"] == {}
-            assert master_spawn["state"]["fog"]["renderRevision"] == 0
 
             player.send_json(
                 {
@@ -192,15 +176,13 @@ def test_fog_is_server_composited_role_safe_and_hides_tokens(
             )
             assert player.receive_json()["error"]["code"] == "forbidden"
 
-            assert (
-                _asset(
-                    client,
-                    room["roomId"],
-                    ids["map_v2"],
-                    player_access["mediaToken"],
-                ).status_code
-                == 404
-            )
+            # A névoa é desenhada no navegador; o servidor não compõe cópias do mapa.
+            assert _asset(
+                client,
+                room["roomId"],
+                ids["map_v2"],
+                player_access["mediaToken"],
+            ).status_code == 200
             assert (
                 _asset(
                     client,
@@ -220,59 +202,87 @@ def test_fog_is_server_composited_role_safe_and_hides_tokens(
                 == 200
             )
 
-            hidden_map = _fog_map(
-                client,
-                room["roomId"],
-                player_access["mediaToken"],
-                master_spawn["state"]["fog"]["renderRevision"],
+            master.send_json(
+                {
+                    "type": "fog.region.create",
+                    "commandId": "create-center-room",
+                    "payload": {
+                        "regionId": "center-room",
+                        "label": "Sala central",
+                        "points": [
+                            {"x": 0.4, "y": 0.4},
+                            {"x": 0.6, "y": 0.4},
+                            {"x": 0.6, "y": 0.6},
+                            {"x": 0.4, "y": 0.6},
+                        ],
+                    },
+                }
             )
-            assert hidden_map.status_code == 200
-            assert hidden_map.headers["content-type"] == "image/webp"
-            with Image.open(io.BytesIO(hidden_map.content)) as image:
-                pixel = image.convert("RGB").getpixel((32, 32))
-                assert max(pixel) < 15
+            master_created = master.receive_json()
+            player_created = player.receive_json()
+            assert player_created["state"]["tokens"] == {}
+            assert player_created["state"]["fog"]["regions"] == []
+            assert master_created["state"]["fog"]["regions"][0]["revealed"] is False
 
             master.send_json(
                 {
-                    "type": "fog.stroke",
-                    "commandId": "reveal-center",
-                    "payload": {
-                        "points": [{"x": 0.5, "y": 0.5}],
-                        "radius": 0.1,
-                        "reveal": True,
-                    },
+                    "type": "fog.region.set_revealed",
+                    "commandId": "reveal-center-room",
+                    "payload": {"regionIds": ["center-room"], "revealed": True},
                 }
             )
             master_revealed = master.receive_json()
             player_revealed = player.receive_json()
-            assert master_revealed["state"]["fog"]["revision"] == 1
-            assert master_revealed["state"]["fog"]["renderRevision"] == 1
+            assert master_revealed["state"]["fog"]["revision"] == 2
+            assert master_revealed["state"]["fog"]["revealAll"] is False
             assert token_id in player_revealed["state"]["tokens"]
-            assert _decoded_mask(master_revealed)[128 * 256 + 128] == 255
-
-            revealed_map = _fog_map(
-                client,
-                room["roomId"],
-                player_access["mediaToken"],
-                master_revealed["state"]["fog"]["renderRevision"],
-            )
-            assert revealed_map.status_code == 200
-            with Image.open(io.BytesIO(revealed_map.content)) as image:
-                rgb = image.convert("RGB")
-                center = rgb.getpixel((32, 32))
-                corner = rgb.getpixel((0, 0))
-                assert center[0] > 150 and center[1] < 70
-                assert max(corner) < 15
+            assert "label" not in player_revealed["state"]["fog"]["regions"][0]
 
             master.send_json(
                 {
-                    "type": "fog.stroke",
-                    "commandId": "hide-center",
+                    "type": "fog.region.update",
+                    "commandId": "move-center-room-away",
                     "payload": {
-                        "points": [{"x": 0.5, "y": 0.5}],
-                        "radius": 0.1,
-                        "reveal": False,
+                        "regionId": "center-room",
+                        "label": "Sala central ajustada",
+                        "points": [
+                            {"x": 0.05, "y": 0.05},
+                            {"x": 0.2, "y": 0.05},
+                            {"x": 0.2, "y": 0.2},
+                            {"x": 0.05, "y": 0.2},
+                        ],
                     },
+                }
+            )
+            master_updated = master.receive_json()
+            player_updated = player.receive_json()
+            assert master_updated["state"]["fog"]["regions"][0]["revealed"] is True
+            assert player_updated["state"]["tokens"] == {}
+
+            master.send_json(
+                {
+                    "type": "fog.region.update",
+                    "commandId": "restore-center-room",
+                    "payload": {
+                        "regionId": "center-room",
+                        "label": "Sala central",
+                        "points": [
+                            {"x": 0.4, "y": 0.4},
+                            {"x": 0.6, "y": 0.4},
+                            {"x": 0.6, "y": 0.6},
+                            {"x": 0.4, "y": 0.6},
+                        ],
+                    },
+                }
+            )
+            master.receive_json()
+            assert token_id in player.receive_json()["state"]["tokens"]
+
+            master.send_json(
+                {
+                    "type": "fog.region.set_revealed",
+                    "commandId": "hide-center-room",
+                    "payload": {"regionIds": ["center-room"], "revealed": False},
                 }
             )
             master.receive_json()
@@ -294,31 +304,40 @@ def test_fog_is_server_composited_role_safe_and_hides_tokens(
                 }
             )
             master_overlay = master.receive_json()
-            player.receive_json()
-            assert master_overlay["state"]["fog"]["renderRevision"] == 3
+            player_overlay = player.receive_json()
+            assert master_overlay["state"]["scene"]["overlays"]
+            assert player_overlay["state"]["scene"]["overlays"]
             master.send_json(
                 {"type": "fog.reveal_all", "commandId": "reveal-everything"}
             )
             master_all = master.receive_json()
             player_all = player.receive_json()
             assert token_id in player_all["state"]["tokens"]
-            assert player_all["state"]["scene"]["overlays"] == []
-            all_map = _fog_map(
-                client,
-                room["roomId"],
-                player_access["mediaToken"],
-                master_all["state"]["fog"]["renderRevision"],
-            )
-            assert all_map.status_code == 200
-            with Image.open(io.BytesIO(all_map.content)) as image:
-                red, _green, blue = image.convert("RGB").getpixel((32, 32))
-                assert red > 70 and blue > 70
+            assert player_all["state"]["fog"]["revealAll"] is True
+            assert master_all["state"]["fog"]["regions"][0]["revealed"] is True
 
             master.send_json({"type": "fog.reset", "commandId": "hide-everything"})
             master_reset = master.receive_json()
             player_reset = player.receive_json()
-            assert _decoded_mask(master_reset) == bytes(256 * 256)
+            assert master_reset["state"]["fog"]["revealAll"] is False
+            assert master_reset["state"]["fog"]["regions"][0]["revealed"] is False
             assert player_reset["state"]["tokens"] == {}
+
+            master.send_json(
+                {
+                    "type": "fog.region.remove",
+                    "commandId": "remove-center-room",
+                    "payload": {"regionId": "center-room"},
+                }
+            )
+            assert master.receive_json()["state"]["fog"]["regions"] == []
+            assert player.receive_json()["state"]["fog"]["regions"] == []
+
+            # O endpoint pesado de composição deixou de existir.
+            assert client.get(
+                f"/api/vtt/rooms/{room['roomId']}/fog-map",
+                params={"access": player_access["mediaToken"]},
+            ).status_code == 404
 
 
 def test_invalid_fog_commands_are_rejected_before_mutation(tmp_path: Path) -> None:
@@ -357,10 +376,22 @@ def test_invalid_fog_commands_are_rejected_before_mutation(tmp_path: Path) -> No
                 error = master.receive_json()
                 assert error["type"] == "error"
                 assert error["error"]["code"].startswith("invalid_fog_")
+            master.send_json(
+                {
+                    "type": "fog.stroke",
+                    "commandId": "legacy-valid-brush",
+                    "payload": {
+                        "points": [{"x": 0.5, "y": 0.5}],
+                        "radius": 0.1,
+                        "reveal": True,
+                    },
+                }
+            )
+            assert master.receive_json()["error"]["code"] == "fog_regions_required"
             assert app.state.vtt._rooms[room["roomId"]].revision == 0
 
 
-def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> None:
+def test_props_are_region_filtered_and_persisted(tmp_path: Path) -> None:
     state_db = tmp_path / "props-state.sqlite3"
     app, ids = _fog_app(tmp_path, state_db_path=state_db)
     with TestClient(app) as client:
@@ -434,28 +465,38 @@ def test_props_are_separate_server_composited_and_persisted(tmp_path: Path) -> N
 
             master.send_json(
                 {
-                    "type": "fog.stroke",
-                    "commandId": "reveal-prop-center",
+                    "type": "fog.region.create",
+                    "commandId": "create-prop-room",
                     "payload": {
-                        "points": [{"x": 0.5, "y": 0.5}],
-                        "radius": 0.12,
-                        "reveal": True,
+                        "regionId": "prop-room",
+                        "label": "Sala do objeto",
+                        "points": [
+                            {"x": 0.35, "y": 0.35},
+                            {"x": 0.65, "y": 0.35},
+                            {"x": 0.65, "y": 0.65},
+                            {"x": 0.35, "y": 0.65},
+                        ],
                     },
                 }
             )
-            master_revealed = master.receive_json()
+            master.receive_json()
+            assert player.receive_json()["state"]["props"] == {}
+            master.send_json(
+                {
+                    "type": "fog.region.set_revealed",
+                    "commandId": "reveal-prop-room",
+                    "payload": {"regionIds": ["prop-room"], "revealed": True},
+                }
+            )
+            master.receive_json()
             player_revealed = player.receive_json()
-            assert player_revealed["state"]["props"] == {}
-            rendered = _fog_map(
+            assert prop_id in player_revealed["state"]["props"]
+            assert _asset(
                 client,
                 room["roomId"],
+                ids["prop"],
                 player_access["mediaToken"],
-                master_revealed["state"]["fog"]["renderRevision"],
-            )
-            assert rendered.status_code == 200
-            with Image.open(io.BytesIO(rendered.content)) as image:
-                red, green, blue = image.convert("RGB").getpixel((32, 32))
-                assert green > 150 and green > red * 2 and green > blue * 2
+            ).status_code == 200
 
             master.send_json(
                 {
@@ -566,13 +607,23 @@ def test_integrated_room_and_fog_survive_restart_without_persisting_access_grant
                     "payload": {"enabled": True},
                 },
                 {
-                    "type": "fog.stroke",
-                    "commandId": "persisted-stroke",
+                    "type": "fog.region.create",
+                    "commandId": "persisted-region",
                     "payload": {
-                        "points": [{"x": 0.5, "y": 0.5}],
-                        "radius": 0.08,
-                        "reveal": True,
+                        "regionId": "persisted-room",
+                        "label": "Sala persistida",
+                        "points": [
+                            {"x": 0.4, "y": 0.4},
+                            {"x": 0.6, "y": 0.4},
+                            {"x": 0.6, "y": 0.6},
+                            {"x": 0.4, "y": 0.6},
+                        ],
                     },
+                },
+                {
+                    "type": "fog.region.set_revealed",
+                    "commandId": "persisted-region-revealed",
+                    "payload": {"regionIds": ["persisted-room"], "revealed": True},
                 },
             ):
                 master.send_json(command)
@@ -617,8 +668,20 @@ def test_integrated_room_and_fog_survive_restart_without_persisting_access_grant
             assert master_snapshot["revision"] == persisted_revision
             assert master_snapshot["state"]["table"]["name"] == "Mnemosyne recuperada"
             assert master_snapshot["state"]["fog"]["revision"] == persisted_fog_revision
-            assert _decoded_mask(master_snapshot)[128 * 256 + 128] == 255
-            assert "data" not in player_snapshot["state"]["fog"]
+            assert master_snapshot["state"]["fog"]["regions"] == [
+                {
+                    "regionId": "persisted-room",
+                    "label": "Sala persistida",
+                    "points": [
+                        {"x": 0.4, "y": 0.4},
+                        {"x": 0.6, "y": 0.4},
+                        {"x": 0.6, "y": 0.6},
+                        {"x": 0.4, "y": 0.6},
+                    ],
+                    "revealed": True,
+                }
+            ]
+            assert player_snapshot["state"]["fog"]["regions"][0]["revealed"] is True
             assert any(
                 token["label"] == "Agente persistido"
                 for token in player_snapshot["state"]["tokens"].values()
@@ -690,18 +753,23 @@ def test_persisted_fog_resets_closed_when_map_fingerprint_is_stale(
             master.receive_json()
             master.send_json(
                 {
-                    "type": "fog.stroke",
-                    "commandId": "reveal-before-map-change",
+                    "type": "fog.region.create",
+                    "commandId": "region-before-map-change",
                     "payload": {
-                        "points": [{"x": 0.5, "y": 0.5}],
-                        "radius": 0.1,
-                        "reveal": True,
+                        "regionId": "stale-room",
+                        "label": "Sala ligada ao mapa",
+                        "points": [
+                            {"x": 0.4, "y": 0.4},
+                            {"x": 0.6, "y": 0.4},
+                            {"x": 0.6, "y": 0.6},
+                            {"x": 0.4, "y": 0.6},
+                        ],
                     },
                 }
             )
             revealed = master.receive_json()
             assert revealed["state"]["fog"]["revision"] == 1
-            assert _decoded_mask(revealed)[128 * 256 + 128] == 255
+            assert len(revealed["state"]["fog"]["regions"]) == 1
 
     payload = _read_persisted_room(state_db, room["roomId"])
     scene = payload["scenes"]["scene:salao-vazio"]
@@ -725,8 +793,7 @@ def test_persisted_fog_resets_closed_when_map_fingerprint_is_stale(
             restored = master.receive_json()
             assert restored["state"]["fog"]["enabled"] is True
             assert restored["state"]["fog"]["revision"] == 0
-            assert restored["state"]["fog"]["renderRevision"] == 0
-            assert _decoded_mask(restored) == bytes(256 * 256)
+            assert restored["state"]["fog"]["regions"] == []
 
     with sqlite3.connect(state_db) as connection:
         assert connection.execute(

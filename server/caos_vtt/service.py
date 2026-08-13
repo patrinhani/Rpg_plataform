@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import binascii
 import hashlib
-import io
 import json
 import math
 import re
 import secrets
 import string
 import warnings
-import zlib
 from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -20,8 +17,6 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import WebSocket
-from PIL import Image, ImageDraw
-
 from .campaign import (
     AssetNotAvailableError,
     AssetView,
@@ -32,6 +27,10 @@ from .campaign import (
 )
 from .models import (
     FogResetCommand,
+    FogRegionCreateCommand,
+    FogRegionRemoveCommand,
+    FogRegionSetRevealedCommand,
+    FogRegionUpdateCommand,
     FogRevealAllCommand,
     FogSetEnabledCommand,
     FogStrokeCommand,
@@ -65,9 +64,7 @@ MAX_ROOM_TOKENS = 256
 MAX_ROOM_PROPS = 128
 PROCESSED_COMMAND_LIMIT = 256
 CLIENT_SEND_TIMEOUT_SECONDS = 5.0
-FOG_MASK_SIZE = 256
-FOG_RENDER_CACHE_LIMIT = 8
-MAX_FOG_RENDER_PIXELS = 40_000_000
+MAX_FOG_REGIONS_PER_SCENE = 128
 
 CatalogCommand = (
     MoveCommand
@@ -81,6 +78,10 @@ CatalogCommand = (
     | PropUpdateCommand
     | PropRemoveCommand
     | FogStrokeCommand
+    | FogRegionCreateCommand
+    | FogRegionUpdateCommand
+    | FogRegionSetRevealedCommand
+    | FogRegionRemoveCommand
     | FogSetEnabledCommand
     | FogResetCommand
     | FogRevealAllCommand
@@ -208,22 +209,21 @@ class CatalogProp:
 
 
 @dataclass(slots=True)
+class FogRegion:
+    region_id: str
+    label: str
+    points: tuple[tuple[float, float], ...]
+    revealed: bool = False
+
+
+@dataclass(slots=True)
 class FogState:
     enabled: bool = True
     revision: int = 0
-    render_revision: int = 0
     map_asset_id: str | None = None
     map_fingerprint: str | None = None
-    mask: bytearray = field(
-        default_factory=lambda: bytearray(FOG_MASK_SIZE * FOG_MASK_SIZE)
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class RenderedFogMap:
-    content: bytes
-    media_type: str
-    revision: int
+    reveal_all: bool = False
+    regions: dict[str, FogRegion] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -278,11 +278,6 @@ class VTTService:
         self._media_grants: dict[bytes, MediaGrant] = {}
         self._mesa_challenges: dict[str, PendingMesaChallenge] = {}
         self._map_fingerprint_cache: dict[str, str] = {}
-        self._fog_render_cache: OrderedDict[tuple[Any, ...], RenderedFogMap] = OrderedDict()
-        self._fog_render_inflight: dict[
-            tuple[Any, ...], asyncio.Task[RenderedFogMap]
-        ] = {}
-        self._fog_cache_lock = asyncio.Lock()
         self._rooms_lock = asyncio.Lock()
         self._access_lock = asyncio.Lock()
         self._store = state_store
@@ -657,7 +652,7 @@ class VTTService:
                 pass
 
     async def can_access_asset(self, room_id: str, role: Role, asset_id: str) -> bool:
-        """Restrict player media to assets currently revealed in the active scene."""
+        """Authorize only media needed by the player's current client-side scene."""
         catalog = self.catalog
         room = self._rooms.get(room_id)
         if catalog is None or room is None or not self._room_uses_catalog(room):
@@ -688,8 +683,6 @@ class VTTService:
                 state.asset_id for layer in scene.layers for state in layer.states
             }
             if asset_id in layer_asset_ids:
-                if fog is not None and fog.enabled:
-                    return False
                 selected_layers = room.scene_layers.get(active_scene_id, {})
                 return any(
                     selected_layers.get(layer.layer_id) == state.key
@@ -697,16 +690,6 @@ class VTTService:
                     for layer in scene.layers
                     for state in layer.states
                 )
-            if fog is not None and fog.enabled:
-                if scene.active_player_map == asset_id:
-                    return False
-                if any(overlay.asset_id == asset_id for overlay in scene.overlays):
-                    return False
-                if any(
-                    prop.asset_id == asset_id
-                    for prop in room.scene_props.get(active_scene_id, {}).values()
-                ):
-                    return False
             if scene.active_player_map == asset_id:
                 return True
 
@@ -758,151 +741,6 @@ class VTTService:
                 delivered,
             )
         return await asyncio.to_thread(catalog.open_asset, asset_id, role)
-
-    async def render_player_fog_map(
-        self,
-        room_id: str,
-        role: Role,
-    ) -> RenderedFogMap | None:
-        """Render the active player map server-side without exposing raw layers."""
-
-        catalog = self.catalog
-        room = self._rooms.get(room_id)
-        if (
-            catalog is None
-            or room is None
-            or not self._room_uses_catalog(room)
-            or role != "player"
-        ):
-            return None
-
-        async with room.lock:
-            scene_id = room.active_scene_id
-            fog = room.scene_fog.get(scene_id or "")
-            if scene_id is None or fog is None or not fog.enabled:
-                return None
-            scene = next(
-                (item for item in catalog.list_scenes("player") if item.scene_id == scene_id),
-                None,
-            )
-            if scene is None or scene.active_player_map is None:
-                return None
-            overlay_states = room.scene_overlays.get(scene_id, {})
-            overlay_ids = tuple(
-                overlay.asset_id
-                for overlay in scene.overlays
-                if overlay_states.get(overlay.asset_id, False)
-            )
-            prop_layers: list[tuple[str, float, float, float, float, float]] = []
-            for prop in room.scene_props.get(scene_id, {}).values():
-                if not prop.visible:
-                    continue
-                try:
-                    catalog.get_asset(prop.asset_id, "player")
-                except AssetNotAvailableError:
-                    continue
-                prop_layers.append(
-                    (
-                        prop.asset_id,
-                        prop.x,
-                        prop.y,
-                        prop.width,
-                        prop.height,
-                        prop.rotation,
-                    )
-                )
-            scene_layer_items: list[tuple[str, float, float, float, float, float]] = []
-            selected_layers = room.scene_layers.get(scene_id, {})
-            for layer in scene.layers:
-                selected_state = selected_layers.get(layer.layer_id)
-                state = next(
-                    (item for item in layer.states if item.key == selected_state),
-                    None,
-                )
-                if state is None:
-                    continue
-                for placement in state.placements:
-                    scene_layer_items.append(
-                        (
-                            state.asset_id,
-                            placement.x,
-                            placement.y,
-                            placement.width,
-                            placement.height,
-                            placement.rotation,
-                        )
-                    )
-            mask = bytes(fog.mask)
-            render_revision = fog.render_revision
-            map_id = scene.active_player_map
-
-        prop_signature = tuple(prop_layers)
-        scene_layer_signature = tuple(scene_layer_items)
-        cache_key = (
-            room_id,
-            scene_id,
-            render_revision,
-            map_id,
-            overlay_ids,
-            prop_signature,
-            scene_layer_signature,
-        )
-        async with self._fog_cache_lock:
-            cached = self._fog_render_cache.get(cache_key)
-            if cached is not None:
-                self._fog_render_cache.move_to_end(cache_key)
-                return cached
-            task = self._fog_render_inflight.get(cache_key)
-            if task is None:
-                task = asyncio.create_task(
-                    asyncio.to_thread(
-                        self._render_player_fog_map_sync,
-                        map_id,
-                        overlay_ids,
-                        prop_signature,
-                        scene_layer_signature,
-                        mask,
-                        render_revision,
-                    )
-                )
-                self._fog_render_inflight[cache_key] = task
-                task.add_done_callback(
-                    lambda completed, key=cache_key: asyncio.create_task(
-                        self._finish_fog_render(key, completed)
-                    )
-                )
-        try:
-            rendered = await asyncio.shield(task)
-        except (CampaignCatalogError, OSError, ValueError):
-            return None
-        async with room.lock:
-            current_fog = room.scene_fog.get(scene_id)
-            if (
-                room.active_scene_id != scene_id
-                or current_fog is None
-                or not current_fog.enabled
-                or current_fog.render_revision != rendered.revision
-            ):
-                return None
-        return rendered
-
-    async def _finish_fog_render(
-        self,
-        cache_key: tuple[Any, ...],
-        task: asyncio.Task[RenderedFogMap],
-    ) -> None:
-        try:
-            rendered = task.result()
-        except (CampaignCatalogError, OSError, ValueError, asyncio.CancelledError):
-            rendered = None
-        async with self._fog_cache_lock:
-            if self._fog_render_inflight.get(cache_key) is task:
-                self._fog_render_inflight.pop(cache_key, None)
-            if rendered is not None:
-                self._fog_render_cache[cache_key] = rendered
-                self._fog_render_cache.move_to_end(cache_key)
-                while len(self._fog_render_cache) > FOG_RENDER_CACHE_LIMIT:
-                    self._fog_render_cache.popitem(last=False)
 
     async def connect(
         self,
@@ -1102,7 +940,16 @@ class VTTService:
 
         if isinstance(
             command,
-            (FogStrokeCommand, FogSetEnabledCommand, FogResetCommand, FogRevealAllCommand),
+            (
+                FogStrokeCommand,
+                FogSetEnabledCommand,
+                FogResetCommand,
+                FogRevealAllCommand,
+                FogRegionCreateCommand,
+                FogRegionUpdateCommand,
+                FogRegionSetRevealedCommand,
+                FogRegionRemoveCommand,
+            ),
         ):
             if role != "master":
                 return CatalogCommandFailure("forbidden", "Somente o mestre altera a nevoa")
@@ -1113,13 +960,44 @@ class VTTService:
             if isinstance(command, FogSetEnabledCommand):
                 fog.enabled = command.payload.enabled
             elif isinstance(command, FogResetCommand):
-                fog.mask[:] = b"\x00" * len(fog.mask)
+                fog.reveal_all = False
+                for region in fog.regions.values():
+                    region.revealed = False
             elif isinstance(command, FogRevealAllCommand):
-                fog.mask[:] = b"\xff" * len(fog.mask)
-            else:
-                self._apply_fog_stroke(fog, command)
+                fog.reveal_all = True
+                for region in fog.regions.values():
+                    region.revealed = True
+            elif isinstance(command, FogStrokeCommand):
+                return CatalogCommandFailure(
+                    "fog_regions_required",
+                    "O pincel foi substituido por salas e setores",
+                )
+            elif isinstance(command, (FogRegionCreateCommand, FogRegionUpdateCommand)):
+                existing = fog.regions.get(command.payload.regionId)
+                if isinstance(command, FogRegionCreateCommand) and existing is not None:
+                    return CatalogCommandFailure("fog_region_exists", "A regiao ja existe")
+                if isinstance(command, FogRegionUpdateCommand) and existing is None:
+                    return CatalogCommandFailure("fog_region_not_found", "Regiao nao encontrada")
+                if existing is None and len(fog.regions) >= MAX_FOG_REGIONS_PER_SCENE:
+                    return CatalogCommandFailure("fog_region_limit", "Limite de regioes atingido")
+                fog.regions[command.payload.regionId] = FogRegion(
+                    region_id=command.payload.regionId,
+                    label=command.payload.label,
+                    points=tuple((point.x, point.y) for point in command.payload.points),
+                    revealed=existing.revealed if existing is not None else fog.reveal_all,
+                )
+            elif isinstance(command, FogRegionSetRevealedCommand):
+                if any(region_id not in fog.regions for region_id in command.payload.regionIds):
+                    return CatalogCommandFailure("fog_region_not_found", "Regiao nao encontrada")
+                for region_id in command.payload.regionIds:
+                    fog.regions[region_id].revealed = command.payload.revealed
+                # Uma seleção manual nunca deve revelar o espaço fora das regiões.
+                # Somente o comando explícito fog.reveal_all abre o mapa inteiro.
+                fog.reveal_all = False
+            elif isinstance(command, FogRegionRemoveCommand):
+                if fog.regions.pop(command.payload.regionId, None) is None:
+                    return CatalogCommandFailure("fog_region_not_found", "Regiao nao encontrada")
             fog.revision += 1
-            self._mark_scene_render_dirty(room, scene_id)
             return None
 
         if isinstance(command, SceneSelectCommand):
@@ -1140,7 +1018,6 @@ class VTTService:
             if command.payload.assetId not in overlays:
                 return CatalogCommandFailure("overlay_not_found", "Overlay nao encontrado")
             overlays[command.payload.assetId] = command.payload.enabled
-            self._mark_scene_render_dirty(room, room.active_scene_id or "")
             return None
 
         if isinstance(command, SceneLayerSetCommand):
@@ -1174,7 +1051,6 @@ class VTTService:
                     "layer_state_not_found", "Estado do objeto ancorado nao encontrado"
                 )
             layer_states[layer.layer_id] = command.payload.state
-            self._mark_scene_render_dirty(room, scene_id)
             return None
 
         if isinstance(command, TokenSpawnCommand):
@@ -1271,7 +1147,6 @@ class VTTService:
                 rotation=command.payload.rotation,
                 visible=command.payload.visible,
             )
-            self._mark_scene_render_dirty(room, room.active_scene_id or "")
             return None
 
         if isinstance(command, (PropUpdateCommand, PropRemoveCommand)):
@@ -1285,7 +1160,6 @@ class VTTService:
                 return CatalogCommandFailure("prop_not_found", "Objeto nao encontrado")
             if isinstance(command, PropRemoveCommand):
                 props.pop(prop.prop_id)
-                self._mark_scene_render_dirty(room, room.active_scene_id or "")
                 return None
 
             assert isinstance(command, PropUpdateCommand)
@@ -1310,7 +1184,6 @@ class VTTService:
                 value = getattr(command.payload, field_name)
                 if value is not None:
                     setattr(prop, field_name, value)
-            self._mark_scene_render_dirty(room, room.active_scene_id or "")
             return None
 
         tokens = room.scene_tokens.get(room.active_scene_id or "")
@@ -1423,10 +1296,22 @@ class VTTService:
                 "fog": {
                     "enabled": fog.enabled,
                     "revision": fog.revision,
-                    "renderRevision": fog.render_revision,
                     "mapAssetId": fog.map_asset_id,
                     "mapFingerprint": fog.map_fingerprint,
-                    "maskBase64": base64.b64encode(bytes(fog.mask)).decode("ascii"),
+                    "revealAll": fog.reveal_all,
+                    "regions": [
+                        {
+                            "regionId": region.region_id,
+                            "label": region.label,
+                            "points": [
+                                {"x": x, "y": y} for x, y in region.points
+                            ],
+                            "revealed": region.revealed,
+                        }
+                        for region in sorted(
+                            fog.regions.values(), key=lambda item: item.region_id
+                        )
+                    ],
                 },
             }
         return {
@@ -1864,9 +1749,6 @@ class VTTService:
         if not isinstance(enabled, bool):
             raise ValueError("fog.enabled invalido")
         revision = VTTService._nonnegative_int(payload.get("revision"), "fog.revision")
-        render_revision = VTTService._nonnegative_int(
-            payload.get("renderRevision", revision), "fog.renderRevision"
-        )
         persisted_map_asset_id = payload.get("mapAssetId")
         persisted_map_fingerprint = payload.get("mapFingerprint")
         if (
@@ -1882,19 +1764,60 @@ class VTTService:
                 map_asset_id=expected_map_asset_id,
                 map_fingerprint=expected_map_fingerprint,
             )
-        encoded = payload.get("maskBase64")
-        if not isinstance(encoded, str) or len(encoded) > 100_000:
-            raise ValueError("mascara de fog invalida")
-        mask = base64.b64decode(encoded, validate=True)
-        if len(mask) != FOG_MASK_SIZE * FOG_MASK_SIZE:
-            raise ValueError("dimensoes da mascara de fog invalidas")
+        raw_regions = payload.get("regions")
+        if raw_regions is None:
+            if "maskBase64" in payload:
+                warnings.warn(
+                    "Mascara antiga de nevoa foi migrada para tudo oculto",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            raw_regions = []
+        if not isinstance(raw_regions, list) or len(raw_regions) > MAX_FOG_REGIONS_PER_SCENE:
+            raise ValueError("regioes de fog invalidas")
+        regions: dict[str, FogRegion] = {}
+        for raw_region in raw_regions:
+            if not isinstance(raw_region, dict):
+                raise ValueError("regiao de fog invalida")
+            region_id = raw_region.get("regionId")
+            label = raw_region.get("label")
+            revealed = raw_region.get("revealed", False)
+            raw_points = raw_region.get("points")
+            if (
+                not isinstance(region_id, str)
+                or not 1 <= len(region_id) <= 64
+                or not region_id[0].isalnum()
+                or any(not (character.isalnum() or character in "._:-") for character in region_id)
+                or region_id in regions
+                or not isinstance(label, str)
+                or not 1 <= len(label.strip()) <= 80
+                or any(ord(character) < 32 for character in label)
+                or not isinstance(revealed, bool)
+                or not isinstance(raw_points, list)
+                or not 3 <= len(raw_points) <= 64
+            ):
+                raise ValueError("regiao de fog invalida")
+            points = tuple(
+                (
+                    VTTService._normalised_float(point.get("x"), "fog.region.x"),
+                    VTTService._normalised_float(point.get("y"), "fog.region.y"),
+                )
+                for point in raw_points
+                if isinstance(point, dict)
+            )
+            if len(points) != len(raw_points) or len(set(points)) < 3:
+                raise ValueError("pontos da regiao de fog invalidos")
+            regions[region_id] = FogRegion(region_id, label.strip(), points, revealed)
+        reveal_all = payload.get("revealAll", False)
+        if not isinstance(reveal_all, bool):
+            raise ValueError("fog.revealAll invalido")
         return FogState(
             enabled=enabled,
             revision=revision,
-            render_revision=render_revision,
             map_asset_id=expected_map_asset_id,
             map_fingerprint=expected_map_fingerprint,
-            mask=bytearray(mask),
+            reveal_all=reveal_all,
+            regions=regions,
         )
 
     @staticmethod
@@ -2093,30 +2016,26 @@ class VTTService:
                 if role == "master":
                     tokens[token.token_id]["controllerUid"] = token.controller_uid
             active_fog = room.scene_fog.get(active_scene.scene_id)
-            compose_props_for_player = (
-                role == "player" and active_fog is not None and active_fog.enabled
-            )
-            if not compose_props_for_player:
-                for prop in room.scene_props.get(active_scene.scene_id, {}).values():
-                    if role == "player" and not self._prop_visible_to_player(
-                        room, active_scene.scene_id, prop
-                    ):
-                        continue
-                    try:
-                        self.catalog.get_asset(prop.asset_id, role)
-                    except AssetNotAvailableError:
-                        continue
-                    props[prop.prop_id] = {
-                        "id": prop.prop_id,
-                        "assetId": prop.asset_id,
-                        "x": prop.x,
-                        "y": prop.y,
-                        "label": prop.label,
-                        "width": prop.width,
-                        "height": prop.height,
-                        "rotation": prop.rotation,
-                        "visible": prop.visible,
-                    }
+            for prop in room.scene_props.get(active_scene.scene_id, {}).values():
+                if role == "player" and not self._prop_visible_to_player(
+                    room, active_scene.scene_id, prop
+                ):
+                    continue
+                try:
+                    self.catalog.get_asset(prop.asset_id, role)
+                except AssetNotAvailableError:
+                    continue
+                props[prop.prop_id] = {
+                    "id": prop.prop_id,
+                    "assetId": prop.asset_id,
+                    "x": prop.x,
+                    "y": prop.y,
+                    "label": prop.label,
+                    "width": prop.width,
+                    "height": prop.height,
+                    "rotation": prop.rotation,
+                    "visible": prop.visible,
+                }
 
         delivered_handouts: list[dict[str, Any]] = []
         for asset_id, delivered_at in sorted(room.delivered_handouts.items()):
@@ -2273,45 +2192,39 @@ class VTTService:
                 "height": map_asset.image.height if map_asset.image is not None else None,
             }
         layers_payload: list[dict[str, Any]] = []
-        compose_layers_for_player = (
-            role == "player" and fog is not None and fog.enabled
-        )
-        if not compose_layers_for_player:
-            for layer in scene.layers:
-                selected_key = selected_layers.get(layer.layer_id)
-                selected_state = next(
-                    (state for state in layer.states if state.key == selected_key),
-                    None,
-                )
-                if role == "player" and selected_state is None:
-                    continue
-                layer_payload: dict[str, Any] = {
-                    "id": layer.layer_id,
-                    "key": layer.key,
-                    "label": layer.label,
-                    "state": selected_state.key if selected_state is not None else None,
-                    "assetId": (
-                        selected_state.asset_id if selected_state is not None else None
-                    ),
-                    "placements": [
-                        {
-                            "x": placement.x,
-                            "y": placement.y,
-                            "width": placement.width,
-                            "height": placement.height,
-                            "rotation": placement.rotation,
-                        }
-                        for placement in (
-                            selected_state.placements if selected_state is not None else ()
-                        )
-                    ],
-                }
-                if role == "master":
-                    layer_payload["options"] = [
-                        {"key": state.key, "label": state.label}
-                        for state in layer.states
-                    ]
-                layers_payload.append(layer_payload)
+        for layer in scene.layers:
+            selected_key = selected_layers.get(layer.layer_id)
+            selected_state = next(
+                (state for state in layer.states if state.key == selected_key),
+                None,
+            )
+            if role == "player" and selected_state is None:
+                continue
+            layer_payload: dict[str, Any] = {
+                "id": layer.layer_id,
+                "key": layer.key,
+                "label": layer.label,
+                "state": selected_state.key if selected_state is not None else None,
+                "assetId": selected_state.asset_id if selected_state is not None else None,
+                "placements": [
+                    {
+                        "x": placement.x,
+                        "y": placement.y,
+                        "width": placement.width,
+                        "height": placement.height,
+                        "rotation": placement.rotation,
+                    }
+                    for placement in (
+                        selected_state.placements if selected_state is not None else ()
+                    )
+                ],
+            }
+            if role == "master":
+                layer_payload["options"] = [
+                    {"key": state.key, "label": state.label}
+                    for state in layer.states
+                ]
+            layers_payload.append(layer_payload)
 
         payload = {
             "id": scene.scene_id,
@@ -2326,11 +2239,7 @@ class VTTService:
                     "enabled": states.get(item.asset_id, False),
                 }
                 for item in scene.overlays
-                if role == "master"
-                or (
-                    states.get(item.asset_id, False)
-                    and not (fog is not None and fog.enabled)
-                )
+                if role == "master" or states.get(item.asset_id, False)
             ],
             "gridHint": (
                 {
@@ -2366,25 +2275,6 @@ class VTTService:
         return payload
 
     @staticmethod
-    def _apply_fog_stroke(fog: FogState, command: FogStrokeCommand) -> None:
-        image = Image.frombytes("L", (FOG_MASK_SIZE, FOG_MASK_SIZE), bytes(fog.mask))
-        draw = ImageDraw.Draw(image)
-        points = [
-            (
-                round(point.x * (FOG_MASK_SIZE - 1)),
-                round(point.y * (FOG_MASK_SIZE - 1)),
-            )
-            for point in command.payload.points
-        ]
-        radius = max(1, round(command.payload.radius * (FOG_MASK_SIZE - 1)))
-        fill = 255 if command.payload.reveal else 0
-        if len(points) > 1:
-            draw.line(points, fill=fill, width=(radius * 2) + 1, joint="curve")
-        for x, y in points:
-            draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
-        fog.mask[:] = image.tobytes()
-
-    @staticmethod
     def _fog_payload(
         room: Room,
         scene: SceneView | None,
@@ -2398,27 +2288,50 @@ class VTTService:
         payload: dict[str, Any] = {
             "enabled": fog.enabled,
             "revision": fog.revision,
-            "renderRevision": fog.render_revision,
-            "width": FOG_MASK_SIZE,
-            "height": FOG_MASK_SIZE,
+            "mode": "regions",
+            "revealAll": fog.reveal_all,
+            "regions": [
+                ({
+                    "regionId": region.region_id,
+                    "points": [{"x": x, "y": y} for x, y in region.points],
+                    "revealed": region.revealed,
+                } | ({"label": region.label} if role == "master" else {}))
+                for region in sorted(fog.regions.values(), key=lambda item: item.region_id)
+                if role == "master" or region.revealed
+            ],
         }
-        if role == "master":
-            compressed = zlib.compress(bytes(fog.mask), level=6)
-            payload.update(
-                {
-                    "encoding": "zlib-base64",
-                    "data": base64.b64encode(compressed).decode("ascii"),
-                }
-            )
         return payload
 
     @staticmethod
     def _fog_reveals_point(fog: FogState, x: float, y: float) -> bool:
         if not fog.enabled:
             return True
-        pixel_x = min(FOG_MASK_SIZE - 1, max(0, round(x * (FOG_MASK_SIZE - 1))))
-        pixel_y = min(FOG_MASK_SIZE - 1, max(0, round(y * (FOG_MASK_SIZE - 1))))
-        return fog.mask[(pixel_y * FOG_MASK_SIZE) + pixel_x] >= 128
+        if fog.reveal_all:
+            return True
+        return any(
+            region.revealed
+            and VTTService._point_in_polygon(x, y, region.points)
+            for region in fog.regions.values()
+        )
+
+    @staticmethod
+    def _point_in_polygon(
+        x: float,
+        y: float,
+        points: tuple[tuple[float, float], ...],
+    ) -> bool:
+        inside = False
+        previous_x, previous_y = points[-1]
+        for current_x, current_y in points:
+            if (current_y > y) != (previous_y > y):
+                crossing_x = (
+                    ((previous_x - current_x) * (y - current_y))
+                    / (previous_y - current_y)
+                ) + current_x
+                if x < crossing_x:
+                    inside = not inside
+            previous_x, previous_y = current_x, current_y
+        return inside
 
     @classmethod
     def _token_visible_to_player(
@@ -2443,86 +2356,6 @@ class VTTService:
             return False
         fog = room.scene_fog.get(scene_id)
         return fog is None or cls._fog_reveals_point(fog, prop.x, prop.y)
-
-    def _discard_fog_cache(self, room_id: str, scene_id: str) -> None:
-        for key in tuple(self._fog_render_cache):
-            if key[0] == room_id and key[1] == scene_id:
-                self._fog_render_cache.pop(key, None)
-
-    def _mark_scene_render_dirty(self, room: Room, scene_id: str) -> None:
-        fog = room.scene_fog.get(scene_id)
-        if fog is None:
-            return
-        fog.render_revision += 1
-        self._discard_fog_cache(room.room_id, scene_id)
-
-    def _render_player_fog_map_sync(
-        self,
-        map_id: str,
-        overlay_ids: tuple[str, ...],
-        prop_layers: tuple[tuple[str, float, float, float, float, float], ...],
-        scene_layers: tuple[tuple[str, float, float, float, float, float], ...],
-        mask: bytes,
-        render_revision: int,
-    ) -> RenderedFogMap:
-        assert self.catalog is not None
-        with self.catalog.open_asset(map_id, "player") as opened:
-            with Image.open(opened.stream) as source:
-                source.load()
-                width, height = source.size
-                if width <= 0 or height <= 0 or width * height > MAX_FOG_RENDER_PIXELS:
-                    raise ValueError("Dimensoes do mapa excedem o limite de renderizacao")
-                composed = source.convert("RGBA")
-
-        for asset_id, x, y, relative_width, relative_height, rotation in (
-            scene_layers + prop_layers
-        ):
-            with self.catalog.open_asset(asset_id, "player") as opened:
-                with Image.open(opened.stream) as prop_source:
-                    prop_source.load()
-                    prop_image = prop_source.convert("RGBA")
-            target_size = (
-                max(1, round(width * relative_width)),
-                max(1, round(height * relative_height)),
-            )
-            prop_image = prop_image.resize(target_size, Image.Resampling.LANCZOS)
-            if rotation:
-                prop_image = prop_image.rotate(
-                    -rotation,
-                    resample=Image.Resampling.BICUBIC,
-                    expand=True,
-                )
-            composed.alpha_composite(
-                prop_image,
-                dest=(
-                    round((x * width) - (prop_image.width / 2)),
-                    round((y * height) - (prop_image.height / 2)),
-                ),
-            )
-
-        for overlay_id in overlay_ids:
-            with self.catalog.open_asset(overlay_id, "player") as opened:
-                with Image.open(opened.stream) as overlay_source:
-                    overlay_source.load()
-                    overlay = overlay_source.convert("RGBA")
-            if overlay.size != composed.size:
-                overlay = overlay.resize(composed.size, Image.Resampling.LANCZOS)
-            composed.alpha_composite(overlay)
-
-        reveal_mask = Image.frombytes(
-            "L", (FOG_MASK_SIZE, FOG_MASK_SIZE), mask
-        ).resize(composed.size, Image.Resampling.NEAREST)
-        background = Image.new("RGB", composed.size, (3, 5, 7))
-        flattened = Image.new("RGB", composed.size, (3, 5, 7))
-        flattened.paste(composed, mask=composed.getchannel("A"))
-        rendered_image = Image.composite(flattened, background, reveal_mask)
-        output = io.BytesIO()
-        rendered_image.save(output, format="WEBP", quality=90, method=2)
-        return RenderedFogMap(
-            content=output.getvalue(),
-            media_type="image/webp",
-            revision=render_revision,
-        )
 
     def _master_scenes(self) -> tuple[SceneView, ...]:
         assert self.catalog is not None

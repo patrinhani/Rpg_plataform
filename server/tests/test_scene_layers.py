@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import io
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +17,6 @@ from test_fog import (
     _access,
     _asset as fetch_asset,
     _create_room,
-    _fog_map,
     _read_persisted_room,
     _replace_image_asset,
     _write_persisted_room,
@@ -137,7 +135,7 @@ def _receive_broadcast(master: Any, player: Any) -> tuple[dict[str, Any], dict[s
     return master.receive_json(), player.receive_json()
 
 
-def test_scene_layer_commands_are_master_only_role_safe_and_composited_in_fog(
+def test_scene_layer_commands_are_master_only_role_safe_and_client_composited(
     tmp_path: Path,
 ) -> None:
     app, ids = _layer_app(tmp_path)
@@ -202,7 +200,7 @@ def test_scene_layer_commands_are_master_only_role_safe_and_composited_in_fog(
                     "rotation": 0.0,
                 }
             ]
-            assert player_active["state"]["scene"]["layers"] == []
+            assert player_active["state"]["scene"]["layers"][0]["assetId"] == ids["layer_active"]
             assert (
                 fetch_asset(
                     client,
@@ -210,7 +208,7 @@ def test_scene_layer_commands_are_master_only_role_safe_and_composited_in_fog(
                     ids["layer_active"],
                     player_access["mediaToken"],
                 ).status_code
-                == 404
+                == 200
             )
 
             master.send_json(
@@ -238,21 +236,10 @@ def test_scene_layer_commands_are_master_only_role_safe_and_composited_in_fog(
                     "commandId": "reveal-layer-through-fog",
                 }
             )
-            master_revealed, _player_revealed = _receive_broadcast(master, player)
-            rendered = _fog_map(
-                client,
-                room["roomId"],
-                player_access["mediaToken"],
-                master_revealed["state"]["fog"]["renderRevision"],
-            )
-            assert rendered.status_code == 200
-            with Image.open(io.BytesIO(rendered.content)) as image:
-                rendered_rgb = image.convert("RGB")
-                center = rendered_rgb.getpixel((32, 32))
-                layer_edge = rendered_rgb.getpixel((26, 32))
-            # O prop movel fica sobre o layer ancorado; ambos ficam sobre o mapa.
-            assert center[0] > center[1] and center[2] > center[1]
-            assert layer_edge[1] > layer_edge[0] and layer_edge[1] > layer_edge[2]
+            master_revealed, player_revealed = _receive_broadcast(master, player)
+            assert master_revealed["state"]["fog"]["revealAll"] is True
+            assert player_revealed["state"]["scene"]["layers"][0]["assetId"] == ids["layer_active"]
+            assert any(prop["label"] == "Helena" for prop in player_revealed["state"]["props"].values())
 
             master.send_json(
                 {

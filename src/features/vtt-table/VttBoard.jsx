@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import './vtt-board.css';
 import { constrainVttCamera, zoomVttCameraAtPoint } from './camera.js';
 import { resolvePropStateOptions } from './prop-state-groups.js';
@@ -16,11 +16,10 @@ const MAX_ZOOM = 3.2;
 const DEFAULT_TOKEN_SIZE = 0.075;
 const MIN_TOKEN_SIZE = 0.01;
 const MAX_TOKEN_SIZE = 0.25;
-const DEFAULT_FOG_BRUSH_RADIUS = 0.045;
 const DEFAULT_PROP_SIZE = 0.18;
 const MIN_PROP_SIZE = 0.025;
 const MAX_PROP_SIZE = 0.8;
-const FOG_STROKE_BATCH_SIZE = 128;
+const MAX_FOG_REGION_POINTS = 64;
 
 function snapToDevicePixel(value) {
   const ratio = typeof window === 'undefined' ? 1 : Math.max(1, window.devicePixelRatio || 1);
@@ -45,25 +44,32 @@ function tokenInitials(label) {
   return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase() || '?';
 }
 
-function decodeBase64(value) {
-  const binary = globalThis.atob(String(value || ''));
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
+function createFogRegionId() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return `fog-${globalThis.crypto.randomUUID()}`;
   }
-  return bytes;
+  return `fog-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-async function decodeFogMask(fog) {
-  if (!fog?.data) return null;
-  const compressed = decodeBase64(fog.data);
-  if (fog.encoding === 'raw-base64') return compressed;
-  if (fog.encoding !== 'zlib-base64' || typeof DecompressionStream === 'undefined') {
-    throw new Error('Este navegador não consegue visualizar a máscara privada da névoa.');
-  }
-  const stream = new Blob([compressed]).stream()
-    .pipeThrough(new DecompressionStream('deflate'));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
+function normalizeFogRegions(fog) {
+  if (!Array.isArray(fog?.regions)) return [];
+  return fog.regions
+    .map((region) => ({
+      regionId: String(region?.regionId || ''),
+      label: String(region?.label || 'Área sem nome'),
+      revealed: Boolean(region?.revealed),
+      points: Array.isArray(region?.points)
+        ? region.points.map((point) => ({
+          x: clamp(point?.x, 0, 1),
+          y: clamp(point?.y, 0, 1),
+        }))
+        : [],
+    }))
+    .filter((region) => region.regionId && region.points.length >= 3);
+}
+
+function fogPolygonPoints(points) {
+  return points.map((point) => `${point.x * 100},${point.y * 100}`).join(' ');
 }
 
 function VttOverlayImage({ overlay }) {
@@ -200,8 +206,8 @@ export default function VttBoard({
   const panRef = useRef(null);
   const tokenDragRef = useRef(null);
   const propDragRef = useRef(null);
-  const fogCanvasRef = useRef(null);
-  const fogStrokeRef = useRef(null);
+  const fogVertexDragRef = useRef(null);
+  const fogMaskId = useId().replace(/:/g, '');
   const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
   const [draftPositions, setDraftPositions] = useState({});
   const [selectedTokenId, setSelectedTokenId] = useState('');
@@ -225,11 +231,12 @@ export default function VttBoard({
     props: false,
   });
   const [fogEditMode, setFogEditMode] = useState(false);
-  const [fogRevealMode, setFogRevealMode] = useState(true);
-  const [fogBrushRadius, setFogBrushRadius] = useState(DEFAULT_FOG_BRUSH_RADIUS);
-  const [fogMask, setFogMask] = useState(null);
-  const [fogMaskError, setFogMaskError] = useState('');
   const [fogDraftPoints, setFogDraftPoints] = useState([]);
+  const [fogRegionLabel, setFogRegionLabel] = useState('');
+  const [editingFogRegionId, setEditingFogRegionId] = useState('');
+  const [selectedFogRegionIds, setSelectedFogRegionIds] = useState([]);
+  const [fogPlayerPreview, setFogPlayerPreview] = useState(false);
+  const [fogControlMode, setFogControlMode] = useState(false);
 
   const tokens = useMemo(
     () => normalizeTokens(state.tokens, role),
@@ -248,6 +255,12 @@ export default function VttBoard({
     [scene?.layers],
   );
   const fog = state.fog && typeof state.fog === 'object' ? state.fog : null;
+  const fogRegions = useMemo(() => normalizeFogRegions(fog), [fog]);
+  const fogRegionById = useMemo(
+    () => new Map(fogRegions.map((region) => [region.regionId, region])),
+    [fogRegions],
+  );
+  const revealedFogRegionCount = fogRegions.filter((region) => region.revealed).length;
   const scenes = useMemo(
     () => (Array.isArray(catalog?.scenes) ? catalog.scenes : []),
     [catalog?.scenes],
@@ -377,78 +390,26 @@ export default function VttBoard({
     setGuideZoom(1);
     setFogEditMode(false);
     setFogDraftPoints([]);
+    setFogRegionLabel('');
+    setEditingFogRegionId('');
+    setSelectedFogRegionIds([]);
+    setFogPlayerPreview(false);
+    setFogControlMode(false);
   }, [scene?.id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setFogMaskError('');
-    if (!isMaster || !fog?.enabled || !fog.data) {
-      setFogMask(null);
-      return () => { cancelled = true; };
-    }
-    decodeFogMask(fog)
-      .then((mask) => {
-        if (!cancelled) setFogMask(mask);
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setFogMask(null);
-          setFogMaskError(error instanceof Error ? error.message : 'Falha ao abrir a máscara da névoa.');
-        }
-      });
-    return () => { cancelled = true; };
-  }, [fog, isMaster]);
-
-  useEffect(() => {
-    const canvas = fogCanvasRef.current;
-    if (!canvas || !fog?.enabled || !isMaster) return;
-    const width = Math.max(1, Number(fog.width) || 256);
-    const height = Math.max(1, Number(fog.height) || 256);
-    if (canvas.width !== width) canvas.width = width;
-    if (canvas.height !== height) canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.clearRect(0, 0, width, height);
-    if (fogMask?.length === width * height) {
-      const pixels = context.createImageData(width, height);
-      for (let index = 0; index < fogMask.length; index += 1) {
-        const offset = index * 4;
-        pixels.data[offset] = 2;
-        pixels.data[offset + 1] = 8;
-        pixels.data[offset + 2] = 12;
-        pixels.data[offset + 3] = fogMask[index] > 127 ? 0 : (fogEditMode ? 190 : 130);
-      }
-      context.putImageData(pixels, 0, 0);
-    }
-
-    if (fogDraftPoints.length > 0) {
-      const points = fogDraftPoints.map((point) => ({ x: point.x * width, y: point.y * height }));
-      context.save();
-      context.lineCap = 'round';
-      context.lineJoin = 'round';
-      context.lineWidth = Math.max(2, fogBrushRadius * width * 2);
-      context.globalCompositeOperation = fogRevealMode ? 'destination-out' : 'source-over';
-      context.strokeStyle = 'rgba(2, 8, 12, 0.9)';
-      context.fillStyle = 'rgba(2, 8, 12, 0.9)';
-      context.beginPath();
-      context.moveTo(points[0].x, points[0].y);
-      for (const point of points.slice(1)) context.lineTo(point.x, point.y);
-      context.stroke();
-      if (points.length === 1) {
-        context.beginPath();
-        context.arc(points[0].x, points[0].y, context.lineWidth / 2, 0, Math.PI * 2);
-        context.fill();
-      }
-      context.restore();
-    }
-  }, [fog?.enabled, fog?.height, fog?.width, fogBrushRadius, fogDraftPoints, fogEditMode, fogMask, fogRevealMode, isMaster]);
 
   useEffect(() => {
     if (!fog?.enabled) {
       setFogEditMode(false);
       setFogDraftPoints([]);
+      setEditingFogRegionId('');
+      setFogControlMode(false);
+      setFogPlayerPreview(false);
     }
   }, [fog?.enabled]);
+
+  useEffect(() => {
+    setSelectedFogRegionIds((current) => current.filter((id) => fogRegionById.has(id)));
+  }, [fogRegionById]);
 
   useEffect(() => {
     setMapLoadState(scene?.map?.url ? 'loading' : 'idle');
@@ -597,7 +558,7 @@ export default function VttBoard({
   };
 
   const handlePanPointerDown = (event) => {
-    if (!scene || event.button !== 0) return;
+    if (!scene || fogEditMode || fogControlMode || event.button !== 0) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsPanning(true);
@@ -640,56 +601,108 @@ export default function VttBoard({
     };
   }, []);
 
-  const handleFogPointerDown = (event) => {
+  const handleFogEditorClick = (event) => {
     if (!fogEditMode || !connected || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     const point = pointerToMap(event);
-    if (!point) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    fogStrokeRef.current = { pointerId: event.pointerId, points: [point] };
-    setFogDraftPoints([point]);
+    if (!point || fogDraftPoints.length >= MAX_FOG_REGION_POINTS) return;
+    setFogDraftPoints((current) => [...current, point]);
   };
 
-  const handleFogPointerMove = (event) => {
-    const stroke = fogStrokeRef.current;
-    if (!stroke || stroke.pointerId !== event.pointerId) return;
+  const saveFogRegion = () => {
+    if (fogDraftPoints.length < 3) return false;
+    const label = fogRegionLabel.trim() || `Área ${fogRegions.length + 1}`;
+    const sent = emitCommand(
+      editingFogRegionId ? 'fog.region.update' : 'fog.region.create',
+      {
+        regionId: editingFogRegionId || createFogRegionId(),
+        label,
+        points: fogDraftPoints,
+      },
+    );
+    if (sent) {
+      setFogDraftPoints([]);
+      setFogRegionLabel('');
+      setEditingFogRegionId('');
+    }
+    return sent;
+  };
+
+  const editSelectedFogRegion = () => {
+    if (selectedFogRegionIds.length !== 1) return false;
+    const region = fogRegionById.get(selectedFogRegionIds[0]);
+    if (!region) return false;
+    setEditingFogRegionId(region.regionId);
+    setFogRegionLabel(region.label);
+    setFogDraftPoints(region.points.map((point) => ({ ...point })));
+    setFogEditMode(true);
+    setFogControlMode(false);
+    setFogPlayerPreview(false);
+    return true;
+  };
+
+  const cancelFogRegionDraft = () => {
+    setFogDraftPoints([]);
+    setFogRegionLabel('');
+    setEditingFogRegionId('');
+  };
+
+  const handleFogVertexPointerDown = (event, pointIndex) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    fogVertexDragRef.current = { pointerId: event.pointerId, pointIndex };
+  };
+
+  const handleFogVertexPointerMove = (event) => {
+    const drag = fogVertexDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
     event.stopPropagation();
     const point = pointerToMap(event);
-    const previous = stroke.points.at(-1);
-    if (!point || (previous && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.0025)) return;
-    stroke.points.push(point);
-    if (stroke.points.length >= FOG_STROKE_BATCH_SIZE) {
-      emitCommand('fog.stroke', {
-        points: stroke.points,
-        radius: fogBrushRadius,
-        reveal: fogRevealMode,
-      });
-      stroke.points = [point];
-      setFogDraftPoints([point]);
-      return;
-    }
-    setFogDraftPoints([...stroke.points]);
+    if (!point) return;
+    setFogDraftPoints((current) => current.map((item, index) => (
+      index === drag.pointIndex ? point : item
+    )));
   };
 
-  const finishFogStroke = (event, cancelled = false) => {
-    const stroke = fogStrokeRef.current;
-    if (!stroke || stroke.pointerId !== event.pointerId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    fogStrokeRef.current = null;
+  const finishFogVertexDrag = (event) => {
+    const drag = fogVertexDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    fogVertexDragRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    if (!cancelled && stroke.points.length > 0) {
-      emitCommand('fog.stroke', {
-        points: stroke.points,
-        radius: fogBrushRadius,
-        reveal: fogRevealMode,
-      });
-    }
-    setFogDraftPoints([]);
+  };
+
+  const toggleFogRegionSelection = (regionId, additive = false) => {
+    setSelectedFogRegionIds((current) => {
+      const present = current.includes(regionId);
+      if (!additive) return present && current.length === 1 ? [] : [regionId];
+      return present ? current.filter((id) => id !== regionId) : [...current, regionId];
+    });
+  };
+
+  const setSelectedFogRegionsRevealed = (revealed) => {
+    if (selectedFogRegionIds.length === 0) return false;
+    return emitCommand('fog.region.set_revealed', {
+      regionIds: selectedFogRegionIds,
+      revealed,
+    });
+  };
+
+  const removeSelectedFogRegions = () => {
+    if (selectedFogRegionIds.length !== 1) return false;
+    const [regionId] = selectedFogRegionIds;
+    const region = fogRegionById.get(regionId);
+    const removed = confirmMasterCommand(
+      `Remover definitivamente a região “${region?.label || regionId}”?`,
+      'fog.region.remove',
+      { regionId },
+    );
+    if (removed) setSelectedFogRegionIds([]);
+    return removed;
   };
 
   const canMoveToken = useCallback((token) => (
@@ -1065,16 +1078,87 @@ export default function VttBoard({
                 />
               ))}
 
-              {isMaster && fog?.enabled && (
-                <canvas
-                  ref={fogCanvasRef}
-                  className={`vtt-board__fog-mask ${fogEditMode ? 'is-editing' : ''}`}
-                  onPointerDown={handleFogPointerDown}
-                  onPointerMove={handleFogPointerMove}
-                  onPointerUp={(event) => finishFogStroke(event)}
-                  onPointerCancel={(event) => finishFogStroke(event, true)}
-                  aria-label={fogEditMode ? 'Editor da névoa de guerra' : undefined}
-                />
+              {fog?.enabled && (
+                <svg
+                  className={`vtt-board__fog-mask ${fogEditMode ? 'is-editing' : ''} ${fogControlMode ? 'is-controlling' : ''} ${fogPlayerPreview ? 'is-player-preview' : ''}`}
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  onClick={handleFogEditorClick}
+                  role={fogEditMode || fogControlMode ? 'application' : undefined}
+                  aria-label={fogEditMode
+                    ? 'Editor de salas e setores da névoa de guerra'
+                    : fogControlMode ? 'Controle de revelação por salas e setores' : undefined}
+                  aria-hidden={fogEditMode || fogControlMode ? undefined : 'true'}
+                >
+                  <defs>
+                    <mask id={fogMaskId}>
+                      <rect width="100" height="100" fill="white" />
+                      {fog?.revealAll ? (
+                        <rect width="100" height="100" fill="black" />
+                      ) : fogRegions.filter((region) => region.revealed).map((region) => (
+                        <polygon
+                          key={`hole:${region.regionId}`}
+                          points={fogPolygonPoints(region.points)}
+                          fill="black"
+                        />
+                      ))}
+                    </mask>
+                  </defs>
+                  {(!isMaster || fogPlayerPreview || fogEditMode || fogControlMode) && (
+                    <rect
+                      className="vtt-board__fog-cover"
+                      width="100"
+                      height="100"
+                      mask={`url(#${fogMaskId})`}
+                    />
+                  )}
+                  {isMaster && (fogEditMode || fogControlMode) && fogRegions.map((region) => (
+                    <polygon
+                      key={region.regionId}
+                      className={`vtt-board__fog-region ${region.revealed ? 'is-revealed' : 'is-hidden'} ${selectedFogRegionIds.includes(region.regionId) ? 'is-selected' : ''}`}
+                      points={fogPolygonPoints(region.points)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (fogControlMode) {
+                          emitCommand('fog.region.set_revealed', {
+                            regionIds: [region.regionId],
+                            revealed: !region.revealed,
+                          });
+                          return;
+                        }
+                        toggleFogRegionSelection(region.regionId, event.shiftKey);
+                      }}
+                    >
+                      <title>{`${region.label} · ${region.revealed ? 'revelada' : 'oculta'}`}</title>
+                    </polygon>
+                  ))}
+                  {isMaster && fogEditMode && fogDraftPoints.length > 0 && (
+                    <>
+                      <polyline
+                        className="vtt-board__fog-draft"
+                        points={fogPolygonPoints(fogDraftPoints)}
+                      />
+                      {fogDraftPoints.map((point, pointIndex) => (
+                        <circle
+                          key={`${point.x}:${point.y}:${pointIndex}`}
+                          className="vtt-board__fog-vertex"
+                          cx={point.x * 100}
+                          cy={point.y * 100}
+                          r="0.9"
+                          onPointerDown={(event) => handleFogVertexPointerDown(event, pointIndex)}
+                          onPointerMove={handleFogVertexPointerMove}
+                          onPointerUp={finishFogVertexDrag}
+                          onPointerCancel={finishFogVertexDrag}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
+                </svg>
               )}
 
               {hasGrid && showGrid && (
@@ -1335,37 +1419,132 @@ export default function VttBoard({
                 <>
                   <button
                     type="button"
+                    className={fogControlMode ? 'is-active' : ''}
+                    disabled={fogRegions.length === 0}
+                    onClick={() => {
+                      setFogControlMode((current) => !current);
+                      setFogEditMode(false);
+                      setFogPlayerPreview(false);
+                    }}
+                    aria-pressed={fogControlMode}
+                  >
+                    {fogControlMode ? 'Sair do controle no mapa' : 'Controlar salas no mapa'}
+                  </button>
+                  <button
+                    type="button"
                     className={fogEditMode ? 'is-active' : ''}
-                    onClick={() => setFogEditMode((current) => !current)}
+                    onClick={() => {
+                      setFogEditMode((current) => !current);
+                      setFogControlMode(false);
+                      setFogPlayerPreview(false);
+                    }}
                     aria-pressed={fogEditMode}
                   >
-                    {fogEditMode ? 'Concluir desenho' : 'Editar no mapa'}
+                    {fogEditMode ? 'Concluir edição' : 'Editar regiões no mapa'}
                   </button>
-                  <div className="vtt-board__fog-modes" aria-label="Modo do pincel">
-                    <button
-                      type="button"
-                      className={fogRevealMode ? 'is-active' : ''}
-                      onClick={() => setFogRevealMode(true)}
-                      aria-pressed={fogRevealMode}
-                    >Revelar</button>
-                    <button
-                      type="button"
-                      className={!fogRevealMode ? 'is-active' : ''}
-                      onClick={() => setFogRevealMode(false)}
-                      aria-pressed={!fogRevealMode}
-                    >Ocultar</button>
+                  <button
+                    type="button"
+                    className={fogPlayerPreview ? 'is-active' : ''}
+                    onClick={() => {
+                      setFogPlayerPreview((current) => !current);
+                      setFogEditMode(false);
+                      setFogControlMode(false);
+                    }}
+                    aria-pressed={fogPlayerPreview}
+                  >
+                    {fogPlayerPreview ? 'Sair da prévia' : 'Prévia do jogador'}
+                  </button>
+
+                  {fogEditMode && (
+                    <div className="vtt-board__fog-region-editor">
+                      <label className="vtt-board__field">
+                        <span>Nome da região</span>
+                        <input
+                          type="text"
+                          maxLength="80"
+                          value={fogRegionLabel}
+                          placeholder={`Área ${fogRegions.length + 1}`}
+                          onChange={(event) => setFogRegionLabel(event.target.value)}
+                        />
+                      </label>
+                      <p>
+                        Clique nos cantos da sala ou setor. As paredes que ficarem fora do polígono
+                        continuam cobertas. Arraste os pontos para ajustar.
+                      </p>
+                      <div className="vtt-board__fog-actions">
+                        <button
+                          type="button"
+                          disabled={fogDraftPoints.length < 3}
+                          onClick={saveFogRegion}
+                        >
+                          {editingFogRegionId ? 'Salvar alterações' : 'Criar região'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={fogDraftPoints.length === 0}
+                          onClick={() => setFogDraftPoints((current) => current.slice(0, -1))}
+                        >Desfazer ponto</button>
+                        <button
+                          type="button"
+                          disabled={fogDraftPoints.length === 0}
+                          onClick={cancelFogRegionDraft}
+                        >Cancelar desenho</button>
+                      </div>
+                      <small>{fogDraftPoints.length} de {MAX_FOG_REGION_POINTS} pontos</small>
+                    </div>
+                  )}
+
+                  <div className="vtt-board__fog-region-list" aria-label="Regiões da névoa">
+                    {fogRegions.length === 0 && (
+                      <p>Nenhuma região definida. Até criar uma área, o mapa permanece totalmente oculto.</p>
+                    )}
+                    {fogRegions.map((region) => (
+                      <label
+                        key={region.regionId}
+                        className={`vtt-board__fog-region-item ${selectedFogRegionIds.includes(region.regionId) ? 'is-selected' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedFogRegionIds.includes(region.regionId)}
+                          onChange={(event) => toggleFogRegionSelection(region.regionId, event.nativeEvent?.shiftKey)}
+                        />
+                        <span>
+                          <strong>{region.label}</strong>
+                          <small>{region.revealed ? 'Revelada' : 'Oculta'} · {region.points.length} pontos</small>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => emitCommand('fog.region.set_revealed', {
+                            regionIds: [region.regionId],
+                            revealed: !region.revealed,
+                          })}
+                        >{region.revealed ? 'Ocultar' : 'Revelar'}</button>
+                      </label>
+                    ))}
                   </div>
-                  <label className="vtt-board__fog-radius">
-                    <span>Raio do pincel <output>{Math.round(fogBrushRadius * 100)}%</output></span>
-                    <input
-                      type="range"
-                      min="1"
-                      max="15"
-                      step="1"
-                      value={Math.round(fogBrushRadius * 100)}
-                      onChange={(event) => setFogBrushRadius(Number(event.target.value) / 100)}
-                    />
-                  </label>
+
+                  <div className="vtt-board__fog-modes" aria-label="Ações das regiões selecionadas">
+                    <button
+                      type="button"
+                      disabled={selectedFogRegionIds.length === 0}
+                      onClick={() => setSelectedFogRegionsRevealed(true)}
+                    >Revelar selecionadas</button>
+                    <button
+                      type="button"
+                      disabled={selectedFogRegionIds.length === 0}
+                      onClick={() => setSelectedFogRegionsRevealed(false)}
+                    >Ocultar selecionadas</button>
+                    <button
+                      type="button"
+                      disabled={selectedFogRegionIds.length !== 1}
+                      onClick={editSelectedFogRegion}
+                    >Editar formato</button>
+                    <button
+                      type="button"
+                      disabled={selectedFogRegionIds.length !== 1}
+                      onClick={removeSelectedFogRegions}
+                    >Remover região</button>
+                  </div>
                   <div className="vtt-board__fog-actions">
                     <button
                       type="button"
@@ -1383,9 +1562,8 @@ export default function VttBoard({
                     >Revelar tudo</button>
                   </div>
                   <small className="vtt-board__fog-status">
-                    Máscara privada · revisão {Number(fog.revision || 0)}
+                    {revealedFogRegionCount} de {fogRegions.length} regiões reveladas · revisão {Number(fog.revision || 0)}
                   </small>
-                  {fogMaskError && <p className="vtt-board__fog-error" role="alert">{fogMaskError}</p>}
                 </>
               )}
             </fieldset>

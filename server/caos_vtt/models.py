@@ -417,6 +417,102 @@ class FogStrokeCommand(BaseModel):
     payload: FogStrokePayload
 
 
+class FogRegionPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    regionId: str = Field(
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$",
+    )
+    label: str = Field(min_length=1, max_length=80)
+    points: list[FogPoint] = Field(min_length=3, max_length=64)
+
+    @field_validator("label")
+    @classmethod
+    def validate_label(cls, value: str) -> str:
+        label = value.strip()
+        if not label or any(ord(character) < 32 for character in label):
+            raise ValueError("Nome da regiao invalido")
+        return label
+
+    @model_validator(mode="after")
+    def validate_polygon(self) -> "FogRegionPayload":
+        unique = {(round(point.x, 6), round(point.y, 6)) for point in self.points}
+        if len(unique) < 3:
+            raise ValueError("A regiao precisa de tres pontos distintos")
+        area = 0.0
+        for index, point in enumerate(self.points):
+            following = self.points[(index + 1) % len(self.points)]
+            area += (point.x * following.y) - (following.x * point.y)
+        if abs(area) < 0.000002:
+            raise ValueError("A regiao precisa possuir area")
+        return self
+
+
+class FogRegionCreateCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.region.create"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: FogRegionPayload
+
+
+class FogRegionUpdateCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.region.update"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: FogRegionPayload
+
+
+class FogRegionSetRevealedPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    regionIds: list[str] = Field(min_length=1, max_length=128)
+    revealed: StrictBool
+
+    @field_validator("regionIds")
+    @classmethod
+    def validate_region_ids(cls, values: list[str]) -> list[str]:
+        if len(values) != len(set(values)):
+            raise ValueError("regionIds duplicados")
+        for value in values:
+            if (
+                not 1 <= len(value) <= 64
+                or not value[0].isalnum()
+                or any(not (character.isalnum() or character in "._:-") for character in value)
+            ):
+                raise ValueError("regionId invalido")
+        return values
+
+
+class FogRegionSetRevealedCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.region.set_revealed"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: FogRegionSetRevealedPayload
+
+
+class FogRegionRemovePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    regionId: str = Field(
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$",
+    )
+
+
+class FogRegionRemoveCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.region.remove"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: FogRegionRemovePayload
+
+
 class FogSetEnabledPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

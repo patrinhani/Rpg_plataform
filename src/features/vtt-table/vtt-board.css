@@ -237,17 +237,80 @@
 
 .vtt-board__fog-mask {
   cursor: default;
-  image-rendering: auto;
   opacity: 1;
   pointer-events: none;
   touch-action: none;
   z-index: 4;
 }
 
-.vtt-board__fog-mask.is-editing {
+.vtt-board__fog-cover {
+  fill: rgba(2, 7, 10, 0.985);
+}
+
+.vtt-board__fog-mask.is-editing .vtt-board__fog-cover {
+  fill: rgba(2, 7, 10, 0.74);
+}
+
+.vtt-board__fog-mask.is-controlling .vtt-board__fog-cover {
+  fill: rgba(2, 7, 10, 0.68);
+}
+
+.vtt-board__fog-mask.is-player-preview {
+  z-index: 7;
+}
+
+.vtt-board__fog-region {
+  cursor: pointer;
+  fill: rgba(116, 195, 235, 0.08);
+  pointer-events: auto;
+  stroke: rgba(115, 212, 255, 0.78);
+  stroke-dasharray: 1.4 0.8;
+  stroke-width: 0.38;
+  vector-effect: non-scaling-stroke;
+}
+
+.vtt-board__fog-region.is-revealed {
+  fill: rgba(75, 222, 149, 0.12);
+  stroke: rgba(97, 245, 171, 0.9);
+}
+
+.vtt-board__fog-region.is-selected {
+  fill: rgba(54, 173, 241, 0.26);
+  stroke: #f4d188;
+  stroke-dasharray: none;
+  stroke-width: 0.62;
+}
+
+.vtt-board__fog-draft {
+  fill: rgba(244, 209, 136, 0.12);
+  pointer-events: none;
+  stroke: #f4d188;
+  stroke-width: 0.52;
+  vector-effect: non-scaling-stroke;
+}
+
+.vtt-board__fog-vertex {
+  cursor: grab;
+  fill: #f4d188;
+  pointer-events: auto;
+  stroke: #071119;
+  stroke-width: 0.28;
+  vector-effect: non-scaling-stroke;
+}
+
+.vtt-board__fog-vertex:active {
+  cursor: grabbing;
+}
+
+.vtt-board__fog-mask.is-editing,
+.vtt-board__fog-mask.is-controlling {
   cursor: crosshair;
   pointer-events: auto;
   z-index: 8;
+}
+
+.vtt-board__fog-mask.is-controlling {
+  cursor: pointer;
 }
 
 .vtt-board__map {
@@ -1133,26 +1196,70 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.vtt-board__fog-radius {
-  color: #8faab8;
+.vtt-board__fog-region-editor,
+.vtt-board__fog-region-list {
+  background: rgba(3, 10, 14, 0.46);
+  border: 1px solid rgba(126, 180, 214, 0.14);
+  border-radius: 8px;
   display: grid;
-  font-size: 0.66rem;
-  gap: 6px;
+  gap: 8px;
+  padding: 9px;
 }
 
-.vtt-board__fog-radius > span {
-  display: flex;
-  justify-content: space-between;
+.vtt-board__fog-region-editor p,
+.vtt-board__fog-region-list > p {
+  color: #7894a4;
+  font-size: 0.65rem;
+  line-height: 1.45;
+  margin: 0;
 }
 
-.vtt-board__fog-radius output {
-  color: #ccecff;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+.vtt-board__fog-region-editor > small {
+  color: #6f8998;
+  font-size: 0.6rem;
 }
 
-.vtt-board__fog-radius input {
+.vtt-board__fog-region-item {
+  align-items: center;
+  border: 1px solid rgba(126, 180, 214, 0.12);
+  border-radius: 7px;
+  display: grid;
+  gap: 7px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 7px;
+}
+
+.vtt-board__fog-region-item.is-selected {
+  background: rgba(30, 126, 180, 0.13);
+  border-color: rgba(101, 200, 255, 0.42);
+}
+
+.vtt-board__fog-region-item > input {
   accent-color: #65c8ff;
-  width: 100%;
+}
+
+.vtt-board__fog-region-item > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vtt-board__fog-region-item strong {
+  color: #c9e6f5;
+  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__fog-region-item small {
+  color: #708a99;
+  font-size: 0.58rem;
+}
+
+.vtt-board__fog-region-item button {
+  min-height: 30px;
+  padding: 5px 8px;
 }
 
 .vtt-board__fog-actions button:first-child {
