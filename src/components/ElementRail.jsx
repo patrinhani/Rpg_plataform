@@ -1,5 +1,6 @@
 import React from "react";
 import { getTemaConfig, listaTemas } from "../lib/temas.js";
+import { AFFINITY_NEX_THRESHOLD, getNexAffinityState } from "../lib/nex-affinity.js";
 
 const estilos = `
   .element-rail {
@@ -44,6 +45,54 @@ const estilos = `
     gap: 5px;
     min-width: 0;
     position: relative;
+  }
+
+  .element-rail__awakening {
+    align-self: stretch;
+    background: rgb(0 145 255 / 0.06);
+    border: 1px solid rgb(0 145 255 / 0.2);
+    border-radius: 11px;
+    display: grid;
+    gap: 6px;
+    padding: 9px 8px;
+    text-align: center;
+  }
+
+  .element-rail__awakening > span,
+  .element-rail__awakening > small {
+    color: rgba(205, 225, 239, 0.68);
+    font-family: "Roboto Condensed", system-ui, sans-serif;
+    font-size: 0.57rem;
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
+  .element-rail__awakening > strong {
+    color: #8bceff;
+    font-family: "Special Elite", monospace;
+    font-size: 0.72rem;
+  }
+
+  .element-rail__awakening--unlocked {
+    background: rgb(111 211 255 / 0.1);
+    border-color: rgb(111 211 255 / 0.46);
+    box-shadow: 0 0 18px rgb(0 145 255 / 0.16);
+  }
+
+  .element-rail__progress {
+    background: rgba(0, 0, 0, 0.48);
+    border-radius: 999px;
+    height: 4px;
+    overflow: hidden;
+  }
+
+  .element-rail__progress > i {
+    background: linear-gradient(90deg, #165d91, #64c5ff);
+    box-shadow: 0 0 9px #0091ff;
+    display: block;
+    height: 100%;
+    transition: width 420ms ease;
   }
 
   .element-rail__control {
@@ -164,10 +213,15 @@ const estilos = `
       font-size: 0.58rem;
       max-width: 64px;
     }
+
+    .element-rail__awakening {
+      flex: 0 0 132px;
+      min-height: 58px;
+    }
   }
 `;
 
-function ElementItem({ tema, ativo, interativo, habilitado, onSelect }) {
+function ElementItem({ tema, ativo, interativo, habilitado, onSelect, disabledTitle }) {
   const itemClassName = [
     "element-rail__item",
     tema.id === "tema-ordem" ? "element-rail__item--ordem" : "",
@@ -197,7 +251,7 @@ function ElementItem({ tema, ativo, interativo, habilitado, onSelect }) {
           aria-pressed={ativo}
           disabled={!habilitado}
           onClick={() => onSelect(tema.id)}
-          title={habilitado ? tema.nome : "Troca de afinidade indisponível"}
+          title={habilitado ? tema.nome : disabledTitle}
         >
           {conteudo}
         </button>
@@ -218,10 +272,13 @@ export default function ElementRail({
   temaAtual = "tema-ordem",
   onThemeChange,
   canChangeTheme = true,
+  nexAtual = AFFINITY_NEX_THRESHOLD,
 }) {
   const temaAtivo = getTemaConfig(temaAtual);
   const interativo = variante === "ficha";
   const habilitado = interativo && canChangeTheme && typeof onThemeChange === "function";
+  const affinityState = getNexAffinityState(nexAtual);
+  const disabledTitle = `Afinidade disponível no NEX ${AFFINITY_NEX_THRESHOLD}%`;
 
   const selecionarTema = (temaId) => {
     if (!habilitado || temaId === temaAtivo.id) return;
@@ -233,6 +290,23 @@ export default function ElementRail({
       className={`element-rail element-rail--${interativo ? "ficha" : "dashboard"}`}
       style={{ "--element-rail-accent": temaAtivo.cor }}
     >
+      {interativo && (
+        <div className={`element-rail__awakening ${affinityState.unlocked ? 'element-rail__awakening--unlocked' : ''}`}>
+          <span>{affinityState.unlocked ? 'Limiar rompido' : 'Despertar paranormal'}</span>
+          <strong>{affinityState.unlocked ? 'Afinidade liberada' : `NEX ${affinityState.nex}%`}</strong>
+          <div
+            className="element-rail__progress"
+            role="progressbar"
+            aria-label="Progresso para desbloquear afinidade"
+            aria-valuemin="0"
+            aria-valuemax={AFFINITY_NEX_THRESHOLD}
+            aria-valuenow={Math.min(affinityState.nex, AFFINITY_NEX_THRESHOLD)}
+          >
+            <i style={{ width: `${affinityState.progress * 100}%` }} />
+          </div>
+          <small>{affinityState.unlocked ? 'Selecione seu elemento' : `Faltam ${affinityState.remaining}%`}</small>
+        </div>
+      )}
       {listaTemas.map((tema) => (
         <ElementItem
           key={tema.id}
@@ -241,6 +315,7 @@ export default function ElementRail({
           interativo={interativo}
           habilitado={habilitado}
           onSelect={selecionarTema}
+          disabledTitle={disabledTitle}
         />
       ))}
     </div>

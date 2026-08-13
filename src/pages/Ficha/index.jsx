@@ -33,7 +33,10 @@ const ConfiguracoesFicha = lazy(() => import('../../components/ConfiguracoesFich
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
 import ElementRail from '../../components/ElementRail.jsx';
+import AffinityAwakening from '../../components/AffinityAwakening.jsx';
+import NexAwakeningMeter from '../../components/NexAwakeningMeter.jsx';
 import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
+import { crossedAffinityThreshold, getNexAffinityState } from '../../lib/nex-affinity.js';
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
@@ -193,6 +196,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
     : 0;
 
   const [tema, setTema] = useState(() => localStorage.getItem("temaFichaOrdem") || "tema-ordem");
+  const [showAffinityAwakening, setShowAffinityAwakening] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState('principal'); 
   const [trilhasPorClasse, setTrilhasPorClasse] = useState({});
   const trilhasUnificadas = useMemo(() => getMergedTrilhas(personagem.trilhas_personalizadas || []), [personagem.trilhas_personalizadas]);
@@ -217,6 +221,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
   const inFlightSaveRef = useRef(null);
   const inFlightSavesRef = useRef(new Set());
   const isDeletingRef = useRef(false);
+  const previousNexRef = useRef(null);
   
   // Controle de Atualização Remota (IMPORTANTE PARA EVITAR LOOPS)
   const isRemoteUpdate = useRef(false);
@@ -396,12 +401,29 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
 
   useEffect(() => {
     const temaNoDOM = document.documentElement.dataset.tema;
-    if (tema !== temaNoDOM) {
+    const temaVisual = getNexAffinityState(personagem.info.nex).unlocked ? tema : 'tema-ordem';
+    if (temaVisual !== temaNoDOM) {
         if (!temaNoDOM) {
-            aplicarTemaSemAnimacao(tema);
-        } else aplicarTemaComAnimacao(tema, temaNoDOM);
+            aplicarTemaSemAnimacao(temaVisual);
+        } else aplicarTemaComAnimacao(temaVisual, temaNoDOM);
     }
-  }, [tema]); 
+  }, [personagem.info.nex, tema]);
+
+  const nexAffinity = useMemo(
+    () => getNexAffinityState(personagem.info.nex),
+    [personagem.info.nex],
+  );
+  const temaVisual = nexAffinity.unlocked ? tema : 'tema-ordem';
+
+  useEffect(() => {
+    if (loading) return;
+
+    const previous = previousNexRef.current;
+    if (previous?.fichaId === idAlvo && crossedAffinityThreshold(previous.nex, nexAffinity.nex)) {
+      setShowAffinityAwakening(true);
+    }
+    previousNexRef.current = { fichaId: idAlvo, nex: nexAffinity.nex };
+  }, [idAlvo, loading, nexAffinity.nex]);
 
   useEffect(() => {
     return () => {
@@ -647,13 +669,6 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
       return { ok: false, cancelado: true };
   }, [podeExcluirFicha, showConfirm, navigate, showAlert, debouncedSave, onBack]);
 
-  // Props de Controles Memoizadas
-  const controlesProps = useMemo(() => ({
-    temaAtual: tema, 
-    onThemeChange: handleThemeChange, 
-    canChangeTheme: isModoMesa && calculados.canChangeTheme
-  }), [tema, handleThemeChange, calculados.canChangeTheme, isModoMesa]);
-
   // Funções de Abrir Modais Memoizadas
   const openLoja = useCallback(() => setIsLojaOpen(true), []);
   const openRituais = useCallback(() => setIsRitualModalOpen(true), []);
@@ -699,17 +714,30 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
   const LoadingComponent = () => <div className="item-placeholder ficha-view-loading">Carregando aba...</div>;
 
   return (
-    <div className={`ficha-convergence-shell ${isModoMesa ? 'ficha-convergence-shell--mesa' : ''}`}>
+    <div
+      className={`ficha-convergence-shell ${nexAffinity.unlocked ? 'ficha-convergence-shell--affinity-unlocked' : 'ficha-convergence-shell--awakening'}`}
+      data-affinity-stage={nexAffinity.stage}
+      style={{ '--nex-awakening-progress': nexAffinity.progress }}
+    >
       <div id="transition-overlay"></div>
-
-      {!isModoMesa && (
-        <ElementRail
-          variante="ficha"
-          temaAtual={tema}
-          onThemeChange={handleThemeChange}
-          canChangeTheme={calculados.canChangeTheme}
-        />
+      {!nexAffinity.unlocked && (
+        <div className="nex-awakening-atmosphere" aria-hidden="true">
+          <span className="nex-awakening-atmosphere__halo" />
+          <span className="nex-awakening-atmosphere__orbit" />
+          <span className="nex-awakening-atmosphere__signal" />
+        </div>
       )}
+      {showAffinityAwakening && (
+        <AffinityAwakening onComplete={() => setShowAffinityAwakening(false)} />
+      )}
+
+      <ElementRail
+        variante="ficha"
+        temaAtual={temaVisual}
+        onThemeChange={handleThemeChange}
+        canChangeTheme={nexAffinity.unlocked}
+        nexAtual={nexAffinity.nex}
+      />
 
       <div className="ficha-convergence-workspace">
         <div className="ficha-sticky-stack">
@@ -754,12 +782,14 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
           </nav>
         </div>
 
+        <NexAwakeningMeter state={nexAffinity} />
+
         <div className="ficha-content-surface" data-aba-ativa={abaAtiva}>
           <Suspense fallback={<LoadingComponent />}>
         {abaAtiva === 'principal' && (
           <FichaPrincipal
             personagem={personagem} calculados={calculados} fichaInstance={fichaInstance} handleFichaChange={handleFichaChange}
-            controlesProps={controlesProps} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={toggleCondicao}
+            temaAtual={temaVisual} trilhasPorClasse={trilhasPorClasse} periciasDeOrigem={periciasDeOrigem} onToggleCondicao={toggleCondicao}
             onReaplicarCondicao={reaplicarCondicao}
             onAddPericiaCustom={addPericiaCustom} onRemovePericiaCustom={removePericiaCustom}
           />

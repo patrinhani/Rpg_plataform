@@ -4,7 +4,6 @@ import Identidade from './ficha/identidade.jsx';
 import Atributos from './ficha/atributos.jsx';
 import DefesaStatus from './ficha/defesa-status.jsx';
 import Pericias from './ficha/pericias.jsx';
-import Controles from './ficha/controles.jsx';
 import CalculoDetalhado from './ficha/calculo-detalhado.jsx';
 import Condicoes from './Condicoes.jsx';
 
@@ -48,7 +47,7 @@ function FichaPrincipal({
   calculados,
   fichaInstance,
   handleFichaChange,
-  controlesProps,
+  temaAtual,
   trilhasPorClasse,
   periciasDeOrigem,
   onToggleCondicao,
@@ -56,11 +55,6 @@ function FichaPrincipal({
   onAddPericiaCustom,
   onRemovePericiaCustom,
 }) {
-  const controlesComNEX = {
-    ...controlesProps,
-    canChangeTheme: Boolean(controlesProps.canChangeTheme && calculados.canChangeTheme),
-  };
-
   const classeNome = personagem.info.classe
     ? personagem.info.classe.charAt(0).toUpperCase() + personagem.info.classe.slice(1)
     : 'Agente';
@@ -88,7 +82,7 @@ function FichaPrincipal({
           <div className="summary-agent-tags" aria-label="Dados rápidos do agente">
             <span>{classeNome}</span>
             <span>{nexAtual}</span>
-            <span>{NOMES_TEMA[controlesProps.temaAtual] || 'Ordem'}</span>
+            <span>{NOMES_TEMA[temaAtual] || 'Ordem'}</span>
           </div>
         </div>
 
@@ -145,7 +139,6 @@ function FichaPrincipal({
           <span className="summary-panel-index">02</span>
         </div>
         <div className="ficha-controls-stack">
-          <Controles {...controlesComNEX} />
           <Condicoes
             ativas={personagem.condicoesEfetivas || personagem.condicoesAtivas || []}
             automaticas={personagem.condicoesAutomaticas || []}
