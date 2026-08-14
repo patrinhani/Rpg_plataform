@@ -62,19 +62,18 @@ test('backend consulta grant anonimo sem cabecalho Firebase', async () => {
   assert.match(verifier, /GRANT_TTL_SECONDS = 5 \* 60/);
 });
 
-test('acesso integrado nao exibe tabuleiro de demonstracao antes do snapshot', async () => {
+test('acesso integrado usa abertura neutra e nao exibe a interface legada antes do snapshot', async () => {
   const vttLab = await read('../src/features/vtt-lab/VttLab.jsx');
-  const campaignBranch = vttLab.indexOf('{campaignState ? (');
-  const fallbackEnd = vttLab.indexOf('<footer className="vtt-lab__board-footer">', campaignBranch);
+  const bootstrapCondition = vttLab.indexOf('const showIntegratedBootstrap = Boolean(');
+  const bootstrapReturn = vttLab.indexOf('if (showIntegratedBootstrap)');
+  const fullInterfaceReturn = vttLab.indexOf('className={`vtt-lab ${isConnected');
 
-  assert.ok(campaignBranch >= 0 && fallbackEnd > campaignBranch);
-  const loadingTransition = vttLab.slice(campaignBranch, fallbackEnd);
+  assert.ok(bootstrapCondition >= 0);
+  assert.ok(bootstrapReturn > bootstrapCondition);
+  assert.ok(fullInterfaceReturn > bootstrapReturn);
+  assert.match(vttLab, /usesAutomaticAccess\s*&&\s*!campaignState/);
   assert.match(vttLab, /const integratedSceneStatus = connectionStatus === 'error'/);
   assert.match(vttLab, /Sincronizando a sessão atual com o servidor/);
-  assert.match(loadingTransition, /usesAutomaticAccess \? \(/);
-  assert.match(loadingTransition, /vtt-lab__scene-loading/);
-  assert.ok(
-    loadingTransition.indexOf('vtt-lab__scene-loading')
-      < loadingTransition.indexOf('aria-label="Tabuleiro de teste"'),
-  );
+  assert.match(vttLab.slice(bootstrapReturn, fullInterfaceReturn), /vtt-lab__bootstrap-card/);
+  assert.match(vttLab.slice(bootstrapReturn, fullInterfaceReturn), /Tentar novamente/);
 });

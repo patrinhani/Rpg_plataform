@@ -1095,6 +1095,10 @@
   overflow: auto;
 }
 
+.ficha-convergence-shell .recursos-hud-trackers:has(.perseguicao-container[open]) {
+  max-height: 320px;
+}
+
 .ficha-convergence-shell .tracker-linha {
   background: rgba(0, 0, 0, 0.26);
   border: 1px solid var(--conv-border);
@@ -1115,6 +1119,7 @@
   border: 0;
   color: inherit;
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   justify-content: center;
   margin: 0;
@@ -1126,10 +1131,64 @@
 .vis-tracker-container--wrap { flex-wrap: wrap; }
 
 .ficha-convergence-shell .perseguicao-container {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--conv-border);
+  border-radius: 8px;
   display: grid;
   gap: 5px;
   margin: 0;
+  overflow: hidden;
   padding: 0;
+}
+
+.ficha-convergence-shell .perseguicao-container > summary {
+  align-items: center;
+  color: var(--conv-text);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 7px 9px;
+}
+
+.ficha-convergence-shell .perseguicao-container > summary small {
+  color: var(--conv-muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.62rem;
+}
+
+.ficha-convergence-shell .perseguicao-conteudo {
+  border-top: 1px solid var(--conv-border);
+  display: grid;
+  gap: 6px;
+  padding: 7px;
+}
+
+.ficha-convergence-shell .perseguicao-meta {
+  align-items: center;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+
+.ficha-convergence-shell .perseguicao-meta > span {
+  color: var(--conv-muted);
+  font-size: 0.54rem;
+  text-transform: uppercase;
+}
+
+.ficha-convergence-shell .perseguicao-meta > input {
+  min-height: 34px;
+  padding: 4px;
+  text-align: center;
+  width: 46px;
+}
+
+.ficha-convergence-shell .tracker-linha.sucesso,
+.ficha-convergence-shell .tracker-linha.falha {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 48px;
 }
 
 .ficha-convergence-shell .ficha-abas {

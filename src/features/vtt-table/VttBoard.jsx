@@ -72,16 +72,29 @@ function fogPolygonPoints(points) {
   return points.map((point) => `${point.x * 100},${point.y * 100}`).join(' ');
 }
 
-function VttOverlayImage({ overlay }) {
+function VttOverlayImage({
+  overlay,
+  editable = false,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+  onKeyDown,
+}) {
   const [loaded, setLoaded] = useState(false);
   const motionPreset = resolveOverlayMotionPreset(overlay);
   const motionLabel = overlayMotionLabel(motionPreset);
-  return (
-    <span
-      className={`vtt-board__overlay-frame is-motion-${motionPreset} ${loaded ? 'is-loaded' : ''}`}
-      title={motionLabel || undefined}
-      aria-hidden="true"
-    >
+  const placement = overlay.placement || {};
+  const className = `vtt-board__overlay-frame is-motion-${motionPreset} ${loaded ? 'is-loaded' : ''} ${editable ? 'is-editing' : ''} ${placement.locked === false ? 'is-unlocked' : 'is-locked'}`;
+  const style = {
+    '--vtt-overlay-x': `${clamp(placement.x ?? 0.5, 0, 1) * 100}%`,
+    '--vtt-overlay-y': `${clamp(placement.y ?? 0.5, 0, 1) * 100}%`,
+    '--vtt-overlay-width': `${clamp(placement.width ?? 1, 0.01, 1) * 100}%`,
+    '--vtt-overlay-height': `${clamp(placement.height ?? 1, 0.01, 1) * 100}%`,
+    '--vtt-overlay-rotation': `${clamp(placement.rotation ?? 0, -360, 360)}deg`,
+  };
+  const images = (
+    <>
       <img
         className="vtt-board__overlay"
         src={overlay.url}
@@ -97,29 +110,93 @@ function VttOverlayImage({ overlay }) {
           draggable="false"
         />
       )}
+    </>
+  );
+
+  if (editable) {
+    return (
+      <button
+        type="button"
+        className={className}
+        style={style}
+        title={motionLabel || undefined}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onKeyDown={onKeyDown}
+        aria-label={`${overlay.label || humanize(overlay.name)}. ${placement.locked === false ? 'Destravado para ajuste.' : 'Posição travada.'}`}
+      >
+        {images}
+      </button>
+    );
+  }
+  return (
+    <span
+      className={className}
+      style={style}
+      title={motionLabel || undefined}
+      aria-hidden="true"
+    >
+      {images}
     </span>
   );
 }
 
-function VttSceneLayerImage({ layer, placement, placementIndex }) {
+function VttSceneLayerImage({
+  layer,
+  placement,
+  placementIndex,
+  selected = false,
+  editable = false,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+  onKeyDown,
+}) {
   const [loaded, setLoaded] = useState(false);
+  const style = {
+    '--vtt-layer-x': `${clamp(placement.x, 0, 1) * 100}%`,
+    '--vtt-layer-y': `${clamp(placement.y, 0, 1) * 100}%`,
+    '--vtt-layer-width': `${clamp(placement.width, 0.01, 1) * 100}%`,
+    '--vtt-layer-height': `${clamp(placement.height, 0.01, 1) * 100}%`,
+    '--vtt-layer-rotation': `${clamp(placement.rotation ?? 0, -360, 360)}deg`,
+  };
+  const className = `vtt-board__scene-layer ${loaded ? 'is-loaded' : ''} ${selected ? 'is-selected' : ''} ${placement.locked !== false ? 'is-locked' : 'is-unlocked'}`;
+
+  if (!editable) {
+    return (
+      <img
+        className={className}
+        src={layer.assetUrl}
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        style={style}
+        data-placement={placementIndex}
+        onLoad={() => setLoaded(true)}
+      />
+    );
+  }
+
   return (
-    <img
-      className={`vtt-board__scene-layer ${loaded ? 'is-loaded' : ''}`}
-      src={layer.assetUrl}
-      alt=""
-      aria-hidden="true"
-      draggable="false"
-      style={{
-        '--vtt-layer-x': `${clamp(placement.x, 0, 1) * 100}%`,
-        '--vtt-layer-y': `${clamp(placement.y, 0, 1) * 100}%`,
-        '--vtt-layer-width': `${clamp(placement.width, 0.01, 1) * 100}%`,
-        '--vtt-layer-height': `${clamp(placement.height, 0.01, 1) * 100}%`,
-        '--vtt-layer-rotation': `${clamp(placement.rotation ?? 0, -360, 360)}deg`,
-      }}
+    <button
+      type="button"
+      className={className}
+      style={style}
       data-placement={placementIndex}
-      onLoad={() => setLoaded(true)}
-    />
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onKeyDown={onKeyDown}
+      aria-label={`${layer.label || humanize(layer.key)}. ${placement.locked === false ? 'Destravado para ajuste.' : 'Posição travada.'}`}
+      aria-pressed={selected}
+    >
+      <img src={layer.assetUrl} alt="" draggable="false" onLoad={() => setLoaded(true)} />
+      <small>{placement.locked === false ? 'Destravado' : 'Travado'}</small>
+    </button>
   );
 }
 
@@ -189,13 +266,169 @@ function DirectorSection({
   );
 }
 
+function DirectorDrawer({
+  title,
+  summary,
+  badge,
+  defaultOpen = false,
+  reveal = false,
+  children,
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (reveal) setOpen(true);
+  }, [reveal]);
+
+  return (
+    <details
+      className="vtt-board__director-drawer"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary>
+        <span>
+          <strong>{title}</strong>
+          {summary && <small>{summary}</small>}
+        </span>
+        {badge && <em>{badge}</em>}
+        <i aria-hidden="true">⌄</i>
+      </summary>
+      <div className="vtt-board__director-drawer-body">
+        {children}
+      </div>
+    </details>
+  );
+}
+
+function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
+  const [pendingField, setPendingField] = useState('');
+  const [error, setError] = useState('');
+  const canEdit = typeof onUpdateSheet === 'function';
+
+  const updateField = async (agent, field, value) => {
+    if (!canEdit || !agent?.uid) return;
+    const operationKey = `${agent.uid}:${field}`;
+    setPendingField(operationKey);
+    setError('');
+    try {
+      await onUpdateSheet(agent.uid, field, value);
+    } catch (updateError) {
+      setError(updateError?.message || 'Não foi possível atualizar a ficha do agente.');
+    } finally {
+      setPendingField((current) => (current === operationKey ? '' : current));
+    }
+  };
+
+  if (agents.length === 0) {
+    return <p className="vtt-board__drawer-empty">Nenhuma ficha vinculada à Mesa.</p>;
+  }
+
+  return (
+    <section className="vtt-board__agent-monitor" aria-label="Monitor dos agentes">
+      {error && <p className="vtt-board__agent-monitor-error" role="alert">{error}</p>}
+      {agents.map((agent) => {
+        const sheet = agent.sheet;
+        const displayName = sheet?.characterName || agent.name;
+        const resources = [
+          ['pv', 'PV', 'recursos.pv_atual'],
+          ['pe', 'PE', 'recursos.pe_atual'],
+          ['san', 'SAN', 'recursos.san_atual'],
+        ];
+        const pursuit = sheet?.pursuit || {
+          successes: 0,
+          failures: 0,
+          successTarget: 3,
+          failureTarget: 3,
+        };
+
+        return (
+          <article key={agent.uid} className="vtt-board__agent-monitor-card">
+            <header>
+              <span className="vtt-board__agent-monitor-avatar" aria-hidden="true">
+                {sheet?.photo
+                  ? <img src={sheet.photo} alt="" loading="lazy" decoding="async" />
+                  : tokenInitials(displayName)}
+              </span>
+              <span>
+                <strong>{displayName}</strong>
+                <small>{sheet?.className || 'Classe não informada'}{sheet?.nex ? ` · NEX ${sheet.nex}` : ''}</small>
+              </span>
+              <button type="button" onClick={() => onOpenSheet?.(agent.uid)}>Ficha</button>
+            </header>
+
+            <div className="vtt-board__agent-resource-grid">
+              {resources.map(([key, label, field]) => {
+                const resource = sheet?.resources?.[key] || { current: 0, maximum: 0 };
+                const operationKey = `${agent.uid}:${field}`;
+                return (
+                  <div key={key} className={`is-${key}`}>
+                    <span>{label}</span>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => updateField(agent, field, resource.current - 1)}
+                        disabled={!canEdit || pendingField === operationKey || resource.current <= 0}
+                        aria-label={`Reduzir ${label} de ${displayName}`}
+                      >−</button>
+                      <output aria-label={`${label} de ${displayName}`}>{resource.current}/{resource.maximum}</output>
+                      <button
+                        type="button"
+                        onClick={() => updateField(agent, field, resource.current + 1)}
+                        disabled={!canEdit || pendingField === operationKey || resource.current >= resource.maximum}
+                        aria-label={`Aumentar ${label} de ${displayName}`}
+                      >+</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="vtt-board__agent-pursuit">
+              {[
+                ['successes', 'Sucessos', 'perseguicao.sucessos', pursuit.successTarget],
+                ['failures', 'Falhas', 'perseguicao.falhas', pursuit.failureTarget],
+              ].map(([key, label, field, target]) => {
+                const value = pursuit[key];
+                const operationKey = `${agent.uid}:${field}`;
+                return (
+                  <div key={key} className={`is-${key}`}>
+                    <span>{label}</span>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => updateField(agent, field, value - 1)}
+                        disabled={!canEdit || pendingField === operationKey || value <= 0}
+                        aria-label={`Remover ${label.toLowerCase()} de ${displayName}`}
+                      >−</button>
+                      <output aria-label={`${label} de ${displayName}`}>{value}/{target}</output>
+                      <button
+                        type="button"
+                        onClick={() => updateField(agent, field, value + 1)}
+                        disabled={!canEdit || pendingField === operationKey || value >= target}
+                        aria-label={`Adicionar ${label.toLowerCase()} a ${displayName}`}
+                      >+</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  );
+}
+
 export default function VttBoard({
   state = {},
   role = 'player',
   connected = false,
   members = [],
   characterSheetUids = [],
+  characterSheets = [],
   onOpenCharacterSheet,
+  onUpdateCharacterSheet,
   onCommand,
 }) {
   const scene = state.scene || null;
@@ -206,6 +439,8 @@ export default function VttBoard({
   const panRef = useRef(null);
   const tokenDragRef = useRef(null);
   const propDragRef = useRef(null);
+  const layerDragRef = useRef(null);
+  const overlayDragRef = useRef(null);
   const fogVertexDragRef = useRef(null);
   const fogMaskId = useId().replace(/:/g, '');
   const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
@@ -217,6 +452,10 @@ export default function VttBoard({
   const [selectedPropAssetId, setSelectedPropAssetId] = useState('');
   const [selectedPropStateAssetId, setSelectedPropStateAssetId] = useState('');
   const [draftPropPositions, setDraftPropPositions] = useState({});
+  const [selectedLayerPlacementKey, setSelectedLayerPlacementKey] = useState('');
+  const [draftLayerPositions, setDraftLayerPositions] = useState({});
+  const [selectedOverlayAssetId, setSelectedOverlayAssetId] = useState('');
+  const [draftOverlayPositions, setDraftOverlayPositions] = useState({});
   const [showGrid, setShowGrid] = useState(true);
   const [isPanning, setIsPanning] = useState(false);
   const [mapLoadState, setMapLoadState] = useState('idle');
@@ -294,14 +533,21 @@ export default function VttBoard({
     () => normalizeCharacterSheetUids(characterSheetUids),
     [characterSheetUids],
   );
+  const characterSheetByUid = useMemo(
+    () => new Map((Array.isArray(characterSheets) ? characterSheets : [])
+      .filter((sheet) => sheet?.uid)
+      .map((sheet) => [String(sheet.uid).trim(), sheet])),
+    [characterSheets],
+  );
   const characterSheetMembers = useMemo(
     () => controllerMembers
       .filter((member) => characterSheetUidSet.has(member.uid))
       .map((member) => ({
         ...member,
+        sheet: characterSheetByUid.get(member.uid) || null,
         tokenCount: tokens.filter((token) => token.controllerUid === member.uid).length,
       })),
-    [characterSheetUidSet, controllerMembers, tokens],
+    [characterSheetByUid, characterSheetUidSet, controllerMembers, tokens],
   );
   const selectedToken = useMemo(
     () => tokens.find((item) => item.id === selectedTokenId) || null,
@@ -314,6 +560,22 @@ export default function VttBoard({
   const selectedPropStates = useMemo(
     () => resolvePropStateOptions(propStateGroups, selectedProp?.assetId),
     [propStateGroups, selectedProp?.assetId],
+  );
+  const selectedLayerPlacement = useMemo(() => {
+    for (const layer of sceneLayers) {
+      const placements = Array.isArray(layer.placements) ? layer.placements : [];
+      for (let placementIndex = 0; placementIndex < placements.length; placementIndex += 1) {
+        const key = `${layer.id}:${placementIndex}`;
+        if (key === selectedLayerPlacementKey) {
+          return { key, layer, placementIndex, placement: placements[placementIndex] };
+        }
+      }
+    }
+    return null;
+  }, [sceneLayers, selectedLayerPlacementKey]);
+  const selectedOverlay = useMemo(
+    () => overlays.find((overlay) => overlay.assetId === selectedOverlayAssetId) || null,
+    [overlays, selectedOverlayAssetId],
   );
   const selectedTokenController = selectedToken?.controllerUid
     ? controllerByUid.get(selectedToken.controllerUid) || null
@@ -385,6 +647,10 @@ export default function VttBoard({
     setSelectedPropId('');
     setSelectedPropStateAssetId('');
     setDraftPropPositions({});
+    setSelectedLayerPlacementKey('');
+    setDraftLayerPositions({});
+    setSelectedOverlayAssetId('');
+    setDraftOverlayPositions({});
     setIsPanning(false);
     setGuideOpen(false);
     setGuideZoom(1);
@@ -418,7 +684,17 @@ export default function VttBoard({
   useEffect(() => {
     setDraftPositions({});
     setDraftPropPositions({});
+    setDraftLayerPositions({});
+    setDraftOverlayPositions({});
   }, [revision]);
+
+  useEffect(() => {
+    if (selectedOverlayAssetId && !selectedOverlay) setSelectedOverlayAssetId('');
+  }, [selectedOverlay, selectedOverlayAssetId]);
+
+  useEffect(() => {
+    if (selectedLayerPlacementKey && !selectedLayerPlacement) setSelectedLayerPlacementKey('');
+  }, [selectedLayerPlacement, selectedLayerPlacementKey]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -477,6 +753,12 @@ export default function VttBoard({
   useEffect(() => {
     if (selectedPropId) openDirectorSection('props');
   }, [openDirectorSection, selectedPropId]);
+
+  useEffect(() => {
+    if (!selectedLayerPlacementKey) return;
+    setDirectorOpen(true);
+    openDirectorSection('props');
+  }, [openDirectorSection, selectedLayerPlacementKey]);
 
   useEffect(() => {
     if (fogEditMode) openDirectorSection('fog');
@@ -730,7 +1012,8 @@ export default function VttBoard({
     event.stopPropagation();
     setSelectedPropId(prop.id);
     setSelectedTokenId('');
-    if (!connected || !isMaster) return;
+    setSelectedLayerPlacementKey('');
+    if (!connected || !isMaster || prop.locked !== false) return;
     event.preventDefault();
     const pointer = pointerToMap(event);
     const shown = draftPropPositions[prop.id] || prop;
@@ -790,16 +1073,193 @@ export default function VttBoard({
       ArrowDown: [0, 1],
     };
     const direction = directions[event.key];
-    if (!direction || !connected || !isMaster) return;
+    if (!direction || !connected || !isMaster || prop.locked !== false) return;
     event.preventDefault();
     const shown = draftPropPositions[prop.id] || prop;
-    const step = event.shiftKey ? 0.05 : 0.02;
+    const step = event.shiftKey ? 0.01 : 0.002;
     const position = {
       x: clamp(shown.x + direction[0] * step, 0, 1),
       y: clamp(shown.y + direction[1] * step, 0, 1),
     };
     setDraftPropPositions((current) => ({ ...current, [prop.id]: position }));
     emitCommand('prop.update', { propId: prop.id, ...position });
+  };
+
+  const handleLayerPointerDown = (event, layer, placementIndex, placement) => {
+    event.stopPropagation();
+    const key = `${layer.id}:${placementIndex}`;
+    setSelectedLayerPlacementKey(key);
+    setSelectedPropId('');
+    setSelectedTokenId('');
+    if (!connected || !isMaster || placement.locked !== false) return;
+    event.preventDefault();
+    const pointer = pointerToMap(event);
+    const shown = draftLayerPositions[key] || placement;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    layerDragRef.current = {
+      pointerId: event.pointerId,
+      key,
+      layerId: layer.id,
+      placementIndex,
+      offsetX: pointer ? pointer.x - shown.x : 0,
+      offsetY: pointer ? pointer.y - shown.y : 0,
+    };
+  };
+
+  const handleLayerPointerMove = (event, key) => {
+    const drag = layerDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.key !== key) return;
+    const point = pointerToMap(event);
+    if (!point) return;
+    setDraftLayerPositions((current) => ({
+      ...current,
+      [key]: {
+        x: clamp(point.x - drag.offsetX, 0, 1),
+        y: clamp(point.y - drag.offsetY, 0, 1),
+      },
+    }));
+  };
+
+  const finishLayerDrag = (event, key, cancelled = false) => {
+    const drag = layerDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.key !== key) return;
+    layerDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (cancelled) {
+      setDraftLayerPositions((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+      return;
+    }
+    const point = pointerToMap(event);
+    if (!point) return;
+    const position = {
+      x: clamp(point.x - drag.offsetX, 0, 1),
+      y: clamp(point.y - drag.offsetY, 0, 1),
+    };
+    setDraftLayerPositions((current) => ({ ...current, [key]: position }));
+    emitCommand('layer.update', {
+      layerId: drag.layerId,
+      placementIndex: drag.placementIndex,
+      ...position,
+    });
+  };
+
+  const handleLayerKeyDown = (event, layer, placementIndex, placement) => {
+    const directions = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const direction = directions[event.key];
+    if (!direction || !connected || !isMaster || placement.locked !== false) return;
+    event.preventDefault();
+    const key = `${layer.id}:${placementIndex}`;
+    const shown = draftLayerPositions[key] || placement;
+    const step = event.shiftKey ? 0.01 : 0.002;
+    const position = {
+      x: clamp(shown.x + direction[0] * step, 0, 1),
+      y: clamp(shown.y + direction[1] * step, 0, 1),
+    };
+    setDraftLayerPositions((current) => ({ ...current, [key]: position }));
+    emitCommand('layer.update', { layerId: layer.id, placementIndex, ...position });
+  };
+
+  const handleUpdateSelectedLayer = (patch) => {
+    if (!selectedLayerPlacement) return;
+    emitCommand('layer.update', {
+      layerId: selectedLayerPlacement.layer.id,
+      placementIndex: selectedLayerPlacement.placementIndex,
+      ...patch,
+    });
+  };
+
+  const handleOverlayPointerDown = (event, overlay) => {
+    event.stopPropagation();
+    setSelectedOverlayAssetId(overlay.assetId);
+    setSelectedLayerPlacementKey('');
+    setSelectedPropId('');
+    setSelectedTokenId('');
+    if (!connected || !isMaster || overlay.placement?.locked !== false) return;
+    event.preventDefault();
+    const pointer = pointerToMap(event);
+    const shown = draftOverlayPositions[overlay.assetId] || overlay.placement || { x: 0.5, y: 0.5 };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    overlayDragRef.current = {
+      pointerId: event.pointerId,
+      assetId: overlay.assetId,
+      offsetX: pointer ? pointer.x - shown.x : 0,
+      offsetY: pointer ? pointer.y - shown.y : 0,
+    };
+  };
+
+  const handleOverlayPointerMove = (event, assetId) => {
+    const drag = overlayDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.assetId !== assetId) return;
+    const point = pointerToMap(event);
+    if (!point) return;
+    setDraftOverlayPositions((current) => ({
+      ...current,
+      [assetId]: {
+        x: clamp(point.x - drag.offsetX, 0, 1),
+        y: clamp(point.y - drag.offsetY, 0, 1),
+      },
+    }));
+  };
+
+  const finishOverlayDrag = (event, assetId, cancelled = false) => {
+    const drag = overlayDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || drag.assetId !== assetId) return;
+    overlayDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (cancelled) {
+      setDraftOverlayPositions((current) => {
+        const next = { ...current };
+        delete next[assetId];
+        return next;
+      });
+      return;
+    }
+    const point = pointerToMap(event);
+    if (!point) return;
+    const position = {
+      x: clamp(point.x - drag.offsetX, 0, 1),
+      y: clamp(point.y - drag.offsetY, 0, 1),
+    };
+    setDraftOverlayPositions((current) => ({ ...current, [assetId]: position }));
+    emitCommand('overlay.update', { assetId, ...position });
+  };
+
+  const handleOverlayKeyDown = (event, overlay) => {
+    const directions = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const direction = directions[event.key];
+    if (!direction || !connected || !isMaster || overlay.placement?.locked !== false) return;
+    event.preventDefault();
+    const shown = draftOverlayPositions[overlay.assetId] || overlay.placement;
+    const step = event.shiftKey ? 0.01 : 0.002;
+    const position = {
+      x: clamp(shown.x + direction[0] * step, 0, 1),
+      y: clamp(shown.y + direction[1] * step, 0, 1),
+    };
+    setDraftOverlayPositions((current) => ({ ...current, [overlay.assetId]: position }));
+    emitCommand('overlay.update', { assetId: overlay.assetId, ...position });
+  };
+
+  const handleUpdateSelectedOverlay = (patch) => {
+    if (!selectedOverlay) return;
+    emitCommand('overlay.update', { assetId: selectedOverlay.assetId, ...patch });
   };
 
   const handleTokenPointerMove = (event, token) => {
@@ -917,6 +1377,7 @@ export default function VttBoard({
       width: DEFAULT_PROP_SIZE,
       height: DEFAULT_PROP_SIZE,
       rotation: 0,
+      locked: false,
     });
   };
 
@@ -1029,8 +1490,18 @@ export default function VttBoard({
                     <VttSceneLayerImage
                       key={`${layer.id}:${layer.assetId}:${placementIndex}`}
                       layer={layer}
-                      placement={placement}
+                      placement={{
+                        ...placement,
+                        ...(draftLayerPositions[`${layer.id}:${placementIndex}`] || {}),
+                      }}
                       placementIndex={placementIndex}
+                      selected={selectedLayerPlacementKey === `${layer.id}:${placementIndex}`}
+                      editable={isMaster}
+                      onPointerDown={(event) => handleLayerPointerDown(event, layer, placementIndex, placement)}
+                      onPointerMove={(event) => handleLayerPointerMove(event, `${layer.id}:${placementIndex}`)}
+                      onPointerUp={(event) => finishLayerDrag(event, `${layer.id}:${placementIndex}`)}
+                      onPointerCancel={(event) => finishLayerDrag(event, `${layer.id}:${placementIndex}`, true)}
+                      onKeyDown={(event) => handleLayerKeyDown(event, layer, placementIndex, placement)}
                     />
                   ))
                   : []
@@ -1043,7 +1514,7 @@ export default function VttBoard({
                   <button
                     key={prop.id}
                     type="button"
-                    className={`vtt-board__prop ${selected ? 'is-selected' : ''} ${prop.visible === false ? 'is-hidden' : ''}`}
+                    className={`vtt-board__prop ${selected ? 'is-selected' : ''} ${prop.visible === false ? 'is-hidden' : ''} ${prop.locked !== false ? 'is-locked' : 'is-unlocked'}`}
                     style={{
                       '--vtt-prop-x': `${position.x * 100}%`,
                       '--vtt-prop-y': `${position.y * 100}%`,
@@ -1074,7 +1545,19 @@ export default function VttBoard({
               {overlays.filter((overlay) => overlay.enabled).map((overlay) => (
                 <VttOverlayImage
                   key={overlay.assetId}
-                  overlay={overlay}
+                  overlay={{
+                    ...overlay,
+                    placement: {
+                      ...(overlay.placement || {}),
+                      ...(draftOverlayPositions[overlay.assetId] || {}),
+                    },
+                  }}
+                  editable={isMaster}
+                  onPointerDown={(event) => handleOverlayPointerDown(event, overlay)}
+                  onPointerMove={(event) => handleOverlayPointerMove(event, overlay.assetId)}
+                  onPointerUp={(event) => finishOverlayDrag(event, overlay.assetId)}
+                  onPointerCancel={(event) => finishOverlayDrag(event, overlay.assetId, true)}
+                  onKeyDown={(event) => handleOverlayKeyDown(event, overlay)}
                 />
               ))}
 
@@ -1260,48 +1743,6 @@ export default function VttBoard({
                 </button>
               </div>
 
-              <div className="vtt-board__master-quick-actions">
-                <span>Ações rápidas</span>
-                <button
-                  type="button"
-                  className={fog?.enabled ? 'is-active' : ''}
-                  onClick={() => handleFogEnabledChange(!fog?.enabled)}
-                  disabled={!connected || !scene}
-                >
-                  {fog?.enabled ? 'Desativar névoa' : 'Ativar névoa'}
-                </button>
-                <button type="button" onClick={resetCamera} disabled={!scene}>
-                  Enquadrar mapa
-                </button>
-              </div>
-
-              <div className="vtt-board__master-effects" aria-label="Efeitos rápidos">
-                <div>
-                  <span>Efeitos rápidos</span>
-                  <small>{activeOverlayCount}/{overlays.length} ativos</small>
-                </div>
-                {overlays.length === 0 ? (
-                  <p>Esta cena não possui efeitos alternáveis.</p>
-                ) : (
-                  <div>
-                    {overlays.map((overlay) => (
-                      <button
-                        key={overlay.assetId}
-                        type="button"
-                        className={overlay.enabled ? 'is-active' : ''}
-                        onClick={() => emitCommand('overlay.set', {
-                          assetId: overlay.assetId,
-                          enabled: !overlay.enabled,
-                        })}
-                        aria-pressed={Boolean(overlay.enabled)}
-                        disabled={!connected}
-                      >
-                        {overlay.label || humanize(overlay.name)}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
             </section>
 
             <DirectorSection
@@ -1313,6 +1754,12 @@ export default function VttBoard({
               onToggle={() => toggleDirectorSection('scene')}
             >
 
+            <DirectorDrawer
+              title="Mapa e guia"
+              summary="Cena ativa e referência privada"
+              badge={scene ? 'Mapa' : 'Vazio'}
+              defaultOpen
+            >
             {scene?.gmGuideMap?.url && (
               <details className="vtt-board__gm-guide">
                 <summary>Guia privado do Mestre</summary>
@@ -1347,25 +1794,108 @@ export default function VttBoard({
                 ))}
               </select>
             </label>
+            <div className="vtt-board__drawer-actions">
+              <button type="button" onClick={resetCamera} disabled={!scene}>Enquadrar mapa</button>
+            </div>
+            </DirectorDrawer>
 
+            <DirectorDrawer
+              title="Efeitos visuais"
+              summary="Ativar e posicionar overlays"
+              badge={`${activeOverlayCount}/${overlays.length}`}
+              reveal={Boolean(selectedOverlay)}
+            >
             <fieldset className="vtt-board__effects" disabled={!connected || overlays.length === 0}>
               <legend>Efeitos e overlays</legend>
               {overlays.length === 0 && <p>Esta cena não possui overlays.</p>}
               {overlays.map((overlay) => (
-                <label key={overlay.assetId}>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(overlay.enabled)}
-                    onChange={(event) => emitCommand('overlay.set', {
-                      assetId: overlay.assetId,
-                      enabled: event.target.checked,
-                    })}
-                  />
-                  <span>{overlay.label || humanize(overlay.name)}</span>
-                </label>
+                <div key={overlay.assetId} className="vtt-board__overlay-control-row">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(overlay.enabled)}
+                      onChange={(event) => emitCommand('overlay.set', {
+                        assetId: overlay.assetId,
+                        enabled: event.target.checked,
+                      })}
+                    />
+                    <span>{overlay.label || humanize(overlay.name)}</span>
+                  </label>
+                  {overlay.enabled && (
+                    <button
+                      type="button"
+                      className={overlay.placement?.locked === false ? 'is-unlocked' : 'is-locked'}
+                      onClick={() => {
+                        setSelectedOverlayAssetId(overlay.assetId);
+                        emitCommand('overlay.update', {
+                          assetId: overlay.assetId,
+                          locked: overlay.placement?.locked === false,
+                        });
+                      }}
+                    >
+                      {overlay.placement?.locked === false ? 'Travar' : 'Ajustar'}
+                    </button>
+                  )}
+                </div>
               ))}
             </fieldset>
+            {selectedOverlay && selectedOverlay.enabled && (
+              <section className="vtt-board__asset-lock-panel">
+                <div>
+                  <span>Efeito selecionado</span>
+                  <strong>{selectedOverlay.label || humanize(selectedOverlay.name)}</strong>
+                </div>
+                <div className="vtt-board__prop-transform" aria-label="Ajuste fino do efeito selecionado">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSelectedOverlay({
+                      width: clamp(selectedOverlay.placement.width * 0.995, 0.01, 1),
+                      height: clamp(selectedOverlay.placement.height * 0.995, 0.01, 1),
+                    })}
+                    disabled={selectedOverlay.placement?.locked !== false}
+                    aria-label="Diminuir efeito"
+                  >−</button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSelectedOverlay({
+                      rotation: ((((selectedOverlay.placement.rotation - 1) + 180) % 360) + 360) % 360 - 180,
+                    })}
+                    disabled={selectedOverlay.placement?.locked !== false}
+                    aria-label="Girar efeito à esquerda"
+                  >↺</button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSelectedOverlay({
+                      rotation: ((((selectedOverlay.placement.rotation + 1) + 180) % 360) + 360) % 360 - 180,
+                    })}
+                    disabled={selectedOverlay.placement?.locked !== false}
+                    aria-label="Girar efeito à direita"
+                  >↻</button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSelectedOverlay({
+                      width: clamp(selectedOverlay.placement.width * 1.005, 0.01, 1),
+                      height: clamp(selectedOverlay.placement.height * 1.005, 0.01, 1),
+                    })}
+                    disabled={selectedOverlay.placement?.locked !== false}
+                    aria-label="Aumentar efeito"
+                  >+</button>
+                </div>
+                <small>
+                  {selectedOverlay.placement?.locked === false
+                    ? 'Arraste o efeito no mapa ou use as setas; depois trave.'
+                    : 'Posição protegida contra alterações acidentais.'}
+                </small>
+              </section>
+            )}
+            </DirectorDrawer>
 
+            <DirectorDrawer
+              title="Elementos ancorados"
+              summary="Corpos, emissores e composição"
+              badge={`${sceneLayers.length}`}
+              reveal={Boolean(selectedLayerPlacement)}
+            >
             <fieldset className="vtt-board__layers" disabled={!connected || sceneLayers.length === 0}>
               <legend>Composição da cena</legend>
               {sceneLayers.length === 0 && <p>Esta cena não possui objetos ancorados.</p>}
@@ -1389,6 +1919,7 @@ export default function VttBoard({
                 </label>
               ))}
             </fieldset>
+            </DirectorDrawer>
 
             </DirectorSection>
 
@@ -1401,6 +1932,12 @@ export default function VttBoard({
               onToggle={() => toggleDirectorSection('fog')}
             >
 
+            <DirectorDrawer
+              title="Proteção do mapa"
+              summary="Ativar, pré-visualizar e controlar"
+              badge={fog?.enabled ? 'Ativa' : 'Livre'}
+              defaultOpen
+            >
             <fieldset className="vtt-board__fog-controls" disabled={!connected || !scene}>
               <legend>Névoa de guerra</legend>
               <label className="vtt-board__fog-toggle">
@@ -1414,9 +1951,18 @@ export default function VttBoard({
                   <small>Oculta mapa, efeitos e tokens ainda não revelados.</small>
                 </span>
               </label>
+            </fieldset>
+            </DirectorDrawer>
 
-              {fog?.enabled && (
-                <>
+            {fog?.enabled && (
+              <DirectorDrawer
+                title="Salas e setores"
+                summary="Revelar, ocultar e desenhar regiões"
+                badge={`${revealedFogRegionCount}/${fogRegions.length}`}
+                defaultOpen
+              >
+                <fieldset className="vtt-board__fog-controls" disabled={!connected || !scene}>
+                  <legend>Controle por regiões</legend>
                   <button
                     type="button"
                     className={fogControlMode ? 'is-active' : ''}
@@ -1564,9 +2110,9 @@ export default function VttBoard({
                   <small className="vtt-board__fog-status">
                     {revealedFogRegionCount} de {fogRegions.length} regiões reveladas · revisão {Number(fog.revision || 0)}
                   </small>
-                </>
-              )}
-            </fieldset>
+                </fieldset>
+              </DirectorDrawer>
+            )}
 
             </DirectorSection>
 
@@ -1579,11 +2125,13 @@ export default function VttBoard({
               onToggle={() => toggleDirectorSection('tokens')}
             >
 
+            <DirectorDrawer
+              title="Galeria de tokens"
+              summary="Escolha e adicione uma peça"
+              badge={`${tokenAssets.length}`}
+              defaultOpen={tokens.length === 0}
+            >
             <div className="vtt-board__spawn">
-              <div className="vtt-board__token-gallery-heading">
-                <span>Galeria de tokens</span>
-                <small>{tokenAssets.length} disponíveis</small>
-              </div>
               <div
                 className="vtt-board__token-gallery"
                 role="listbox"
@@ -1655,12 +2203,15 @@ export default function VttBoard({
                 Posicionar no centro
               </button>
             </div>
+            </DirectorDrawer>
 
-            <section className="vtt-board__token-roster" aria-labelledby="vtt-board-token-roster-title">
-              <div className="vtt-board__token-roster-heading">
-                <span id="vtt-board-token-roster-title">Peças em cena</span>
-                <small>{tokens.length}</small>
-              </div>
+            <DirectorDrawer
+              title="Peças em cena"
+              summary="Seleção, dono e acesso à ficha"
+              badge={`${tokens.length}`}
+              reveal={Boolean(selectedToken)}
+            >
+            <section className="vtt-board__token-roster" aria-label="Peças em cena">
               {tokens.length === 0 ? (
                 <p>Adicione um token para vinculá-lo a um jogador e à ficha dele.</p>
               ) : (
@@ -1714,47 +2265,28 @@ export default function VttBoard({
                 </div>
               )}
             </section>
+            </DirectorDrawer>
 
-            {canBrowseCharacterSheets && characterSheetMembers.length > 0 && (
-              <section
-                className="vtt-board__linked-sheets"
-                aria-labelledby="vtt-board-linked-sheets-title"
-              >
-                <div className="vtt-board__token-roster-heading">
-                  <span id="vtt-board-linked-sheets-title">Fichas vinculadas</span>
-                  <small>{characterSheetMembers.length}</small>
-                </div>
-                <div className="vtt-board__linked-sheets-list">
-                  {characterSheetMembers.map((member) => (
-                    <button
-                      key={member.uid}
-                      type="button"
-                      onClick={() => handleOpenCharacterSheet(member.uid)}
-                      aria-label={`Abrir ficha de ${member.name}`}
-                    >
-                      <span className="vtt-board__linked-sheet-avatar" aria-hidden="true">
-                        {tokenInitials(member.name)}
-                      </span>
-                      <span className="vtt-board__linked-sheet-copy">
-                        <strong>{member.name}</strong>
-                        <small>
-                          {member.tokenCount === 0
-                            ? 'Nenhuma peça atribuída'
-                            : `${member.tokenCount} ${member.tokenCount === 1 ? 'peça atribuída' : 'peças atribuídas'}`}
-                        </small>
-                      </span>
-                      <span className="vtt-board__linked-sheet-action">Abrir ficha</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
+            <DirectorDrawer
+              title="Monitor dos agentes"
+              summary="PV, PE, SAN e progresso da perseguição"
+              badge={`${characterSheetMembers.length}`}
+              defaultOpen={characterSheetMembers.length > 0}
+            >
+              <MasterAgentMonitor
+                agents={canBrowseCharacterSheets ? characterSheetMembers : []}
+                onOpenSheet={handleOpenCharacterSheet}
+                onUpdateSheet={onUpdateCharacterSheet}
+              />
+            </DirectorDrawer>
 
-            <section className="vtt-board__token-controller" aria-labelledby="vtt-board-token-controller-title">
-              <div>
-                <span id="vtt-board-token-controller-title">Token selecionado</span>
-                <strong>{selectedToken?.label || 'Selecione uma peça no mapa'}</strong>
-              </div>
+            <DirectorDrawer
+              title="Token selecionado"
+              summary={selectedToken?.label || 'Nenhuma peça selecionada'}
+              badge={selectedToken ? 'Editar' : '—'}
+              reveal={Boolean(selectedToken)}
+            >
+            <section className="vtt-board__token-controller" aria-label="Controle do token selecionado">
               <label className="vtt-board__field" htmlFor="vtt-board-token-controller">
                 <span>Quem pode movimentar</span>
                 <select
@@ -1802,142 +2334,223 @@ export default function VttBoard({
             >
               Remover token selecionado
             </button>
+            </DirectorDrawer>
 
             </DirectorSection>
 
             <DirectorSection
               id="vtt-board-props-section"
               title="Objetos de cenário"
-              summary={selectedProp?.label || 'Posicionar e ajustar objetos'}
+              summary={selectedLayerPlacement?.layer.label || selectedProp?.label || 'Posicionar e ajustar objetos'}
               badge={`${props.length} ${props.length === 1 ? 'objeto' : 'objetos'}`}
               open={directorSections.props}
               onToggle={() => toggleDirectorSection('props')}
             >
 
             <div className="vtt-board__prop-editor">
-              <label className="vtt-board__field" htmlFor="vtt-board-prop-asset">
-                <span>Objetos de cenário</span>
-                <select
-                  id="vtt-board-prop-asset"
-                  value={selectedPropAssetId}
-                  onChange={(event) => setSelectedPropAssetId(event.target.value)}
-                  disabled={!connected || propAssets.length === 0}
-                >
-                  {propAssets.length === 0 && <option value="">Nenhum objeto disponível</option>}
-                  {propAssets.map((asset) => (
-                    <option key={asset.assetId} value={asset.assetId}>
-                      {asset.label || humanize(asset.assetId.split('/').pop())}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="vtt-board__prop-primary-actions">
-                <button type="button" onClick={handleSpawnProp} disabled={!selectedPropAssetId}>
-                  Posicionar objeto
-                </button>
-              </div>
-              <label className="vtt-board__field" htmlFor="vtt-board-prop-state">
-                <span>Estado do objeto selecionado</span>
-                <select
-                  id="vtt-board-prop-state"
-                  value={selectedPropStateAssetId}
-                  onChange={(event) => setSelectedPropStateAssetId(event.target.value)}
-                  disabled={!selectedPropId || !selectedPropStates?.options.length}
-                >
-                  {!selectedPropStates?.options.length && (
-                    <option value="">Este objeto não possui estados alternativos</option>
-                  )}
-                  {selectedPropStates?.options.map((state) => (
-                    <option key={state.assetId} value={state.assetId}>
-                      {state.label}{state.version > 1 ? ` · v${state.version}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="vtt-board__prop-primary-actions">
-                <button
-                  type="button"
-                  onClick={() => handleUpdateSelectedProp({
-                    assetId: selectedPropStateAssetId,
-                    label: selectedPropStates?.groupLabel || selectedProp?.label,
-                  })}
-                  disabled={
-                    !selectedPropId
-                    || !selectedPropStateAssetId
-                    || selectedPropStateAssetId === selectedProp?.assetId
-                  }
-                >
-                  Aplicar estado
-                </button>
-              </div>
-              <div className="vtt-board__prop-transform" aria-label="Ajustes do objeto selecionado">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prop = props.find((item) => item.id === selectedPropId);
-                    if (prop) handleUpdateSelectedProp({
-                      width: clamp(prop.width * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
-                      height: clamp(prop.height * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
-                    });
-                  }}
-                  disabled={!selectedPropId}
-                  aria-label="Diminuir objeto"
-                >−</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prop = props.find((item) => item.id === selectedPropId);
-                    if (prop) handleUpdateSelectedProp({
-                      rotation: ((((prop.rotation - 15) + 180) % 360) + 360) % 360 - 180,
-                    });
-                  }}
-                  disabled={!selectedPropId}
-                  aria-label="Girar objeto à esquerda"
-                >↺</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prop = props.find((item) => item.id === selectedPropId);
-                    if (prop) handleUpdateSelectedProp({
-                      rotation: ((((prop.rotation + 15) + 180) % 360) + 360) % 360 - 180,
-                    });
-                  }}
-                  disabled={!selectedPropId}
-                  aria-label="Girar objeto à direita"
-                >↻</button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prop = props.find((item) => item.id === selectedPropId);
-                    if (prop) handleUpdateSelectedProp({
-                      width: clamp(prop.width * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
-                      height: clamp(prop.height * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
-                    });
-                  }}
-                  disabled={!selectedPropId}
-                  aria-label="Aumentar objeto"
-                >+</button>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const prop = props.find((item) => item.id === selectedPropId);
-                  if (prop) handleUpdateSelectedProp({ visible: prop.visible === false });
-                }}
-                disabled={!selectedPropId}
+              <DirectorDrawer
+                title="Catálogo de objetos"
+                summary="Escolher e posicionar um novo asset"
+                badge={`${propAssets.length} disponíveis`}
+                defaultOpen={!selectedProp && !selectedLayerPlacement}
               >
-                {props.find((item) => item.id === selectedPropId)?.visible === false
-                  ? 'Mostrar aos jogadores'
-                  : 'Ocultar dos jogadores'}
-              </button>
-              <button
-                type="button"
-                className="vtt-board__remove"
-                onClick={handleRemoveSelectedProp}
-                disabled={!selectedPropId}
+                <label className="vtt-board__field" htmlFor="vtt-board-prop-asset">
+                  <span>Objeto de cenário</span>
+                  <select
+                    id="vtt-board-prop-asset"
+                    value={selectedPropAssetId}
+                    onChange={(event) => setSelectedPropAssetId(event.target.value)}
+                    disabled={!connected || propAssets.length === 0}
+                  >
+                    {propAssets.length === 0 && <option value="">Nenhum objeto disponível</option>}
+                    {propAssets.map((asset) => (
+                      <option key={asset.assetId} value={asset.assetId}>
+                        {asset.label || humanize(asset.assetId.split('/').pop())}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="vtt-board__prop-primary-actions">
+                  <button type="button" onClick={handleSpawnProp} disabled={!selectedPropAssetId}>
+                    Posicionar objeto
+                  </button>
+                </div>
+              </DirectorDrawer>
+
+              <DirectorDrawer
+                title="Objeto livre selecionado"
+                summary={selectedProp?.label || 'Selecione um objeto no mapa'}
+                badge={selectedProp ? (selectedProp.locked === false ? 'Editando' : 'Travado') : '—'}
+                reveal={Boolean(selectedProp)}
               >
-                Remover objeto selecionado
-              </button>
+                {selectedProp ? (
+                  <>
+                    <label className="vtt-board__field" htmlFor="vtt-board-prop-state">
+                      <span>Estado visual</span>
+                      <select
+                        id="vtt-board-prop-state"
+                        value={selectedPropStateAssetId}
+                        onChange={(event) => setSelectedPropStateAssetId(event.target.value)}
+                        disabled={!selectedPropStates?.options.length}
+                      >
+                        {!selectedPropStates?.options.length && (
+                          <option value="">Este objeto não possui estados alternativos</option>
+                        )}
+                        {selectedPropStates?.options.map((state) => (
+                          <option key={state.assetId} value={state.assetId}>
+                            {state.label}{state.version > 1 ? ` · v${state.version}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="vtt-board__prop-primary-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedProp({
+                          assetId: selectedPropStateAssetId,
+                          label: selectedPropStates?.groupLabel || selectedProp.label,
+                        })}
+                        disabled={!selectedPropStateAssetId || selectedPropStateAssetId === selectedProp.assetId}
+                      >
+                        Aplicar estado
+                      </button>
+                    </div>
+                    <div className="vtt-board__prop-transform" aria-label="Ajustes do objeto selecionado">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedProp({
+                          width: clamp(selectedProp.width * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                          height: clamp(selectedProp.height * 0.85, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                        })}
+                        disabled={selectedProp.locked !== false}
+                        aria-label="Diminuir objeto"
+                      >−</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedProp({
+                          rotation: ((((selectedProp.rotation - 15) + 180) % 360) + 360) % 360 - 180,
+                        })}
+                        disabled={selectedProp.locked !== false}
+                        aria-label="Girar objeto à esquerda"
+                      >↺</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedProp({
+                          rotation: ((((selectedProp.rotation + 15) + 180) % 360) + 360) % 360 - 180,
+                        })}
+                        disabled={selectedProp.locked !== false}
+                        aria-label="Girar objeto à direita"
+                      >↻</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedProp({
+                          width: clamp(selectedProp.width * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                          height: clamp(selectedProp.height * 1.15, MIN_PROP_SIZE, MAX_PROP_SIZE),
+                        })}
+                        disabled={selectedProp.locked !== false}
+                        aria-label="Aumentar objeto"
+                      >+</button>
+                    </div>
+                    <button
+                      type="button"
+                      className={`vtt-board__asset-lock-button ${selectedProp.locked !== false ? 'is-locked' : 'is-unlocked'}`}
+                      onClick={() => handleUpdateSelectedProp({ locked: selectedProp.locked === false })}
+                      disabled={!connected}
+                    >
+                      {selectedProp.locked === false ? 'Travar posição do objeto' : 'Destravar objeto para ajustar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateSelectedProp({ visible: selectedProp.visible === false })}
+                    >
+                      {selectedProp.visible === false ? 'Mostrar aos jogadores' : 'Ocultar dos jogadores'}
+                    </button>
+                    <button
+                      type="button"
+                      className="vtt-board__remove"
+                      onClick={handleRemoveSelectedProp}
+                    >
+                      Remover objeto selecionado
+                    </button>
+                  </>
+                ) : (
+                  <p className="vtt-board__drawer-empty">Clique em um objeto livre no mapa para editar.</p>
+                )}
+              </DirectorDrawer>
+
+              <DirectorDrawer
+                title="Elemento ancorado selecionado"
+                summary={selectedLayerPlacement?.layer.label || 'Selecione um elemento integrado ao mapa'}
+                badge={selectedLayerPlacement
+                  ? (selectedLayerPlacement.placement.locked === false ? 'Editando' : 'Travado')
+                  : '—'}
+                reveal={Boolean(selectedLayerPlacement)}
+              >
+                {selectedLayerPlacement ? (
+                  <>
+                    <section className="vtt-board__asset-lock-panel" aria-live="polite">
+                      <div>
+                        <span>Elemento selecionado</span>
+                        <strong>{selectedLayerPlacement.layer.label || humanize(selectedLayerPlacement.layer.key)}</strong>
+                        <small>Posição {selectedLayerPlacement.placementIndex + 1}</small>
+                      </div>
+                      <button
+                        type="button"
+                        className={selectedLayerPlacement.placement.locked === false ? 'is-unlocked' : 'is-locked'}
+                        onClick={() => handleUpdateSelectedLayer({
+                          locked: selectedLayerPlacement.placement.locked === false,
+                        })}
+                        disabled={!connected}
+                      >
+                        {selectedLayerPlacement.placement.locked === false ? 'Travar posição' : 'Destravar para ajustar'}
+                      </button>
+                      <small>
+                        {selectedLayerPlacement.placement.locked === false
+                          ? 'Arraste no mapa ou use as setas. Shift faz um ajuste maior.'
+                          : 'Travado contra movimentos acidentais.'}
+                      </small>
+                    </section>
+                    <div className="vtt-board__prop-transform" aria-label="Ajuste fino do elemento ancorado">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedLayer({
+                          width: clamp(selectedLayerPlacement.placement.width * 0.98, 0.01, 1),
+                          height: clamp(selectedLayerPlacement.placement.height * 0.98, 0.01, 1),
+                        })}
+                        disabled={selectedLayerPlacement.placement.locked !== false}
+                        aria-label="Diminuir elemento ancorado"
+                      >−</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedLayer({
+                          rotation: ((((selectedLayerPlacement.placement.rotation - 1) + 180) % 360) + 360) % 360 - 180,
+                        })}
+                        disabled={selectedLayerPlacement.placement.locked !== false}
+                        aria-label="Girar elemento ancorado à esquerda"
+                      >↺</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedLayer({
+                          rotation: ((((selectedLayerPlacement.placement.rotation + 1) + 180) % 360) + 360) % 360 - 180,
+                        })}
+                        disabled={selectedLayerPlacement.placement.locked !== false}
+                        aria-label="Girar elemento ancorado à direita"
+                      >↻</button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSelectedLayer({
+                          width: clamp(selectedLayerPlacement.placement.width * 1.02, 0.01, 1),
+                          height: clamp(selectedLayerPlacement.placement.height * 1.02, 0.01, 1),
+                        })}
+                        disabled={selectedLayerPlacement.placement.locked !== false}
+                        aria-label="Aumentar elemento ancorado"
+                      >+</button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="vtt-board__drawer-empty">Clique em um elemento ancorado no mapa para editar.</p>
+                )}
+              </DirectorDrawer>
             </div>
 
             </DirectorSection>

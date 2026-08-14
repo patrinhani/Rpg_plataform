@@ -36,6 +36,113 @@
   opacity: 0.48;
 }
 
+.vtt-lab__bootstrap {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.vtt-lab__bootstrap::before,
+.vtt-lab__bootstrap::after {
+  border: 1px solid rgb(var(--vtt-lab-accent-rgb) / 0.12);
+  border-radius: 50%;
+  content: '';
+  height: min(68vw, 720px);
+  pointer-events: none;
+  position: absolute;
+  width: min(68vw, 720px);
+}
+
+.vtt-lab__bootstrap::after {
+  height: min(48vw, 520px);
+  width: min(48vw, 520px);
+}
+
+.vtt-lab__bootstrap-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  padding: 34px;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.vtt-lab__bootstrap-symbol {
+  filter: drop-shadow(0 0 28px rgb(var(--vtt-lab-accent-rgb) / 0.45));
+  height: clamp(76px, 10vw, 118px);
+  margin-bottom: 24px;
+  object-fit: contain;
+  width: clamp(76px, 10vw, 118px);
+}
+
+.vtt-lab__bootstrap-card h1 {
+  font-family: "Special Elite", ui-monospace, monospace;
+  font-size: clamp(1.65rem, 4vw, 2.65rem);
+  letter-spacing: 0.06em;
+  margin: 5px 0 12px;
+  text-transform: uppercase;
+}
+
+.vtt-lab__bootstrap-card p {
+  color: var(--vtt-lab-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.vtt-lab__bootstrap-progress {
+  background: rgba(92, 147, 179, 0.14);
+  border-radius: 999px;
+  height: 3px;
+  margin-top: 28px;
+  overflow: hidden;
+  width: min(310px, 76vw);
+}
+
+.vtt-lab__bootstrap-progress span {
+  animation: vtt-bootstrap-progress 1.35s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, var(--vtt-lab-accent), transparent);
+  display: block;
+  height: 100%;
+  width: 46%;
+}
+
+.vtt-lab__bootstrap-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.vtt-lab__bootstrap-actions a {
+  border: 1px solid var(--vtt-lab-border);
+  border-radius: 7px;
+  color: #a9c2cf;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 10px 14px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.vtt-lab__bootstrap.is-error .vtt-lab__bootstrap-symbol {
+  filter: grayscale(0.35) drop-shadow(0 0 24px rgba(255, 107, 117, 0.3));
+}
+
+.vtt-lab__bootstrap.is-error .vtt-lab__bootstrap-card h1 {
+  color: #ffc2c6;
+}
+
+@keyframes vtt-bootstrap-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(320%); }
+}
+
 .vtt-lab__header {
   align-items: flex-end;
   display: flex;

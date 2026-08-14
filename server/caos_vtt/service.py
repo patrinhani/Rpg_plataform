@@ -38,11 +38,13 @@ from .models import (
     HandoutRevokeCommand,
     MoveCommand,
     OverlaySetCommand,
+    OverlayUpdateCommand,
     PropRemoveCommand,
     PropSpawnCommand,
     PropUpdateCommand,
     Role,
     SceneLayerSetCommand,
+    SceneLayerUpdateCommand,
     SceneSelectCommand,
     TokenAssignCommand,
     TokenRemoveCommand,
@@ -70,7 +72,9 @@ CatalogCommand = (
     MoveCommand
     | SceneSelectCommand
     | OverlaySetCommand
+    | OverlayUpdateCommand
     | SceneLayerSetCommand
+    | SceneLayerUpdateCommand
     | TokenSpawnCommand
     | TokenAssignCommand
     | TokenRemoveCommand
@@ -206,6 +210,27 @@ class CatalogProp:
     height: float
     rotation: float
     visible: bool
+    locked: bool = True
+
+
+@dataclass(slots=True)
+class CatalogLayerPlacement:
+    x: float
+    y: float
+    width: float
+    height: float
+    rotation: float
+    locked: bool = True
+
+
+@dataclass(slots=True)
+class CatalogOverlayPlacement:
+    x: float = 0.5
+    y: float = 0.5
+    width: float = 1.0
+    height: float = 1.0
+    rotation: float = 0.0
+    locked: bool = True
 
 
 @dataclass(slots=True)
@@ -246,7 +271,13 @@ class Room:
     scene_tokens: dict[str, dict[str, CatalogToken]] = field(default_factory=dict)
     scene_props: dict[str, dict[str, CatalogProp]] = field(default_factory=dict)
     scene_overlays: dict[str, dict[str, bool]] = field(default_factory=dict)
+    scene_overlay_placements: dict[str, dict[str, CatalogOverlayPlacement]] = field(
+        default_factory=dict
+    )
     scene_layers: dict[str, dict[str, str | None]] = field(default_factory=dict)
+    scene_layer_placements: dict[
+        str, dict[str, dict[int, CatalogLayerPlacement]]
+    ] = field(default_factory=dict)
     scene_fog: dict[str, FogState] = field(default_factory=dict)
     delivered_handouts: dict[str, str] = field(default_factory=dict)
     persistence_warning: str | None = None
@@ -393,9 +424,11 @@ class VTTService:
             room.scene_overlays[scene.scene_id] = {
                 overlay.asset_id: False for overlay in scene.overlays
             }
+            room.scene_overlay_placements[scene.scene_id] = {}
             room.scene_layers[scene.scene_id] = {
                 layer.layer_id: layer.default_state for layer in scene.layers
             }
+            room.scene_layer_placements[scene.scene_id] = {}
             room.scene_fog[scene.scene_id] = FogState(
                 map_asset_id=scene.active_player_map,
                 map_fingerprint=self._map_fingerprint(scene.active_player_map),
@@ -1020,6 +1053,34 @@ class VTTService:
             overlays[command.payload.assetId] = command.payload.enabled
             return None
 
+        if isinstance(command, OverlayUpdateCommand):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre ajusta overlays")
+            scene_id = room.active_scene_id or ""
+            overlays = room.scene_overlays.get(scene_id)
+            if overlays is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            if command.payload.assetId not in overlays:
+                return CatalogCommandFailure("overlay_not_found", "Overlay nao encontrado")
+            placements = room.scene_overlay_placements.setdefault(scene_id, {})
+            placement = placements.setdefault(
+                command.payload.assetId,
+                CatalogOverlayPlacement(),
+            )
+            transform_fields = ("x", "y", "width", "height", "rotation")
+            if placement.locked and any(
+                getattr(command.payload, field_name) is not None
+                for field_name in transform_fields
+            ):
+                return CatalogCommandFailure("overlay_locked", "Destrave o efeito antes de ajustar sua posicao")
+            for field_name in transform_fields:
+                value = getattr(command.payload, field_name)
+                if value is not None:
+                    setattr(placement, field_name, value)
+            if command.payload.locked is not None:
+                placement.locked = command.payload.locked
+            return None
+
         if isinstance(command, SceneLayerSetCommand):
             if role != "master":
                 return CatalogCommandFailure(
@@ -1051,6 +1112,61 @@ class VTTService:
                     "layer_state_not_found", "Estado do objeto ancorado nao encontrado"
                 )
             layer_states[layer.layer_id] = command.payload.state
+            return None
+
+        if isinstance(command, SceneLayerUpdateCommand):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre ajusta objetos ancorados")
+            active_scene_id = room.active_scene_id or ""
+            scene = next(
+                (item for item in self._master_scenes() if item.scene_id == active_scene_id),
+                None,
+            )
+            if scene is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            layer = next(
+                (item for item in scene.layers if item.layer_id == command.payload.layerId),
+                None,
+            )
+            selected_key = room.scene_layers.get(active_scene_id, {}).get(command.payload.layerId)
+            selected_state = next(
+                (state for state in (layer.states if layer is not None else ()) if state.key == selected_key),
+                None,
+            )
+            if selected_state is None:
+                return CatalogCommandFailure("layer_state_not_found", "O objeto ancorado nao esta ativo")
+            if command.payload.placementIndex >= len(selected_state.placements):
+                return CatalogCommandFailure("layer_placement_not_found", "Posicao do objeto ancorado nao existe")
+
+            base = selected_state.placements[command.payload.placementIndex]
+            placements = room.scene_layer_placements.setdefault(active_scene_id, {}).setdefault(
+                command.payload.layerId,
+                {},
+            )
+            placement = placements.get(command.payload.placementIndex)
+            if placement is None:
+                placement = CatalogLayerPlacement(
+                    x=base.x,
+                    y=base.y,
+                    width=base.width,
+                    height=base.height,
+                    rotation=base.rotation,
+                )
+                placements[command.payload.placementIndex] = placement
+
+            transform_fields = ("x", "y", "width", "height", "rotation")
+            changes_transform = any(
+                getattr(command.payload, field_name) is not None
+                for field_name in transform_fields
+            )
+            if placement.locked and changes_transform:
+                return CatalogCommandFailure("layer_locked", "Destrave o objeto antes de ajustar sua posicao")
+            for field_name in transform_fields:
+                value = getattr(command.payload, field_name)
+                if value is not None:
+                    setattr(placement, field_name, value)
+            if command.payload.locked is not None:
+                placement.locked = command.payload.locked
             return None
 
         if isinstance(command, TokenSpawnCommand):
@@ -1146,6 +1262,7 @@ class VTTService:
                 height=command.payload.height,
                 rotation=command.payload.rotation,
                 visible=command.payload.visible,
+                locked=command.payload.locked,
             )
             return None
 
@@ -1163,6 +1280,12 @@ class VTTService:
                 return None
 
             assert isinstance(command, PropUpdateCommand)
+            transform_fields = ("x", "y", "width", "height", "rotation")
+            if prop.locked and any(
+                getattr(command.payload, field_name) is not None
+                for field_name in transform_fields
+            ):
+                return CatalogCommandFailure("prop_locked", "Destrave o objeto antes de ajustar sua posicao")
             if command.payload.assetId is not None:
                 assert self.catalog is not None
                 try:
@@ -1180,7 +1303,7 @@ class VTTService:
                         "O visual escolhido nao pertence aos estados deste objeto",
                     )
                 prop.asset_id = command.payload.assetId
-            for field_name in ("label", "x", "y", "width", "height", "rotation", "visible"):
+            for field_name in ("label", "x", "y", "width", "height", "rotation", "visible", "locked"):
                 value = getattr(command.payload, field_name)
                 if value is not None:
                     setattr(prop, field_name, value)
@@ -1250,7 +1373,9 @@ class VTTService:
             set(room.scene_tokens)
             | set(room.scene_props)
             | set(room.scene_overlays)
+            | set(room.scene_overlay_placements)
             | set(room.scene_layers)
+            | set(room.scene_layer_placements)
             | set(room.scene_fog)
         )
         scenes: dict[str, Any] = {}
@@ -1285,6 +1410,7 @@ class VTTService:
                         "height": prop.height,
                         "rotation": prop.rotation,
                         "visible": prop.visible,
+                        "locked": prop.locked,
                     }
                     for prop in sorted(
                         room.scene_props.get(scene_id, {}).values(),
@@ -1292,7 +1418,37 @@ class VTTService:
                     )
                 ],
                 "overlays": dict(sorted(room.scene_overlays.get(scene_id, {}).items())),
+                "overlayPlacements": {
+                    asset_id: {
+                        "x": placement.x,
+                        "y": placement.y,
+                        "width": placement.width,
+                        "height": placement.height,
+                        "rotation": placement.rotation,
+                        "locked": placement.locked,
+                    }
+                    for asset_id, placement in sorted(
+                        room.scene_overlay_placements.get(scene_id, {}).items()
+                    )
+                },
                 "layers": dict(sorted(room.scene_layers.get(scene_id, {}).items())),
+                "layerPlacements": {
+                    layer_id: [
+                        {
+                            "placementIndex": placement_index,
+                            "x": placement.x,
+                            "y": placement.y,
+                            "width": placement.width,
+                            "height": placement.height,
+                            "rotation": placement.rotation,
+                            "locked": placement.locked,
+                        }
+                        for placement_index, placement in sorted(placements.items())
+                    ]
+                    for layer_id, placements in sorted(
+                        room.scene_layer_placements.get(scene_id, {}).items()
+                    )
+                },
                 "fog": {
                     "enabled": fog.enabled,
                     "revision": fog.revision,
@@ -1473,6 +1629,16 @@ class VTTService:
                     raise ValueError("estado de overlay invalido")
                 room.scene_overlays[scene_id][asset_id] = enabled
 
+            raw_overlay_placements = raw_scene.get("overlayPlacements", {})
+            if not isinstance(raw_overlay_placements, dict):
+                raise ValueError("ajustes de overlays persistidos invalidos")
+            for asset_id, raw_placement in raw_overlay_placements.items():
+                if asset_id not in room.scene_overlays[scene_id]:
+                    continue
+                room.scene_overlay_placements[scene_id][asset_id] = (
+                    self._deserialize_overlay_placement(raw_placement)
+                )
+
             raw_layers = raw_scene.get("layers", {})
             if not isinstance(raw_layers, dict):
                 raise ValueError("layers persistidos invalidos")
@@ -1488,6 +1654,19 @@ class VTTService:
                 ):
                     raise ValueError("estado de layer persistido invalido")
                 room.scene_layers[scene_id][layer_id] = selected_state
+
+            raw_layer_placements = raw_scene.get("layerPlacements", {})
+            if not isinstance(raw_layer_placements, dict):
+                raise ValueError("ajustes de layers persistidos invalidos")
+            for layer_id, raw_placements in raw_layer_placements.items():
+                if layer_id not in layer_by_id or not isinstance(raw_placements, list):
+                    continue
+                restored: dict[int, CatalogLayerPlacement] = {}
+                for raw_placement in raw_placements:
+                    placement_index, placement = self._deserialize_layer_placement(raw_placement)
+                    restored[placement_index] = placement
+                if restored:
+                    room.scene_layer_placements[scene_id][layer_id] = restored
 
             raw_tokens = raw_scene.get("tokens", [])
             if not isinstance(raw_tokens, list):
@@ -1705,6 +1884,7 @@ class VTTService:
         asset_id = payload.get("assetId")
         label = payload.get("label")
         visible = payload.get("visible")
+        locked = payload.get("locked", True)
         if (
             not isinstance(prop_id, str)
             or not 1 <= len(prop_id) <= 64
@@ -1715,6 +1895,7 @@ class VTTService:
             or not 1 <= len(label.strip()) <= 80
             or any(ord(character) < 32 for character in label)
             or not isinstance(visible, bool)
+            or not isinstance(locked, bool)
         ):
             raise ValueError("objeto persistido invalido")
         assert self.catalog is not None
@@ -1735,6 +1916,41 @@ class VTTService:
                 payload.get("rotation"), -360, 360, "prop.rotation"
             ),
             visible=visible,
+            locked=locked,
+        )
+
+    def _deserialize_layer_placement(
+        self,
+        payload: Any,
+    ) -> tuple[int, CatalogLayerPlacement]:
+        if not isinstance(payload, dict):
+            raise ValueError("ajuste de layer persistido invalido")
+        placement_index = payload.get("placementIndex")
+        locked = payload.get("locked", True)
+        if not isinstance(placement_index, int) or not 0 <= placement_index <= 63 or not isinstance(locked, bool):
+            raise ValueError("ajuste de layer persistido invalido")
+        return placement_index, CatalogLayerPlacement(
+            x=self._normalised_float(payload.get("x"), "layer.x"),
+            y=self._normalised_float(payload.get("y"), "layer.y"),
+            width=self._bounded_float(payload.get("width"), 0.01, 1, "layer.width"),
+            height=self._bounded_float(payload.get("height"), 0.01, 1, "layer.height"),
+            rotation=self._bounded_float(payload.get("rotation"), -360, 360, "layer.rotation"),
+            locked=locked,
+        )
+
+    def _deserialize_overlay_placement(self, payload: Any) -> CatalogOverlayPlacement:
+        if not isinstance(payload, dict):
+            raise ValueError("ajuste de overlay persistido invalido")
+        locked = payload.get("locked", True)
+        if not isinstance(locked, bool):
+            raise ValueError("ajuste de overlay persistido invalido")
+        return CatalogOverlayPlacement(
+            x=self._normalised_float(payload.get("x"), "overlay.x"),
+            y=self._normalised_float(payload.get("y"), "overlay.y"),
+            width=self._bounded_float(payload.get("width"), 0.01, 1, "overlay.width"),
+            height=self._bounded_float(payload.get("height"), 0.01, 1, "overlay.height"),
+            rotation=self._bounded_float(payload.get("rotation"), -360, 360, "overlay.rotation"),
+            locked=locked,
         )
 
     @staticmethod
@@ -2035,6 +2251,7 @@ class VTTService:
                     "height": prop.height,
                     "rotation": prop.rotation,
                     "visible": prop.visible,
+                    "locked": prop.locked,
                 }
 
         delivered_handouts: list[dict[str, Any]] = []
@@ -2178,7 +2395,9 @@ class VTTService:
     ) -> dict[str, Any]:
         assert self._room_uses_catalog(room)
         states = room.scene_overlays.get(scene.scene_id, {})
+        overlay_placements = room.scene_overlay_placements.get(scene.scene_id, {})
         selected_layers = room.scene_layers.get(scene.scene_id, {})
+        placement_overrides = room.scene_layer_placements.get(scene.scene_id, {})
         fog = room.scene_fog.get(scene.scene_id)
         map_id = scene.active_player_map
         if map_id is None and role == "master":
@@ -2208,14 +2427,22 @@ class VTTService:
                 "assetId": selected_state.asset_id if selected_state is not None else None,
                 "placements": [
                     {
-                        "x": placement.x,
-                        "y": placement.y,
-                        "width": placement.width,
-                        "height": placement.height,
-                        "rotation": placement.rotation,
+                        "x": override.x if override is not None else placement.x,
+                        "y": override.y if override is not None else placement.y,
+                        "width": override.width if override is not None else placement.width,
+                        "height": override.height if override is not None else placement.height,
+                        "rotation": override.rotation if override is not None else placement.rotation,
+                        **(
+                            {"locked": override.locked if override is not None else True}
+                            if role == "master"
+                            else {}
+                        ),
                     }
-                    for placement in (
+                    for placement_index, placement in enumerate(
                         selected_state.placements if selected_state is not None else ()
+                    )
+                    for override in (
+                        placement_overrides.get(layer.layer_id, {}).get(placement_index),
                     )
                 ],
             }
@@ -2237,6 +2464,18 @@ class VTTService:
                     "name": item.name,
                     "label": self._humanize(item.name),
                     "enabled": states.get(item.asset_id, False),
+                    "placement": {
+                        "x": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).x,
+                        "y": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).y,
+                        "width": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).width,
+                        "height": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).height,
+                        "rotation": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).rotation,
+                        **(
+                            {"locked": overlay_placements.get(item.asset_id, CatalogOverlayPlacement()).locked}
+                            if role == "master"
+                            else {}
+                        ),
+                    },
                 }
                 for item in scene.overlays
                 if role == "master" or states.get(item.asset_id, False)

@@ -35,8 +35,10 @@ import Recursos from '../../components/ficha/recursos.jsx';
 import ElementRail from '../../components/ElementRail.jsx';
 import AffinityAwakening from '../../components/AffinityAwakening.jsx';
 import NexAwakeningMeter from '../../components/NexAwakeningMeter.jsx';
+import CharacterCreationWizard from '../../components/ficha/CharacterCreationWizard.jsx';
 import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 import { crossedAffinityThreshold, getNexAffinityState } from '../../lib/nex-affinity.js';
+import { deveExibirCriador } from '../../lib/character-creation.js';
 
 const allPoderesList = [...poderesParanormais, ...poderesGerais, ...poderesCombatente, ...poderesEspecialista, ...poderesOcultista];
 const opcoesElemento = [
@@ -191,6 +193,7 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
   const idAlvo = propFichaId || paramFichaId || usuario?.uid;
   const isModoMesa = !!mesaContexto;
   const podeExcluirFicha = !isModoMesa || propFichaId === usuario?.uid;
+  const podeCriarPersonagem = !isModoMesa || propFichaId === usuario?.uid;
   const evidenceCount = Array.isArray(handoutSession?.deliveredHandouts)
     ? handoutSession.deliveredHandouts.length
     : 0;
@@ -238,6 +241,27 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
   const [isDiarioModalOpen, setIsDiarioModalOpen] = useState(false);
   const [notaParaEditar, setNotaParaEditar] = useState(null); 
   const [isInterludioModalOpen, setIsInterludioModalOpen] = useState(false);
+
+  useEffect(() => {
+      const rootElement = document.documentElement;
+      const pursuit = personagem.perseguicao || {};
+      const failureTarget = Math.min(20, Math.max(1, Number(pursuit.metaFalhas) || 3));
+      const successTarget = Math.min(20, Math.max(1, Number(pursuit.metaSucessos) || 3));
+      const failures = Math.max(0, Number(pursuit.falhas) || 0);
+      const successes = Math.max(0, Number(pursuit.sucessos) || 0);
+      const visibility = Number(personagem.visibilidade) || 0;
+      const effectClasses = ['modo-tensao', 'modo-sucesso', 'modo-morte'];
+
+      rootElement.classList.remove(...effectClasses);
+      if (failures >= failureTarget) rootElement.classList.add('modo-morte');
+      else if (successes >= successTarget) rootElement.classList.add('modo-sucesso');
+      else if (visibility >= 3) rootElement.classList.add('modo-tensao');
+
+      return () => rootElement.classList.remove(...effectClasses);
+  }, [
+      personagem.perseguicao,
+      personagem.visibilidade,
+  ]);
 
   const saveToFirestore = useCallback(async (dadosCompletos, destino = docRef.current) => {
     if (isDeletingRef.current) return { ok: false, cancelado: true };
@@ -559,6 +583,16 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
       return resultado;
   }, [saveToFirestore, personagem, debouncedSave]);
 
+  const salvarEtapaCriacao = useCallback(async (dadosCriacao) => {
+      debouncedSave.cancel();
+      const resultado = await saveToFirestore(dadosCriacao);
+      if (resultado.ok) {
+          isRemoteUpdate.current = true;
+          carregarFicha(dadosCriacao);
+      }
+      return resultado;
+  }, [carregarFicha, debouncedSave, saveToFirestore]);
+
   const voltarDaFicha = useCallback(async () => {
       const salvamento = debouncedSave.flush() || inFlightSaveRef.current;
       if (salvamento) {
@@ -708,6 +742,17 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
                   <button type="button" onClick={voltarDaFicha}>Voltar</button>
               </div>
           </div>
+      );
+  }
+
+  if (podeCriarPersonagem && deveExibirCriador(personagem.info)) {
+      return (
+          <CharacterCreationWizard
+              dados={personagem}
+              jogadorPadrao={usuario?.displayName || ''}
+              onSalvar={salvarEtapaCriacao}
+              onSair={voltarDaFicha}
+          />
       );
   }
   

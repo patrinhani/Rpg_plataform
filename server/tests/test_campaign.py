@@ -1073,6 +1073,14 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                         "name": "névoa",
                         "label": "Névoa",
                         "enabled": False,
+                        "placement": {
+                            "x": 0.5,
+                            "y": 0.5,
+                            "width": 1.0,
+                            "height": 1.0,
+                            "rotation": 0.0,
+                            "locked": True,
+                        },
                     }
                 ],
                 "gridHint": {"type": "square", "columns": 28, "rows": 28},
@@ -1198,6 +1206,38 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             player_overlay = player.receive_json()
             assert master_overlay["revision"] == player_overlay["revision"] == 3
             assert player_overlay["state"]["scene"]["overlays"][0]["enabled"] is True
+            assert master_overlay["state"]["scene"]["overlays"][0]["placement"]["locked"] is True
+            assert "locked" not in player_overlay["state"]["scene"]["overlays"][0]["placement"]
+
+            player.send_json(
+                {
+                    "type": "overlay.update",
+                    "commandId": "player-overlay-adjust",
+                    "payload": {"assetId": ids["overlay"], "locked": False},
+                }
+            )
+            assert player.receive_json()["error"]["code"] == "forbidden"
+
+            master.send_json(
+                {
+                    "type": "overlay.update",
+                    "commandId": "unlock-overlay",
+                    "payload": {"assetId": ids["overlay"], "locked": False},
+                }
+            )
+            master.receive_json()
+            player.receive_json()
+            master.send_json(
+                {
+                    "type": "overlay.update",
+                    "commandId": "move-overlay",
+                    "payload": {"assetId": ids["overlay"], "x": 0.49, "y": 0.51},
+                }
+            )
+            moved_overlay_master = master.receive_json()
+            moved_overlay_player = player.receive_json()
+            assert moved_overlay_master["state"]["scene"]["overlays"][0]["placement"]["x"] == 0.49
+            assert moved_overlay_player["state"]["scene"]["overlays"][0]["placement"]["y"] == 0.51
             assert _asset_request(
                 client,
                 room["roomId"],
@@ -1213,7 +1253,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             player.send_json(move)
             player_move = player.receive_json()
             master_move = master.receive_json()
-            assert player_move["revision"] == master_move["revision"] == 4
+            assert player_move["revision"] == master_move["revision"] == 6
             assert player_move["state"]["tokens"][public_token_id]["x"] == 0.7
 
             player.send_json(
@@ -1223,12 +1263,12 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
                     "payload": {"tokenId": public_token_id, "x": 0.9, "y": 0.2},
                 }
             )
-            assert player.receive_json()["revision"] == 5
-            assert master.receive_json()["revision"] == 5
+            assert player.receive_json()["revision"] == 7
+            assert master.receive_json()["revision"] == 7
 
             player.send_json(move)
             replay = player.receive_json()
-            assert replay["revision"] == 5
+            assert replay["revision"] == 7
             assert replay["state"]["tokens"][public_token_id]["x"] == 0.9
             assert replay["state"]["tokens"][public_token_id]["y"] == 0.2
             master.send_json({"type": "ping", "commandId": "after-retry"})
@@ -1239,7 +1279,7 @@ def test_catalog_snapshots_commands_permissions_scene_state_and_idempotency(
             player.send_json(conflicting_move)
             conflict = player.receive_json()
             assert conflict["error"]["code"] == "command_id_conflict"
-            assert app.state.vtt._rooms[room["roomId"]].revision == 5
+            assert app.state.vtt._rooms[room["roomId"]].revision == 7
 
             master.send_json(move)
             role_conflict = master.receive_json()
@@ -1406,6 +1446,27 @@ def test_prop_visual_updates_are_restricted_to_states_of_the_same_group(
             spawned_master = master.receive_json()
             player.receive_json()
             prop_id = next(iter(spawned_master["state"]["props"]))
+            assert spawned_master["state"]["props"][prop_id]["locked"] is False
+
+            master.send_json(
+                {
+                    "type": "prop.update",
+                    "commandId": "lock-positioned-prop",
+                    "payload": {"propId": prop_id, "locked": True},
+                }
+            )
+            locked_master = master.receive_json()
+            player.receive_json()
+            assert locked_master["state"]["props"][prop_id]["locked"] is True
+
+            master.send_json(
+                {
+                    "type": "prop.update",
+                    "commandId": "reject-locked-prop-move",
+                    "payload": {"propId": prop_id, "x": 0.6},
+                }
+            )
+            assert master.receive_json()["error"]["code"] == "prop_locked"
 
             master.send_json(
                 {

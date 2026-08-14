@@ -68,6 +68,12 @@ const ICONS = {
   ),
   rest: <path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.5 8.5 0 1 0 12 12Z" />,
   back: <path d="m15 18-6-6 6-6M9 12h11" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   code: (
     <>

@@ -38,6 +38,7 @@ export async function importarPersonagemParaMesa(mesaId, jogadorUid, dadosPerson
   const charRef = doc(db, "mesas", mesaId, "personagens", jogadorUid);
 
   const dadosFinais = normalizarDadosPersonagem(dadosPersonagem);
+  if (!dadosPersonagem) dadosFinais.info.criacao_em_andamento = true;
   dadosFinais.info.jogador = resolverNomeLegivelJogador(
     jogadorUid,
     jogadorNome,
@@ -65,6 +66,7 @@ export async function listarPersonagensPessoais(uid) {
 
 export async function criarFichaPessoal(uid, dadosIniciais = null) {
   const dados = normalizarDadosPersonagem(dadosIniciais);
+  if (!dadosIniciais) dados.info.criacao_em_andamento = true;
 
   const docRef = await addDoc(collection(db, "users", uid, "personagens"), dados);
   return docRef.id;

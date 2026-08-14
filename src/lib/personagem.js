@@ -19,7 +19,7 @@ class Personagem {
       adestramento: 0, artes: 0, diplomacia: 0, enganacao: 0, intimidacao: 0, intuicao: 0, percepcao: 0, religiao: 0, vontade: 0,
       fortitude: 0,
     };
-    this.info = { nome: "", jogador: "", origem: "desgarrado", classe: "especialista", trilha: "nenhuma", nex: "5%", estagio_sobrevivente: 1, prestigio: 0, deslocamento: 9, monstruoso_elemento: "", possuido_elemento: "", foto: "", tema: "tema-ordem" };
+    this.info = { nome: "", jogador: "", origem: "desgarrado", classe: "especialista", trilha: "nenhuma", nex: "5%", estagio_sobrevivente: 1, prestigio: 0, deslocamento: 9, monstruoso_elemento: "", possuido_elemento: "", foto: "", tema: "tema-ordem", conceito: "", criacao_concluida: false, criacao_em_andamento: false, criacao_etapa: 0 };
     this.recursos = { pv_atual: 10, pv_max: 10, pe_atual: 10, pe_max: 10, san_atual: 10, san_max: 10 };
     this._recursosInicializados = false;
     this.defesa = { equip: 0, outros: 0 };

@@ -19,7 +19,9 @@ const MISSING_INTEGRATED_SERVER_ORIGIN_ERROR = 'O mestre ainda precisa configura
 const BOARD_COMMAND_TYPES = new Set([
   'scene.select',
   'overlay.set',
+  'overlay.update',
   'layer.set',
+  'layer.update',
   'token.spawn',
   'token.assign',
   'token.move',
@@ -1159,6 +1161,51 @@ export default function VttLab({
   const integratedSceneStatus = connectionStatus === 'error'
     ? 'Não foi possível carregar a sessão atual.'
     : 'Sincronizando a sessão atual com o servidor...';
+  const showIntegratedBootstrap = Boolean(
+    usesAutomaticAccess
+    && !campaignState
+    && (
+      automaticAccess?.autoStart
+      || busyAction === 'automatic-access'
+      || connectionStatus === 'connecting'
+      || connectionStatus === 'connected'
+      || connectionStatus === 'error'
+    )
+  );
+
+  if (showIntegratedBootstrap) {
+    const bootstrapFailed = connectionStatus === 'error';
+    return (
+      <main className={`vtt-lab vtt-lab__bootstrap ${bootstrapFailed ? 'is-error' : ''}`} aria-busy={!bootstrapFailed}>
+        <section className="vtt-lab__bootstrap-card" role={bootstrapFailed ? 'alert' : 'status'} aria-live="polite">
+          <img
+            className="vtt-lab__bootstrap-symbol"
+            src="/assets/images/optimized/SimboloSemafinidade-320.webp"
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="vtt-lab__eyebrow">C.A.O.S. · mesa virtual</span>
+          <h1>{bootstrapFailed ? 'Sessão indisponível' : 'Preparando a mesa'}</h1>
+          <p>{bootstrapFailed ? (lastError || integratedSceneStatus) : integratedSceneStatus}</p>
+
+          {!bootstrapFailed && (
+            <div className="vtt-lab__bootstrap-progress" aria-hidden="true">
+              <span />
+            </div>
+          )}
+
+          <div className="vtt-lab__bootstrap-actions">
+            {bootstrapFailed && (
+              <button type="button" className="vtt-lab__primary-button" onClick={handleAutomaticAccess} disabled={Boolean(busyAction)}>
+                {busyAction ? 'Tentando novamente...' : 'Tentar novamente'}
+              </button>
+            )}
+            <a href={`/mesa/${encodeURIComponent(launchContext.mesaId)}`}>Voltar para a mesa</a>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main
@@ -1500,7 +1547,9 @@ export default function VttLab({
                 connected={isConnected}
                 members={automaticAccess?.members || []}
                 characterSheetUids={automaticAccess?.characterSheetUids || []}
+                characterSheets={automaticAccess?.characterSheets || []}
                 onOpenCharacterSheet={onOpenCharacterSheet}
+                onUpdateCharacterSheet={automaticAccess?.updateCharacterSheetField}
                 onCommand={sendBoardCommand}
               />
             ) : usesAutomaticAccess ? (

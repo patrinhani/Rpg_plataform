@@ -1,11 +1,16 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
 import { db } from '../../lib/firebase.js';
 import { vincularVttMesa } from '../../lib/vtt-mesa-link.js';
 import { normalizeVttServerOrigin, readVttLaunchContext } from '../../lib/vtt-link.js';
 import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
+import {
+  clampVttCharacterField,
+  normalizeVttCharacterSheets,
+  VTT_CHARACTER_MONITOR_FIELDS,
+} from '../../lib/vtt-character-monitor.js';
 import VttLab from './VttLab.jsx';
 
 const Ficha = lazy(() => import('../../pages/Ficha/index.jsx'));
@@ -14,6 +19,25 @@ const DEV_VTT_MEMBERS = [
   { uid: 'dev-rafael', name: 'Rafael Nunes' },
   { uid: 'dev-helena', name: 'Helena Vargas' },
 ];
+
+const DEV_VTT_CHARACTER_SHEETS = normalizeVttCharacterSheets([
+  {
+    uid: 'dev-rafael',
+    data: {
+      info: { nome: 'Rafael Nunes', classe: 'Combatente', nex: '20%' },
+      recursos: { pv_atual: 31, pv_max: 38, pe_atual: 8, pe_max: 12, san_atual: 17, san_max: 24 },
+      perseguicao: { sucessos: 2, falhas: 1, metaSucessos: 5, metaFalhas: 3 },
+    },
+  },
+  {
+    uid: 'dev-helena',
+    data: {
+      info: { nome: 'Helena Vargas', classe: 'Especialista', nex: '20%' },
+      recursos: { pv_atual: 21, pv_max: 26, pe_atual: 13, pe_max: 16, san_atual: 26, san_max: 32 },
+      perseguicao: { sucessos: 1, falhas: 0, metaSucessos: 5, metaFalhas: 3 },
+    },
+  },
+]);
 
 function normalizeMesaPlayers(mesa) {
   const masterUid = String(mesa?.mestre || '').trim();
@@ -40,8 +64,8 @@ export default function VttLabIntegrated() {
   const [resolvedOrigin, setResolvedOrigin] = useState('');
   const [canEditServerUrl, setCanEditServerUrl] = useState(false);
   const [members, setMembers] = useState(() => (devVisualMode ? DEV_VTT_MEMBERS : []));
-  const [characterSheetUids, setCharacterSheetUids] = useState(
-    () => (devVisualMode ? DEV_VTT_MEMBERS.map((member) => member.uid) : []),
+  const [characterSheets, setCharacterSheets] = useState(
+    () => (devVisualMode ? DEV_VTT_CHARACTER_SHEETS : []),
   );
   const [activeCharacterSheetUid, setActiveCharacterSheetUid] = useState('');
   const [originReady, setOriginReady] = useState(
@@ -83,20 +107,63 @@ export default function VttLabIntegrated() {
 
   useEffect(() => {
     if (devVisualMode) {
-      setCharacterSheetUids(DEV_VTT_MEMBERS.map((member) => member.uid));
+      setCharacterSheets(DEV_VTT_CHARACTER_SHEETS);
       return undefined;
     }
     if (!canEditServerUrl || !launchContext.mesaId) {
-      setCharacterSheetUids([]);
+      setCharacterSheets([]);
       return undefined;
     }
     const unsubscribe = onSnapshot(
       collection(db, 'mesas', launchContext.mesaId, 'personagens'),
-      (snapshot) => setCharacterSheetUids(snapshot.docs.map((item) => item.id)),
-      () => setCharacterSheetUids([]),
+      (snapshot) => setCharacterSheets(normalizeVttCharacterSheets(
+        snapshot.docs.map((item) => ({ uid: item.id, data: item.data() })),
+      )),
+      () => setCharacterSheets([]),
     );
     return unsubscribe;
   }, [canEditServerUrl, devVisualMode, launchContext.mesaId]);
+
+  const updateCharacterSheetField = useCallback(async (uid, field, value) => {
+    const normalizedUid = String(uid || '').trim();
+    const sheet = characterSheets.find((item) => item.uid === normalizedUid) || null;
+    if (!normalizedUid || !sheet || !VTT_CHARACTER_MONITOR_FIELDS.has(field)) {
+      throw new Error('Ficha ou campo de monitoramento inválido.');
+    }
+    const nextValue = clampVttCharacterField(field, value, sheet);
+
+    if (devVisualMode) {
+      setCharacterSheets((current) => current.map((item) => {
+        if (item.uid !== normalizedUid) return item;
+        if (field.startsWith('recursos.')) {
+          const resourceKey = field.split('.')[1].split('_')[0];
+          return {
+            ...item,
+            resources: {
+              ...item.resources,
+              [resourceKey]: { ...item.resources[resourceKey], current: nextValue },
+            },
+          };
+        }
+        const pursuitKey = field.endsWith('sucessos') ? 'successes' : 'failures';
+        return { ...item, pursuit: { ...item.pursuit, [pursuitKey]: nextValue } };
+      }));
+      return;
+    }
+
+    if (!canEditServerUrl || !launchContext.mesaId) {
+      throw new Error('Somente o mestre pode alterar o monitor dos agentes.');
+    }
+    await updateDoc(
+      doc(db, 'mesas', launchContext.mesaId, 'personagens', normalizedUid),
+      { [field]: nextValue },
+    );
+  }, [canEditServerUrl, characterSheets, devVisualMode, launchContext.mesaId]);
+
+  const characterSheetUids = useMemo(
+    () => characterSheets.map((item) => item.uid),
+    [characterSheets],
+  );
 
   useEffect(() => {
     if (
@@ -120,14 +187,18 @@ export default function VttLabIntegrated() {
     canEditServerUrl,
     members,
     characterSheetUids,
+    characterSheets,
+    updateCharacterSheetField,
   }), [
     canEditServerUrl,
     characterSheetUids,
+    characterSheets,
     devVisualMode,
     launchContext.mesaId,
     members,
     resolvedOrigin,
     usuario,
+    updateCharacterSheetField,
   ]);
   const sheetIsOpen = Boolean(
     activeCharacterSheetUid

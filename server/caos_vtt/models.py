@@ -143,6 +143,42 @@ class OverlaySetCommand(BaseModel):
     payload: OverlaySetPayload
 
 
+class OverlayUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    assetId: str = Field(min_length=7, max_length=2048)
+    x: float | None = Field(default=None, ge=0, le=1)
+    y: float | None = Field(default=None, ge=0, le=1)
+    width: float | None = Field(default=None, ge=0.01, le=1)
+    height: float | None = Field(default=None, ge=0.01, le=1)
+    rotation: float | None = Field(default=None, ge=-360, le=360)
+    locked: StrictBool | None = None
+
+    @field_validator("assetId")
+    @classmethod
+    def validate_asset_id(cls, value: str) -> str:
+        if not value.startswith("asset:") or any(character in value for character in "\x00\r\n"):
+            raise ValueError("assetId invalido")
+        return value
+
+    @model_validator(mode="after")
+    def require_change(self) -> "OverlayUpdatePayload":
+        if all(
+            value is None
+            for value in (self.x, self.y, self.width, self.height, self.rotation, self.locked)
+        ):
+            raise ValueError("overlay.update precisa alterar ao menos um campo")
+        return self
+
+
+class OverlayUpdateCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["overlay.update"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: OverlayUpdatePayload
+
+
 class SceneLayerSetPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -170,6 +206,50 @@ class SceneLayerSetCommand(BaseModel):
     type: Literal["layer.set"]
     commandId: str = Field(min_length=1, max_length=100)
     payload: SceneLayerSetPayload
+
+
+class SceneLayerUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    layerId: str = Field(min_length=13, max_length=160)
+    placementIndex: int = Field(ge=0, le=63)
+    x: float | None = Field(default=None, ge=0, le=1)
+    y: float | None = Field(default=None, ge=0, le=1)
+    width: float | None = Field(default=None, ge=0.01, le=1)
+    height: float | None = Field(default=None, ge=0.01, le=1)
+    rotation: float | None = Field(default=None, ge=-360, le=360)
+    locked: StrictBool | None = None
+
+    @field_validator("layerId")
+    @classmethod
+    def validate_layer_id(cls, value: str) -> str:
+        if not value.startswith("scene-layer:") or any(ord(character) < 32 for character in value):
+            raise ValueError("layerId invalido")
+        return value
+
+    @model_validator(mode="after")
+    def require_change(self) -> "SceneLayerUpdatePayload":
+        if all(
+            value is None
+            for value in (
+                self.x,
+                self.y,
+                self.width,
+                self.height,
+                self.rotation,
+                self.locked,
+            )
+        ):
+            raise ValueError("layer.update precisa alterar ao menos um campo")
+        return self
+
+
+class SceneLayerUpdateCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["layer.update"]
+    commandId: str = Field(min_length=1, max_length=100)
+    payload: SceneLayerUpdatePayload
 
 
 class TokenSpawnPayload(BaseModel):
@@ -288,6 +368,7 @@ class PropSpawnPayload(BaseModel):
     height: float = Field(default=0.18, ge=0.01, le=0.8)
     rotation: float = Field(default=0, ge=-360, le=360)
     visible: StrictBool = True
+    locked: StrictBool = False
 
     @field_validator("assetId")
     @classmethod
@@ -329,6 +410,7 @@ class PropUpdatePayload(BaseModel):
     height: float | None = Field(default=None, ge=0.01, le=0.8)
     rotation: float | None = Field(default=None, ge=-360, le=360)
     visible: StrictBool | None = None
+    locked: StrictBool | None = None
 
     @field_validator("assetId")
     @classmethod
@@ -362,6 +444,7 @@ class PropUpdatePayload(BaseModel):
                 self.height,
                 self.rotation,
                 self.visible,
+                self.locked,
             )
         ):
             raise ValueError("prop.update precisa alterar ao menos um campo")

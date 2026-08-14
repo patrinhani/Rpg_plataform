@@ -198,9 +198,78 @@ def test_scene_layer_commands_are_master_only_role_safe_and_client_composited(
                     "width": 0.25,
                     "height": 0.25,
                     "rotation": 0.0,
+                    "locked": True,
                 }
             ]
             assert player_active["state"]["scene"]["layers"][0]["assetId"] == ids["layer_active"]
+            assert "locked" not in player_active["state"]["scene"]["layers"][0]["placements"][0]
+
+            player.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "player-cannot-adjust-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "locked": False,
+                    },
+                }
+            )
+            assert player.receive_json()["error"]["code"] == "forbidden"
+
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "locked-layer-rejects-move",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "x": 0.6,
+                    },
+                }
+            )
+            assert master.receive_json()["error"]["code"] == "layer_locked"
+
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "unlock-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "locked": False,
+                    },
+                }
+            )
+            _receive_broadcast(master, player)
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "adjust-unlocked-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "x": 0.51,
+                        "y": 0.49,
+                    },
+                }
+            )
+            adjusted_master, adjusted_player = _receive_broadcast(master, player)
+            assert adjusted_master["state"]["scene"]["layers"][0]["placements"][0] == {
+                "x": 0.51,
+                "y": 0.49,
+                "width": 0.25,
+                "height": 0.25,
+                "rotation": 0.0,
+                "locked": False,
+            }
+            assert adjusted_player["state"]["scene"]["layers"][0]["placements"][0] == {
+                "x": 0.51,
+                "y": 0.49,
+                "width": 0.25,
+                "height": 0.25,
+                "rotation": 0.0,
+            }
             assert (
                 fetch_asset(
                     client,
@@ -293,11 +362,61 @@ def test_scene_layer_persists_in_schema_one_and_migrates_legacy_props(
                 }
             )
             master.receive_json()
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "unlock-persisted-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "locked": False,
+                    },
+                }
+            )
+            master.receive_json()
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "move-persisted-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "x": 0.47,
+                        "y": 0.53,
+                    },
+                }
+            )
+            master.receive_json()
+            master.send_json(
+                {
+                    "type": "layer.update",
+                    "commandId": "lock-persisted-layer",
+                    "payload": {
+                        "layerId": "scene-layer:ancora",
+                        "placementIndex": 0,
+                        "locked": True,
+                    },
+                }
+            )
+            master.receive_json()
 
     persisted = _read_persisted_room(state_db, room["roomId"])
     assert persisted["schemaVersion"] == 1
     scene = persisted["scenes"]["scene:salao-vazio"]
     assert scene["layers"] == {"scene-layer:ancora": "ativo"}
+    assert scene["layerPlacements"] == {
+        "scene-layer:ancora": [
+            {
+                "placementIndex": 0,
+                "x": 0.47,
+                "y": 0.53,
+                "width": 0.25,
+                "height": 0.25,
+                "rotation": 0.0,
+                "locked": True,
+            }
+        ]
+    }
 
     # Simula uma sala da versao anterior, quando o mesmo asset era um prop livre.
     scene.pop("layers")
@@ -342,5 +461,13 @@ def test_scene_layer_persists_in_schema_one_and_migrates_legacy_props(
         assert restored_room.scene_layers["scene:salao-vazio"] == {
             "scene-layer:ancora": "ativo"
         }
+        restored_placement = restored_room.scene_layer_placements["scene:salao-vazio"][
+            "scene-layer:ancora"
+        ][0]
+        assert (restored_placement.x, restored_placement.y, restored_placement.locked) == (
+            0.47,
+            0.53,
+            True,
+        )
         assert restored_room.scene_props["scene:salao-vazio"] == {}
         assert restored_room.scene_props["scene:z-arquivo"] == {}
