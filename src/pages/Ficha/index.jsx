@@ -30,6 +30,7 @@ const ModalTrilhaCustom = lazy(() => import('../../components/ModalTrilhaCustom.
 const ModalNota = lazy(() => import('../../components/ModalNota.jsx'));
 const ModalInterludio = lazy(() => import('../../components/ModalInterludio.jsx'));
 const ConfiguracoesFicha = lazy(() => import('../../components/ConfiguracoesFicha.jsx'));
+const SupplementRulesReference = lazy(() => import('../../components/ficha/SupplementRulesReference.jsx'));
 import FichaPrincipal from '../../components/FichaPrincipal.jsx'; 
 import Recursos from '../../components/ficha/recursos.jsx';
 import ElementRail from '../../components/ElementRail.jsx';
@@ -59,6 +60,7 @@ const ABAS_FICHA = [
     { id: 'poderes', label: 'Poderes', icon: 'powers' },
     { id: 'progressao', label: 'Progressão', icon: 'progress' },
     { id: 'diario', label: 'Diário', icon: 'journal' },
+    { id: 'regras', label: 'Regras', icon: 'journal' },
     { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
 ];
 
@@ -859,6 +861,8 @@ export default function Ficha({ fichaId: propFichaId, mesaContexto, handoutSessi
             onRemoveNota={removeNota}
           />
         )}
+
+        {abaAtiva === 'regras' && <SupplementRulesReference />}
 
         {abaAtiva === 'configuracoes' && (
           <ConfiguracoesFicha

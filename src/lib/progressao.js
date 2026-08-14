@@ -1,4 +1,5 @@
 // /src/lib/progressao.js
+import { SUPPLEMENT_TRAILS } from './supplements.js';
 /**
  * Mapeamento da progressão de habilidades para as classes baseadas no NEX.
  * Sobrevivente usa Estágio; as demais classes usam NEX.
@@ -397,6 +398,7 @@ const progressaoTrilhas = {
             4: "Iniciado (Aprende e pode conjurar 1 ritual de 1º círculo)",
         },
     },
+    ...SUPPLEMENT_TRAILS,
 };
 
 
@@ -454,15 +456,20 @@ const groupTrilhasByClass = (trilhasUnificadas) => {
 
     Object.keys(trilhasUnificadas).forEach(key => {
         const trilha = trilhasUnificadas[key];
-        const classeKey = trilha.classe.toLowerCase();
+        const classes = Array.isArray(trilha.classes)
+            ? trilha.classes
+            : [trilha.classe];
 
-        if (grouped[classeKey]) {
+        classes.forEach(classe => {
+          const classeKey = classe.toLowerCase();
+          if (grouped[classeKey]) {
             grouped[classeKey][key] = {
                 key: key,
                 nome: trilha.nome,
                 isCustom: !!trilha.isCustom
             };
-        }
+          }
+        });
     });
 
     return grouped;

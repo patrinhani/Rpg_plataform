@@ -1,6 +1,7 @@
 import {
   modificacoesAcessorios,
   modificacoesArmas,
+  modificacoesGranadas,
   modificacoesProtecoes,
 } from './database.js';
 
@@ -8,6 +9,7 @@ const TODAS_MODIFICACOES = [
   ...modificacoesArmas,
   ...modificacoesProtecoes,
   ...modificacoesAcessorios,
+  ...modificacoesGranadas,
 ];
 
 const MODIFICACOES_POR_CHAVE = new Map(
@@ -80,6 +82,7 @@ export function inferirTiposItem(item = {}) {
 
   if (['generico', 'custom', 'kit'].includes(item.tipoBonus)) tipos.add('acessorio');
   if (item.eletrico) tipos.add('acessorio-eletrico');
+  if (item.tipoItem === 'granada' || item.id?.startsWith('granada_')) tipos.add('granada');
 
   return tipos;
 }

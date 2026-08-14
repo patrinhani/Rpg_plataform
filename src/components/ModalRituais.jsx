@@ -8,12 +8,15 @@ import RitualCard from './RitualCard.jsx';
 
 // --- Lógica de Filtragem ---
 const todosOsRituais = database.rituais || [];
+const pertenceAoElemento = (ritual, elemento) => (
+  ritual.elemento === elemento || ritual.elementos?.includes(elemento)
+);
 const rituaisPorElemento = {
-  sangue: todosOsRituais.filter(r => r.elemento === 'Sangue'),
-  morte: todosOsRituais.filter(r => r.elemento === 'Morte'),
-  conhecimento: todosOsRituais.filter(r => r.elemento === 'Conhecimento'),
-  energia: todosOsRituais.filter(r => r.elemento === 'Energia'),
-  medo: todosOsRituais.filter(r => r.elemento === 'Medo'),
+  sangue: todosOsRituais.filter(r => pertenceAoElemento(r, 'Sangue')),
+  morte: todosOsRituais.filter(r => pertenceAoElemento(r, 'Morte')),
+  conhecimento: todosOsRituais.filter(r => pertenceAoElemento(r, 'Conhecimento')),
+  energia: todosOsRituais.filter(r => pertenceAoElemento(r, 'Energia')),
+  medo: todosOsRituais.filter(r => pertenceAoElemento(r, 'Medo')),
 };
 
 function ModalRituais({ isOpen, onClose, onAddRitual }) {

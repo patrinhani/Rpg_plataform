@@ -150,6 +150,7 @@ function criarRascunhoCriacao(dados, jogadorPadrao = '') {
     jogador: info.jogador || jogadorPadrao || '',
     conceito: info.conceito || '',
     origem,
+    opcoesOrigem: { ...(info.criacao_opcoes_origem || {}) },
     classe,
     atributos: ATRIBUTOS_CRIACAO.reduce((acc, atributo) => {
       acc[atributo.key] = Number.parseInt(dados?.atributos?.[atributo.key], 10) || 0;
@@ -171,11 +172,25 @@ function validarEtapaCriacao(etapa, rascunho) {
 
   if (etapa === 1) {
     if (!OpcoesOrigem[rascunho.origem]) return 'Escolha uma origem para continuar.';
-    const escolhas = obterDadosOrigem(rascunho.origem).escolhas || [];
+    const dadosOrigem = obterDadosOrigem(rascunho.origem);
+    const opcoesNarrativas = dadosOrigem.opcoesNarrativas || [];
+    const opcaoPendente = opcoesNarrativas.find(opcao => !rascunho.opcoesOrigem?.[opcao.key]);
+    if (opcaoPendente) return `Escolha ${opcaoPendente.titulo.toLocaleLowerCase('pt-BR')} para continuar.`;
+    const escolhas = dadosOrigem.escolhas || [];
     const quantidade = escolhas.reduce((total, escolha) => total + (escolha.quantidade || 0), 0);
     if ((rascunho.periciasOrigemEscolhidas || []).length !== quantidade) {
       return `Escolha ${quantidade} ${quantidade === 1 ? 'perícia' : 'perícias'} para completar esta origem.`;
     }
+    const selecionadas = rascunho.periciasOrigemEscolhidas || [];
+    const escolhasInvalidas = escolhas.some(escolha => {
+      const narrativa = escolha.grupo ? rascunho.opcoesOrigem?.elemento_ritual : null;
+      const permitidas = narrativa && escolha.opcoesPorNarrativa?.[narrativa]
+        ? escolha.opcoesPorNarrativa[narrativa]
+        : escolha.opcoes;
+      return Array.isArray(permitidas)
+        && selecionadas.filter(pericia => permitidas.includes(pericia)).length !== (escolha.quantidade || 0);
+    });
+    if (escolhasInvalidas) return 'A perícia escolhida não corresponde à opção definida para esta origem.';
   }
 
   if (etapa === 2 && !CLASSES_CRIACAO[rascunho.classe]) {
@@ -241,6 +256,7 @@ function montarDadosCriacao(dadosBase, rascunho, { concluida = false, etapa = ra
     criacao_concluida: concluida,
     criacao_em_andamento: !concluida,
     criacao_etapa: limitarEtapa(etapa),
+    criacao_opcoes_origem: { ...(rascunho.opcoesOrigem || {}) },
     criacao_pericias_origem: [...(rascunho.periciasOrigemEscolhidas || [])],
     criacao_pericia_combate: rascunho.periciaCombate || '',
     criacao_pericia_resistencia: rascunho.periciaResistencia || '',

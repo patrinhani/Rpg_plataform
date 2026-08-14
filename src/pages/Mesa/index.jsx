@@ -16,9 +16,12 @@ import {
   atualizarNomeMesa,
   importarPersonagemParaMesa,
   listarPersonagensPessoais,
+  removerCriaturaPersonalizada,
   removerJogadorDaMesa,
+  salvarCriaturaPersonalizada,
   vincularVttMesa,
 } from '../../lib/mesas.js';
+import { normalizarCriaturaPersonalizada } from '../../lib/custom-creatures.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useDialog } from '../../contexts/DialogContext.jsx';
 import { FichaProvider } from '../../contexts/FichaContext.jsx';
@@ -27,6 +30,7 @@ import ModalBase from '../../components/ModalBase.jsx';
 import HandoutEvidencePanel from '../../components/handouts/HandoutEvidencePanel.jsx';
 import { AppIcon } from '../../components/icons/NavigationIcons.jsx';
 import FichaCriatura from '../../components/mesa/FichaCriatura.jsx';
+import CustomCreatureForm from '../../components/mesa/CustomCreatureForm.jsx';
 import IniciativaTracker from '../../components/mesa/IniciativaTracker.jsx';
 import { useMesaHandouts } from '../../features/vtt-handouts/useMesaHandouts.js';
 import Ficha from '../Ficha/index.jsx';
@@ -94,8 +98,11 @@ export default function Mesa() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showBestiarioModal, setShowBestiarioModal] = useState(false);
   const [listaBestiario, setListaBestiario] = useState(null);
+  const [criaturasPersonalizadas, setCriaturasPersonalizadas] = useState([]);
   const [bestiarioLoading, setBestiarioLoading] = useState(false);
   const [criaturaSelecionada, setCriaturaSelecionada] = useState(null);
+  const [criaturaEmEdicao, setCriaturaEmEdicao] = useState(null);
+  const [showCreatureForm, setShowCreatureForm] = useState(false);
   const [minhasFichas, setMinhasFichas] = useState([]);
   const [buscaBestiario, setBuscaBestiario] = useState('');
   const [filtroElemento, setFiltroElemento] = useState('todos');
@@ -285,6 +292,29 @@ export default function Mesa() {
     return unsubscribe;
   }, [devVisualMode, mesaId, mestreUidDaMesa, usuario?.uid]);
 
+  useEffect(() => {
+    if (!mesaId || !usuario?.uid || !mestreUidDaMesa) return undefined;
+    if (devVisualMode) {
+      setCriaturasPersonalizadas([]);
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'mesas', mesaId, 'criaturas'),
+      (snapshot) => {
+        setCriaturasPersonalizadas(snapshot.docs
+          .map(documento => ({ ...documento.data(), id: documento.id, personalizada: true }))
+          .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR')));
+      },
+      (error) => {
+        console.error('Erro ao sincronizar criaturas da mesa:', error);
+        setActionError('Não foi possível sincronizar as criaturas personalizadas desta mesa.');
+      },
+    );
+
+    return unsubscribe;
+  }, [devVisualMode, mesaId, mestreUidDaMesa, usuario?.uid]);
+
   const jogadores = useMemo(
     () => (Array.isArray(mesaData?.jogadores) ? mesaData.jogadores : []),
     [mesaData?.jogadores],
@@ -329,16 +359,19 @@ export default function Mesa() {
     }
   }, [devVisualMode, executarAcao, mesaData, mesaId, souMestre]);
 
+  const criaturasDisponiveis = useMemo(
+    () => [...criaturasPersonalizadas, ...(listaBestiario || [])],
+    [criaturasPersonalizadas, listaBestiario],
+  );
+
   const elementosBestiario = useMemo(() => {
-    if (!listaBestiario) return [];
-    return [...new Set(listaBestiario.map((criatura) => criatura.elemento).filter(Boolean))]
+    return [...new Set(criaturasDisponiveis.map((criatura) => criatura.elemento).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  }, [listaBestiario]);
+  }, [criaturasDisponiveis]);
 
   const criaturasFiltradas = useMemo(() => {
-    if (!listaBestiario) return [];
     const termo = normalizarBusca(buscaBestiario.trim());
-    return listaBestiario.filter((criatura) => {
+    return criaturasDisponiveis.filter((criatura) => {
       const correspondeElemento = filtroElemento === 'todos'
         || normalizarBusca(criatura.elemento) === normalizarBusca(filtroElemento);
       const correspondeBusca = !termo
@@ -346,7 +379,7 @@ export default function Mesa() {
         || normalizarBusca(criatura.tipo).includes(termo);
       return correspondeElemento && correspondeBusca;
     });
-  }, [buscaBestiario, filtroElemento, listaBestiario]);
+  }, [buscaBestiario, criaturasDisponiveis, filtroElemento]);
 
   const carregarBestiario = async () => {
     if (bestiarioLoading) return;
@@ -368,6 +401,62 @@ export default function Mesa() {
     setActionError('');
     setShowBestiarioModal(true);
     if (!listaBestiario) void carregarBestiario();
+  };
+
+  const abrirNovaCriatura = () => {
+    if (!souMestre) return;
+    setCriaturaEmEdicao(null);
+    setShowCreatureForm(true);
+  };
+
+  const abrirEdicaoCriatura = (criatura) => {
+    if (!souMestre || !criatura?.personalizada) return;
+    setCriaturaEmEdicao(criatura);
+    setShowCreatureForm(true);
+  };
+
+  const salvarCriaturaDaMesa = async (rascunho) => {
+    const normalizada = normalizarCriaturaPersonalizada(
+      { ...rascunho, id: criaturaEmEdicao?.id || rascunho.id },
+      criaturaEmEdicao?.id || rascunho.id,
+    );
+    if (devVisualMode) {
+      setCriaturasPersonalizadas(atuais => [
+        ...atuais.filter(criatura => criatura.id !== normalizada.id),
+        normalizada,
+      ].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
+      setCriaturaEmEdicao(null);
+      return normalizada;
+    }
+    try {
+      const salva = await salvarCriaturaPersonalizada(mesaId, normalizada);
+      setCriaturaEmEdicao(null);
+      return salva;
+    } catch (error) {
+      console.error('Erro ao salvar criatura personalizada:', error);
+      throw new Error('Não foi possível salvar a criatura nesta mesa. Verifique sua conexão e tente novamente.');
+    }
+  };
+
+  const excluirCriaturaDaMesa = async (criatura) => {
+    if (!souMestre || !criatura?.personalizada) return;
+    const confirmado = await showConfirm(
+      `Excluir “${criatura.nome}” do bestiário desta mesa? Cópias já adicionadas à iniciativa serão preservadas.`,
+      'Excluir criatura',
+      'Excluir',
+      'Cancelar',
+    );
+    if (!confirmado) return;
+
+    if (devVisualMode) {
+      setCriaturasPersonalizadas(atuais => atuais.filter(item => item.id !== criatura.id));
+      return;
+    }
+    await executarAcao(
+      `excluir-criatura-${criatura.id}`,
+      () => removerCriaturaPersonalizada(mesaId, criatura.id),
+      `Não foi possível excluir ${criatura.nome}.`,
+    );
   };
 
   const handleCopiarCodigo = async () => {
@@ -1075,11 +1164,17 @@ export default function Mesa() {
               {elementosBestiario.map((elemento) => <option key={elemento} value={elemento}>{elemento}</option>)}
             </select>
           </label>
+          {souMestre && (
+            <button type="button" className="mesa-bestiary-create" onClick={abrirNovaCriatura}>
+              <AppIcon name="plus" size={17} />
+              Nova criatura
+            </button>
+          )}
         </div>
 
-        {bestiarioLoading ? (
+        {bestiarioLoading && !listaBestiario && criaturasPersonalizadas.length === 0 ? (
           <div className="mesa-modal-loading" role="status">Carregando grimório de criaturas...</div>
-        ) : !listaBestiario ? (
+        ) : !listaBestiario && criaturasPersonalizadas.length === 0 ? (
           <div className="mesa-bestiary-retry">
             <AppIcon name="rituals" size={27} />
             <strong>O grimório não pôde ser aberto</strong>
@@ -1093,25 +1188,38 @@ export default function Mesa() {
             {criaturasFiltradas.map((criatura) => {
               const elemento = slugElemento(criatura.elemento || 'medo');
               return (
-                <button
-                  type="button"
+                <article
                   key={criatura.id}
                   className={`mesa-creature-card mesa-creature-card--${elemento}`}
-                  onClick={() => adicionarMonstro(criatura)}
-                  disabled={Boolean(actionBusy)}
                 >
-                  <span className="mesa-creature-thumb">
-                    {criatura.foto
-                      ? <img src={getBestiaryThumbnail(criatura.foto)} alt="" loading="lazy" decoding="async" />
-                      : <AppIcon name="rituals" size={24} />}
-                  </span>
-                  <span className="mesa-creature-copy">
-                    <strong>{criatura.nome}</strong>
-                    <small>{criatura.tipo || 'Criatura'} · VD {criatura.vd}</small>
-                    <em>{criatura.elemento || 'Medo'} · Referência {criatura.iniciativa}</em>
-                  </span>
-                  <span className="mesa-creature-add"><AppIcon name="plus" size={17} /> Adicionar</span>
-                </button>
+                  <button type="button" className="mesa-creature-card__profile" onClick={() => setCriaturaSelecionada(criatura)}>
+                    <span className="mesa-creature-thumb">
+                      {criatura.foto
+                        ? <img src={getBestiaryThumbnail(criatura.foto)} alt="" loading="lazy" decoding="async" />
+                        : <AppIcon name="rituals" size={24} />}
+                    </span>
+                    <span className="mesa-creature-copy">
+                      <span className="mesa-creature-copy__title">
+                        <strong>{criatura.nome}</strong>
+                        {criatura.personalizada && <small>Ficha da mesa</small>}
+                      </span>
+                      <small>{criatura.tipo || 'Criatura'} · VD {criatura.vd}</small>
+                      <em>{criatura.elemento || 'Medo'} · Referência {criatura.iniciativa}</em>
+                    </span>
+                    <span className="mesa-creature-view">Ver ficha</span>
+                  </button>
+                  <div className="mesa-creature-card__actions">
+                    <button type="button" onClick={() => adicionarMonstro(criatura)} disabled={Boolean(actionBusy)}>
+                      <AppIcon name="plus" size={15} /> Adicionar à iniciativa
+                    </button>
+                    {criatura.personalizada && souMestre && (
+                      <>
+                        <button type="button" onClick={() => abrirEdicaoCriatura(criatura)} disabled={Boolean(actionBusy)}>Editar</button>
+                        <button type="button" className="is-danger" onClick={() => excluirCriaturaDaMesa(criatura)} disabled={Boolean(actionBusy)}>Excluir</button>
+                      </>
+                    )}
+                  </div>
+                </article>
               );
             })}
             {criaturasFiltradas.length === 0 && (
@@ -1168,6 +1276,15 @@ export default function Mesa() {
       {criaturaSelecionada && (
         <FichaCriatura dados={criaturaSelecionada} onClose={() => setCriaturaSelecionada(null)} />
       )}
+      <CustomCreatureForm
+        isOpen={showCreatureForm}
+        criatura={criaturaEmEdicao}
+        onClose={() => {
+          setShowCreatureForm(false);
+          setCriaturaEmEdicao(null);
+        }}
+        onSave={salvarCriaturaDaMesa}
+      />
     </div>
   );
 }

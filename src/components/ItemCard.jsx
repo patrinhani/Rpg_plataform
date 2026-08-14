@@ -105,6 +105,9 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
   const bonusAtaque = calcularBonusAtaqueItem(item);
   const criticoExibido = calcularCriticoItem(item);
   const alcanceExibido = calcularAlcanceItem(item);
+  const fonte = item.fonte && typeof item.fonte === 'object'
+    ? `${item.fonte.sigla || item.fonte.nome || ''}${item.fonte.pagina ? ` · p. ${item.fonte.pagina}` : ''}`
+    : item.fonte;
 
   return (
     <li className={cardClasses}>
@@ -120,6 +123,7 @@ function ItemCard({ item, tipo, onAdd, onRemove, onToggle, onEdit }) {
         <div className="item-header-info">
           <div><strong>CAT:</strong> {categoriaFinal}</div>
           <div><strong>ESP:</strong> {Number.isInteger(espacosFinal) ? espacosFinal : espacosFinal.toFixed(1)}</div>
+          {fonte && <div><strong>Fonte:</strong> {fonte}</div>}
         </div>
       </div>
 

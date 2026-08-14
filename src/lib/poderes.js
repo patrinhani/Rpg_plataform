@@ -1,4 +1,5 @@
 // /src/lib/poderes.js
+import { SUPPLEMENT_POWERS } from './supplements.js';
 /**
  * Lista de Poderes de Classe (Combatente, Especialista, Ocultista) 
  * E Poderes Gerais (Disponíveis para todas as classes).
@@ -1073,6 +1074,14 @@ const poderesParanormais = [
 ];
 
 // Exporta todas as listas
+// Opções oficiais dos suplementos são mantidas em arquivo próprio para
+// preservar a origem editorial e evitar duplicações no catálogo base.
+poderesCombatente.push(...SUPPLEMENT_POWERS.combatente);
+poderesEspecialista.push(...SUPPLEMENT_POWERS.especialista);
+poderesOcultista.push(...SUPPLEMENT_POWERS.ocultista);
+poderesGerais.push(...SUPPLEMENT_POWERS.gerais);
+poderesParanormais.push(...SUPPLEMENT_POWERS.paranormais);
+
 export { 
     poderesCombatente, 
     poderesEspecialista, 

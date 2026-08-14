@@ -14,6 +14,11 @@ import {
     poderesGerais,
     poderesParanormais
 } from './poderes.js';
+import {
+  SUPPLEMENT_ITEMS,
+  SUPPLEMENT_ORIGINS,
+  SUPPLEMENT_RITUALS,
+} from './supplements.js';
 
 // --- (NOVO) LISTAS DE MODIFICAÇÕES ---
 //
@@ -3434,6 +3439,21 @@ periciasPorOrigem: {
     },
   ],
 };
+
+Object.assign(
+  OpcoesOrigem,
+  Object.fromEntries(
+    Object.entries(SUPPLEMENT_ORIGINS).map(([key, origem]) => [key, origem.nome]),
+  ),
+);
+Object.assign(database.periciasPorOrigem, SUPPLEMENT_ORIGINS);
+database.armasTaticas.push(...SUPPLEMENT_ITEMS.armasTaticas);
+database.armasPesadas.push(...SUPPLEMENT_ITEMS.armasPesadas);
+database.equipGeral.push(...SUPPLEMENT_ITEMS.equipGeral);
+database.itensParanormais.push(...SUPPLEMENT_ITEMS.itensParanormais);
+database.rituais.push(...SUPPLEMENT_RITUALS);
+
+const modificacoesGranadas = SUPPLEMENT_ITEMS.modificacoesGranadas;
 // --- LISTAS DE PODERES DE CLASSE (COLE NO FINAL DO ARQUIVO) ---
 
 export { 
@@ -3451,5 +3471,6 @@ export {
     modificacoesArmas,
     modificacoesProtecoes,
     modificacoesAcessorios,
-    modificacoesParanormais
-};
+    modificacoesParanormais,
+    modificacoesGranadas
+ };

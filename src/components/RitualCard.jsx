@@ -24,16 +24,23 @@ function RitualCard({ ritual, tipo, onAdd, onRemove }) {
 
   const alvoArea = ritual.alvo || ritual.area || ritual.efeito || 'N/A';
   const elemento = String(ritual.elemento || 'ordem').toLowerCase();
+  const elementos = Array.isArray(ritual.elementos) && ritual.elementos.length > 0
+    ? ritual.elementos.join(' + ')
+    : (ritual.elemento || 'Sem elemento');
+  const fonte = ritual.fonte && typeof ritual.fonte === 'object'
+    ? `${ritual.fonte.sigla || ritual.fonte.nome || ''}${ritual.fonte.pagina ? ` · p. ${ritual.fonte.pagina}` : ''}`
+    : ritual.fonte;
 
   return (
     <li className={`item-card item-card--ritual ritual-card ${elemento}`}>
       <div className="item-header">
         <div className="item-title-stack">
           <h3>{ritual.nome}</h3>
-          <span className="ritual-element-badge">{ritual.elemento || 'Sem elemento'}</span>
+          <span className="ritual-element-badge">{elementos}</span>
         </div>
         <div className="item-header-info">
           <div><strong>{ritual.circulo}º círculo</strong></div>
+          {fonte && <div><strong>Fonte:</strong> {fonte}</div>}
         </div>
       </div>
 

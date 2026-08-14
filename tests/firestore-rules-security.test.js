@@ -32,3 +32,14 @@ test('interface não oferece escrita de iniciativa ao jogador', () => {
   assert.match(mesaPage, /onSubmit=\{registrarIniciativaAgente\}/);
   assert.match(mesaPage, /Informe ao mestre/);
 });
+
+test('criaturas personalizadas ficam vinculadas à mesa e somente o mestre escreve', () => {
+  assert.match(rules, /match \/criaturas\/\{criaturaId\}/);
+  assert.match(rules, /allow read: if membroDaMesa\(mesaPaiCriatura\(\)\);/);
+  assert.match(
+    rules,
+    /allow create, update: if mestreDaMesa\(mesaPaiCriatura\(\)\)[\s\S]*?fichaCriaturaValida\(\);/,
+  );
+  assert.match(rules, /request\.resource\.data\.personalizada == true/);
+  assert.match(rules, /request\.resource\.data\.acoes\.size\(\) <= 20/);
+});

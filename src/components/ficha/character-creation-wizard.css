@@ -398,12 +398,33 @@
   box-shadow: 0 0 12px rgba(0, 170, 255, 0.65);
 }
 
-.character-builder__choice-card > strong {
+.character-builder__choice-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding-right: 22px;
+}
+
+.character-builder__choice-title > strong {
   padding-right: 22px;
   color: #edf8fb;
   font-size: 0.92rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.character-builder__source {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  color: #8ad8ff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(0, 170, 255, 0.1);
+  border: 1px solid rgba(0, 170, 255, 0.25);
+  border-radius: 999px;
 }
 
 .character-builder__choice-card > small {
@@ -413,10 +434,42 @@
   font-size: 0.68rem;
 }
 
-.character-builder__choice-card > span:not(.character-builder__choice-mark) {
+.character-builder__choice-card > span:not(.character-builder__choice-mark):not(.character-builder__choice-title) {
   color: var(--builder-accent);
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+.character-builder__narrative-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 280px);
+  align-items: center;
+  gap: 18px;
+  margin-top: 20px;
+  padding: 18px;
+  background: rgba(9, 25, 35, 0.8);
+  border: 1px solid var(--builder-line);
+  border-radius: 9px;
+}
+
+.character-builder__narrative-choice strong,
+.character-builder__narrative-choice small {
+  display: block;
+}
+
+.character-builder__narrative-choice small {
+  margin-top: 5px;
+  color: var(--builder-muted);
+  line-height: 1.45;
+}
+
+.character-builder__narrative-choice select {
+  min-height: 44px;
+  padding: 0 12px;
+  color: var(--builder-text);
+  background: #07141d;
+  border: 1px solid var(--builder-line);
+  border-radius: 7px;
 }
 
 .character-builder__choice-card p {
@@ -996,6 +1049,8 @@
   .character-builder__attributes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .character-builder__skill-grid,
   .character-builder__skill-grid--main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .character-builder__narrative-choice { grid-template-columns: 1fr; }
   .character-builder__section-heading { display: grid; }
   .character-builder__points { justify-self: start; }
   .character-builder__review-hero { grid-template-columns: 1fr; }

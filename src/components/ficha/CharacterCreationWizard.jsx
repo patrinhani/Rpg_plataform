@@ -60,6 +60,7 @@ function CharacterCreationWizard({ dados, jogadorPadrao, onSalvar, onSair }) {
     if (!termo) return origens;
     return origens.filter(origem => {
       const texto = [origem.nome, origem.poder?.nome, origem.poder?.descricao]
+        .concat(origem.fonte?.nome || '', origem.fonte?.sigla || '')
         .filter(Boolean)
         .join(' ')
         .toLocaleLowerCase('pt-BR');
@@ -86,9 +87,20 @@ function CharacterCreationWizard({ dados, jogadorPadrao, onSalvar, onSair }) {
     setRascunho(atual => ({
       ...atual,
       origem,
+      opcoesOrigem: {},
       periciasOrigemEscolhidas: [],
       periciaCombate: '',
       periciaResistencia: '',
+      periciasClasseLivres: [],
+    }));
+  };
+
+  const selecionarOpcaoOrigem = (key, valor) => {
+    setErro('');
+    setRascunho(atual => ({
+      ...atual,
+      opcoesOrigem: { ...(atual.opcoesOrigem || {}), [key]: valor },
+      periciasOrigemEscolhidas: [],
       periciasClasseLivres: [],
     }));
   };
@@ -316,7 +328,14 @@ function CharacterCreationWizard({ dados, jogadorPadrao, onSalvar, onSair }) {
                     onClick={() => selecionarOrigem(origem.key)}
                   >
                     <span className="character-builder__choice-mark" aria-hidden="true" />
-                    <strong>{origem.nome}</strong>
+                    <span className="character-builder__choice-title">
+                      <strong>{origem.nome}</strong>
+                      {origem.fonte && (
+                        <small className="character-builder__source">
+                          {origem.fonte.sigla}{origem.fonte.pagina ? ` · p. ${origem.fonte.pagina}` : ''}
+                        </small>
+                      )}
+                    </span>
                     <small>{(origem.fixas || []).map(nomePericia).join(' • ') || 'Perícias à sua escolha'}</small>
                     <span>{origem.poder?.nome || 'Poder de origem'}</span>
                     <p>{origem.poder?.descricao}</p>
@@ -324,14 +343,35 @@ function CharacterCreationWizard({ dados, jogadorPadrao, onSalvar, onSair }) {
                 ))}
               </div>
               {origensFiltradas.length === 0 && <p className="character-builder__empty">Nenhuma origem corresponde à busca.</p>}
+              {(dadosOrigem.opcoesNarrativas || []).map(opcao => (
+                <label className="character-builder__narrative-choice" key={opcao.key}>
+                  <span><strong>{opcao.titulo}</strong><small>{opcao.descricao}</small></span>
+                  <select
+                    value={rascunho.opcoesOrigem?.[opcao.key] || ''}
+                    onChange={event => selecionarOpcaoOrigem(opcao.key, event.target.value)}
+                  >
+                    <option value="">Selecione...</option>
+                    {(opcao.opcoes || []).map(item => (
+                      <option key={item.value} value={item.value}>{item.label}</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
               {(dadosOrigem.escolhas || []).map((escolha, index) => {
                 const quantidade = escolha.quantidade || 0;
+                const narrativa = escolha.grupo ? rascunho.opcoesOrigem?.elemento_ritual : null;
+                const opcoesPermitidas = narrativa && escolha.opcoesPorNarrativa?.[narrativa]
+                  ? escolha.opcoesPorNarrativa[narrativa]
+                  : escolha.opcoes;
+                const periciasDisponiveis = Array.isArray(opcoesPermitidas)
+                  ? PERICIAS_CRIACAO.filter(pericia => opcoesPermitidas.includes(pericia.key))
+                  : PERICIAS_CRIACAO;
                 return (
                   <div className="character-builder__inline-choice" key={`${rascunho.origem}-${index}`}>
                     <div><strong>{escolha.titulo}</strong><p>{escolha.descricao}</p></div>
                     <span>{rascunho.periciasOrigemEscolhidas.length}/{quantidade}</span>
                     <div className="character-builder__skill-grid">
-                      {PERICIAS_CRIACAO.map(pericia => {
+                      {periciasDisponiveis.map(pericia => {
                         const selecionada = rascunho.periciasOrigemEscolhidas.includes(pericia.key);
                         const concedida = (dadosOrigem.fixas || []).includes(pericia.key);
                         return (

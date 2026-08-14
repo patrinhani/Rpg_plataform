@@ -12,6 +12,13 @@ const generalKeys = new Set(poderesGerais.map(poder => poder.key));
 const paranormalKeys = new Set(poderesParanormais.map(poder => poder.key));
 
 const getBasePowerKey = (key = '') => key.replace(/_(sangue|morte|conhecimento|energia)$/i, '');
+const elementosComTema = new Set(['sangue', 'morte', 'conhecimento', 'energia', 'medo']);
+
+function formatarFonte(fonte) {
+  if (!fonte) return '';
+  if (typeof fonte === 'string') return fonte;
+  return `${fonte.sigla || fonte.nome || ''}${fonte.pagina ? ` · p. ${fonte.pagina}` : ''}`;
+}
 
 function aplicarElementoNaDescricao(texto, trilhaKey, info, progressaoTrilhas) {
   if (!texto || !trilhaKey) return texto;
@@ -36,6 +43,7 @@ function getPoderOrigem(info) {
     descricao: dadosOrigem.poder.descricao,
     tipo: 'Origem',
     fonte: OpcoesOrigem?.[origemKey] || origemKey,
+    fonteLivro: dadosOrigem.fonte,
     isOrigemPower: true,
   };
 }
@@ -134,7 +142,8 @@ function PoderesAprendidos({
         lista.map(poder => {
           const baseKey = getBasePowerKey(poder.key);
           const isParanormalInGroup = paranormalKeys.has(baseKey);
-          const accent = poder.elemento && isParanormalInGroup
+          const elementoTema = String(poder.elemento || '').toLowerCase();
+          const accent = poder.elemento && isParanormalInGroup && elementosComTema.has(elementoTema)
             ? `var(--cor-trans-${poder.elemento.toLowerCase()})`
             : corBorda;
 
@@ -155,7 +164,8 @@ function PoderesAprendidos({
                   </div>
                 </div>
                 <div className="item-header-info">
-                  {poder.fonte && <div><strong>{poder.fonte}</strong></div>}
+                  {poder.fonte && <div><strong>{formatarFonte(poder.fonte)}</strong></div>}
+                  {poder.fonteLivro && <div><strong>Fonte:</strong> {formatarFonte(poder.fonteLivro)}</div>}
                   {poder.nivel && (
                     <div>
                       <strong>{poder.escala === 'NEX' ? 'NEX' : 'Estágio'}:</strong>{' '}

@@ -161,6 +161,50 @@ service cloud.firestore {
 
         allow read, create, update, delete: if acessoAoPersonagemNaMesaValido();
       }
+
+      match /criaturas/{criaturaId} {
+        function mesaPaiCriatura() {
+          return get(/databases/$(database)/documents/mesas/$(mesaId)).data;
+        }
+
+        function fichaCriaturaValida() {
+          return request.resource.data.keys().hasOnly([
+              'id', 'nome', 'elemento', 'vd', 'tipo', 'presenca', 'foto',
+              'sentidos', 'iniciativa', 'defesa', 'fortitude', 'reflexos',
+              'vontade', 'pv_max', 'pv_atual', 'machucado', 'resistencias',
+              'vulnerabilidades', 'atributos', 'deslocamento', 'habilidades',
+              'acoes', 'personalizada', 'atualizadaEm'
+            ])
+            && request.resource.data.id == criaturaId
+            && criaturaId.matches('^criatura_[A-Za-z0-9_-]{8,90}$')
+            && request.resource.data.nome is string
+            && request.resource.data.nome.size() >= 2
+            && request.resource.data.nome.size() <= 80
+            && request.resource.data.elemento is string
+            && request.resource.data.elemento.size() <= 50
+            && request.resource.data.tipo is string
+            && request.resource.data.tipo.size() <= 100
+            && request.resource.data.foto is string
+            && request.resource.data.foto.size() <= 350000
+            && request.resource.data.iniciativa is string
+            && request.resource.data.iniciativa.size() > 0
+            && request.resource.data.pv_max is int
+            && request.resource.data.pv_max > 0
+            && request.resource.data.pv_max <= 9999
+            && request.resource.data.atributos is map
+            && request.resource.data.habilidades is list
+            && request.resource.data.habilidades.size() <= 20
+            && request.resource.data.acoes is list
+            && request.resource.data.acoes.size() <= 20
+            && request.resource.data.personalizada == true
+            && request.resource.data.atualizadaEm == request.time;
+        }
+
+        allow read: if membroDaMesa(mesaPaiCriatura());
+        allow create, update: if mestreDaMesa(mesaPaiCriatura())
+          && fichaCriaturaValida();
+        allow delete: if mestreDaMesa(mesaPaiCriatura());
+      }
     }
   }
 }

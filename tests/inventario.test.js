@@ -153,3 +153,13 @@ test('filtra modificações pelo tipo do item', () => {
 
   assert.deepEqual(chaves.sort(), ['discreta_protecao', 'reforcada'].sort());
 });
+
+test('oferece modificações exclusivas para granadas', () => {
+  const granada = database.equipGeral.find(item => item.id === 'granada_gas_lacrimogeneo');
+  const chaves = getModificacoesCompativeis(granada).map(modificacao => modificacao.key);
+
+  assert.ok(chaves.includes('granada_adesiva'));
+  assert.ok(chaves.includes('granada_dupla'));
+  assert.ok(chaves.includes('granada_programada'));
+  assert.equal(chaves.includes('reforcada'), false);
+});

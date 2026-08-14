@@ -1,0 +1,129 @@
+[
+  {
+    "id": "criatura_mnemosyne_repetente_nex25",
+    "nome": "Repetente Palíndromo",
+    "elemento": "Energia e Conhecimento",
+    "vd": 20,
+    "tipo": "Criatura - Média",
+    "presenca": "Perturbadora (NEX 20% • DT 16 • 2d6 mental)",
+    "tokenPath": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
+    "sentidos": "Percepção 3d20+5; visão no escuro",
+    "iniciativa": "3d20+8",
+    "defesa": 18,
+    "fortitude": "2d20+5",
+    "reflexos": "3d20+8",
+    "vontade": "3d20+8",
+    "pv_max": 42,
+    "machucado": 21,
+    "resistencias": "Energia e Conhecimento 5",
+    "vulnerabilidades": "—",
+    "atributos": { "agi": 3, "for": 1, "int": 1, "pre": 3, "vig": 2 },
+    "deslocamento": "9m | 6q",
+    "habilidades": [
+      "BALANCEAMENTO NEX 25: Use dois Repetentes para quatro agentes. Eles compartilham a iniciativa, mas cada um possui seu próprio turno e PV.",
+      "ROTA GRAVADA: Escolha dois pontos da rota. O Repetente termina o turno tão perto quanto possível do próximo ponto e só ataca quem impedir seu trajeto ou retirar o objeto ligado à tarefa.",
+      "VOLTAR AO QUADRO: Na primeira vez em que chega a 0 PV, reaparece no início da rota com 21 PV. Isso não acontece se sua tarefa foi concluída, se o objeto correto foi devolvido ou se ele foi estabilizado.",
+      "AINDA HÁ ALGUÉM AQUI: Um agente adjacente usa ação completa e testa Diplomacia, Medicina ou Tecnologia DT 17. Sucesso encerra a repetição e deixa a vítima inconsciente e estável; falha causa 1d6 mental.",
+      "SEDAÇÃO PREPARADA: Uma dose dos Dormitórios permite Medicina DT 17 como ação padrão. Sucesso deixa o Repetente inconsciente; falha perde a dose e provoca Movimento que Já Aconteceu como reação."
+    ],
+    "acoes": [
+      {
+        "nome": "Movimento que Já Aconteceu (Padrão)",
+        "descricao": "Corpo a corpo, 3d20+8. Dano 1d10+4 de impacto mais 1d6 de Energia. Se o mesmo alvo foi atingido por este Repetente na rodada anterior, sofre -2 na Defesa contra o ataque."
+      },
+      {
+        "nome": "Frase Antes da Voz (Padrão, 1/cena)",
+        "descricao": "Uma criatura em alcance curto faz Vontade DT 17. Falha: 2d6 mental, perde a reação e fica vulnerável até o início do próximo turno. Sucesso: metade do dano e evita as condições."
+      }
+    ]
+  },
+  {
+    "id": "criatura_mnemosyne_otavio_leme_nex25",
+    "nome": "Dr. Otávio Leme",
+    "elemento": "Conhecimento",
+    "vd": 40,
+    "tipo": "Pessoa - Cultista, Médio",
+    "presenca": "Não possui presença perturbadora.",
+    "tokenPath": "assets/tokens/otavio-leme-token-vtt-v1.png",
+    "sentidos": "Percepção 3d20+8",
+    "iniciativa": "3d20+8",
+    "defesa": 19,
+    "fortitude": "2d20+5",
+    "reflexos": "3d20+8",
+    "vontade": "3d20+10",
+    "pv_max": 68,
+    "machucado": 34,
+    "resistencias": "Paranormal 5 enquanto ao menos uma âncora estiver ativa",
+    "vulnerabilidades": "—",
+    "atributos": { "agi": 3, "for": 1, "int": 3, "pre": 3, "vig": 2 },
+    "deslocamento": "9m | 6q",
+    "habilidades": [
+      "BALANCEAMENTO NEX 25: Confronto secundário para quatro agentes. A negociação reduz sua pressão e deve valer tanto quanto vencê-lo em combate.",
+      "CONVICÇÃO DISTRIBUÍDA: Enquanto ao menos uma âncora estiver ativa, Otávio recebe resistência 5 a dano paranormal.",
+      "PRIMEIRO VOLUNTÁRIO: Ao chegar a 0 PV adjacente ao Relé Hemático, pode ser absorvido pelo Eco. Longe do Relé, fica inconsciente e morrendo normalmente.",
+      "O HOMEM AINDA ESCOLHE: Antes do primeiro ataque, o grupo pode obter 3 sucessos antes de 2 falhas com Diplomacia, Intuição, Ocultismo ou Religião DT 18, sem repetir perícia. Sucesso: Otávio perde a primeira ação, não aceita ser absorvido e revela uma contradição do protocolo."
+    ],
+    "acoes": [
+      {
+        "nome": "Pistola de Sinal (Padrão)",
+        "descricao": "Distância, alcance médio, 3d20+10. Dano 2d6+4 de perfuração. Em acerto crítico, causa também 1d6 de Energia."
+      },
+      {
+        "nome": "Fios Subcutâneos (Padrão)",
+        "descricao": "Corpo a corpo, 3d20+10. Dano 2d8+5 de corte. Reflexos DT 18 evita ficar agarrado; escapar exige ação de movimento e Atletismo ou Reflexos DT 18."
+      },
+      {
+        "nome": "Comando Palíndromo (Movimento)",
+        "descricao": "Escolhe um Repetente ou âncora em alcance médio. Um Repetente move-se imediatamente; uma âncora concede +2 na Defesa de Otávio até o início do próximo turno."
+      }
+    ]
+  },
+  {
+    "id": "criatura_mnemosyne_eco_indexador_nex25",
+    "nome": "Eco Indexador",
+    "elemento": "Energia e Conhecimento",
+    "vd": 80,
+    "tipo": "Criatura - Grande",
+    "presenca": "Perturbadora (NEX 30% • DT 20 • 3d6 mental)",
+    "tokenPath": "assets/tokens/eco-indexador-token-vtt-v1.png",
+    "sentidos": "Percepção 4d20+12; visão no escuro",
+    "iniciativa": "4d20+12",
+    "defesa": 22,
+    "fortitude": "3d20+10",
+    "reflexos": "4d20+12",
+    "vontade": "4d20+12",
+    "pv_max": 180,
+    "machucado": 90,
+    "resistencias": "Dano paranormal 10 enquanto duas ou mais âncoras estiverem ativas",
+    "vulnerabilidades": "Perde resistências e habilidades conforme as âncoras são desligadas",
+    "atributos": { "agi": 4, "for": 2, "int": 4, "pre": 4, "vig": 2 },
+    "deslocamento": "9m | 6q; escalada 6m | 4q",
+    "habilidades": [
+      "BALANCEAMENTO NEX 25: Chefe para quatro agentes. Use a Ação de Ruptura a partir da rodada 2, em todas as rodadas, apenas enquanto alguma âncora estiver ativa.",
+      "ENIGMA DAS TRÊS ÂNCORAS: Emissor concede Deslocamento de Tela e Defesa 22; desligado, remove a reação e reduz a Defesa para 20. Malha concede Antecipar Tentativa. Relé concede Recompilar. Sem âncoras, perde resistência paranormal e Ação de Ruptura.",
+      "DESLOCAMENTO DE TELA (Reação): Com Emissor ativo, ao ser alvo de ataque move-se até 6m para tela ou reflexo visível e recebe +5 na Defesa contra o ataque. Permanece na nova posição.",
+      "ANTECIPAR TENTATIVA (Reação): Com Malha ativa, recebe +5 na Defesa contra a primeira ação hostil da rodada ou +5 no primeiro teste de resistência provocado por ela. Possui apenas uma reação por rodada.",
+      "RECOMPILAR: No início do turno, com Relé ativo, recupera 3 PV por corpo conectado e mais 3 PV se Otávio foi absorvido.",
+      "VAZAMENTO DO FUTURO: Na primeira vez em que chega a 90 PV ou menos, cada agente faz Vontade DT 19. Falha sofre 2d6 mental; sucesso permite ação de movimento imediata.",
+      "FORMA DEPENDENTE: Ao chegar a 0 PV, perde coesão, deixa o Fragmento cair e retorna às gravações; não morre de forma convencional."
+    ],
+    "acoes": [
+      {
+        "nome": "Corte de Quadro x2 (Padrão)",
+        "descricao": "Dois ataques corpo a corpo, 4d20+12. Cada acerto causa 1d10+6 de Energia mais 1d6 mental. Se ambos acertarem o mesmo alvo, ele perde reações até o próximo turno ou é empurrado 3m."
+      },
+      {
+        "nome": "Dado Impossível (Padrão)",
+        "descricao": "Distância, alcance médio, 4d20+12. Dano 3d8+6 de Conhecimento. O alvo fica desprevenido contra o próximo ataque até o fim da rodada."
+      },
+      {
+        "nome": "Indexar Nome (Padrão, 1/personagem)",
+        "descricao": "Uma criatura em alcance médio faz Vontade DT 20. Falha: 3d6 mental, fica vulnerável até o fim do próximo turno e o Eco aprende um nome importante. Sucesso: metade do dano e evita a condição."
+      },
+      {
+        "nome": "Ação de Ruptura (Iniciativa 10)",
+        "descricao": "A partir da rodada 2, escolha uma âncora ativa sem repetir em rodadas consecutivas. Emissor: tela explode, Reflexos DT 18, 2d6 Energia e ofuscado. Malha: Vontade DT 18 ou repete o último deslocamento ao contrário. Relé: Reflexos DT 18 ou agarrado por cabos."
+      }
+    ]
+  }
+]

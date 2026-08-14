@@ -13,6 +13,13 @@ import ModalBase from './ModalBase.jsx';
 
 // Cria conjuntos de chaves para lookup rápido para evitar confusão entre listas
 const paranormalKeys = new Set(poderesParanormais.map(p => p.key));
+const elementosComTema = new Set(['sangue', 'morte', 'conhecimento', 'energia', 'medo']);
+
+function formatarFonte(fonte) {
+    if (!fonte) return '';
+    if (typeof fonte === 'string') return fonte;
+    return `${fonte.sigla || fonte.nome || ''}${fonte.pagina ? ` · p. ${fonte.pagina}` : ''}`;
+}
 
 /**
  * Modal para seleção e gerenciamento de Poderes de Classe, Gerais e Paranormais.
@@ -72,7 +79,8 @@ function ModalPoderes({
                     const isAprendido = poderesAprendidos.some(p => p.key === poderKeyOriginal || p.key.startsWith(`${poderKeyOriginal}_`));
                     const isParanormalInList = paranormalKeys.has(poder.key);
                     
-                    const borderColor = poder.elemento && isParanormalInList
+                    const elementoTema = String(poder.elemento || '').toLowerCase();
+                    const borderColor = poder.elemento && isParanormalInList && elementosComTema.has(elementoTema)
                         ? `4px solid var(--cor-trans-${poder.elemento.toLowerCase()})`
                         : `4px solid var(--cor-destaque)`;
                     
@@ -103,6 +111,7 @@ function ModalPoderes({
                                 <div className="item-header-info">
                                     {poder.tipo && <div><strong>Tipo:</strong> {poder.tipo}</div>}
                                     {poder.elemento && isParanormalInList && <div><strong>Elemento:</strong> {poder.elemento}</div>}
+                                    {poder.fonte && <div><strong>Fonte:</strong> {formatarFonte(poder.fonte)}</div>}
                                 </div>
                             </div>
                             <div className="item-body" style={{ paddingTop: '5px' }}>

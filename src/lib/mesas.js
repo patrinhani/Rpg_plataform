@@ -1,7 +1,7 @@
 // src/lib/mesas.js
 import { db } from './firebase';
-import { 
-  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, runTransaction
+import {
+  collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc, runTransaction, serverTimestamp
 } from 'firebase/firestore';
 
 // CORREÇÃO AQUI: Importa a classe default, não a instância nomeada
@@ -18,6 +18,7 @@ import {
   obterPapelNaMesa,
   removerMembroDaMesa,
 } from './mesa-membership.js';
+import { normalizarCriaturaPersonalizada } from './custom-creatures.js';
 export { vincularVttMesa } from './vtt-mesa-link.js';
 
 // ... (Funções de Combate permanecem iguais: alternarCombate, avancarTurno, etc.) ...
@@ -184,6 +185,20 @@ export async function adicionarMonstroIniciativa(mesaId, monstroData, iniciativa
 
     lista.sort((a, b) => b.valor - a.valor);
     await updateDoc(mesaRef, { iniciativas: lista });
+}
+
+export async function salvarCriaturaPersonalizada(mesaId, criaturaData) {
+    const criatura = normalizarCriaturaPersonalizada(criaturaData, criaturaData?.id);
+    const criaturaRef = doc(db, 'mesas', mesaId, 'criaturas', criatura.id);
+    await setDoc(criaturaRef, { ...criatura, atualizadaEm: serverTimestamp() });
+    return criatura;
+}
+
+export async function removerCriaturaPersonalizada(mesaId, criaturaId) {
+    if (!/^criatura_[a-zA-Z0-9_-]{8,90}$/.test(String(criaturaId || ''))) {
+      throw new Error('Identificador de criatura personalizado inválido.');
+    }
+    await deleteDoc(doc(db, 'mesas', mesaId, 'criaturas', criaturaId));
 }
 
 export async function atualizarNPCStatus(mesaId, uidNPC, campo, valor) {

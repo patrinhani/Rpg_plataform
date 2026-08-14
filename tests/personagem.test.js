@@ -294,4 +294,12 @@ test('aplica efeitos numéricos determinísticos das origens', () => {
   personagem.setInfo('origem', 'teorico_conspiracao');
   personagem.setAtributo('int', 3);
   assert.deepEqual(personagem.getResistenciasOrigem(), { mental: 3 });
+
+  personagem.setInfo('origem', 'transtornado_arrependido');
+  personagem.rituais = [
+    { id: 'ritual-sangue', elemento: 'Sangue' },
+    { id: 'ritual-duplo', elemento: 'Conhecimento', elementos: ['Sangue', 'Conhecimento'] },
+  ];
+  personagem.poderes_aprendidos = [{ key: 'ferro_maculado', elemento: 'Sangue' }];
+  assert.deepEqual(personagem.getResistenciasOrigem(), { mental: 3 });
 });

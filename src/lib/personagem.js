@@ -579,6 +579,13 @@ class Personagem {
     if (this.info.origem === 'teorico_conspiracao') {
       return { mental: Math.max(0, this.getAtributoFinal('int')) };
     }
+    if (this.info.origem === 'transtornado_arrependido') {
+      const rituaisSangue = this.rituais.filter(ritual => (
+        ritual?.elemento === 'Sangue' || ritual?.elementos?.includes('Sangue')
+      )).length;
+      const poderesSangue = this.poderes_aprendidos.filter(poder => poder?.elemento === 'Sangue').length;
+      return { mental: 2 + Math.floor((rituaisSangue + poderesSangue) / 2) };
+    }
     return {};
   }
 

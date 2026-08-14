@@ -87,3 +87,31 @@ test('impede avançar com escolhas repetidas entre origem e classe', () => {
   };
   assert.match(validarEtapaCriacao(4, invalido), /repetidas/);
 });
+
+test('guia Ferido por Ritual pelo elemento e pela perícia correspondente', () => {
+  const base = new Personagem().getDados();
+  const rascunho = {
+    ...criarRascunhoValido(),
+    origem: 'ferido_por_ritual',
+    opcoesOrigem: {},
+    periciasOrigemEscolhidas: [],
+  };
+
+  assert.match(validarEtapaCriacao(1, rascunho), /elemento da mácula/i);
+  assert.match(validarEtapaCriacao(1, {
+    ...rascunho,
+    opcoesOrigem: { elemento_ritual: 'Energia' },
+    periciasOrigemEscolhidas: ['fortitude'],
+  }), /não corresponde/i);
+
+  const valido = {
+    ...rascunho,
+    opcoesOrigem: { elemento_ritual: 'Energia' },
+    periciasOrigemEscolhidas: ['reflexos'],
+  };
+  assert.equal(validarEtapaCriacao(1, valido), '');
+
+  const dados = montarDadosCriacao(base, valido, { concluida: false, etapa: 2 });
+  assert.deepEqual(dados.info.criacao_opcoes_origem, { elemento_ritual: 'Energia' });
+  assert.deepEqual(dados.info.criacao_pericias_origem, ['reflexos']);
+});

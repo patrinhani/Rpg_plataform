@@ -33,8 +33,10 @@ const TEMAS_CRIATURA = {
 function FichaCriatura({ dados, onClose }) {
   if (!dados) return null;
 
-  const theme = TEMAS_CRIATURA[dados.elemento] || TEMAS_CRIATURA.Medo;
+  const chaveTema = Object.keys(TEMAS_CRIATURA).find(elemento => String(dados.elemento || '').includes(elemento));
+  const theme = TEMAS_CRIATURA[chaveTema] || TEMAS_CRIATURA.Medo;
   const attributes = Object.entries(dados.atributos || {});
+  const abilities = dados.habilidades || [];
   const actions = dados.acoes || [];
 
   return (
@@ -57,6 +59,7 @@ function FichaCriatura({ dados, onClose }) {
         <div className="creature-sheet__classification">
           <span>{dados.elemento || 'Medo'}</span>
           <span>{dados.tipo || 'Criatura paranormal'}</span>
+          {dados.personalizada && <span>Ficha da mesa</span>}
         </div>
         <div className="creature-sheet__vd">
           <small>Valor de desafio</small>
@@ -121,6 +124,23 @@ function FichaCriatura({ dados, onClose }) {
       )}
 
       <p className="creature-sheet__movement"><strong>Deslocamento:</strong> {dados.deslocamento || '—'}</p>
+
+      {abilities.length > 0 && (
+        <section className="creature-sheet__actions" aria-labelledby="creature-abilities-title">
+          <h3 id="creature-abilities-title">Habilidades</h3>
+          <ul>
+            {abilities.map((ability, index) => {
+              const [name, ...description] = String(ability).split(':');
+              return (
+                <li key={`${name || 'habilidade'}-${index}`}>
+                  <strong>{description.length > 0 ? name : 'Habilidade'}</strong>
+                  <p>{description.length > 0 ? description.join(':').trim() : ability}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="creature-sheet__actions" aria-labelledby="creature-actions-title">
         <h3 id="creature-actions-title">Ações</h3>
