@@ -49,32 +49,35 @@ function criarIdCriaturaPersonalizada(cryptoApi = globalThis.crypto) {
 }
 
 function criarRascunhoCriatura(criatura = {}) {
-  const pvMax = inteiro(criatura.pv_max, 1, 9999) || 20;
+  const dados = criatura && typeof criatura === 'object' ? criatura : {};
+  const pvMax = dados.pv_max === undefined || dados.pv_max === null || dados.pv_max === ''
+    ? 20
+    : inteiro(dados.pv_max, 1, 9999);
   return {
-    id: texto(criatura.id, 100),
-    nome: texto(criatura.nome, 80),
-    elemento: texto(criatura.elemento, 50) || 'Medo',
-    vd: inteiro(criatura.vd, 0, 999),
-    tipo: texto(criatura.tipo, 100) || 'Criatura - Média',
-    presenca: texto(criatura.presenca, 500),
-    foto: normalizarFoto(criatura.foto),
-    sentidos: texto(criatura.sentidos, 300),
-    iniciativa: texto(criatura.iniciativa, 100),
-    defesa: inteiro(criatura.defesa, 0, 999),
-    fortitude: texto(criatura.fortitude, 100),
-    reflexos: texto(criatura.reflexos, 100),
-    vontade: texto(criatura.vontade, 100),
+    id: texto(dados.id, 100),
+    nome: texto(dados.nome, 80),
+    elemento: texto(dados.elemento, 50) || 'Medo',
+    vd: inteiro(dados.vd, 0, 999),
+    tipo: texto(dados.tipo, 100) || 'Criatura - Média',
+    presenca: texto(dados.presenca, 500),
+    foto: normalizarFoto(dados.foto),
+    sentidos: texto(dados.sentidos, 300),
+    iniciativa: texto(dados.iniciativa, 100),
+    defesa: inteiro(dados.defesa, 0, 999),
+    fortitude: texto(dados.fortitude, 100),
+    reflexos: texto(dados.reflexos, 100),
+    vontade: texto(dados.vontade, 100),
     pv_max: pvMax,
-    pv_atual: inteiro(criatura.pv_atual ?? pvMax, 0, pvMax),
-    machucado: inteiro(criatura.machucado ?? Math.floor(pvMax / 2), 0, pvMax),
-    resistencias: texto(criatura.resistencias, 400),
-    vulnerabilidades: texto(criatura.vulnerabilidades, 300),
+    pv_atual: inteiro(dados.pv_atual ?? pvMax, 0, pvMax),
+    machucado: inteiro(dados.machucado ?? Math.floor(pvMax / 2), 0, pvMax),
+    resistencias: texto(dados.resistencias, 400),
+    vulnerabilidades: texto(dados.vulnerabilidades, 300),
     atributos: Object.fromEntries(
-      ATRIBUTOS_CRIATURA.map(chave => [chave, inteiro(criatura.atributos?.[chave], 0, 10)]),
+      ATRIBUTOS_CRIATURA.map(chave => [chave, inteiro(dados.atributos?.[chave], 0, 10)]),
     ),
-    deslocamento: texto(criatura.deslocamento, 150) || '9m | 6q',
-    habilidades: normalizarHabilidades(criatura.habilidades),
-    acoes: normalizarAcoes(criatura.acoes),
+    deslocamento: texto(dados.deslocamento, 150) || '9m | 6q',
+    habilidades: normalizarHabilidades(dados.habilidades),
+    acoes: normalizarAcoes(dados.acoes),
   };
 }
 

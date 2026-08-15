@@ -14,6 +14,14 @@ const criaturasMnemosyne = JSON.parse(readFileSync(
   'utf8',
 ));
 
+test('cria o rascunho padrão quando o formulário fechado recebe criatura nula', () => {
+  const rascunho = criarRascunhoCriatura(null);
+
+  assert.equal(rascunho.pv_max, 20);
+  assert.equal(rascunho.pv_atual, 20);
+  assert.equal(rascunho.elemento, 'Medo');
+});
+
 test('normaliza uma ficha completa sem preservar campos arbitrários', () => {
   const criatura = normalizarCriaturaPersonalizada({
     id: 'criatura_teste_seguro',
