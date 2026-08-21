@@ -828,6 +828,23 @@
     },
     {
       "audience": "players",
+      "bytes": 2198293,
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/agnes-sato-token-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/agnes-sato-token-vtt-v1.png",
+      "sha256": "f7dbd67312f71488ff93cce8e90d996428fb990d5104d77f74eb5dde3b616af0"
+    },
+    {
+      "audience": "players",
       "bytes": 664141,
       "controlledBy": "gm",
       "id": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
@@ -1468,6 +1485,7 @@
       }
     ],
     "tokenAssetIds": [
+      "asset:assets/tokens/agnes-sato-token-vtt-v1.png",
       "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
       "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
       "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
@@ -1482,13 +1500,13 @@
   },
   "schemaVersion": 2,
   "summary": {
-    "assetCount": 60,
+    "assetCount": 61,
     "documentCount": 0,
     "sceneCount": 8,
     "sceneLayerCount": 8,
-    "sourceFingerprint": "5a30028935f04be0a864ecc9867aecca74c855cdcd520a7d45750eac5afb9ff8",
+    "sourceFingerprint": "bfebc91ee3484f1330a54f5d9e5e1f3b2fc9f6f2f8590f27eed3428dcb29d2e6",
     "stateGroupCount": 1,
-    "totalAssetBytes": 130052888,
+    "totalAssetBytes": 132251181,
     "warningCount": 7
   },
   "warnings": [

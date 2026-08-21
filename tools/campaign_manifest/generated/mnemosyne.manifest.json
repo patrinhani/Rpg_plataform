@@ -16,14 +16,14 @@
     "fingerprint": "sha256:960a1b0f9f48901387bbfb5a2288b8e3d6fade970bb7ee9bcbf2393b625e4172"
   },
   "summary": {
-    "assetCount": 111,
+    "assetCount": 112,
     "documentCount": 22,
     "sceneCount": 8,
     "sceneLayerCount": 8,
     "stateGroupCount": 1,
-    "totalAssetBytes": 227801900,
+    "totalAssetBytes": 230000193,
     "warningCount": 7,
-    "sourceFingerprint": "e5fc9b9b859c2ba22587e732d0078f21ce5aef07ce31cd7b1370a2feda513257"
+    "sourceFingerprint": "25d7d44dccd74e2bee8ee49d9d64cea141c02e87f074d5a8895341728b7d588a"
   },
   "assets": [
     {
@@ -1727,6 +1727,23 @@
       }
     },
     {
+      "id": "asset:assets/tokens/agnes-sato-token-vtt-v1.png",
+      "relativePath": "assets/tokens/agnes-sato-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2198293,
+      "sha256": "f7dbd67312f71488ff93cce8e90d996428fb990d5104d77f74eb5dde3b616af0",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
       "relativePath": "assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
       "kind": "prop",
@@ -2584,6 +2601,7 @@
       }
     ],
     "tokenAssetIds": [
+      "asset:assets/tokens/agnes-sato-token-vtt-v1.png",
       "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
       "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
       "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
