@@ -241,8 +241,9 @@ function DirectorSection({
   onToggle,
   children,
 }) {
+  const sectionClassName = `vtt-board__director-section ${open ? 'is-open' : ''} ${id === 'vtt-board-tokens-section' ? 'vtt-board__piece-drawer' : ''}`;
   return (
-    <section className={`vtt-board__director-section ${open ? 'is-open' : ''}`}>
+    <section className={sectionClassName}>
       <button
         type="button"
         className="vtt-board__director-section-toggle"
@@ -342,6 +343,7 @@ function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
           failureTarget: 3,
         };
 
+        const conditions = Array.isArray(sheet?.conditions) ? sheet.conditions : [];
         return (
           <article key={agent.uid} className="vtt-board__agent-monitor-card">
             <header>
@@ -383,6 +385,21 @@ function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
                 );
               })}
             </div>
+
+            <section className="vtt-board__agent-conditions" aria-label={`Condições ativas de ${displayName}`}>
+              <span>Condições ativas</span>
+              <div>
+                {conditions.length > 0 ? (
+                  conditions.map((condition) => (
+                    <span key={condition.id} className="vtt-board__agent-condition-chip">
+                      {condition.label}
+                    </span>
+                  ))
+                ) : (
+                  <small>Sem condições ativas</small>
+                )}
+              </div>
+            </section>
 
             <div className="vtt-board__agent-pursuit">
               {[
@@ -2561,6 +2578,23 @@ export default function VttBoard({
           </aside>
         )}
       </div>
+
+      {isMaster && directorOpen && (
+        <section className="vtt-board__agent-deck" aria-label="Agentes em operação">
+          <header>
+            <div>
+              <span>Leitura de campo</span>
+              <strong>Agentes em operação</strong>
+            </div>
+            <span>{characterSheetMembers.length} ficha{characterSheetMembers.length === 1 ? '' : 's'} vinculada{characterSheetMembers.length === 1 ? '' : 's'}</span>
+          </header>
+          <MasterAgentMonitor
+            agents={canBrowseCharacterSheets ? characterSheetMembers : []}
+            onOpenSheet={handleOpenCharacterSheet}
+            onUpdateSheet={onUpdateCharacterSheet}
+          />
+        </section>
+      )}
 
       {isMaster && guideOpen && scene?.gmGuideMap?.url && (
         <div

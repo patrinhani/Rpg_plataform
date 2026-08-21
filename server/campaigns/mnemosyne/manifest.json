@@ -1,1203 +1,1026 @@
 {
-  "schemaVersion": 2,
-  "generator": {
-    "name": "caos-campaign-pack",
-    "version": "1.2.0"
-  },
-  "campaign": {
-    "id": "mnemosyne",
-    "title": "Projeto Mnemosyne",
-    "sourceRef": "mnemosyne",
-    "sourceMode": "external-read-only"
-  },
-  "summary": {
-    "assetCount": 53,
-    "documentCount": 0,
-    "sceneCount": 4,
-    "sceneLayerCount": 8,
-    "stateGroupCount": 0,
-    "totalAssetBytes": 115040703,
-    "warningCount": 3,
-    "sourceFingerprint": "60a201ba2acdb3ae46f4e4d782a2573078b82445943db5b1166710a50c293735"
-  },
   "assets": [
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 7601178,
-      "sha256": "8c1cc68ae20cf2d65edf5989fe9700b949fce91c2b7ed41df1863046ff682817",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 2546,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 2546,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
+      "sha256": "8c1cc68ae20cf2d65edf5989fe9700b949fce91c2b7ed41df1863046ff682817"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 6979462,
-      "sha256": "fa6602e106159ccf2b5376f23eaa6a2a91130d5dffa62f40b4562f3d29c18b7a",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 2546,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 2546,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
+      "sha256": "fa6602e106159ccf2b5376f23eaa6a2a91130d5dffa62f40b4562f3d29c18b7a"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 5141984,
-      "sha256": "2f197bba36647cb013cb254e0309272126eb62ec8545d603067efe5541afe465",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1400,
-        "height": 1980,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1980,
+        "pngColorType": 6,
+        "width": 1400
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/03-caderno-davi-pagina-handout-v1.png",
+      "sha256": "2f197bba36647cb013cb254e0309272126eb62ec8545d603067efe5541afe465"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 7995007,
-      "sha256": "84d8e9181161bbfa2db5ec8395ca616ab80dfa9e452d77285d893f232a54244c",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 2546,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 2546,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/04-transcricao-helena-handout-v1.png",
+      "sha256": "84d8e9181161bbfa2db5ec8395ca616ab80dfa9e452d77285d893f232a54244c"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 3320733,
-      "sha256": "65934dbf41f5c4d1598ab38fe2806165552a6070573b9eb4a44b02c59054989e",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1600,
+        "hasAlpha": true,
         "height": 1131,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1600
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/05-bilhete-raul-handout-v1.png",
+      "sha256": "65934dbf41f5c4d1598ab38fe2806165552a6070573b9eb4a44b02c59054989e"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 5248812,
-      "sha256": "8931b51e737bd00a12f075323471da685722f286ed0d0ab9c187abe09297dd72",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1400,
-        "height": 1980,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1980,
+        "pngColorType": 6,
+        "width": 1400
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06a-protocolo-palindromo-fragmento-administracao-handout-v1.png",
+      "sha256": "8931b51e737bd00a12f075323471da685722f286ed0d0ab9c187abe09297dd72"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 5261309,
-      "sha256": "eb47664b8294a4240f7c300d16e5b126eccbd736c2cf7f95de759981e8a0d2df",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1400,
-        "height": 1980,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1980,
+        "pngColorType": 6,
+        "width": 1400
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06b-protocolo-palindromo-fragmento-laboratorio-handout-v1.png",
+      "sha256": "eb47664b8294a4240f7c300d16e5b126eccbd736c2cf7f95de759981e8a0d2df"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 8108360,
-      "sha256": "baa4a3fe8642fc46cb4389f71151db91ee08f3825a4fc2afec12168059a7c139",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 2546,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 2546,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/06c-protocolo-palindromo-reconstruido-handout-v1.png",
+      "sha256": "baa4a3fe8642fc46cb4389f71151db91ee08f3825a4fc2afec12168059a7c139"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 5005665,
-      "sha256": "56a4257fbf7a9864f15e92345a6b808da0392b8bc74cbac89191240a3929618d",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 1350,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1350,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07a-log-impossivel-monitoramento-handout-v1.png",
+      "sha256": "56a4257fbf7a9864f15e92345a6b808da0392b8bc74cbac89191240a3929618d"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 3424267,
-      "sha256": "10e342c47d9d39c2016786a6083b50e25a88f7490baf4853dc9f06c8771654e7",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
+        "hasAlpha": true,
         "height": 1350,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/07b-log-impossivel-corrompido-handout-v1.png",
+      "sha256": "10e342c47d9d39c2016786a6083b50e25a88f7490baf4853dc9f06c8771654e7"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 5140541,
-      "sha256": "e6cc797754936fdb45282f76aa999838159775679f6e044130fb38070c842b2b",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 2200,
-        "height": 1556,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1556,
+        "pngColorType": 6,
+        "width": 2200
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08a-planta-incompleta-frente-handout-v1.png",
+      "sha256": "e6cc797754936fdb45282f76aa999838159775679f6e044130fb38070c842b2b"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 4122870,
-      "sha256": "57d548bfddace34e1b76bf7e24299902418c8c8a944ba40652595cb47a046e7e",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 2200,
+        "hasAlpha": true,
         "height": 1556,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 2200
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/08b-planta-incompleta-verso-handout-v1.png",
+      "sha256": "57d548bfddace34e1b76bf7e24299902418c8c8a944ba40652595cb47a046e7e"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 73745,
-      "sha256": "4efd63a67b488b008695525dc271cb5c93746b6fdb1b1f5834dfc4d8e585bf82",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 1200,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1200,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09a-livro-entrada-editavel-handout-v1.png",
+      "sha256": "4efd63a67b488b008695525dc271cb5c93746b6fdb1b1f5834dfc4d8e585bf82"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 79492,
-      "sha256": "db40579273f51a652eb27ca03ef328be2e6b6459893de0f4a424c9331791e1bd",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1000,
-        "height": 1400,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1400,
+        "pngColorType": 6,
+        "width": 1000
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/09b-cracha-davi-handout-v1.png",
+      "sha256": "db40579273f51a652eb27ca03ef328be2e6b6459893de0f4a424c9331791e1bd"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 20419,
-      "sha256": "8516cb39ad37f120f410b0cf550530a9059cbe4183be3f1721acf7ef6e61bc6a",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1600,
-        "height": 1200,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1200,
+        "pngColorType": 6,
+        "width": 1600
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10a-circuito-video-handout-v1.png",
+      "sha256": "8516cb39ad37f120f410b0cf550530a9059cbe4183be3f1721acf7ef6e61bc6a"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 20675,
-      "sha256": "06b4964d678c059d47b971979374ee83931591578659ee27eefa0bdf28235eea",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1600,
-        "height": 1200,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1200,
+        "pngColorType": 6,
+        "width": 1600
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10b-circuito-neural-handout-v1.png",
+      "sha256": "06b4964d678c059d47b971979374ee83931591578659ee27eefa0bdf28235eea"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 24683,
-      "sha256": "4a66160bcaad67b16dac659d222ae6c0c33342c27bd89399a1c45dcaa1d11da2",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1600,
-        "height": 1200,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1200,
+        "pngColorType": 6,
+        "width": 1600
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10c-circuito-organico-handout-v1.png",
+      "sha256": "4a66160bcaad67b16dac659d222ae6c0c33342c27bd89399a1c45dcaa1d11da2"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
-      "kind": "concept",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 54163,
-      "sha256": "b2d117769e598487759ff7c8c0cc8c5d0f4bff2a9508f7a714818254a4197060",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
       "image": {
         "format": "png",
-        "width": 1600,
+        "hasAlpha": true,
         "height": 1200,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1600
+      },
+      "kind": "concept",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png",
+      "sha256": "b2d117769e598487759ff7c8c0cc8c5d0f4bff2a9508f7a714818254a4197060"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 106690,
-      "sha256": "304f749d4cc2bff73885adad7656036a7aaf8627517329928238e8a320015c69",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
+        "hasAlpha": true,
         "height": 2546,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/11-contrato-financiador-handout-v1.png",
+      "sha256": "304f749d4cc2bff73885adad7656036a7aaf8627517329928238e8a320015c69"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 74167,
-      "sha256": "cba2b29127313ba6e2992c8267967787593e4b5a84e896c62bed11e8ed56bfe4",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 1400,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1400,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12a-escala-plantao-palindromo-handout-v1.png",
+      "sha256": "cba2b29127313ba6e2992c8267967787593e4b5a84e896c62bed11e8ed56bfe4"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 77524,
-      "sha256": "46f1662ac02ce04ab10c3a79e10154a1f81b6b280d03288f4ae86ea97e15a47a",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1400,
+        "hasAlpha": true,
         "height": 1980,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1400
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
+      "sha256": "46f1662ac02ce04ab10c3a79e10154a1f81b6b280d03288f4ae86ea97e15a47a"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 91777,
-      "sha256": "412d60e919c1f17f36d6ed6fd5cd29532ff5160343f67dfc33b676e0d1ca9559",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
+        "hasAlpha": true,
         "height": 1300,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
+      "sha256": "412d60e919c1f17f36d6ed6fd5cd29532ff5160343f67dfc33b676e0d1ca9559"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 28040,
-      "sha256": "5d514ab3a465f5797695903c65881b9d78ffb5914c3309c3b35be43c59997365",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1200,
+        "hasAlpha": true,
         "height": 720,
-        "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "pngColorType": 6,
+        "width": 1200
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
+      "sha256": "5d514ab3a465f5797695903c65881b9d78ffb5914c3309c3b35be43c59997365"
     },
     {
-      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
-      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
-      "kind": "handout",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 69300,
-      "sha256": "d7d28e2894f1c4a0c89e981611fd72c24ee987b7cc412457d1b0e647c5542f53",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
       "image": {
         "format": "png",
-        "width": 1800,
-        "height": 1400,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1400,
+        "pngColorType": 6,
+        "width": 1800
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
+      "sha256": "d7d28e2894f1c4a0c89e981611fd72c24ee987b7cc412457d1b0e647c5542f53"
     },
     {
-      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
-      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
-      "kind": "map",
       "audience": "gm",
-      "controlledBy": "gm",
       "bytes": 1529060,
-      "sha256": "cb3d9f5384799fcf42e34908aadbe369772610dfcf62222a1603e304aaa08955",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
-      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
-      "kind": "map",
-      "audience": "gm",
       "controlledBy": "gm",
-      "bytes": 1317672,
-      "sha256": "b4b94e7cbbf473819079f378549ab9d7ef63510dd3ba47abfd867d95dbb4a13a",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
-      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
-      "kind": "map",
-      "audience": "gm",
-      "controlledBy": "gm",
-      "bytes": 1894680,
-      "sha256": "d7c480918036b5a037366abd9df17411fc05f8da4c9e37643ee33ccb983382e9",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
-      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
-      "kind": "overlay",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 2379495,
-      "sha256": "a9f9c73e47c3048fd3878e54895ff8b1669e3a5a8cf9f62e9965abc291e68ae1",
-      "mediaType": "image/png",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
-      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
-      "kind": "overlay",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 2703267,
-      "sha256": "c882daf8dfc4998e7481d483bd96fdcbb959bb94511026f69e95db81e501b805",
-      "mediaType": "image/png",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
-      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
-      "kind": "overlay",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 65186,
-      "sha256": "352a77a138fb833ee612b994f4dfdbe2e08725a8c8c6072ab152dafab45207d2",
-      "mediaType": "image/png",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
-      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
-      "kind": "map",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 2238022,
-      "sha256": "cce7be74b8f1e55302a5da8125412ed5129f6b36669f0bf3ed7307020273a7ca",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
-      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
-      "kind": "map",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 1810540,
-      "sha256": "797438f31195037fb3e6b43b3d30af13e4c8128b34451564f25dc20e173bee8a",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
-      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
-      "kind": "map",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 2632436,
-      "sha256": "11c148b56df03c7eee60eed97a3be4f85b9a38ce6c3dbcfb2f28e0c7c9ca3569",
-      "mediaType": "image/webp",
-      "image": {
-        "width": 3136,
-        "height": 3136
-      }
-    },
-    {
-      "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
-      "relativePath": "assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
-      "kind": "map",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 2148968,
-      "sha256": "2d0f990aad37abf44ccef6a4888d8200b1830d65e2b5b7ec696709f709235a1e",
-      "mediaType": "image/webp",
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
       "image": {
         "format": "webp",
-        "width": 3136,
+        "hasAlpha": false,
         "height": 3136,
-        "hasAlpha": false
-      }
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+      "sha256": "cb3d9f5384799fcf42e34908aadbe369772610dfcf62222a1603e304aaa08955"
     },
     {
-      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-      "kind": "prop",
-      "audience": "players",
+      "audience": "gm",
+      "bytes": 1317672,
       "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+      "sha256": "b4b94e7cbbf473819079f378549ab9d7ef63510dd3ba47abfd867d95dbb4a13a"
+    },
+    {
+      "audience": "gm",
+      "bytes": 1894680,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+      "sha256": "d7c480918036b5a037366abd9df17411fc05f8da4c9e37643ee33ccb983382e9"
+    },
+    {
+      "audience": "players",
+      "bytes": 2379495,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 3136,
+        "pngColorType": 6,
+        "width": 3136
+      },
+      "kind": "overlay",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
+      "sha256": "a9f9c73e47c3048fd3878e54895ff8b1669e3a5a8cf9f62e9965abc291e68ae1"
+    },
+    {
+      "audience": "players",
+      "bytes": 412834,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 3136,
+        "pngColorType": 6,
+        "width": 3136
+      },
+      "kind": "overlay",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+      "sha256": "77172c2ae4ae7f80382c5b6a4037024d745e827c5c3335970a0d4119bdfaf564"
+    },
+    {
+      "audience": "players",
+      "bytes": 2703267,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 3136,
+        "pngColorType": 6,
+        "width": 3136
+      },
+      "kind": "overlay",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
+      "sha256": "c882daf8dfc4998e7481d483bd96fdcbb959bb94511026f69e95db81e501b805"
+    },
+    {
+      "audience": "players",
+      "bytes": 65186,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 3136,
+        "pngColorType": 6,
+        "width": 3136
+      },
+      "kind": "overlay",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
+      "sha256": "352a77a138fb833ee612b994f4dfdbe2e08725a8c8c6072ab152dafab45207d2"
+    },
+    {
+      "audience": "players",
+      "bytes": 2895026,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-fundacao-turbina-battlemap-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": false,
+        "height": 1254,
+        "pngColorType": 2,
+        "width": 1254
+      },
+      "kind": "map",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-fundacao-turbina-battlemap-vtt-v1.png",
+      "sha256": "40dc25c7a933b2a1755bfcfc371a5fe5c04c49e7278f54a911d6610a025852b0"
+    },
+    {
+      "audience": "players",
+      "bytes": 2238022,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+      "sha256": "cce7be74b8f1e55302a5da8125412ed5129f6b36669f0bf3ed7307020273a7ca"
+    },
+    {
+      "audience": "players",
+      "bytes": 1810540,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+      "sha256": "797438f31195037fb3e6b43b3d30af13e4c8128b34451564f25dc20e173bee8a"
+    },
+    {
+      "audience": "players",
+      "bytes": 2632436,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+      "sha256": "11c148b56df03c7eee60eed97a3be4f85b9a38ce6c3dbcfb2f28e0c7c9ca3569"
+    },
+    {
+      "audience": "players",
+      "bytes": 3131532,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-vale-santa-dalia-regional-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": false,
+        "height": 1254,
+        "pngColorType": 2,
+        "width": 1254
+      },
+      "kind": "map",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-vale-santa-dalia-regional-vtt-v1.png",
+      "sha256": "92da26161d63090600f4583952d3f21c6f795c260171925df5e889b896988d53"
+    },
+    {
+      "audience": "players",
+      "bytes": 3062796,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/santa-dalia-capela-battlemap-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": false,
+        "height": 1254,
+        "pngColorType": 2,
+        "width": 1254
+      },
+      "kind": "map",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/santa-dalia-capela-battlemap-vtt-v1.png",
+      "sha256": "57cee2bc007f09794f0fb5a244df7b2478c98b775e764287386acdbc297b5651"
+    },
+    {
+      "audience": "players",
+      "bytes": 2796839,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/orfeu-2073/laboratorio-mnemosyne-battlemap-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": false,
+        "height": 1254,
+        "pngColorType": 2,
+        "width": 1254
+      },
+      "kind": "map",
+      "mediaType": "image/png",
+      "relativePath": "assets/mapas/orfeu-2073/laboratorio-mnemosyne-battlemap-vtt-v1.png",
+      "sha256": "2b8c70ae28e4f6b1e7739b09e10ac612731a084ac186c8c36400bc634a02a245"
+    },
+    {
+      "audience": "players",
+      "bytes": 2148968,
+      "controlledBy": "gm",
+      "id": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+      "image": {
+        "format": "webp",
+        "hasAlpha": false,
+        "height": 3136,
+        "width": 3136
+      },
+      "kind": "map",
+      "mediaType": "image/webp",
+      "relativePath": "assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+      "sha256": "2d0f990aad37abf44ccef6a4888d8200b1830d65e2b5b7ec696709f709235a1e"
+    },
+    {
+      "audience": "players",
       "bytes": 1268308,
-      "sha256": "d3bbc119ad99c73c9847eae9b2933b33d8a18586f3908c7e9ffffcf13b9f3848",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "sha256": "d3bbc119ad99c73c9847eae9b2933b33d8a18586f3908c7e9ffffcf13b9f3848"
     },
     {
-      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
-      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 6175,
-      "sha256": "d6ed27a2b5980b3c26d4bd1e591e7c806228d6a42ad8867f86cf39051d622bdd",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
+      "sha256": "d6ed27a2b5980b3c26d4bd1e591e7c806228d6a42ad8867f86cf39051d622bdd"
     },
     {
-      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
+      "bytes": 1492476,
       "controlledBy": "gm",
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "sha256": "e0d82fc39bae8c274df1f55c9711c9a968333e012b6a519b8bddc1098721a235"
+    },
+    {
+      "audience": "players",
       "bytes": 315746,
-      "sha256": "e994167b62c86ff8cd1b183a7e490319d249307b3dc52133e3495b613a88434c",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
+      "sha256": "e994167b62c86ff8cd1b183a7e490319d249307b3dc52133e3495b613a88434c"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 1434507,
-      "sha256": "20466180976a7b7dd415b3d16692b450697b03ec78f5b0dde727f6943a521ebb",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
+      "sha256": "20466180976a7b7dd415b3d16692b450697b03ec78f5b0dde727f6943a521ebb"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 1274813,
-      "sha256": "70990224e2be504341ea41b52204ac6c8df2d34e6b438f21afa2dbd0ef1b893e",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
+      "sha256": "70990224e2be504341ea41b52204ac6c8df2d34e6b438f21afa2dbd0ef1b893e"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 1325425,
-      "sha256": "ebaefbbbda60d075b12c59ec7045eedc0bb2278a21ad609a63421372d8915392",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
+      "sha256": "ebaefbbbda60d075b12c59ec7045eedc0bb2278a21ad609a63421372d8915392"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 1226285,
-      "sha256": "2ae693d73e21ee4aa71e028f19595d71c7bb93190420db686a67415b9083d6b9",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
+      "sha256": "2ae693d73e21ee4aa71e028f19595d71c7bb93190420db686a67415b9083d6b9"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 1030795,
-      "sha256": "150b94effa19f4a9f8c7824387d81f4199a933a4adf57702d65af99251243f0f",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
+      "sha256": "150b94effa19f4a9f8c7824387d81f4199a933a4adf57702d65af99251243f0f"
     },
     {
-      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
-      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 969555,
-      "sha256": "6e1d5aae254b5d430422535c4451d1c823d15f8e387f821921699602426520b2",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
       "image": {
-        "width": 1254,
-        "height": 1254
-      }
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
+      "sha256": "6e1d5aae254b5d430422535c4451d1c823d15f8e387f821921699602426520b2"
     },
     {
+      "audience": "players",
+      "bytes": 664141,
+      "controlledBy": "gm",
       "id": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
       "relativePath": "assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 664141,
-      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
-      "mediaType": "image/png",
-      "image": {
-        "width": 1254,
-        "height": 1254
-      }
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373"
     },
     {
+      "audience": "players",
+      "bytes": 664141,
+      "controlledBy": "gm",
       "id": "asset:assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
       "relativePath": "assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 664141,
-      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
-      "mediaType": "image/png",
-      "image": {
-        "width": 1254,
-        "height": 1254
-      }
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373"
     },
     {
+      "audience": "players",
+      "bytes": 664141,
+      "controlledBy": "gm",
       "id": "asset:assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
       "relativePath": "assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 664141,
-      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
-      "mediaType": "image/png",
-      "image": {
-        "width": 1254,
-        "height": 1254
-      }
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373"
     },
     {
+      "audience": "players",
+      "bytes": 664141,
+      "controlledBy": "gm",
       "id": "asset:assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
       "relativePath": "assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
-      "kind": "prop",
-      "audience": "players",
-      "controlledBy": "gm",
-      "bytes": 664141,
-      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373",
-      "mediaType": "image/png",
-      "image": {
-        "width": 1254,
-        "height": 1254
-      }
+      "sha256": "f471af83858f026edcc9e7dbf0050d49bef7a8c3c1a381016bd433ecf7350373"
     },
     {
-      "id": "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
-      "relativePath": "assets/tokens/eco-indexador-token-vtt-v1.png",
-      "kind": "token",
       "audience": "players",
+      "bytes": 1220682,
       "controlledBy": "gm",
+      "id": "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": true,
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "sha256": "b6e278f27b275c7b1116513ca6a7487cc9f7c16a8c321a6a3401530e2c9d7017"
+    },
+    {
+      "audience": "players",
       "bytes": 2806749,
-      "sha256": "ec539dc309e659753735aac1735dbbd4d274ea4db751d41e4fa9fca69c5b7437",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/eco-indexador-token-vtt-v1.png",
+      "sha256": "ec539dc309e659753735aac1735dbbd4d274ea4db751d41e4fa9fca69c5b7437"
     },
     {
-      "id": "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
-      "relativePath": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
-      "kind": "prop",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 2899253,
-      "sha256": "2531e74ff2b60cba99a22ab9e95737bc55ed37bcdef375ab529ae6d749021c22",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "prop",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
+      "sha256": "2531e74ff2b60cba99a22ab9e95737bc55ed37bcdef375ab529ae6d749021c22"
     },
     {
-      "id": "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
-      "relativePath": "assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
-      "kind": "token",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 2711684,
-      "sha256": "12fdda8fabf3ad163f3e03f99b727af9257c49c2f7f542a31c2ef07ae0fbd82b",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "sha256": "12fdda8fabf3ad163f3e03f99b727af9257c49c2f7f542a31c2ef07ae0fbd82b"
     },
     {
-      "id": "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
-      "relativePath": "assets/tokens/otavio-leme-token-vtt-v1.png",
-      "kind": "token",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 2756430,
-      "sha256": "62ea214ee2396b49fb851f49af3d8b1cbe72d527c21f18241a7af561b3ffd4b9",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/otavio-leme-token-vtt-v1.png",
+      "sha256": "62ea214ee2396b49fb851f49af3d8b1cbe72d527c21f18241a7af561b3ffd4b9"
     },
     {
-      "id": "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
-      "relativePath": "assets/tokens/raul-moreira-token-vtt-v1.png",
-      "kind": "token",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 2936207,
-      "sha256": "dc16290cc313e619560b01d58f162131fd27750431abb23e381996e4689a9960",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/raul-moreira-token-vtt-v1.png",
+      "sha256": "dc16290cc313e619560b01d58f162131fd27750431abb23e381996e4689a9960"
     },
     {
-      "id": "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png",
-      "relativePath": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
-      "kind": "token",
       "audience": "players",
-      "controlledBy": "gm",
       "bytes": 2632018,
-      "sha256": "1a1b2c26870248c3e87e1b0e51df727e3e0971376a8725a888f84955aa5bdac1",
-      "mediaType": "image/png",
+      "controlledBy": "gm",
+      "id": "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png",
       "image": {
         "format": "png",
-        "width": 1254,
-        "height": 1254,
         "hasAlpha": true,
-        "pngColorType": 6
-      }
+        "height": 1254,
+        "pngColorType": 6,
+        "width": 1254
+      },
+      "kind": "token",
+      "mediaType": "image/png",
+      "relativePath": "assets/tokens/repetente-palindromo-token-vtt-v1.png",
+      "sha256": "1a1b2c26870248c3e87e1b0e51df727e3e0971376a8725a888f84955aa5bdac1"
     }
   ],
-  "documents": [],
+  "campaign": {
+    "id": "mnemosyne",
+    "sourceMode": "external-read-only",
+    "sourceRef": "mnemosyne",
+    "title": "Projeto Mnemosyne"
+  },
   "collections": {
-    "scenes": [
-      {
-        "id": "scene:helix-9-nivel-0",
-        "key": "helix-9-nivel-0",
-        "playerMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
-            "version": 3
-          }
-        ],
-        "gmGuideMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
-            "version": 3
-          }
-        ],
-        "overlays": [],
-        "layers": [
-          {
-            "id": "scene-layer:emissor-sincronia",
-            "key": "emissor-sincronia",
-            "label": "Emissor de Sincronia",
-            "defaultState": "ativo",
-            "states": {
-              "ativo": {
-                "label": "Ativo",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.417,
-                    "y": 0.18,
-                    "width": 0.115,
-                    "height": 0.115,
-                    "rotation": 0.0
-                  }
-                ]
-              },
-              "desativado": {
-                "label": "Desativado",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.417,
-                    "y": 0.18,
-                    "width": 0.115,
-                    "height": 0.115,
-                    "rotation": 0.0
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
-        "gridHint": null
-      },
-      {
-        "id": "scene:helix-9-subsolo-1",
-        "key": "helix-9-subsolo-1",
-        "playerMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
-            "version": 3
-          }
-        ],
-        "gmGuideMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
-            "version": 3
-          }
-        ],
-        "overlays": [],
-        "layers": [
-          {
-            "id": "scene-layer:malha-mnemonica",
-            "key": "malha-mnemonica",
-            "label": "Malha Mnemônica",
-            "defaultState": "ativo",
-            "states": {
-              "ativo": {
-                "label": "Ativa",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.466,
-                    "y": 0.327,
-                    "width": 0.14,
-                    "height": 0.14,
-                    "rotation": 0.0
-                  }
-                ]
-              },
-              "desativado": {
-                "label": "Desativada",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.466,
-                    "y": 0.327,
-                    "width": 0.14,
-                    "height": 0.14,
-                    "rotation": 0.0
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
-        "gridHint": null
-      },
-      {
-        "id": "scene:helix-9-subsolo-2-camara",
-        "key": "helix-9-subsolo-2-camara",
-        "playerMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
-            "version": 3
-          }
-        ],
-        "gmGuideMaps": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
-            "version": 3
-          }
-        ],
-        "overlays": [
-          {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
-            "name": "eletrificacao",
-            "version": 2
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
-            "name": "inundacao",
-            "version": 3
-          },
-          {
-            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
-            "name": "telas-quebradas",
-            "version": 4
-          }
-        ],
-        "layers": [
-          {
-            "id": "scene-layer:base-rele-hematico",
-            "key": "base-rele-hematico",
-            "label": "Relé Hemático",
-            "defaultState": "ativo",
-            "states": {
-              "ativo": {
-                "label": "Ativo",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.25,
-                    "y": 0.512,
-                    "width": 0.135,
-                    "height": 0.135,
-                    "rotation": 0.0
-                  }
-                ]
-              },
-              "desativado": {
-                "label": "Desativado",
-                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.25,
-                    "y": 0.512,
-                    "width": 0.135,
-                    "height": 0.135,
-                    "rotation": 0.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:corpo-conectado-nordeste",
-            "key": "corpo-conectado-nordeste",
-            "label": "Corpo Conectado — Nordeste",
-            "defaultState": "conectado",
-            "states": {
-              "conectado": {
-                "label": "Conectado",
-                "assetId": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.619,
-                    "y": 0.344,
-                    "width": 0.074,
-                    "height": 0.074,
-                    "rotation": 34.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:corpo-conectado-noroeste",
-            "key": "corpo-conectado-noroeste",
-            "label": "Corpo Conectado — Noroeste",
-            "defaultState": "conectado",
-            "states": {
-              "conectado": {
-                "label": "Conectado",
-                "assetId": "asset:assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.397,
-                    "y": 0.344,
-                    "width": 0.074,
-                    "height": 0.074,
-                    "rotation": -34.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:corpo-conectado-sudeste",
-            "key": "corpo-conectado-sudeste",
-            "label": "Corpo Conectado — Sudeste",
-            "defaultState": "conectado",
-            "states": {
-              "conectado": {
-                "label": "Conectado",
-                "assetId": "asset:assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.62,
-                    "y": 0.626,
-                    "width": 0.074,
-                    "height": 0.074,
-                    "rotation": 143.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:corpo-conectado-sudoeste",
-            "key": "corpo-conectado-sudoeste",
-            "label": "Corpo Conectado — Sudoeste",
-            "defaultState": "conectado",
-            "states": {
-              "conectado": {
-                "label": "Conectado",
-                "assetId": "asset:assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.397,
-                    "y": 0.626,
-                    "width": 0.074,
-                    "height": 0.074,
-                    "rotation": -142.0
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "id": "scene-layer:fragmento-mnemosyne",
-            "key": "fragmento-mnemosyne",
-            "label": "Fragmento Mnemosyne",
-            "defaultState": "ritual",
-            "states": {
-              "removido": {
-                "label": "Removido",
-                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
-                "placements": [
-                  {
-                    "x": 0.507,
-                    "y": 0.49,
-                    "width": 0.1,
-                    "height": 0.1,
-                    "rotation": 0.0
-                  }
-                ]
-              },
-              "ritual": {
-                "label": "Ritual",
-                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
-                "placements": [
-                  {
-                    "x": 0.507,
-                    "y": 0.49,
-                    "width": 0.1,
-                    "height": 0.1,
-                    "rotation": 0.0
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
-        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
-        "gridHint": null
-      },
-      {
-        "id": "scene:salao-vazio",
-        "key": "salao-vazio",
-        "playerMaps": [
-          {
-            "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
-            "version": 3
-          }
-        ],
-        "gmGuideMaps": [],
-        "overlays": [],
-        "layers": [],
-        "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
-        "activeGmGuideMap": null,
-        "gridHint": {
-          "type": "square",
-          "columns": 28,
-          "rows": 28,
-          "source": "campaign-documentation"
-        }
-      }
-    ],
-    "stateGroups": [],
-    "tokenAssetIds": [
-      "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
-      "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
-      "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
-      "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
-      "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
-    ],
-    "propAssetIds": [
-      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
-      "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"
-    ],
     "handoutAssetIds": [
       "asset:assets/handouts/one-shot-01-memoria-corrompida/01-ordem-missao-vertice-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/02-relatorio-hm-09-handout-v1.png",
@@ -1225,23 +1048,484 @@
     ],
     "masterReferenceAssetIds": [
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png"
+    ],
+    "propAssetIds": [
+      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
+      "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+      "asset:assets/tokens/corpo-conectado-token-vtt-v1.png",
+      "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png"
+    ],
+    "scenes": [
+      {
+        "activeGmGuideMap": null,
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-fundacao-turbina-battlemap-vtt-v1.png",
+        "gmGuideMaps": [],
+        "gridHint": null,
+        "id": "scene:helix-9-fundacao-turbina",
+        "key": "helix-9-fundacao-turbina",
+        "layers": [],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-fundacao-turbina-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
+            "version": 3
+          }
+        ],
+        "gridHint": null,
+        "id": "scene:helix-9-nivel-0",
+        "key": "helix-9-nivel-0",
+        "layers": [
+          {
+            "defaultState": "ativo",
+            "id": "scene-layer:emissor-sincronia",
+            "key": "emissor-sincronia",
+            "label": "Emissor de Sincronia",
+            "states": {
+              "ativo": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-ativo-objeto-vtt-v2.png",
+                "label": "Ativo",
+                "placements": [
+                  {
+                    "height": 0.115,
+                    "rotation": 0.0,
+                    "width": 0.115,
+                    "x": 0.417,
+                    "y": 0.18
+                  }
+                ]
+              },
+              "desativado": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/emissor-sincronia-desativado-objeto-vtt-v2.png",
+                "label": "Desativado",
+                "placements": [
+                  {
+                    "height": 0.115,
+                    "rotation": 0.0,
+                    "width": 0.115,
+                    "x": 0.417,
+                    "y": 0.18
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+            "version": 3
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
+            "version": 3
+          }
+        ],
+        "gridHint": null,
+        "id": "scene:helix-9-subsolo-1",
+        "key": "helix-9-subsolo-1",
+        "layers": [
+          {
+            "defaultState": "ativo",
+            "id": "scene-layer:malha-mnemonica",
+            "key": "malha-mnemonica",
+            "label": "Malha Mnemônica",
+            "states": {
+              "ativo": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-ativa-objeto-vtt-v2.png",
+                "label": "Ativa",
+                "placements": [
+                  {
+                    "height": 0.14,
+                    "rotation": 0.0,
+                    "width": 0.14,
+                    "x": 0.466,
+                    "y": 0.327
+                  }
+                ]
+              },
+              "desativado": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/malha-mnemonica-desativada-objeto-vtt-v2.png",
+                "label": "Desativada",
+                "placements": [
+                  {
+                    "height": 0.14,
+                    "rotation": 0.0,
+                    "width": 0.14,
+                    "x": 0.466,
+                    "y": 0.327
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+            "version": 3
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
+            "version": 3
+          }
+        ],
+        "gridHint": null,
+        "id": "scene:helix-9-subsolo-2-camara",
+        "key": "helix-9-subsolo-2-camara",
+        "layers": [
+          {
+            "defaultState": "ativo",
+            "id": "scene-layer:base-rele-hematico",
+            "key": "base-rele-hematico",
+            "label": "Relé Hemático",
+            "states": {
+              "ativo": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-ativo-objeto-vtt-v2.png",
+                "label": "Ativo",
+                "placements": [
+                  {
+                    "height": 0.135,
+                    "rotation": 0.0,
+                    "width": 0.135,
+                    "x": 0.25,
+                    "y": 0.512
+                  }
+                ]
+              },
+              "desativado": {
+                "assetId": "asset:assets/objetos/helix-9/ancoras/rele-hematico-desativado-objeto-vtt-v2.png",
+                "label": "Desativado",
+                "placements": [
+                  {
+                    "height": 0.135,
+                    "rotation": 0.0,
+                    "width": 0.135,
+                    "x": 0.25,
+                    "y": 0.512
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "defaultState": "conectado",
+            "id": "scene-layer:corpo-conectado-nordeste",
+            "key": "corpo-conectado-nordeste",
+            "label": "Corpo Conectado — Nordeste",
+            "states": {
+              "conectado": {
+                "assetId": "asset:assets/tokens/corpo-conectado-nordeste-token-vtt-v2.png",
+                "label": "Conectado",
+                "placements": [
+                  {
+                    "height": 0.074,
+                    "rotation": 34.0,
+                    "width": 0.074,
+                    "x": 0.619,
+                    "y": 0.344
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "defaultState": "conectado",
+            "id": "scene-layer:corpo-conectado-noroeste",
+            "key": "corpo-conectado-noroeste",
+            "label": "Corpo Conectado — Noroeste",
+            "states": {
+              "conectado": {
+                "assetId": "asset:assets/tokens/corpo-conectado-noroeste-token-vtt-v2.png",
+                "label": "Conectado",
+                "placements": [
+                  {
+                    "height": 0.074,
+                    "rotation": -34.0,
+                    "width": 0.074,
+                    "x": 0.397,
+                    "y": 0.344
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "defaultState": "conectado",
+            "id": "scene-layer:corpo-conectado-sudeste",
+            "key": "corpo-conectado-sudeste",
+            "label": "Corpo Conectado — Sudeste",
+            "states": {
+              "conectado": {
+                "assetId": "asset:assets/tokens/corpo-conectado-sudeste-token-vtt-v2.png",
+                "label": "Conectado",
+                "placements": [
+                  {
+                    "height": 0.074,
+                    "rotation": 143.0,
+                    "width": 0.074,
+                    "x": 0.62,
+                    "y": 0.626
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "defaultState": "conectado",
+            "id": "scene-layer:corpo-conectado-sudoeste",
+            "key": "corpo-conectado-sudoeste",
+            "label": "Corpo Conectado — Sudoeste",
+            "states": {
+              "conectado": {
+                "assetId": "asset:assets/tokens/corpo-conectado-sudoeste-token-vtt-v2.png",
+                "label": "Conectado",
+                "placements": [
+                  {
+                    "height": 0.074,
+                    "rotation": -142.0,
+                    "width": 0.074,
+                    "x": 0.397,
+                    "y": 0.626
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "defaultState": "ritual",
+            "id": "scene-layer:fragmento-mnemosyne",
+            "key": "fragmento-mnemosyne",
+            "label": "Fragmento Mnemosyne",
+            "states": {
+              "removido": {
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-removido-objeto-vtt-v3.png",
+                "label": "Removido",
+                "placements": [
+                  {
+                    "height": 0.1,
+                    "rotation": 0.0,
+                    "width": 0.1,
+                    "x": 0.507,
+                    "y": 0.49
+                  }
+                ]
+              },
+              "ritual": {
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v2.png",
+                "label": "Ritual",
+                "placements": [
+                  {
+                    "height": 0.1,
+                    "rotation": 0.0,
+                    "width": 0.1,
+                    "x": 0.507,
+                    "y": 0.49
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "overlays": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-eletrificacao-overlay-vtt-v2.png",
+            "name": "eletrificacao",
+            "version": 2
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-fragmento-removido-overlay-vtt-v2.png",
+            "name": "fragmento-removido",
+            "version": 2
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-inundacao-overlay-vtt-v3.png",
+            "name": "inundacao",
+            "version": 3
+          },
+          {
+            "assetId": "asset:assets/mapas/helix-9/overlays/helix-9-subsolo-2-camara-telas-quebradas-overlay-vtt-v4.png",
+            "name": "telas-quebradas",
+            "version": 4
+          }
+        ],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+            "version": 3
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": null,
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-vale-santa-dalia-regional-vtt-v1.png",
+        "gmGuideMaps": [],
+        "gridHint": null,
+        "id": "scene:helix-9-vale-santa-dalia",
+        "key": "helix-9-vale-santa-dalia",
+        "layers": [],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-vale-santa-dalia-regional-vtt-v1.png",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": null,
+        "activePlayerMap": "asset:assets/mapas/orfeu-2073/laboratorio-mnemosyne-battlemap-vtt-v1.png",
+        "gmGuideMaps": [],
+        "gridHint": null,
+        "id": "scene:laboratorio-mnemosyne",
+        "key": "laboratorio-mnemosyne",
+        "layers": [],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/orfeu-2073/laboratorio-mnemosyne-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": null,
+        "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+        "gmGuideMaps": [],
+        "gridHint": {
+          "columns": 28,
+          "rows": 28,
+          "source": "campaign-documentation",
+          "type": "square"
+        },
+        "id": "scene:salao-vazio",
+        "key": "salao-vazio",
+        "layers": [],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+            "version": 3
+          }
+        ]
+      },
+      {
+        "activeGmGuideMap": null,
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/santa-dalia-capela-battlemap-vtt-v1.png",
+        "gmGuideMaps": [],
+        "gridHint": null,
+        "id": "scene:santa-dalia-capela",
+        "key": "santa-dalia-capela",
+        "layers": [],
+        "overlays": [],
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/santa-dalia-capela-battlemap-vtt-v1.png",
+            "version": 1
+          }
+        ]
+      }
+    ],
+    "stateGroups": [
+      {
+        "id": "state-group:fragmento-mnemosyne",
+        "key": "fragmento-mnemosyne",
+        "states": {
+          "ritual": {
+            "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+            "variants": [
+              {
+                "assetId": "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-ritual-objeto-vtt-v1.png",
+                "version": 1
+              }
+            ],
+            "version": 1
+          }
+        }
+      }
+    ],
+    "tokenAssetIds": [
+      "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
+      "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
+      "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
+      "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
+      "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
     ]
+  },
+  "documents": [],
+  "generator": {
+    "name": "caos-campaign-pack",
+    "version": "1.2.0"
+  },
+  "schemaVersion": 2,
+  "summary": {
+    "assetCount": 60,
+    "documentCount": 0,
+    "sceneCount": 8,
+    "sceneLayerCount": 8,
+    "sourceFingerprint": "5a30028935f04be0a864ecc9867aecca74c855cdcd520a7d45750eac5afb9ff8",
+    "stateGroupCount": 1,
+    "totalAssetBytes": 130052888,
+    "warningCount": 7
   },
   "warnings": [
     {
       "code": "scene-grid-unknown",
-      "path": "helix-9-nivel-0",
-      "message": "A campanha nao informa escala/origem de grade para esta cena."
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "helix-9-fundacao-turbina"
     },
     {
       "code": "scene-grid-unknown",
-      "path": "helix-9-subsolo-1",
-      "message": "A campanha nao informa escala/origem de grade para esta cena."
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "helix-9-nivel-0"
     },
     {
       "code": "scene-grid-unknown",
-      "path": "helix-9-subsolo-2-camara",
-      "message": "A campanha nao informa escala/origem de grade para esta cena."
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "helix-9-subsolo-1"
+    },
+    {
+      "code": "scene-grid-unknown",
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "helix-9-subsolo-2-camara"
+    },
+    {
+      "code": "scene-grid-unknown",
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "helix-9-vale-santa-dalia"
+    },
+    {
+      "code": "scene-grid-unknown",
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "laboratorio-mnemosyne"
+    },
+    {
+      "code": "scene-grid-unknown",
+      "message": "A campanha nao informa escala/origem de grade para esta cena.",
+      "path": "santa-dalia-capela"
     }
   ]
 }

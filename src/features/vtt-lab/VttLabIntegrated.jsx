@@ -27,6 +27,7 @@ const DEV_VTT_CHARACTER_SHEETS = normalizeVttCharacterSheets([
       info: { nome: 'Rafael Nunes', classe: 'Combatente', nex: '20%' },
       recursos: { pv_atual: 31, pv_max: 38, pe_atual: 8, pe_max: 12, san_atual: 17, san_max: 24 },
       perseguicao: { sucessos: 2, falhas: 1, metaSucessos: 5, metaFalhas: 3 },
+      condicoesEfetivas: ['machucado'],
     },
   },
   {
@@ -35,6 +36,7 @@ const DEV_VTT_CHARACTER_SHEETS = normalizeVttCharacterSheets([
       info: { nome: 'Helena Vargas', classe: 'Especialista', nex: '20%' },
       recursos: { pv_atual: 21, pv_max: 26, pe_atual: 13, pe_max: 16, san_atual: 26, san_max: 32 },
       perseguicao: { sucessos: 1, falhas: 0, metaSucessos: 5, metaFalhas: 3 },
+      condicoesEfetivas: ['perturbado'],
     },
   },
 ]);

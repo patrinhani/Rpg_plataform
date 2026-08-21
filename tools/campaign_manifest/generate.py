@@ -870,7 +870,7 @@ def _scene_key_and_role(
 ) -> tuple[str | None, str | None, str | None, int | None]:
     stem = PurePosixPath(asset["relativePath"]).stem.casefold()
 
-    match = re.match(r"^(?P<scene>.+)-battlemap-vtt-v(?P<version>\d+)$", stem)
+    match = re.match(r"^(?P<scene>.+)-(?:battlemap|regional)-vtt-v(?P<version>\d+)$", stem)
     if match:
         return match.group("scene"), "playerMaps", None, int(match.group("version"))
 

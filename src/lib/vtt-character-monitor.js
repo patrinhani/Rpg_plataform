@@ -15,6 +15,28 @@ function normalizeResource(resources, key) {
   return { current, maximum };
 }
 
+function humanizeCondition(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\p{L}/gu, (letter) => letter.toLocaleUpperCase('pt-BR'));
+}
+
+function normalizeConditions(raw = {}) {
+  const candidates = [
+    raw?.condicoesEfetivas,
+    raw?.condicoesAtivas,
+    raw?.condicoesAutomaticas,
+  ].flatMap((source) => (Array.isArray(source) ? source : []));
+  const seen = new Set();
+
+  return candidates
+    .map((condition) => String(condition || '').trim())
+    .filter((condition) => condition && !seen.has(condition) && seen.add(condition))
+    .slice(0, 12)
+    .map((condition) => ({ id: condition, label: humanizeCondition(condition) }));
+}
+
 export function normalizeVttCharacterSheet(uid, raw = {}) {
   const normalizedUid = String(uid || '').trim();
   if (!normalizedUid) return null;
@@ -40,6 +62,7 @@ export function normalizeVttCharacterSheet(uid, raw = {}) {
       successTarget,
       failureTarget,
     },
+    conditions: normalizeConditions(raw),
   };
 }
 

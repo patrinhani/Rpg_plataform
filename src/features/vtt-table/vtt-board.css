@@ -2252,3 +2252,327 @@ body.modo-economia .vtt-board *::after {
 body.modo-economia .vtt-board__overlay-motion {
   display: none;
 }
+
+/* Mestre: peças ficam em uma gaveta de campo independente; agentes ganham leitura ampla. */
+.vtt-board__piece-drawer:not(.is-open) {
+  display: none;
+}
+
+.vtt-board__piece-drawer.is-open {
+  background: linear-gradient(145deg, rgba(5, 18, 29, 0.98), rgba(3, 10, 17, 0.98));
+  border: 1px solid rgba(46, 177, 255, 0.46);
+  border-radius: 14px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(87, 211, 255, 0.09) inset;
+  left: 50%;
+  max-height: min(46dvh, 540px);
+  overflow: hidden;
+  position: fixed;
+  transform: translateX(-50%);
+  width: min(1120px, calc(100vw - 44px));
+  z-index: 30;
+}
+
+.vtt-board__piece-drawer > .vtt-board__director-section-toggle {
+  align-items: center;
+  background: linear-gradient(90deg, rgba(10, 52, 79, 0.9), rgba(5, 24, 38, 0.9));
+  border-bottom: 1px solid rgba(76, 181, 244, 0.28);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 62px;
+  padding: 12px 16px;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-section-copy strong::before {
+  content: 'Gaveta de peças';
+  color: #74d8ff;
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-section-copy strong {
+  font-size: 0;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-section-copy strong::after {
+  content: 'Tokens e jogadores';
+  color: #e9f9ff;
+  font-size: 0.93rem;
+  letter-spacing: 0.04em;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-section-body {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(280px, 1.2fr) minmax(250px, 0.8fr);
+  max-height: calc(min(46dvh, 540px) - 62px);
+  overflow: auto;
+  padding: 12px;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-drawer:first-of-type {
+  grid-column: 1 / -1;
+}
+
+.vtt-board__piece-drawer .vtt-board__director-drawer:nth-of-type(3) {
+  display: none;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-gallery {
+  grid-template-columns: repeat(auto-fit, minmax(174px, 1fr));
+  max-height: 218px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-gallery > button {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  min-height: 74px;
+  padding: 8px;
+  text-align: left;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-gallery-image {
+  height: 58px;
+  width: 58px;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-gallery-copy {
+  min-width: 0;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-gallery-copy strong,
+.vtt-board__piece-drawer .vtt-board__token-roster-select strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__piece-drawer .vtt-board__token-roster-list {
+  max-height: 232px;
+  overflow: auto;
+}
+
+.vtt-board__agent-deck {
+  background: linear-gradient(155deg, rgba(7, 22, 34, 0.95), rgba(3, 12, 21, 0.98));
+  border: 1px solid rgba(65, 174, 231, 0.31);
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.vtt-board__agent-deck > header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.vtt-board__agent-deck > header div {
+  display: grid;
+  gap: 3px;
+}
+
+.vtt-board__agent-deck > header span,
+.vtt-board__agent-conditions > span {
+  color: #78cff5;
+  font-size: 0.63rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.vtt-board__agent-deck > header strong {
+  color: #effaff;
+  font-size: 1rem;
+  letter-spacing: 0.035em;
+}
+
+.vtt-board__agent-deck > header > span {
+  background: rgba(18, 102, 152, 0.18);
+  border: 1px solid rgba(80, 190, 245, 0.25);
+  border-radius: 999px;
+  padding: 6px 9px;
+}
+
+.vtt-board__agent-monitor {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(286px, 1fr));
+}
+
+.vtt-board__agent-monitor-card {
+  background: linear-gradient(155deg, rgba(6, 19, 30, 0.92), rgba(3, 10, 17, 0.94));
+  border: 1px solid rgba(67, 158, 208, 0.3);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.vtt-board__agent-monitor-card > header {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+}
+
+.vtt-board__agent-monitor-avatar {
+  height: 50px;
+  width: 50px;
+}
+
+.vtt-board__agent-monitor-card > header > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.vtt-board__agent-monitor-card > header strong {
+  color: #f3fbff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__agent-monitor-card > header small {
+  color: #9bc3d5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-board__agent-resource-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vtt-board__agent-resource-grid > div {
+  background: rgba(3, 14, 23, 0.76);
+  border: 1px solid rgba(79, 157, 199, 0.22);
+  border-radius: 9px;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.vtt-board__agent-resource-grid > div > span {
+  color: #94d6f2;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.vtt-board__agent-resource-grid > div > div,
+.vtt-board__agent-pursuit > div > div {
+  align-items: center;
+  display: grid;
+  gap: 5px;
+  grid-template-columns: 26px minmax(0, 1fr) 26px;
+}
+
+.vtt-board__agent-resource-grid button,
+.vtt-board__agent-pursuit button {
+  min-height: 27px;
+  padding: 0;
+}
+
+.vtt-board__agent-resource-grid output,
+.vtt-board__agent-pursuit output {
+  color: #e8f8ff;
+  font-size: 0.73rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.vtt-board__agent-conditions {
+  border-block: 1px solid rgba(94, 170, 206, 0.18);
+  display: grid;
+  gap: 7px;
+  padding-block: 10px;
+}
+
+.vtt-board__agent-conditions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vtt-board__agent-condition-chip {
+  background: rgba(137, 43, 77, 0.18);
+  border: 1px solid rgba(255, 111, 160, 0.36);
+  border-radius: 999px;
+  color: #ffd2e2;
+  font-size: 0.67rem;
+  padding: 4px 7px;
+}
+
+.vtt-board__agent-conditions small {
+  color: #90aebc;
+  font-size: 0.7rem;
+}
+
+.vtt-board__agent-pursuit {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vtt-board__agent-pursuit > div {
+  border: 1px solid rgba(86, 154, 189, 0.22);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 7px;
+}
+
+.vtt-board__agent-pursuit > div > span {
+  color: #b6dce9;
+  font-size: 0.61rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .vtt-board__piece-drawer.is-open {
+    bottom: 8px;
+    max-height: min(66dvh, 600px);
+    width: calc(100vw - 16px);
+  }
+
+  .vtt-board__piece-drawer .vtt-board__director-section-body {
+    grid-template-columns: 1fr;
+    max-height: calc(min(66dvh, 600px) - 62px);
+    padding: 9px;
+  }
+
+  .vtt-board__piece-drawer .vtt-board__token-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .vtt-board__agent-deck {
+    border-radius: 10px;
+    margin-top: 10px;
+    padding: 11px;
+  }
+
+  .vtt-board__agent-deck > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .vtt-board__agent-monitor {
+    grid-template-columns: 1fr;
+  }
+}
