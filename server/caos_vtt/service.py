@@ -2582,7 +2582,26 @@ class VTTService:
         if not token.visible:
             return False
         fog = room.scene_fog.get(scene_id)
-        return fog is None or cls._fog_reveals_point(fog, token.x, token.y)
+        if fog is None:
+            return True
+
+        # A visibilidade não pode depender apenas do centro da peça: o retrato e
+        # principalmente a etiqueta ficam fora desse ponto e poderiam denunciar
+        # um token ainda coberto pela névoa. Exigimos que toda a pegada visual
+        # essencial esteja em uma região revelada antes de enviá-la ao jogador.
+        half_size = max(0.0, token.size / 2)
+        label_drop = max(token.size, half_size)
+        footprint = (
+            (token.x, token.y),
+            (token.x - half_size, token.y - half_size),
+            (token.x + half_size, token.y - half_size),
+            (token.x - half_size, token.y + half_size),
+            (token.x + half_size, token.y + half_size),
+            (token.x - token.size, token.y + label_drop),
+            (token.x, token.y + label_drop),
+            (token.x + token.size, token.y + label_drop),
+        )
+        return all(cls._fog_reveals_point(fog, x, y) for x, y in footprint)
 
     @classmethod
     def _prop_visible_to_player(

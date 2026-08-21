@@ -16,6 +16,7 @@ from caos_vtt import create_app
 from caos_vtt.campaign import CampaignCatalog
 from caos_vtt.config import Settings
 from caos_vtt.firestore_auth import VerifiedMesaGrant
+from caos_vtt.service import CatalogToken, FogRegion, FogState, Room, VTTService
 from conftest import HOST_TOKEN, ORIGIN
 from test_campaign import _campaign_fixture, _write_manifest
 
@@ -125,6 +126,51 @@ def _write_persisted_room(
             "UPDATE room_state SET payload_json = ? WHERE room_id = ?",
             (json.dumps(payload), room_id),
         )
+
+
+def test_token_requires_its_visual_footprint_to_be_revealed() -> None:
+    room = Room(
+        room_id="room-footprint",
+        name="Pegada visual",
+        master_invite_digest=b"master",
+        player_invite_digest=b"player",
+    )
+    fog = FogState(
+        regions={
+            "narrow": FogRegion(
+                region_id="narrow",
+                label="Fresta revelada",
+                points=((0.47, 0.47), (0.53, 0.47), (0.53, 0.53), (0.47, 0.53)),
+                revealed=True,
+            )
+        }
+    )
+    room.scene_fog["scene"] = fog
+    token = CatalogToken(
+        token_id="token",
+        asset_id="asset",
+        x=0.5,
+        y=0.5,
+        label="Nome protegido",
+        size=0.08,
+        movable=False,
+        visible=True,
+    )
+
+    assert VTTService._fog_reveals_point(fog, token.x, token.y) is True
+    assert VTTService._token_visible_to_player(room, "scene", token) is False
+
+    fog.regions["narrow"] = FogRegion(
+        region_id="narrow",
+        label="Sala revelada",
+        points=((0.35, 0.35), (0.65, 0.35), (0.65, 0.65), (0.35, 0.65)),
+        revealed=True,
+    )
+    assert VTTService._token_visible_to_player(room, "scene", token) is True
+
+    token.visible = False
+    fog.reveal_all = True
+    assert VTTService._token_visible_to_player(room, "scene", token) is False
 
 
 def test_fog_regions_are_role_safe_and_filter_tokens_without_server_rendering(

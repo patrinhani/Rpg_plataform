@@ -345,18 +345,22 @@ function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
 
         const conditions = Array.isArray(sheet?.conditions) ? sheet.conditions : [];
         return (
-          <article key={agent.uid} className="vtt-board__agent-monitor-card">
+          <article
+            key={agent.uid}
+            className={`vtt-board__agent-monitor-card ${conditions.length > 0 ? 'has-conditions' : ''}`}
+          >
             <header>
               <span className="vtt-board__agent-monitor-avatar" aria-hidden="true">
                 {sheet?.photo
                   ? <img src={sheet.photo} alt="" loading="lazy" decoding="async" />
                   : tokenInitials(displayName)}
               </span>
-              <span>
+              <span className="vtt-board__agent-monitor-identity">
+                <em><i aria-hidden="true" /> Agente vinculado</em>
                 <strong>{displayName}</strong>
                 <small>{sheet?.className || 'Classe não informada'}{sheet?.nex ? ` · NEX ${sheet.nex}` : ''}</small>
               </span>
-              <button type="button" onClick={() => onOpenSheet?.(agent.uid)}>Ficha</button>
+              <button type="button" onClick={() => onOpenSheet?.(agent.uid)}>Abrir ficha</button>
             </header>
 
             <div className="vtt-board__agent-resource-grid">
@@ -364,16 +368,24 @@ function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
                 const resource = sheet?.resources?.[key] || { current: 0, maximum: 0 };
                 const operationKey = `${agent.uid}:${field}`;
                 return (
-                  <div key={key} className={`is-${key}`}>
-                    <span>{label}</span>
-                    <div>
+                  <div
+                    key={key}
+                    className={`is-${key}`}
+                    style={{ '--vtt-agent-resource': `${resource.maximum > 0 ? clamp((resource.current / resource.maximum) * 100, 0, 100) : 0}%` }}
+                  >
+                    <header>
+                      <span>{label}</span>
+                      <output aria-label={`${label} de ${displayName}`}>{resource.current}<small>/{resource.maximum}</small></output>
+                    </header>
+                    <span className="vtt-board__agent-resource-meter" aria-hidden="true"><i /></span>
+                    <div className="vtt-board__agent-resource-actions">
                       <button
                         type="button"
                         onClick={() => updateField(agent, field, resource.current - 1)}
                         disabled={!canEdit || pendingField === operationKey || resource.current <= 0}
                         aria-label={`Reduzir ${label} de ${displayName}`}
                       >−</button>
-                      <output aria-label={`${label} de ${displayName}`}>{resource.current}/{resource.maximum}</output>
+                      <span>Ajustar</span>
                       <button
                         type="button"
                         onClick={() => updateField(agent, field, resource.current + 1)}
@@ -401,6 +413,7 @@ function MasterAgentMonitor({ agents, onOpenSheet, onUpdateSheet }) {
               </div>
             </section>
 
+            <span className="vtt-board__agent-pursuit-title">Rastro da operação</span>
             <div className="vtt-board__agent-pursuit">
               {[
                 ['successes', 'Sucessos', 'perseguicao.sucessos', pursuit.successTarget],
@@ -524,6 +537,10 @@ export default function VttBoard({
   const tokenAssets = useMemo(
     () => (Array.isArray(catalog?.tokenAssets) ? catalog.tokenAssets : []),
     [catalog?.tokenAssets],
+  );
+  const selectedTokenAsset = useMemo(
+    () => tokenAssets.find((asset) => asset.assetId === selectedAssetId) || null,
+    [selectedAssetId, tokenAssets],
   );
   const propAssets = useMemo(
     () => (Array.isArray(catalog?.propAssets) ? catalog.propAssets : []),
@@ -1461,6 +1478,19 @@ export default function VttBoard({
           {isMaster && (
             <button
               type="button"
+              className="vtt-board__piece-toggle"
+              onClick={() => {
+                setDirectorOpen(true);
+                openDirectorSection('tokens');
+              }}
+              aria-expanded={directorSections.tokens}
+            >
+              Tokens <span>{tokens.length}</span>
+            </button>
+          )}
+          {isMaster && (
+            <button
+              type="button"
               className="vtt-board__director-toggle"
               onClick={() => setDirectorOpen((current) => !current)}
               aria-expanded={directorOpen}
@@ -1750,9 +1780,10 @@ export default function VttBoard({
                   <span>Névoa</span>
                   <strong>{fog?.enabled ? 'Ativa' : 'Livre'}</strong>
                 </button>
-                <button type="button" onClick={() => openDirectorSection('tokens')}>
+                <button type="button" className="is-piece-trigger" onClick={() => openDirectorSection('tokens')}>
                   <span>Tokens</span>
                   <strong>{tokens.length}</strong>
+                  <small>Abrir gaveta</small>
                 </button>
                 <button type="button" onClick={() => openDirectorSection('props')}>
                   <span>Objetos</span>
@@ -2135,16 +2166,16 @@ export default function VttBoard({
 
             <DirectorSection
               id="vtt-board-tokens-section"
-              title="Tokens e jogadores"
-              summary={selectedToken?.label || 'Posicionar e atribuir peças'}
+              title="Gaveta de tokens"
+              summary={selectedToken?.label || 'Escolha, atribua e posicione sem cobrir o mapa'}
               badge={`${tokens.length} ${tokens.length === 1 ? 'peça' : 'peças'}`}
               open={directorSections.tokens}
               onToggle={() => toggleDirectorSection('tokens')}
             >
 
             <DirectorDrawer
-              title="Galeria de tokens"
-              summary="Escolha e adicione uma peça"
+              title="1 · Escolha a peça"
+              summary="Retratos disponíveis na campanha"
               badge={`${tokenAssets.length}`}
               defaultOpen={tokens.length === 0}
             >
@@ -2184,30 +2215,24 @@ export default function VttBoard({
                   );
                 })}
               </div>
-              <label className="vtt-board__token-asset-select" htmlFor="vtt-board-token-asset">
-                <span>Adicionar token</span>
-                <select
-                  id="vtt-board-token-asset"
-                  value={selectedAssetId}
-                  onChange={(event) => setSelectedAssetId(event.target.value)}
-                  disabled={!connected || tokenAssets.length === 0}
-                >
-                  {tokenAssets.length === 0 && <option value="">Nenhum token disponível</option>}
-                  {tokenAssets.map((asset) => (
-                    <option key={asset.assetId} value={asset.assetId}>
-                      {asset.label || humanize(asset.assetId.split('/').pop())}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {controllerMembers.length > 0 && (
+              <section className="vtt-board__token-launchpad" aria-label="Preparar novo token">
+                <span className="vtt-board__token-launchpad-preview" aria-hidden="true">
+                  {selectedTokenAsset?.assetUrl
+                    ? <img src={selectedTokenAsset.assetUrl} alt="" loading="lazy" decoding="async" />
+                    : <span>{selectedTokenAsset ? tokenInitials(selectedTokenAsset.label) : '◇'}</span>}
+                </span>
+                <div className="vtt-board__token-launchpad-copy">
+                  <span>Token preparado</span>
+                  <strong>{selectedTokenAsset?.label || 'Selecione um retrato'}</strong>
+                  <small>Ele será criado no centro do mapa e poderá ser arrastado em seguida.</small>
+                </div>
                 <label className="vtt-board__field" htmlFor="vtt-board-new-token-controller">
-                  <span>Controle inicial</span>
+                  <span>Quem controla</span>
                   <select
                     id="vtt-board-new-token-controller"
                     value={newTokenControllerUid}
                     onChange={(event) => setNewTokenControllerUid(event.target.value)}
-                    disabled={!connected}
+                    disabled={!connected || controllerMembers.length === 0}
                   >
                     <option value="">Somente Mestre</option>
                     {controllerMembers.map((member) => (
@@ -2215,16 +2240,21 @@ export default function VttBoard({
                     ))}
                   </select>
                 </label>
-              )}
-              <button type="button" onClick={handleSpawn} disabled={!connected || !selectedAssetId}>
-                Posicionar no centro
-              </button>
+                <button
+                  type="button"
+                  className="vtt-board__token-launchpad-action"
+                  onClick={handleSpawn}
+                  disabled={!connected || !selectedAssetId}
+                >
+                  Adicionar ao mapa
+                </button>
+              </section>
             </div>
             </DirectorDrawer>
 
             <DirectorDrawer
-              title="Peças em cena"
-              summary="Seleção, dono e acesso à ficha"
+              title="2 · Peças em cena"
+              summary="Selecione para ajustar controle ou abrir a ficha"
               badge={`${tokens.length}`}
               reveal={Boolean(selectedToken)}
             >
@@ -2285,8 +2315,8 @@ export default function VttBoard({
             </DirectorDrawer>
 
             <DirectorDrawer
-              title="Monitor dos agentes"
-              summary="PV, PE, SAN e progresso da perseguição"
+              title="3 · Painel dos agentes"
+              summary="PV, PE, SAN, condições e perseguição"
               badge={`${characterSheetMembers.length}`}
               defaultOpen={characterSheetMembers.length > 0}
             >
@@ -2298,8 +2328,8 @@ export default function VttBoard({
             </DirectorDrawer>
 
             <DirectorDrawer
-              title="Token selecionado"
-              summary={selectedToken?.label || 'Nenhuma peça selecionada'}
+              title="Ajustar token selecionado"
+              summary={selectedToken?.label || 'Escolha uma peça já posicionada'}
               badge={selectedToken ? 'Editar' : '—'}
               reveal={Boolean(selectedToken)}
             >

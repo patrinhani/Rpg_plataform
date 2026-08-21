@@ -16,14 +16,14 @@
     "fingerprint": "sha256:960a1b0f9f48901387bbfb5a2288b8e3d6fade970bb7ee9bcbf2393b625e4172"
   },
   "summary": {
-    "assetCount": 112,
+    "assetCount": 126,
     "documentCount": 22,
-    "sceneCount": 8,
+    "sceneCount": 14,
     "sceneLayerCount": 8,
     "stateGroupCount": 1,
-    "totalAssetBytes": 230000193,
-    "warningCount": 7,
-    "sourceFingerprint": "25d7d44dccd74e2bee8ee49d9d64cea141c02e87f074d5a8895341728b7d588a"
+    "totalAssetBytes": 239235798,
+    "warningCount": 13,
+    "sourceFingerprint": "c5f8f3f54880a428904c30b0100e98e06ebd2544eea419f60e4f5add305a8048"
   },
   "assets": [
     {
@@ -673,6 +673,57 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 268974,
+      "sha256": "231bae2c1c991a497f2f7eb4c9d87cd569974db50cda1704b46eacba44234917",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1350,
+        "height": 1500,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 292640,
+      "sha256": "7c52edfaef324792c455612f2aced1ad7e6f0b142141478f94d40c980ad569c2",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1390,
+        "height": 1570,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 226686,
+      "sha256": "8151924c0d7c4db0f9bcb4228ecb466ae67db15e875052260deee7b3237fdb9b",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1106,
+        "height": 1570,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
       "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v1.png",
       "kind": "map",
@@ -770,6 +821,57 @@
         "format": "webp",
         "width": 3136,
         "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 407838,
+      "sha256": "c68fc08f94c07495636cd9500fe831c998ab3b77978b824162814d5d60c21769",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 2150,
+        "height": 1470,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 420846,
+      "sha256": "6d38138adfe6a34e5c1b1320869693eb3f954dc2805c2d376553cf8575487487",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 2050,
+        "height": 1816,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
+      "relativePath": "assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
+      "kind": "map",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 283272,
+      "sha256": "aa669c210101309d5a0bf50dd78306861b13a714c8b3dbf3f19c3011ff7c3674",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1356,
+        "height": 1886,
         "hasAlpha": false,
         "webpVariant": "VP8"
       }
@@ -1030,6 +1132,23 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-ala-administrativa-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-ala-administrativa-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 392450,
+      "sha256": "73500e704f07b3b9105cc08dd15b59045560fb0af213d804cf8d0a3c6b7df250",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1350,
+        "height": 1500,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v1.png",
       "kind": "map",
@@ -1081,6 +1200,40 @@
       }
     },
     {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-dormitorios-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-dormitorios-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 417144,
+      "sha256": "60effd148b6d04125b5d99d7e3fd48856ff261f03bb6ebddce0c3f9a7fbe8bbd",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1390,
+        "height": 1570,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-enfermaria-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-enfermaria-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 339552,
+      "sha256": "2a8087450ec749d4755de0a5b2912eff03e0dab093f920c67930388ea4d71f65",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1106,
+        "height": 1570,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
       "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
       "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v1.png",
       "kind": "map",
@@ -1127,6 +1280,57 @@
         "format": "webp",
         "width": 3136,
         "height": 3136,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-laboratorio-neural-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-laboratorio-neural-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 591994,
+      "sha256": "98e6fe2336c9ff7389e11bc757f55352ec3fbecdc91721fc5198a2a67116ad05",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 2150,
+        "height": 1470,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-reservatorio-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-reservatorio-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 595676,
+      "sha256": "4f676429d0394235180b2cd04deb44ab85c5d8db182ed90accd618f31fc9acbb",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 2050,
+        "height": 1816,
+        "hasAlpha": false,
+        "webpVariant": "VP8"
+      }
+    },
+    {
+      "id": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-tunel-manutencao-battlemap-vtt-v1.webp",
+      "relativePath": "assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-tunel-manutencao-battlemap-vtt-v1.webp",
+      "kind": "map",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 431138,
+      "sha256": "9172878b2bdf7cc3d2b6b6fa432ad0fa34b5ad6fed127aca4c27308dcd6082ba",
+      "mediaType": "image/webp",
+      "image": {
+        "format": "webp",
+        "width": 1356,
+        "height": 1886,
         "hasAlpha": false,
         "webpVariant": "VP8"
       }
@@ -1846,6 +2050,23 @@
       }
     },
     {
+      "id": "asset:assets/tokens/elric-zelba-token-vtt-v1.png",
+      "relativePath": "assets/tokens/elric-zelba-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2224978,
+      "sha256": "19ac71a12815a80442c941c1977edc79507108397354483e8a765aee335b977f",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
       "id": "asset:assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
       "relativePath": "assets/tokens/helena-vasconcelos-cadeira-neural-token-vtt-v1.png",
       "kind": "prop",
@@ -1921,6 +2142,23 @@
       "controlledBy": "gm",
       "bytes": 2632018,
       "sha256": "1a1b2c26870248c3e87e1b0e51df727e3e0971376a8725a888f84955aa5bdac1",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true,
+        "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/tokens/toph-token-vtt-v1.png",
+      "relativePath": "assets/tokens/toph-token-vtt-v1.png",
+      "kind": "token",
+      "audience": "players",
+      "controlledBy": "gm",
+      "bytes": 2342417,
+      "sha256": "643581283a7a356dc480e0cb38b756b1a9998e78f8caeab48dc04dc174033d5d",
       "mediaType": "image/png",
       "image": {
         "format": "png",
@@ -2222,6 +2460,69 @@
         ]
       },
       {
+        "id": "scene:helix-9-nivel-0-ala-administrativa",
+        "key": "helix-9-nivel-0-ala-administrativa",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-ala-administrativa-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-ala-administrativa-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
+      },
+      {
+        "id": "scene:helix-9-nivel-0-dormitorios",
+        "key": "helix-9-nivel-0-dormitorios",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-dormitorios-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-dormitorios-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
+      },
+      {
+        "id": "scene:helix-9-nivel-0-enfermaria",
+        "key": "helix-9-nivel-0-enfermaria",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-enfermaria-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-enfermaria-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
+      },
+      {
         "id": "scene:helix-9-subsolo-1",
         "key": "helix-9-subsolo-1",
         "playerMaps": [
@@ -2292,6 +2593,69 @@
             }
           }
         ]
+      },
+      {
+        "id": "scene:helix-9-subsolo-1-laboratorio-neural",
+        "key": "helix-9-subsolo-1-laboratorio-neural",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-laboratorio-neural-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-laboratorio-neural-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
+      },
+      {
+        "id": "scene:helix-9-subsolo-1-reservatorio",
+        "key": "helix-9-subsolo-1-reservatorio",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-reservatorio-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-reservatorio-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
+      },
+      {
+        "id": "scene:helix-9-subsolo-1-tunel-manutencao",
+        "key": "helix-9-subsolo-1-tunel-manutencao",
+        "playerMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-tunel-manutencao-battlemap-vtt-v1.webp",
+            "version": 1
+          }
+        ],
+        "gmGuideMaps": [
+          {
+            "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
+            "version": 1
+          }
+        ],
+        "overlays": [],
+        "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-tunel-manutencao-battlemap-vtt-v1.webp",
+        "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
+        "gridHint": null,
+        "layers": []
       },
       {
         "id": "scene:helix-9-subsolo-2-camara",
@@ -2603,10 +2967,12 @@
     "tokenAssetIds": [
       "asset:assets/tokens/agnes-sato-token-vtt-v1.png",
       "asset:assets/tokens/eco-indexador-token-vtt-v1.png",
+      "asset:assets/tokens/elric-zelba-token-vtt-v1.png",
       "asset:assets/tokens/helena-vasconcelos-resgatada-token-vtt-v1.png",
       "asset:assets/tokens/otavio-leme-token-vtt-v1.png",
       "asset:assets/tokens/raul-moreira-token-vtt-v1.png",
-      "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png"
+      "asset:assets/tokens/repetente-palindromo-token-vtt-v1.png",
+      "asset:assets/tokens/toph-token-vtt-v1.png"
     ],
     "propAssetIds": [
       "asset:assets/objetos/fragmento-mnemosyne/fragmento-mnemosyne-recuperado-objeto-vtt-v1.png",
@@ -2656,7 +3022,37 @@
     },
     {
       "code": "scene-grid-unknown",
+      "path": "helix-9-nivel-0-ala-administrativa",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-nivel-0-dormitorios",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-nivel-0-enfermaria",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
       "path": "helix-9-subsolo-1",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-subsolo-1-laboratorio-neural",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-subsolo-1-reservatorio",
+      "message": "A campanha nao informa escala/origem de grade para esta cena."
+    },
+    {
+      "code": "scene-grid-unknown",
+      "path": "helix-9-subsolo-1-tunel-manutencao",
       "message": "A campanha nao informa escala/origem de grade para esta cena."
     },
     {
