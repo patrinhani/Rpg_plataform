@@ -49,8 +49,29 @@ def _replace_image_asset(
     )
 
 
-def _fog_app(tmp_path: Path, *, state_db_path: Path | None = None):
+def _fog_app(
+    tmp_path: Path,
+    *,
+    state_db_path: Path | None = None,
+    with_preset: bool = False,
+):
     manifest_path, source_root, manifest, ids = _campaign_fixture(tmp_path)
+    if with_preset:
+        manifest["collections"]["scenes"][0]["fogPreset"] = {
+            "revision": 1,
+            "regions": [
+                {
+                    "regionId": "preset:entrada",
+                    "label": "Entrada oficial",
+                    "points": [
+                        {"x": 0.1, "y": 0.1},
+                        {"x": 0.4, "y": 0.1},
+                        {"x": 0.4, "y": 0.4},
+                        {"x": 0.1, "y": 0.4},
+                    ],
+                }
+            ],
+        }
     _replace_image_asset(
         source_root,
         manifest,
@@ -171,6 +192,53 @@ def test_token_requires_its_visual_footprint_to_be_revealed() -> None:
     token.visible = False
     fog.reveal_all = True
     assert VTTService._token_visible_to_player(room, "scene", token) is False
+
+
+def test_campaign_fog_presets_seed_rooms_and_can_be_restored_safely(tmp_path: Path) -> None:
+    app, _ids = _fog_app(tmp_path, with_preset=True)
+    with TestClient(app) as client:
+        room = _create_room(client)
+        master_access = _access(client, room, "masterInviteToken")
+        player_access = _access(client, room, "playerInviteToken")
+        path = f"/ws/vtt/rooms/{room['roomId']}"
+
+        with client.websocket_connect(
+            f"{path}?ticket={master_access['ticket']}", headers={"Origin": ORIGIN}
+        ) as master, client.websocket_connect(
+            f"{path}?ticket={player_access['ticket']}", headers={"Origin": ORIGIN}
+        ) as player:
+            master_initial = master.receive_json()
+            player_initial = player.receive_json()
+            assert master_initial["state"]["scene"]["fogPreset"] == {
+                "revision": 1,
+                "regionCount": 1,
+            }
+            assert master_initial["state"]["fog"]["regions"][0]["label"] == "Entrada oficial"
+            assert player_initial["state"]["fog"]["regions"] == []
+            assert "fogPreset" not in player_initial["state"]["scene"]
+
+            master.send_json(
+                {
+                    "type": "fog.region.remove",
+                    "commandId": "remove-official-region",
+                    "payload": {"regionId": "preset:entrada"},
+                }
+            )
+            master.receive_json()
+            player.receive_json()
+            master.send_json({"type": "fog.preset.apply", "commandId": "restore-scene"})
+            restored = master.receive_json()
+            player.receive_json()
+            assert [item["regionId"] for item in restored["state"]["fog"]["regions"]] == [
+                "preset:entrada"
+            ]
+
+            player.send_json({"type": "fog.presets.apply_all", "commandId": "player-restore-all"})
+            assert player.receive_json()["error"]["code"] == "forbidden"
+            master.send_json({"type": "fog.presets.apply_all", "commandId": "master-restore-all"})
+            reapplied = master.receive_json()
+            player.receive_json()
+            assert reapplied["state"]["fog"]["regions"][0]["revealed"] is False
 
 
 def test_fog_regions_are_role_safe_and_filter_tokens_without_server_rendering(

@@ -136,6 +136,19 @@ class GridHintView:
 
 
 @dataclass(frozen=True, slots=True)
+class FogRegionPresetView:
+    region_id: str
+    label: str
+    points: tuple[tuple[float, float], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class FogPresetView:
+    revision: int
+    regions: tuple[FogRegionPresetView, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class SceneView:
     scene_id: str
     key: str
@@ -146,6 +159,7 @@ class SceneView:
     active_player_map: str | None
     active_gm_guide_map: str | None
     grid_hint: GridHintView | None
+    fog_preset: FogPresetView | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -593,6 +607,71 @@ def _parse_scene_layers(
     return tuple(sorted(layers, key=lambda item: item.key))
 
 
+def _parse_fog_preset(value: Any, context: str) -> FogPresetView | None:
+    if value is None:
+        return None
+    preset = _expect_object(value, context)
+    if set(preset) != {"revision", "regions"}:
+        raise ManifestValidationError(f"{context} possui campos invalidos")
+    revision = _expect_nonnegative_int(preset.get("revision"), f"{context}.revision")
+    if revision < 1:
+        raise ManifestValidationError(f"{context}.revision deve ser positiva")
+    raw_regions = _expect_list(preset.get("regions"), f"{context}.regions")
+    if not 1 <= len(raw_regions) <= 128:
+        raise ManifestValidationError(f"{context}.regions invalido")
+    regions: list[FogRegionPresetView] = []
+    region_ids: set[str] = set()
+    for index, raw_region in enumerate(raw_regions):
+        region_context = f"{context}.regions[{index}]"
+        region = _expect_object(raw_region, region_context)
+        if set(region) != {"regionId", "label", "points"}:
+            raise ManifestValidationError(f"{region_context} possui campos invalidos")
+        region_id = _expect_string(region.get("regionId"), f"{region_context}.regionId")
+        label = _expect_string(region.get("label"), f"{region_context}.label")
+        if (
+            len(region_id) > 64
+            or not region_id[0].isalnum()
+            or any(not (character.isalnum() or character in "._:-") for character in region_id)
+            or region_id in region_ids
+            or len(label) > 80
+            or any(ord(character) < 32 for character in label)
+        ):
+            raise ManifestValidationError(f"{region_context} invalida")
+        raw_points = _expect_list(region.get("points"), f"{region_context}.points")
+        if not 3 <= len(raw_points) <= 64:
+            raise ManifestValidationError(f"{region_context}.points invalido")
+        points: list[tuple[float, float]] = []
+        for point_index, raw_point in enumerate(raw_points):
+            point_context = f"{region_context}.points[{point_index}]"
+            point = _expect_object(raw_point, point_context)
+            if set(point) != {"x", "y"}:
+                raise ManifestValidationError(f"{point_context} possui campos invalidos")
+            x = point.get("x")
+            y = point.get("y")
+            if (
+                isinstance(x, bool)
+                or not isinstance(x, (int, float))
+                or isinstance(y, bool)
+                or not isinstance(y, (int, float))
+                or not 0 <= float(x) <= 1
+                or not 0 <= float(y) <= 1
+            ):
+                raise ManifestValidationError(f"{point_context} fora do mapa")
+            points.append((float(x), float(y)))
+        if len(set(points)) < 3:
+            raise ManifestValidationError(f"{region_context}.points repetidos")
+        area = sum(
+            (point[0] * points[(point_index + 1) % len(points)][1])
+            - (points[(point_index + 1) % len(points)][0] * point[1])
+            for point_index, point in enumerate(points)
+        )
+        if abs(area) < 0.000002:
+            raise ManifestValidationError(f"{region_context} sem area")
+        region_ids.add(region_id)
+        regions.append(FogRegionPresetView(region_id, label, tuple(points)))
+    return FogPresetView(revision, tuple(regions))
+
+
 def _parse_scenes(
     collections: dict[str, Any], assets: Mapping[str, _AssetRecord]
 ) -> tuple[SceneView, ...]:
@@ -690,6 +769,7 @@ def _parse_scenes(
                 active_player_map=active_player,
                 active_gm_guide_map=active_gm,
                 grid_hint=_parse_grid_hint(scene.get("gridHint"), f"{context}.gridHint"),
+                fog_preset=_parse_fog_preset(scene.get("fogPreset"), f"{context}.fogPreset"),
             )
         )
     return tuple(sorted(scenes, key=lambda item: item.key))
@@ -1112,6 +1192,7 @@ class CampaignCatalog:
                     ),
                     active_gm_guide_map=None,
                     grid_hint=scene.grid_hint,
+                    fog_preset=scene.fog_preset,
                 )
             )
         return tuple(result)

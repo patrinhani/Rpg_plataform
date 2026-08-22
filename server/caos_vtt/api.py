@@ -33,6 +33,8 @@ from .firestore_auth import (
 from .models import (
     CreateRoomRequest,
     CreateRoomResponse,
+    FogPresetApplyCommand,
+    FogPresetsApplyAllCommand,
     FogResetCommand,
     FogRegionCreateCommand,
     FogRegionRemoveCommand,
@@ -540,6 +542,8 @@ async def _handle_socket_message(
         ),
         "fog.region.remove": (FogRegionRemoveCommand, "invalid_fog_region_remove"),
         "fog.set_enabled": (FogSetEnabledCommand, "invalid_fog_set_enabled"),
+        "fog.preset.apply": (FogPresetApplyCommand, "invalid_fog_preset_apply"),
+        "fog.presets.apply_all": (FogPresetsApplyAllCommand, "invalid_fog_presets_apply_all"),
         "fog.reset": (FogResetCommand, "invalid_fog_reset"),
         "fog.reveal_all": (FogRevealAllCommand, "invalid_fog_reveal_all"),
         "handout.deliver": (HandoutDeliverCommand, "invalid_handout_deliver"),

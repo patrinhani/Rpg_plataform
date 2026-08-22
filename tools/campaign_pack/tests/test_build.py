@@ -122,6 +122,21 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, object], dict[str, s
                     ],
                     "activePlayerMap": ids["player"],
                     "activeGmGuideMap": ids["gm"],
+                    "fogPreset": {
+                        "revision": 1,
+                        "regions": [
+                            {
+                                "regionId": "preset:entrada",
+                                "label": "Entrada",
+                                "points": [
+                                    {"x": 0.1, "y": 0.1},
+                                    {"x": 0.4, "y": 0.1},
+                                    {"x": 0.4, "y": 0.4},
+                                    {"x": 0.1, "y": 0.4},
+                                ],
+                            }
+                        ],
+                    },
                     "gridHint": {"type": "square", "columns": 20, "rows": 20},
                 }
             ],
@@ -248,6 +263,7 @@ def test_selects_scene_tokens_props_and_private_handouts(tmp_path: Path) -> None
 
     catalog = CampaignCatalog.load(output / "manifest.json", {"fixture": output})
     assert catalog.list_scenes("master")[0].active_player_map == ids["player"]
+    assert catalog.list_scenes("master")[0].fog_preset.regions[0].label == "Entrada"
     assert catalog.list_scenes("player")[0].gm_guide_maps == ()
     assert [item.asset_id for item in catalog.list_tokens("player")] == [ids["token"]]
     assert [item.asset_id for item in catalog.list_props("master")] == [ids["prop"]]

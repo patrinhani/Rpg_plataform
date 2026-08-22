@@ -2140,6 +2140,24 @@ export default function VttBoard({
                     >Remover região</button>
                   </div>
                   <div className="vtt-board__fog-actions">
+                    {scene?.fogPreset && (
+                      <button
+                        type="button"
+                        onClick={() => confirmMasterCommand(
+                          `Restaurar ${scene.fogPreset.regionCount} setores oficiais desta cena substitui o desenho atual e fecha todas as áreas. Continuar?`,
+                          'fog.preset.apply',
+                        )}
+                      >Restaurar setores desta cena</button>
+                    )}
+                    {scene?.fogPreset && (
+                      <button
+                        type="button"
+                        onClick={() => confirmMasterCommand(
+                          'Reaplicar os setores oficiais em TODOS os mapas substitui qualquer desenho manual existente e fecha todas as áreas. Continuar?',
+                          'fog.presets.apply_all',
+                        )}
+                      >Refazer todos os mapas</button>
+                    )}
                     <button
                       type="button"
                       onClick={() => confirmMasterCommand(

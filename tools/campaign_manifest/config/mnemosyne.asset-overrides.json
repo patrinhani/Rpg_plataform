@@ -104,6 +104,164 @@
       "controlledBy": "gm"
     }
   },
+  "fogPresets": {
+    "helix-9-fundacao-turbina": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:fundacao-nucleo", "label": "Núcleo da turbina", "points": [{"x": 0.50, "y": 0.25}, {"x": 0.63, "y": 0.28}, {"x": 0.72, "y": 0.37}, {"x": 0.75, "y": 0.50}, {"x": 0.72, "y": 0.63}, {"x": 0.63, "y": 0.72}, {"x": 0.50, "y": 0.75}, {"x": 0.37, "y": 0.72}, {"x": 0.28, "y": 0.63}, {"x": 0.25, "y": 0.50}, {"x": 0.28, "y": 0.37}, {"x": 0.37, "y": 0.28}]},
+        {"regionId": "preset:fundacao-anel-norte", "label": "Passarela norte", "points": [{"x": 0.14, "y": 0.50}, {"x": 0.17, "y": 0.29}, {"x": 0.29, "y": 0.14}, {"x": 0.50, "y": 0.07}, {"x": 0.71, "y": 0.14}, {"x": 0.83, "y": 0.29}, {"x": 0.86, "y": 0.50}, {"x": 0.75, "y": 0.50}, {"x": 0.72, "y": 0.37}, {"x": 0.63, "y": 0.28}, {"x": 0.50, "y": 0.25}, {"x": 0.37, "y": 0.28}, {"x": 0.28, "y": 0.37}, {"x": 0.25, "y": 0.50}]},
+        {"regionId": "preset:fundacao-anel-sul", "label": "Passarela sul", "points": [{"x": 0.14, "y": 0.50}, {"x": 0.17, "y": 0.71}, {"x": 0.29, "y": 0.86}, {"x": 0.50, "y": 0.93}, {"x": 0.71, "y": 0.86}, {"x": 0.83, "y": 0.71}, {"x": 0.86, "y": 0.50}, {"x": 0.75, "y": 0.50}, {"x": 0.72, "y": 0.63}, {"x": 0.63, "y": 0.72}, {"x": 0.50, "y": 0.75}, {"x": 0.37, "y": 0.72}, {"x": 0.28, "y": 0.63}, {"x": 0.25, "y": 0.50}]},
+        {"regionId": "preset:fundacao-acesso-oeste", "label": "Acesso oeste", "points": [{"x": 0.01, "y": 0.39}, {"x": 0.26, "y": 0.39}, {"x": 0.26, "y": 0.61}, {"x": 0.01, "y": 0.61}]},
+        {"regionId": "preset:fundacao-acesso-leste", "label": "Acesso leste", "points": [{"x": 0.74, "y": 0.39}, {"x": 0.99, "y": 0.39}, {"x": 0.99, "y": 0.61}, {"x": 0.74, "y": 0.61}]}
+      ]
+    },
+    "helix-9-nivel-0": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:nivel0-monitoramento", "label": "Monitoramento e acesso superior", "points": [{"x": 0.29, "y": 0.02}, {"x": 0.71, "y": 0.02}, {"x": 0.71, "y": 0.29}, {"x": 0.59, "y": 0.31}, {"x": 0.41, "y": 0.31}, {"x": 0.29, "y": 0.28}]},
+        {"regionId": "preset:nivel0-administrativo", "label": "Ala administrativa", "points": [{"x": 0.03, "y": 0.28}, {"x": 0.39, "y": 0.28}, {"x": 0.39, "y": 0.69}, {"x": 0.03, "y": 0.69}]},
+        {"regionId": "preset:nivel0-dormitorios", "label": "Dormitórios", "points": [{"x": 0.48, "y": 0.29}, {"x": 0.70, "y": 0.29}, {"x": 0.70, "y": 0.69}, {"x": 0.48, "y": 0.69}]},
+        {"regionId": "preset:nivel0-enfermaria", "label": "Enfermaria", "points": [{"x": 0.70, "y": 0.29}, {"x": 0.95, "y": 0.29}, {"x": 0.95, "y": 0.69}, {"x": 0.70, "y": 0.69}]},
+        {"regionId": "preset:nivel0-corredor-central", "label": "Corredor central", "points": [{"x": 0.38, "y": 0.28}, {"x": 0.49, "y": 0.28}, {"x": 0.49, "y": 0.72}, {"x": 0.38, "y": 0.72}]},
+        {"regionId": "preset:nivel0-entrada", "label": "Saguão de entrada", "points": [{"x": 0.37, "y": 0.68}, {"x": 0.64, "y": 0.68}, {"x": 0.64, "y": 0.84}, {"x": 0.37, "y": 0.84}]},
+        {"regionId": "preset:nivel0-escada-tunel", "label": "Escada para o túnel", "points": [{"x": 0.78, "y": 0.67}, {"x": 0.96, "y": 0.67}, {"x": 0.96, "y": 0.83}, {"x": 0.78, "y": 0.83}]},
+        {"regionId": "preset:nivel0-portaria", "label": "Portaria e pátio", "points": [{"x": 0.49, "y": 0.79}, {"x": 0.79, "y": 0.77}, {"x": 0.89, "y": 0.88}, {"x": 0.76, "y": 0.99}, {"x": 0.52, "y": 0.99}, {"x": 0.42, "y": 0.89}]},
+        {"regionId": "preset:nivel0-acesso-externo", "label": "Estrada de acesso", "points": [{"x": 0.21, "y": 0.72}, {"x": 0.42, "y": 0.72}, {"x": 0.52, "y": 0.88}, {"x": 0.45, "y": 1.00}, {"x": 0.21, "y": 1.00}]}
+      ]
+    },
+    "helix-9-nivel-0-ala-administrativa": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:admin-escritorio-norte", "label": "Escritórios superiores", "points": [{"x": 0.05, "y": 0.10}, {"x": 0.65, "y": 0.10}, {"x": 0.65, "y": 0.31}, {"x": 0.05, "y": 0.31}]},
+        {"regionId": "preset:admin-arquivo", "label": "Arquivo e estação central", "points": [{"x": 0.06, "y": 0.30}, {"x": 0.65, "y": 0.30}, {"x": 0.65, "y": 0.57}, {"x": 0.06, "y": 0.57}]},
+        {"regionId": "preset:admin-corredor-leste", "label": "Corredor leste", "points": [{"x": 0.65, "y": 0.08}, {"x": 0.91, "y": 0.08}, {"x": 0.91, "y": 0.91}, {"x": 0.65, "y": 0.91}]},
+        {"regionId": "preset:admin-sala-reuniao", "label": "Sala de reunião", "points": [{"x": 0.05, "y": 0.57}, {"x": 0.36, "y": 0.57}, {"x": 0.36, "y": 0.92}, {"x": 0.05, "y": 0.92}]},
+        {"regionId": "preset:admin-gabinetes-sul", "label": "Gabinetes inferiores", "points": [{"x": 0.35, "y": 0.57}, {"x": 0.65, "y": 0.57}, {"x": 0.65, "y": 0.94}, {"x": 0.35, "y": 0.94}]}
+      ]
+    },
+    "helix-9-nivel-0-dormitorios": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:dormitorio-convivencia", "label": "Sala de convivência", "points": [{"x": 0.32, "y": 0.11}, {"x": 0.94, "y": 0.11}, {"x": 0.94, "y": 0.42}, {"x": 0.32, "y": 0.42}]},
+        {"regionId": "preset:dormitorio-oeste", "label": "Dormitórios oeste", "points": [{"x": 0.31, "y": 0.40}, {"x": 0.51, "y": 0.40}, {"x": 0.51, "y": 0.80}, {"x": 0.31, "y": 0.80}]},
+        {"regionId": "preset:dormitorio-leste", "label": "Dormitórios leste", "points": [{"x": 0.70, "y": 0.39}, {"x": 0.94, "y": 0.39}, {"x": 0.94, "y": 0.81}, {"x": 0.70, "y": 0.81}]},
+        {"regionId": "preset:dormitorio-corredor", "label": "Corredor dos dormitórios", "points": [{"x": 0.50, "y": 0.39}, {"x": 0.71, "y": 0.39}, {"x": 0.71, "y": 0.87}, {"x": 0.50, "y": 0.87}]},
+        {"regionId": "preset:dormitorio-entrada", "label": "Entrada dos dormitórios", "points": [{"x": 0.15, "y": 0.79}, {"x": 0.75, "y": 0.79}, {"x": 0.75, "y": 1.00}, {"x": 0.15, "y": 1.00}]}
+      ]
+    },
+    "helix-9-nivel-0-enfermaria": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:enfermaria-consultorio", "label": "Consultório", "points": [{"x": 0.43, "y": 0.11}, {"x": 0.86, "y": 0.11}, {"x": 0.86, "y": 0.41}, {"x": 0.43, "y": 0.41}]},
+        {"regionId": "preset:enfermaria-triagem", "label": "Triagem", "points": [{"x": 0.43, "y": 0.40}, {"x": 0.86, "y": 0.40}, {"x": 0.86, "y": 0.62}, {"x": 0.43, "y": 0.62}]},
+        {"regionId": "preset:enfermaria-procedimentos", "label": "Sala de procedimentos", "points": [{"x": 0.43, "y": 0.61}, {"x": 0.87, "y": 0.61}, {"x": 0.87, "y": 0.88}, {"x": 0.43, "y": 0.88}]},
+        {"regionId": "preset:enfermaria-escada", "label": "Escada para o túnel", "points": [{"x": 0.48, "y": 0.87}, {"x": 0.82, "y": 0.87}, {"x": 0.82, "y": 1.00}, {"x": 0.48, "y": 1.00}]}
+      ]
+    },
+    "helix-9-subsolo-1": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:sub1-laboratorio", "label": "Laboratório neural", "points": [{"x": 0.19, "y": 0.08}, {"x": 0.69, "y": 0.08}, {"x": 0.69, "y": 0.48}, {"x": 0.58, "y": 0.53}, {"x": 0.35, "y": 0.53}, {"x": 0.19, "y": 0.45}]},
+        {"regionId": "preset:sub1-passagem", "label": "Passagem inundada", "points": [{"x": 0.68, "y": 0.10}, {"x": 0.94, "y": 0.10}, {"x": 0.94, "y": 0.82}, {"x": 0.77, "y": 0.82}, {"x": 0.77, "y": 0.50}, {"x": 0.68, "y": 0.45}]},
+        {"regionId": "preset:sub1-reservatorio", "label": "Reservatório subterrâneo", "points": [{"x": 0.02, "y": 0.51}, {"x": 0.18, "y": 0.48}, {"x": 0.35, "y": 0.55}, {"x": 0.43, "y": 0.72}, {"x": 0.39, "y": 0.91}, {"x": 0.20, "y": 0.98}, {"x": 0.03, "y": 0.91}]},
+        {"regionId": "preset:sub1-acesso-central", "label": "Acesso central", "points": [{"x": 0.36, "y": 0.48}, {"x": 0.70, "y": 0.48}, {"x": 0.75, "y": 0.67}, {"x": 0.65, "y": 0.86}, {"x": 0.43, "y": 0.86}, {"x": 0.39, "y": 0.69}]},
+        {"regionId": "preset:sub1-manutencao", "label": "Sala de manutenção", "points": [{"x": 0.75, "y": 0.78}, {"x": 0.97, "y": 0.78}, {"x": 0.97, "y": 0.98}, {"x": 0.75, "y": 0.98}]},
+        {"regionId": "preset:sub1-elevador", "label": "Elevador da câmara", "points": [{"x": 0.34, "y": 0.01}, {"x": 0.57, "y": 0.01}, {"x": 0.57, "y": 0.17}, {"x": 0.34, "y": 0.17}]}
+      ]
+    },
+    "helix-9-subsolo-1-laboratorio-neural": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:lab-neural-elevador", "label": "Elevador para a câmara", "points": [{"x": 0.22, "y": 0.00}, {"x": 0.57, "y": 0.00}, {"x": 0.57, "y": 0.20}, {"x": 0.22, "y": 0.20}]},
+        {"regionId": "preset:lab-neural-monitoramento", "label": "Monitoramento", "points": [{"x": 0.58, "y": 0.00}, {"x": 0.94, "y": 0.00}, {"x": 0.94, "y": 0.30}, {"x": 0.58, "y": 0.30}]},
+        {"regionId": "preset:lab-neural-oeste", "label": "Bancadas oeste", "points": [{"x": 0.18, "y": 0.18}, {"x": 0.50, "y": 0.18}, {"x": 0.50, "y": 0.86}, {"x": 0.18, "y": 0.86}]},
+        {"regionId": "preset:lab-neural-leste", "label": "Bancadas leste", "points": [{"x": 0.50, "y": 0.18}, {"x": 0.82, "y": 0.18}, {"x": 0.82, "y": 0.86}, {"x": 0.50, "y": 0.86}]},
+        {"regionId": "preset:lab-neural-tunel", "label": "Passagem para o túnel", "points": [{"x": 0.80, "y": 0.65}, {"x": 1.00, "y": 0.65}, {"x": 1.00, "y": 0.95}, {"x": 0.80, "y": 0.95}]}
+      ]
+    },
+    "helix-9-subsolo-1-reservatorio": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:reservatorio-tanque", "label": "Tanque subterrâneo", "points": [{"x": 0.06, "y": 0.30}, {"x": 0.18, "y": 0.20}, {"x": 0.38, "y": 0.18}, {"x": 0.53, "y": 0.29}, {"x": 0.58, "y": 0.49}, {"x": 0.51, "y": 0.72}, {"x": 0.34, "y": 0.84}, {"x": 0.15, "y": 0.79}, {"x": 0.05, "y": 0.62}]},
+        {"regionId": "preset:reservatorio-passarela", "label": "Passarela do reservatório", "points": [{"x": 0.00, "y": 0.48}, {"x": 0.58, "y": 0.48}, {"x": 0.58, "y": 0.61}, {"x": 0.00, "y": 0.61}]},
+        {"regionId": "preset:reservatorio-acesso", "label": "Acesso ao reservatório", "points": [{"x": 0.50, "y": 0.48}, {"x": 1.00, "y": 0.48}, {"x": 1.00, "y": 0.80}, {"x": 0.50, "y": 0.80}]}
+      ]
+    },
+    "helix-9-subsolo-1-tunel-manutencao": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:tunel-acesso-laboratorio", "label": "Acesso ao laboratório", "points": [{"x": 0.15, "y": 0.00}, {"x": 0.48, "y": 0.00}, {"x": 0.48, "y": 0.20}, {"x": 0.15, "y": 0.20}]},
+        {"regionId": "preset:tunel-trecho-norte", "label": "Túnel norte", "points": [{"x": 0.25, "y": 0.12}, {"x": 0.72, "y": 0.12}, {"x": 0.72, "y": 0.45}, {"x": 0.25, "y": 0.45}]},
+        {"regionId": "preset:tunel-trecho-sul", "label": "Túnel sul", "points": [{"x": 0.25, "y": 0.42}, {"x": 0.72, "y": 0.42}, {"x": 0.72, "y": 0.88}, {"x": 0.25, "y": 0.88}]},
+        {"regionId": "preset:tunel-escada-enfermaria", "label": "Escada da enfermaria", "points": [{"x": 0.68, "y": 0.58}, {"x": 0.94, "y": 0.58}, {"x": 0.94, "y": 0.94}, {"x": 0.68, "y": 0.94}]}
+      ]
+    },
+    "helix-9-subsolo-2-camara": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:camara-nucleo", "label": "Núcleo da câmara", "points": [{"x": 0.34, "y": 0.32}, {"x": 0.50, "y": 0.26}, {"x": 0.66, "y": 0.32}, {"x": 0.75, "y": 0.49}, {"x": 0.66, "y": 0.68}, {"x": 0.50, "y": 0.74}, {"x": 0.34, "y": 0.68}, {"x": 0.25, "y": 0.49}]},
+        {"regionId": "preset:camara-anel-norte", "label": "Galeria norte", "points": [{"x": 0.18, "y": 0.03}, {"x": 0.82, "y": 0.03}, {"x": 0.82, "y": 0.31}, {"x": 0.66, "y": 0.39}, {"x": 0.34, "y": 0.39}, {"x": 0.18, "y": 0.31}]},
+        {"regionId": "preset:camara-anel-oeste", "label": "Galeria oeste", "points": [{"x": 0.02, "y": 0.18}, {"x": 0.31, "y": 0.18}, {"x": 0.39, "y": 0.34}, {"x": 0.39, "y": 0.66}, {"x": 0.31, "y": 0.82}, {"x": 0.02, "y": 0.82}]},
+        {"regionId": "preset:camara-anel-leste", "label": "Galeria leste", "points": [{"x": 0.69, "y": 0.18}, {"x": 0.98, "y": 0.18}, {"x": 0.98, "y": 0.82}, {"x": 0.69, "y": 0.82}, {"x": 0.61, "y": 0.66}, {"x": 0.61, "y": 0.34}]},
+        {"regionId": "preset:camara-anel-sul", "label": "Galeria sul", "points": [{"x": 0.18, "y": 0.69}, {"x": 0.34, "y": 0.61}, {"x": 0.66, "y": 0.61}, {"x": 0.82, "y": 0.69}, {"x": 0.82, "y": 0.98}, {"x": 0.18, "y": 0.98}]},
+        {"regionId": "preset:camara-rele", "label": "Relé hemático", "points": [{"x": 0.08, "y": 0.30}, {"x": 0.33, "y": 0.30}, {"x": 0.33, "y": 0.67}, {"x": 0.08, "y": 0.67}]},
+        {"regionId": "preset:camara-saida-leste", "label": "Saída leste", "points": [{"x": 0.75, "y": 0.35}, {"x": 0.99, "y": 0.35}, {"x": 0.99, "y": 0.66}, {"x": 0.75, "y": 0.66}]},
+        {"regionId": "preset:camara-reserva-sul", "label": "Reserva inferior", "points": [{"x": 0.31, "y": 0.69}, {"x": 0.69, "y": 0.69}, {"x": 0.69, "y": 0.98}, {"x": 0.31, "y": 0.98}]}
+      ]
+    },
+    "helix-9-vale-santa-dalia": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:vale-complexo-helix", "label": "Complexo Helix-9", "points": [{"x": 0.08, "y": 0.07}, {"x": 0.34, "y": 0.07}, {"x": 0.39, "y": 0.31}, {"x": 0.31, "y": 0.45}, {"x": 0.10, "y": 0.45}, {"x": 0.05, "y": 0.27}]},
+        {"regionId": "preset:vale-ponte-helix", "label": "Ponte do complexo", "points": [{"x": 0.08, "y": 0.27}, {"x": 0.31, "y": 0.27}, {"x": 0.31, "y": 0.43}, {"x": 0.08, "y": 0.43}]},
+        {"regionId": "preset:vale-trilha-noroeste", "label": "Trilha noroeste", "points": [{"x": 0.27, "y": 0.27}, {"x": 0.50, "y": 0.27}, {"x": 0.55, "y": 0.39}, {"x": 0.42, "y": 0.46}, {"x": 0.30, "y": 0.39}]},
+        {"regionId": "preset:vale-trilha-nordeste", "label": "Trilha nordeste", "points": [{"x": 0.48, "y": 0.25}, {"x": 0.74, "y": 0.22}, {"x": 0.82, "y": 0.34}, {"x": 0.70, "y": 0.43}, {"x": 0.54, "y": 0.39}]},
+        {"regionId": "preset:vale-trilha-central", "label": "Trilha central", "points": [{"x": 0.37, "y": 0.39}, {"x": 0.59, "y": 0.38}, {"x": 0.67, "y": 0.57}, {"x": 0.53, "y": 0.66}, {"x": 0.35, "y": 0.57}]},
+        {"regionId": "preset:vale-trilha-oeste", "label": "Trilha oeste", "points": [{"x": 0.18, "y": 0.43}, {"x": 0.38, "y": 0.39}, {"x": 0.43, "y": 0.62}, {"x": 0.34, "y": 0.77}, {"x": 0.17, "y": 0.73}]},
+        {"regionId": "preset:vale-ruinas-sul", "label": "Ruínas do sul", "points": [{"x": 0.10, "y": 0.72}, {"x": 0.31, "y": 0.72}, {"x": 0.31, "y": 0.91}, {"x": 0.10, "y": 0.91}]},
+        {"regionId": "preset:vale-trilha-capela", "label": "Trilha da capela", "points": [{"x": 0.52, "y": 0.55}, {"x": 0.76, "y": 0.52}, {"x": 0.84, "y": 0.71}, {"x": 0.73, "y": 0.82}, {"x": 0.57, "y": 0.73}]},
+        {"regionId": "preset:vale-capela", "label": "Capela de Santa Dália", "points": [{"x": 0.76, "y": 0.67}, {"x": 0.93, "y": 0.67}, {"x": 0.93, "y": 0.86}, {"x": 0.76, "y": 0.86}]},
+        {"regionId": "preset:vale-estrada-sul", "label": "Estrada sul", "points": [{"x": 0.29, "y": 0.69}, {"x": 0.58, "y": 0.69}, {"x": 0.64, "y": 0.87}, {"x": 0.55, "y": 1.00}, {"x": 0.31, "y": 1.00}]}
+      ]
+    },
+    "laboratorio-mnemosyne": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:mnemosyne-controle", "label": "Sala de controle", "points": [{"x": 0.32, "y": 0.03}, {"x": 0.67, "y": 0.03}, {"x": 0.67, "y": 0.20}, {"x": 0.32, "y": 0.20}]},
+        {"regionId": "preset:mnemosyne-servidores", "label": "Servidores oeste", "points": [{"x": 0.03, "y": 0.02}, {"x": 0.32, "y": 0.02}, {"x": 0.32, "y": 0.31}, {"x": 0.03, "y": 0.31}]},
+        {"regionId": "preset:mnemosyne-cirurgia", "label": "Laboratório cirúrgico", "points": [{"x": 0.68, "y": 0.03}, {"x": 0.96, "y": 0.03}, {"x": 0.96, "y": 0.31}, {"x": 0.68, "y": 0.31}]},
+        {"regionId": "preset:mnemosyne-ala-oeste", "label": "Ala de pesquisa oeste", "points": [{"x": 0.03, "y": 0.29}, {"x": 0.31, "y": 0.29}, {"x": 0.31, "y": 0.62}, {"x": 0.03, "y": 0.62}]},
+        {"regionId": "preset:mnemosyne-nucleo", "label": "Núcleo Mnemosyne", "points": [{"x": 0.30, "y": 0.27}, {"x": 0.70, "y": 0.27}, {"x": 0.70, "y": 0.62}, {"x": 0.61, "y": 0.66}, {"x": 0.39, "y": 0.66}, {"x": 0.30, "y": 0.62}]},
+        {"regionId": "preset:mnemosyne-ala-leste", "label": "Ala de pesquisa leste", "points": [{"x": 0.69, "y": 0.28}, {"x": 0.96, "y": 0.28}, {"x": 0.96, "y": 0.63}, {"x": 0.69, "y": 0.63}]},
+        {"regionId": "preset:mnemosyne-lab-sudoeste", "label": "Laboratório sudoeste", "points": [{"x": 0.03, "y": 0.61}, {"x": 0.39, "y": 0.61}, {"x": 0.39, "y": 0.81}, {"x": 0.03, "y": 0.81}]},
+        {"regionId": "preset:mnemosyne-recepcao", "label": "Recepção central", "points": [{"x": 0.38, "y": 0.62}, {"x": 0.62, "y": 0.62}, {"x": 0.62, "y": 0.83}, {"x": 0.38, "y": 0.83}]},
+        {"regionId": "preset:mnemosyne-lab-sudeste", "label": "Laboratório sudeste", "points": [{"x": 0.61, "y": 0.61}, {"x": 0.96, "y": 0.61}, {"x": 0.96, "y": 0.81}, {"x": 0.61, "y": 0.81}]},
+        {"regionId": "preset:mnemosyne-entrada", "label": "Entrada sul", "points": [{"x": 0.20, "y": 0.80}, {"x": 0.80, "y": 0.80}, {"x": 0.80, "y": 1.00}, {"x": 0.20, "y": 1.00}]}
+      ]
+    },
+    "salao-vazio": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:salao-centro", "label": "Plataforma central", "points": [{"x": 0.39, "y": 0.37}, {"x": 0.61, "y": 0.37}, {"x": 0.64, "y": 0.50}, {"x": 0.61, "y": 0.61}, {"x": 0.39, "y": 0.61}, {"x": 0.36, "y": 0.50}]},
+        {"regionId": "preset:salao-norte", "label": "Galeria norte", "points": [{"x": 0.18, "y": 0.02}, {"x": 0.82, "y": 0.02}, {"x": 0.82, "y": 0.37}, {"x": 0.61, "y": 0.43}, {"x": 0.39, "y": 0.43}, {"x": 0.18, "y": 0.37}]},
+        {"regionId": "preset:salao-oeste", "label": "Galeria oeste", "points": [{"x": 0.02, "y": 0.18}, {"x": 0.38, "y": 0.18}, {"x": 0.43, "y": 0.39}, {"x": 0.43, "y": 0.61}, {"x": 0.38, "y": 0.82}, {"x": 0.02, "y": 0.82}]},
+        {"regionId": "preset:salao-leste", "label": "Galeria leste", "points": [{"x": 0.62, "y": 0.18}, {"x": 0.98, "y": 0.18}, {"x": 0.98, "y": 0.82}, {"x": 0.62, "y": 0.82}, {"x": 0.57, "y": 0.61}, {"x": 0.57, "y": 0.39}]},
+        {"regionId": "preset:salao-sul", "label": "Galeria sul", "points": [{"x": 0.18, "y": 0.63}, {"x": 0.39, "y": 0.57}, {"x": 0.61, "y": 0.57}, {"x": 0.82, "y": 0.63}, {"x": 0.82, "y": 0.98}, {"x": 0.18, "y": 0.98}]},
+        {"regionId": "preset:salao-entrada", "label": "Entrada sul", "points": [{"x": 0.40, "y": 0.89}, {"x": 0.60, "y": 0.89}, {"x": 0.60, "y": 1.00}, {"x": 0.40, "y": 1.00}]}
+      ]
+    },
+    "santa-dalia-capela": {
+      "revision": 1,
+      "regions": [
+        {"regionId": "preset:capela-altar", "label": "Altar", "points": [{"x": 0.34, "y": 0.06}, {"x": 0.64, "y": 0.06}, {"x": 0.64, "y": 0.27}, {"x": 0.34, "y": 0.27}]},
+        {"regionId": "preset:capela-nave", "label": "Nave da capela", "points": [{"x": 0.33, "y": 0.24}, {"x": 0.64, "y": 0.24}, {"x": 0.64, "y": 0.56}, {"x": 0.33, "y": 0.56}]},
+        {"regionId": "preset:capela-cripta-oeste", "label": "Cripta oeste", "points": [{"x": 0.16, "y": 0.20}, {"x": 0.34, "y": 0.20}, {"x": 0.34, "y": 0.48}, {"x": 0.16, "y": 0.48}]},
+        {"regionId": "preset:capela-ruinas-leste", "label": "Ruínas leste", "points": [{"x": 0.63, "y": 0.09}, {"x": 0.78, "y": 0.09}, {"x": 0.78, "y": 0.51}, {"x": 0.63, "y": 0.51}]},
+        {"regionId": "preset:capela-patio", "label": "Pátio da capela", "points": [{"x": 0.22, "y": 0.51}, {"x": 0.77, "y": 0.51}, {"x": 0.77, "y": 0.70}, {"x": 0.22, "y": 0.70}]},
+        {"regionId": "preset:capela-trilha", "label": "Trilha de acesso", "points": [{"x": 0.15, "y": 0.66}, {"x": 0.78, "y": 0.66}, {"x": 0.78, "y": 0.83}, {"x": 0.65, "y": 0.88}, {"x": 0.29, "y": 0.88}, {"x": 0.15, "y": 0.81}]}
+      ]
+    }
+  },
   "sceneLayers": [
     {
       "key": "emissor-sincronia",

@@ -1302,6 +1302,233 @@
       {
         "activeGmGuideMap": null,
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-fundacao-turbina-battlemap-vtt-v1.png",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Núcleo da turbina",
+              "points": [
+                {
+                  "x": 0.5,
+                  "y": 0.25
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.75
+                },
+                {
+                  "x": 0.37,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.28,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.28,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.37,
+                  "y": 0.28
+                }
+              ],
+              "regionId": "preset:fundacao-nucleo"
+            },
+            {
+              "label": "Passarela norte",
+              "points": [
+                {
+                  "x": 0.14,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.17,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.29,
+                  "y": 0.14
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.07
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.14
+                },
+                {
+                  "x": 0.83,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.25
+                },
+                {
+                  "x": 0.37,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.28,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.5
+                }
+              ],
+              "regionId": "preset:fundacao-anel-norte"
+            },
+            {
+              "label": "Passarela sul",
+              "points": [
+                {
+                  "x": 0.14,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.17,
+                  "y": 0.71
+                },
+                {
+                  "x": 0.29,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.93
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.83,
+                  "y": 0.71
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.75
+                },
+                {
+                  "x": 0.37,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.28,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.5
+                }
+              ],
+              "regionId": "preset:fundacao-anel-sul"
+            },
+            {
+              "label": "Acesso oeste",
+              "points": [
+                {
+                  "x": 0.01,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.26,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.26,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.01,
+                  "y": 0.61
+                }
+              ],
+              "regionId": "preset:fundacao-acesso-oeste"
+            },
+            {
+              "label": "Acesso leste",
+              "points": [
+                {
+                  "x": 0.74,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.99,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.99,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.74,
+                  "y": 0.61
+                }
+              ],
+              "regionId": "preset:fundacao-acesso-leste"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [],
         "gridHint": null,
         "id": "scene:helix-9-fundacao-turbina",
@@ -1318,6 +1545,229 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-battlemap-vtt-v3.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Monitoramento e acesso superior",
+              "points": [
+                {
+                  "x": 0.29,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.59,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.41,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.29,
+                  "y": 0.28
+                }
+              ],
+              "regionId": "preset:nivel0-monitoramento"
+            },
+            {
+              "label": "Ala administrativa",
+              "points": [
+                {
+                  "x": 0.03,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.69
+                }
+              ],
+              "regionId": "preset:nivel0-administrativo"
+            },
+            {
+              "label": "Dormitórios",
+              "points": [
+                {
+                  "x": 0.48,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.48,
+                  "y": 0.69
+                }
+              ],
+              "regionId": "preset:nivel0-dormitorios"
+            },
+            {
+              "label": "Enfermaria",
+              "points": [
+                {
+                  "x": 0.7,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.95,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.95,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.69
+                }
+              ],
+              "regionId": "preset:nivel0-enfermaria"
+            },
+            {
+              "label": "Corredor central",
+              "points": [
+                {
+                  "x": 0.38,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.49,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.49,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.72
+                }
+              ],
+              "regionId": "preset:nivel0-corredor-central"
+            },
+            {
+              "label": "Saguão de entrada",
+              "points": [
+                {
+                  "x": 0.37,
+                  "y": 0.68
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.68
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.84
+                },
+                {
+                  "x": 0.37,
+                  "y": 0.84
+                }
+              ],
+              "regionId": "preset:nivel0-entrada"
+            },
+            {
+              "label": "Escada para o túnel",
+              "points": [
+                {
+                  "x": 0.78,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.83
+                },
+                {
+                  "x": 0.78,
+                  "y": 0.83
+                }
+              ],
+              "regionId": "preset:nivel0-escada-tunel"
+            },
+            {
+              "label": "Portaria e pátio",
+              "points": [
+                {
+                  "x": 0.49,
+                  "y": 0.79
+                },
+                {
+                  "x": 0.79,
+                  "y": 0.77
+                },
+                {
+                  "x": 0.89,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.76,
+                  "y": 0.99
+                },
+                {
+                  "x": 0.52,
+                  "y": 0.99
+                },
+                {
+                  "x": 0.42,
+                  "y": 0.89
+                }
+              ],
+              "regionId": "preset:nivel0-portaria"
+            },
+            {
+              "label": "Estrada de acesso",
+              "points": [
+                {
+                  "x": 0.21,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.42,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.52,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.45,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.21,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:nivel0-acesso-externo"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-guia-mestre-v3.webp",
@@ -1374,6 +1824,121 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-ala-administrativa-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Escritórios superiores",
+              "points": [
+                {
+                  "x": 0.05,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.05,
+                  "y": 0.31
+                }
+              ],
+              "regionId": "preset:admin-escritorio-norte"
+            },
+            {
+              "label": "Arquivo e estação central",
+              "points": [
+                {
+                  "x": 0.06,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.06,
+                  "y": 0.57
+                }
+              ],
+              "regionId": "preset:admin-arquivo"
+            },
+            {
+              "label": "Corredor leste",
+              "points": [
+                {
+                  "x": 0.65,
+                  "y": 0.08
+                },
+                {
+                  "x": 0.91,
+                  "y": 0.08
+                },
+                {
+                  "x": 0.91,
+                  "y": 0.91
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.91
+                }
+              ],
+              "regionId": "preset:admin-corredor-leste"
+            },
+            {
+              "label": "Sala de reunião",
+              "points": [
+                {
+                  "x": 0.05,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.36,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.36,
+                  "y": 0.92
+                },
+                {
+                  "x": 0.05,
+                  "y": 0.92
+                }
+              ],
+              "regionId": "preset:admin-sala-reuniao"
+            },
+            {
+              "label": "Gabinetes inferiores",
+              "points": [
+                {
+                  "x": 0.35,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.94
+                },
+                {
+                  "x": 0.35,
+                  "y": 0.94
+                }
+              ],
+              "regionId": "preset:admin-gabinetes-sul"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
@@ -1395,6 +1960,121 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-dormitorios-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Sala de convivência",
+              "points": [
+                {
+                  "x": 0.32,
+                  "y": 0.11
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.11
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.42
+                },
+                {
+                  "x": 0.32,
+                  "y": 0.42
+                }
+              ],
+              "regionId": "preset:dormitorio-convivencia"
+            },
+            {
+              "label": "Dormitórios oeste",
+              "points": [
+                {
+                  "x": 0.31,
+                  "y": 0.4
+                },
+                {
+                  "x": 0.51,
+                  "y": 0.4
+                },
+                {
+                  "x": 0.51,
+                  "y": 0.8
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.8
+                }
+              ],
+              "regionId": "preset:dormitorio-oeste"
+            },
+            {
+              "label": "Dormitórios leste",
+              "points": [
+                {
+                  "x": 0.7,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.81
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.81
+                }
+              ],
+              "regionId": "preset:dormitorio-leste"
+            },
+            {
+              "label": "Corredor dos dormitórios",
+              "points": [
+                {
+                  "x": 0.5,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.71,
+                  "y": 0.87
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.87
+                }
+              ],
+              "regionId": "preset:dormitorio-corredor"
+            },
+            {
+              "label": "Entrada dos dormitórios",
+              "points": [
+                {
+                  "x": 0.15,
+                  "y": 0.79
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.79
+                },
+                {
+                  "x": 0.75,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.15,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:dormitorio-entrada"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-dormitorios-guia-mestre-v1.webp",
@@ -1416,6 +2096,99 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-nivel-0-enfermaria-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Consultório",
+              "points": [
+                {
+                  "x": 0.43,
+                  "y": 0.11
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.11
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.41
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.41
+                }
+              ],
+              "regionId": "preset:enfermaria-consultorio"
+            },
+            {
+              "label": "Triagem",
+              "points": [
+                {
+                  "x": 0.43,
+                  "y": 0.4
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.4
+                },
+                {
+                  "x": 0.86,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.62
+                }
+              ],
+              "regionId": "preset:enfermaria-triagem"
+            },
+            {
+              "label": "Sala de procedimentos",
+              "points": [
+                {
+                  "x": 0.43,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.87,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.87,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.88
+                }
+              ],
+              "regionId": "preset:enfermaria-procedimentos"
+            },
+            {
+              "label": "Escada para o túnel",
+              "points": [
+                {
+                  "x": 0.48,
+                  "y": 0.87
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.87
+                },
+                {
+                  "x": 0.82,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.48,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:enfermaria-escada"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-enfermaria-guia-mestre-v1.webp",
@@ -1437,6 +2210,179 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-battlemap-vtt-v3.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Laboratório neural",
+              "points": [
+                {
+                  "x": 0.19,
+                  "y": 0.08
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.08
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.53
+                },
+                {
+                  "x": 0.35,
+                  "y": 0.53
+                },
+                {
+                  "x": 0.19,
+                  "y": 0.45
+                }
+              ],
+              "regionId": "preset:sub1-laboratorio"
+            },
+            {
+              "label": "Passagem inundada",
+              "points": [
+                {
+                  "x": 0.68,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.1
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.77,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.77,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.68,
+                  "y": 0.45
+                }
+              ],
+              "regionId": "preset:sub1-passagem"
+            },
+            {
+              "label": "Reservatório subterrâneo",
+              "points": [
+                {
+                  "x": 0.02,
+                  "y": 0.51
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.35,
+                  "y": 0.55
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.91
+                },
+                {
+                  "x": 0.2,
+                  "y": 0.98
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.91
+                }
+              ],
+              "regionId": "preset:sub1-reservatorio"
+            },
+            {
+              "label": "Acesso central",
+              "points": [
+                {
+                  "x": 0.36,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.69
+                }
+              ],
+              "regionId": "preset:sub1-acesso-central"
+            },
+            {
+              "label": "Sala de manutenção",
+              "points": [
+                {
+                  "x": 0.75,
+                  "y": 0.78
+                },
+                {
+                  "x": 0.97,
+                  "y": 0.78
+                },
+                {
+                  "x": 0.97,
+                  "y": 0.98
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.98
+                }
+              ],
+              "regionId": "preset:sub1-manutencao"
+            },
+            {
+              "label": "Elevador da câmara",
+              "points": [
+                {
+                  "x": 0.34,
+                  "y": 0.01
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.01
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.17
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.17
+                }
+              ],
+              "regionId": "preset:sub1-elevador"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-guia-mestre-v3.webp",
@@ -1493,6 +2439,121 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-laboratorio-neural-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Elevador para a câmara",
+              "points": [
+                {
+                  "x": 0.22,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.22,
+                  "y": 0.2
+                }
+              ],
+              "regionId": "preset:lab-neural-elevador"
+            },
+            {
+              "label": "Monitoramento",
+              "points": [
+                {
+                  "x": 0.58,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.3
+                }
+              ],
+              "regionId": "preset:lab-neural-monitoramento"
+            },
+            {
+              "label": "Bancadas oeste",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.86
+                }
+              ],
+              "regionId": "preset:lab-neural-oeste"
+            },
+            {
+              "label": "Bancadas leste",
+              "points": [
+                {
+                  "x": 0.5,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.86
+                }
+              ],
+              "regionId": "preset:lab-neural-leste"
+            },
+            {
+              "label": "Passagem para o túnel",
+              "points": [
+                {
+                  "x": 0.8,
+                  "y": 0.65
+                },
+                {
+                  "x": 1.0,
+                  "y": 0.65
+                },
+                {
+                  "x": 1.0,
+                  "y": 0.95
+                },
+                {
+                  "x": 0.8,
+                  "y": 0.95
+                }
+              ],
+              "regionId": "preset:lab-neural-tunel"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-laboratorio-neural-guia-mestre-v1.webp",
@@ -1514,6 +2575,97 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-reservatorio-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Tanque subterrâneo",
+              "points": [
+                {
+                  "x": 0.06,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.53,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.49
+                },
+                {
+                  "x": 0.51,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.84
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.79
+                },
+                {
+                  "x": 0.05,
+                  "y": 0.62
+                }
+              ],
+              "regionId": "preset:reservatorio-tanque"
+            },
+            {
+              "label": "Passarela do reservatório",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.0,
+                  "y": 0.61
+                }
+              ],
+              "regionId": "preset:reservatorio-passarela"
+            },
+            {
+              "label": "Acesso ao reservatório",
+              "points": [
+                {
+                  "x": 0.5,
+                  "y": 0.48
+                },
+                {
+                  "x": 1.0,
+                  "y": 0.48
+                },
+                {
+                  "x": 1.0,
+                  "y": 0.8
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.8
+                }
+              ],
+              "regionId": "preset:reservatorio-acesso"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-reservatorio-guia-mestre-v1.webp",
@@ -1535,6 +2687,99 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-1-tunel-manutencao-battlemap-vtt-v1.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Acesso ao laboratório",
+              "points": [
+                {
+                  "x": 0.15,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.48,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.48,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.2
+                }
+              ],
+              "regionId": "preset:tunel-acesso-laboratorio"
+            },
+            {
+              "label": "Túnel norte",
+              "points": [
+                {
+                  "x": 0.25,
+                  "y": 0.12
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.12
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.45
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.45
+                }
+              ],
+              "regionId": "preset:tunel-trecho-norte"
+            },
+            {
+              "label": "Túnel sul",
+              "points": [
+                {
+                  "x": 0.25,
+                  "y": 0.42
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.42
+                },
+                {
+                  "x": 0.72,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.88
+                }
+              ],
+              "regionId": "preset:tunel-trecho-sul"
+            },
+            {
+              "label": "Escada da enfermaria",
+              "points": [
+                {
+                  "x": 0.68,
+                  "y": 0.58
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.58
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.94
+                },
+                {
+                  "x": 0.68,
+                  "y": 0.94
+                }
+              ],
+              "regionId": "preset:tunel-escada-enfermaria"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-1-tunel-manutencao-guia-mestre-v1.webp",
@@ -1556,6 +2801,235 @@
       {
         "activeGmGuideMap": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-subsolo-2-camara-battlemap-vtt-v3.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Núcleo da câmara",
+              "points": [
+                {
+                  "x": 0.34,
+                  "y": 0.32
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.26
+                },
+                {
+                  "x": 0.66,
+                  "y": 0.32
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.49
+                },
+                {
+                  "x": 0.66,
+                  "y": 0.68
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.74
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.68
+                },
+                {
+                  "x": 0.25,
+                  "y": 0.49
+                }
+              ],
+              "regionId": "preset:camara-nucleo"
+            },
+            {
+              "label": "Galeria norte",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.66,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.31
+                }
+              ],
+              "regionId": "preset:camara-anel-norte"
+            },
+            {
+              "label": "Galeria oeste",
+              "points": [
+                {
+                  "x": 0.02,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.34
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.02,
+                  "y": 0.82
+                }
+              ],
+              "regionId": "preset:camara-anel-oeste"
+            },
+            {
+              "label": "Galeria leste",
+              "points": [
+                {
+                  "x": 0.69,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.98,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.98,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.34
+                }
+              ],
+              "regionId": "preset:camara-anel-leste"
+            },
+            {
+              "label": "Galeria sul",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.66,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.98
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.98
+                }
+              ],
+              "regionId": "preset:camara-anel-sul"
+            },
+            {
+              "label": "Relé hemático",
+              "points": [
+                {
+                  "x": 0.08,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.33,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.33,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.08,
+                  "y": 0.67
+                }
+              ],
+              "regionId": "preset:camara-rele"
+            },
+            {
+              "label": "Saída leste",
+              "points": [
+                {
+                  "x": 0.75,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.99,
+                  "y": 0.35
+                },
+                {
+                  "x": 0.99,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.75,
+                  "y": 0.66
+                }
+              ],
+              "regionId": "preset:camara-saida-leste"
+            },
+            {
+              "label": "Reserva inferior",
+              "points": [
+                {
+                  "x": 0.31,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.98
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.98
+                }
+              ],
+              "regionId": "preset:camara-reserva-sul"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [
           {
             "assetId": "asset:assets/mapas/helix-9/guia-mestre/helix-9-subsolo-2-camara-guia-mestre-v3.webp",
@@ -1751,6 +3225,263 @@
       {
         "activeGmGuideMap": null,
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/helix-9-vale-santa-dalia-regional-vtt-v1.png",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Complexo Helix-9",
+              "points": [
+                {
+                  "x": 0.08,
+                  "y": 0.07
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.07
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.45
+                },
+                {
+                  "x": 0.1,
+                  "y": 0.45
+                },
+                {
+                  "x": 0.05,
+                  "y": 0.27
+                }
+              ],
+              "regionId": "preset:vale-complexo-helix"
+            },
+            {
+              "label": "Ponte do complexo",
+              "points": [
+                {
+                  "x": 0.08,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.43
+                },
+                {
+                  "x": 0.08,
+                  "y": 0.43
+                }
+              ],
+              "regionId": "preset:vale-ponte-helix"
+            },
+            {
+              "label": "Trilha noroeste",
+              "points": [
+                {
+                  "x": 0.27,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.5,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.55,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.42,
+                  "y": 0.46
+                },
+                {
+                  "x": 0.3,
+                  "y": 0.39
+                }
+              ],
+              "regionId": "preset:vale-trilha-noroeste"
+            },
+            {
+              "label": "Trilha nordeste",
+              "points": [
+                {
+                  "x": 0.48,
+                  "y": 0.25
+                },
+                {
+                  "x": 0.74,
+                  "y": 0.22
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.34
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.43
+                },
+                {
+                  "x": 0.54,
+                  "y": 0.39
+                }
+              ],
+              "regionId": "preset:vale-trilha-nordeste"
+            },
+            {
+              "label": "Trilha central",
+              "points": [
+                {
+                  "x": 0.37,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.59,
+                  "y": 0.38
+                },
+                {
+                  "x": 0.67,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.53,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.35,
+                  "y": 0.57
+                }
+              ],
+              "regionId": "preset:vale-trilha-central"
+            },
+            {
+              "label": "Trilha oeste",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.43
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.77
+                },
+                {
+                  "x": 0.17,
+                  "y": 0.73
+                }
+              ],
+              "regionId": "preset:vale-trilha-oeste"
+            },
+            {
+              "label": "Ruínas do sul",
+              "points": [
+                {
+                  "x": 0.1,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.72
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.91
+                },
+                {
+                  "x": 0.1,
+                  "y": 0.91
+                }
+              ],
+              "regionId": "preset:vale-ruinas-sul"
+            },
+            {
+              "label": "Trilha da capela",
+              "points": [
+                {
+                  "x": 0.52,
+                  "y": 0.55
+                },
+                {
+                  "x": 0.76,
+                  "y": 0.52
+                },
+                {
+                  "x": 0.84,
+                  "y": 0.71
+                },
+                {
+                  "x": 0.73,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.73
+                }
+              ],
+              "regionId": "preset:vale-trilha-capela"
+            },
+            {
+              "label": "Capela de Santa Dália",
+              "points": [
+                {
+                  "x": 0.76,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.93,
+                  "y": 0.67
+                },
+                {
+                  "x": 0.93,
+                  "y": 0.86
+                },
+                {
+                  "x": 0.76,
+                  "y": 0.86
+                }
+              ],
+              "regionId": "preset:vale-capela"
+            },
+            {
+              "label": "Estrada sul",
+              "points": [
+                {
+                  "x": 0.29,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.58,
+                  "y": 0.69
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.87
+                },
+                {
+                  "x": 0.55,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.31,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:vale-estrada-sul"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [],
         "gridHint": null,
         "id": "scene:helix-9-vale-santa-dalia",
@@ -1767,6 +3498,239 @@
       {
         "activeGmGuideMap": null,
         "activePlayerMap": "asset:assets/mapas/orfeu-2073/laboratorio-mnemosyne-battlemap-vtt-v1.png",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Sala de controle",
+              "points": [
+                {
+                  "x": 0.32,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.67,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.67,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.32,
+                  "y": 0.2
+                }
+              ],
+              "regionId": "preset:mnemosyne-controle"
+            },
+            {
+              "label": "Servidores oeste",
+              "points": [
+                {
+                  "x": 0.03,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.32,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.32,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.31
+                }
+              ],
+              "regionId": "preset:mnemosyne-servidores"
+            },
+            {
+              "label": "Laboratório cirúrgico",
+              "points": [
+                {
+                  "x": 0.68,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.03
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.31
+                },
+                {
+                  "x": 0.68,
+                  "y": 0.31
+                }
+              ],
+              "regionId": "preset:mnemosyne-cirurgia"
+            },
+            {
+              "label": "Ala de pesquisa oeste",
+              "points": [
+                {
+                  "x": 0.03,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.29
+                },
+                {
+                  "x": 0.31,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.62
+                }
+              ],
+              "regionId": "preset:mnemosyne-ala-oeste"
+            },
+            {
+              "label": "Núcleo Mnemosyne",
+              "points": [
+                {
+                  "x": 0.3,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.7,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.3,
+                  "y": 0.62
+                }
+              ],
+              "regionId": "preset:mnemosyne-nucleo"
+            },
+            {
+              "label": "Ala de pesquisa leste",
+              "points": [
+                {
+                  "x": 0.69,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.28
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.69,
+                  "y": 0.63
+                }
+              ],
+              "regionId": "preset:mnemosyne-ala-leste"
+            },
+            {
+              "label": "Laboratório sudoeste",
+              "points": [
+                {
+                  "x": 0.03,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.81
+                },
+                {
+                  "x": 0.03,
+                  "y": 0.81
+                }
+              ],
+              "regionId": "preset:mnemosyne-lab-sudoeste"
+            },
+            {
+              "label": "Recepção central",
+              "points": [
+                {
+                  "x": 0.38,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.62,
+                  "y": 0.62
+                },
+                {
+                  "x": 0.62,
+                  "y": 0.83
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.83
+                }
+              ],
+              "regionId": "preset:mnemosyne-recepcao"
+            },
+            {
+              "label": "Laboratório sudeste",
+              "points": [
+                {
+                  "x": 0.61,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.96,
+                  "y": 0.81
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.81
+                }
+              ],
+              "regionId": "preset:mnemosyne-lab-sudeste"
+            },
+            {
+              "label": "Entrada sul",
+              "points": [
+                {
+                  "x": 0.2,
+                  "y": 0.8
+                },
+                {
+                  "x": 0.8,
+                  "y": 0.8
+                },
+                {
+                  "x": 0.8,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.2,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:mnemosyne-entrada"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [],
         "gridHint": null,
         "id": "scene:laboratorio-mnemosyne",
@@ -1783,6 +3747,183 @@
       {
         "activeGmGuideMap": null,
         "activePlayerMap": "asset:assets/mapas/salao-vazio-battlemap-vtt-v3.webp",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Plataforma central",
+              "points": [
+                {
+                  "x": 0.39,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.5
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.36,
+                  "y": 0.5
+                }
+              ],
+              "regionId": "preset:salao-centro"
+            },
+            {
+              "label": "Galeria norte",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.02
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.37
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.43
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.43
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.37
+                }
+              ],
+              "regionId": "preset:salao-norte"
+            },
+            {
+              "label": "Galeria oeste",
+              "points": [
+                {
+                  "x": 0.02,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.39
+                },
+                {
+                  "x": 0.43,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.38,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.02,
+                  "y": 0.82
+                }
+              ],
+              "regionId": "preset:salao-oeste"
+            },
+            {
+              "label": "Galeria leste",
+              "points": [
+                {
+                  "x": 0.62,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.98,
+                  "y": 0.18
+                },
+                {
+                  "x": 0.98,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.62,
+                  "y": 0.82
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.61
+                },
+                {
+                  "x": 0.57,
+                  "y": 0.39
+                }
+              ],
+              "regionId": "preset:salao-leste"
+            },
+            {
+              "label": "Galeria sul",
+              "points": [
+                {
+                  "x": 0.18,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.39,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.61,
+                  "y": 0.57
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.63
+                },
+                {
+                  "x": 0.82,
+                  "y": 0.98
+                },
+                {
+                  "x": 0.18,
+                  "y": 0.98
+                }
+              ],
+              "regionId": "preset:salao-sul"
+            },
+            {
+              "label": "Entrada sul",
+              "points": [
+                {
+                  "x": 0.4,
+                  "y": 0.89
+                },
+                {
+                  "x": 0.6,
+                  "y": 0.89
+                },
+                {
+                  "x": 0.6,
+                  "y": 1.0
+                },
+                {
+                  "x": 0.4,
+                  "y": 1.0
+                }
+              ],
+              "regionId": "preset:salao-entrada"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [],
         "gridHint": {
           "columns": 28,
@@ -1804,6 +3945,151 @@
       {
         "activeGmGuideMap": null,
         "activePlayerMap": "asset:assets/mapas/helix-9/vtt-limpo/santa-dalia-capela-battlemap-vtt-v1.png",
+        "fogPreset": {
+          "regions": [
+            {
+              "label": "Altar",
+              "points": [
+                {
+                  "x": 0.34,
+                  "y": 0.06
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.06
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.27
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.27
+                }
+              ],
+              "regionId": "preset:capela-altar"
+            },
+            {
+              "label": "Nave da capela",
+              "points": [
+                {
+                  "x": 0.33,
+                  "y": 0.24
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.24
+                },
+                {
+                  "x": 0.64,
+                  "y": 0.56
+                },
+                {
+                  "x": 0.33,
+                  "y": 0.56
+                }
+              ],
+              "regionId": "preset:capela-nave"
+            },
+            {
+              "label": "Cripta oeste",
+              "points": [
+                {
+                  "x": 0.16,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.2
+                },
+                {
+                  "x": 0.34,
+                  "y": 0.48
+                },
+                {
+                  "x": 0.16,
+                  "y": 0.48
+                }
+              ],
+              "regionId": "preset:capela-cripta-oeste"
+            },
+            {
+              "label": "Ruínas leste",
+              "points": [
+                {
+                  "x": 0.63,
+                  "y": 0.09
+                },
+                {
+                  "x": 0.78,
+                  "y": 0.09
+                },
+                {
+                  "x": 0.78,
+                  "y": 0.51
+                },
+                {
+                  "x": 0.63,
+                  "y": 0.51
+                }
+              ],
+              "regionId": "preset:capela-ruinas-leste"
+            },
+            {
+              "label": "Pátio da capela",
+              "points": [
+                {
+                  "x": 0.22,
+                  "y": 0.51
+                },
+                {
+                  "x": 0.77,
+                  "y": 0.51
+                },
+                {
+                  "x": 0.77,
+                  "y": 0.7
+                },
+                {
+                  "x": 0.22,
+                  "y": 0.7
+                }
+              ],
+              "regionId": "preset:capela-patio"
+            },
+            {
+              "label": "Trilha de acesso",
+              "points": [
+                {
+                  "x": 0.15,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.78,
+                  "y": 0.66
+                },
+                {
+                  "x": 0.78,
+                  "y": 0.83
+                },
+                {
+                  "x": 0.65,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.29,
+                  "y": 0.88
+                },
+                {
+                  "x": 0.15,
+                  "y": 0.81
+                }
+              ],
+              "regionId": "preset:capela-trilha"
+            }
+          ],
+          "revision": 1
+        },
         "gmGuideMaps": [],
         "gridHint": null,
         "id": "scene:santa-dalia-capela",

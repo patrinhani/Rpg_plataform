@@ -40,7 +40,11 @@ def _webp(*chunks: tuple[bytes, bytes]) -> bytes:
 
 class CampaignManifestTests(unittest.TestCase):
     def _classification_config(
-        self, root: Path, *, scene_layers: list[dict[str, object]] | None = None
+        self,
+        root: Path,
+        *,
+        scene_layers: list[dict[str, object]] | None = None,
+        fog_presets: dict[str, object] | None = None,
     ) -> Path:
         path = root / "fixture.asset-overrides.json"
         path.write_text(
@@ -63,6 +67,7 @@ class CampaignManifestTests(unittest.TestCase):
                             "controlledBy": "gm",
                         },
                     },
+                    "fogPresets": fog_presets or {},
                     "sceneLayers": scene_layers or [],
                 },
                 ensure_ascii=False,
@@ -75,7 +80,26 @@ class CampaignManifestTests(unittest.TestCase):
     def _build(self, campaign: Path) -> dict[str, object]:
         return build_manifest(
             campaign,
-            self._classification_config(campaign.parent),
+            self._classification_config(
+                campaign.parent,
+                fog_presets={
+                    "helix-9-nivel-0": {
+                        "revision": 1,
+                        "regions": [
+                            {
+                                "regionId": "preset:entrada",
+                                "label": "Entrada",
+                                "points": [
+                                    {"x": 0.1, "y": 0.1},
+                                    {"x": 0.4, "y": 0.1},
+                                    {"x": 0.4, "y": 0.4},
+                                    {"x": 0.1, "y": 0.4},
+                                ],
+                            }
+                        ],
+                    }
+                },
+            ),
         )
 
     def _campaign(self, root: Path) -> Path:
@@ -141,6 +165,8 @@ class CampaignManifestTests(unittest.TestCase):
             self.assertEqual(scene["key"], "helix-9-nivel-0")
             self.assertEqual([item["version"] for item in scene["playerMaps"]], [1, 2])
             self.assertTrue(scene["activePlayerMap"].endswith("-v2.png"))
+            self.assertEqual(scene["fogPreset"]["revision"], 1)
+            self.assertEqual(scene["fogPreset"]["regions"][0]["label"], "Entrada")
             self.assertEqual(manifest["summary"]["stateGroupCount"], 1)
             self.assertEqual(
                 set(manifest["collections"]["stateGroups"][0]["states"]),

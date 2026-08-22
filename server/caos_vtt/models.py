@@ -610,6 +610,20 @@ class FogSetEnabledCommand(BaseModel):
     payload: FogSetEnabledPayload
 
 
+class FogPresetApplyCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.preset.apply"]
+    commandId: str = Field(min_length=1, max_length=100)
+
+
+class FogPresetsApplyAllCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fog.presets.apply_all"]
+    commandId: str = Field(min_length=1, max_length=100)
+
+
 class FogResetCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -35,9 +35,16 @@ const BOARD_COMMAND_TYPES = new Set([
   'fog.region.set_revealed',
   'fog.region.remove',
   'fog.reset',
+  'fog.preset.apply',
+  'fog.presets.apply_all',
   'fog.reveal_all',
 ]);
-const BOARD_COMMANDS_WITHOUT_PAYLOAD = new Set(['fog.reset', 'fog.reveal_all']);
+const BOARD_COMMANDS_WITHOUT_PAYLOAD = new Set([
+  'fog.reset',
+  'fog.preset.apply',
+  'fog.presets.apply_all',
+  'fog.reveal_all',
+]);
 
 const STATUS_LABELS = {
   disconnected: 'Desconectado',

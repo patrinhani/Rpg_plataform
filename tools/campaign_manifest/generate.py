@@ -360,11 +360,87 @@ def _classification_config_ref(path: Path) -> str:
 
 
 def _empty_classification_rules() -> dict[str, Any]:
-    return {"exact": {}, "families": {}, "sceneLayers": []}
+    return {"exact": {}, "families": {}, "sceneLayers": [], "fogPresets": {}}
 
 
 def _is_number(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _normalized_fog_presets(value: object) -> dict[str, dict[str, Any]] | None:
+    if not isinstance(value, dict):
+        return None
+    normalized: dict[str, dict[str, Any]] = {}
+    region_pattern = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
+    for scene_key, raw_preset in sorted(value.items(), key=lambda item: str(item[0])):
+        if (
+            not isinstance(scene_key, str)
+            or not _SCENE_LAYER_KEY_PATTERN.fullmatch(scene_key)
+            or not isinstance(raw_preset, dict)
+            or set(raw_preset) != {"revision", "regions"}
+        ):
+            return None
+        revision = raw_preset.get("revision")
+        regions = raw_preset.get("regions")
+        if (
+            isinstance(revision, bool)
+            or not isinstance(revision, int)
+            or revision < 1
+            or not isinstance(regions, list)
+            or not 1 <= len(regions) <= 128
+        ):
+            return None
+        normalized_regions: list[dict[str, Any]] = []
+        region_ids: set[str] = set()
+        for raw_region in regions:
+            if not isinstance(raw_region, dict) or set(raw_region) != {
+                "regionId",
+                "label",
+                "points",
+            }:
+                return None
+            region_id = raw_region.get("regionId")
+            label = raw_region.get("label")
+            points = raw_region.get("points")
+            if (
+                not isinstance(region_id, str)
+                or not region_pattern.fullmatch(region_id)
+                or region_id in region_ids
+                or not isinstance(label, str)
+                or not 1 <= len(label.strip()) <= 80
+                or any(ord(character) < 32 for character in label)
+                or not isinstance(points, list)
+                or not 3 <= len(points) <= 64
+            ):
+                return None
+            normalized_points: list[dict[str, float]] = []
+            for point in points:
+                if (
+                    not isinstance(point, dict)
+                    or set(point) != {"x", "y"}
+                    or not _is_number(point.get("x"))
+                    or not _is_number(point.get("y"))
+                ):
+                    return None
+                x = float(point["x"])
+                y = float(point["y"])
+                if not 0 <= x <= 1 or not 0 <= y <= 1:
+                    return None
+                normalized_points.append({"x": x, "y": y})
+            unique = {(point["x"], point["y"]) for point in normalized_points}
+            area = sum(
+                (point["x"] * normalized_points[(index + 1) % len(normalized_points)]["y"])
+                - (normalized_points[(index + 1) % len(normalized_points)]["x"] * point["y"])
+                for index, point in enumerate(normalized_points)
+            )
+            if len(unique) < 3 or abs(area) < 0.000002:
+                return None
+            region_ids.add(region_id)
+            normalized_regions.append(
+                {"regionId": region_id, "label": label.strip(), "points": normalized_points}
+            )
+        normalized[scene_key] = {"revision": revision, "regions": normalized_regions}
+    return normalized
 
 
 def _normalized_scene_layer_placement(
@@ -668,6 +744,17 @@ def _load_classification_config(
         )
         return _empty_classification_rules(), descriptor, warnings
 
+    fog_presets = _normalized_fog_presets(config.get("fogPresets", {}))
+    if fog_presets is None:
+        warnings.append(
+            {
+                "code": "classification-config-invalid",
+                "path": config_ref,
+                "message": "fogPresets deve definir polígonos normalizados por cena.",
+            }
+        )
+        return _empty_classification_rules(), descriptor, warnings
+
     raw_overrides = config.get("assetOverrides")
     if not isinstance(raw_overrides, dict):
         warnings.append(
@@ -712,6 +799,7 @@ def _load_classification_config(
             "exact": overrides,
             "families": {},
             "sceneLayers": scene_layers,
+            "fogPresets": fog_presets,
         }, descriptor, warnings
 
     families: dict[str, dict[str, Any]] = {}
@@ -759,6 +847,7 @@ def _load_classification_config(
         "exact": overrides,
         "families": families,
         "sceneLayers": scene_layers,
+        "fogPresets": fog_presets,
     }, descriptor, warnings
 
 
@@ -942,6 +1031,7 @@ def _build_scenes(assets: list[dict[str, Any]], warnings: list[dict[str, str]]) 
                 "overlays": [],
                 "activePlayerMap": None,
                 "activeGmGuideMap": None,
+                "fogPreset": None,
                 "gridHint": None,
             },
         )
@@ -1024,6 +1114,19 @@ def _build_scenes(assets: list[dict[str, Any]], warnings: list[dict[str, str]]) 
                 )
 
     return sorted(scenes.values(), key=lambda item: item["key"])
+
+
+def _apply_fog_presets(
+    scenes: list[dict[str, Any]], presets: dict[str, dict[str, Any]]
+) -> None:
+    scenes_by_key = {scene["key"]: scene for scene in scenes}
+    missing = sorted(set(presets) - set(scenes_by_key))
+    if missing:
+        raise ManifestError(
+            f"fogPresets referencia cenas ausentes: {', '.join(missing)}"
+        )
+    for scene_key, preset in presets.items():
+        scenes_by_key[scene_key]["fogPreset"] = preset
 
 
 def _build_state_groups(
@@ -1294,6 +1397,7 @@ def build_manifest(
             )
     documents.sort(key=lambda item: item["relativePath"])
     scenes = _build_scenes(assets, warnings)
+    _apply_fog_presets(scenes, classification_rules.get("fogPresets", {}))
     state_group_excluded_ids = {
         asset["id"]
         for asset in assets
@@ -1436,6 +1540,29 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             raise ManifestError("ID ou key de cena invalido/duplicado")
         scene_ids.add(scene_id)
         scene_keys.add(scene_key)
+        fog_preset = scene.get("fogPreset")
+        if fog_preset is not None:
+            if not isinstance(fog_preset, dict) or set(fog_preset) != {"revision", "regions"}:
+                raise ManifestError(f"fogPreset invalido em {scene_id}")
+            revision = fog_preset.get("revision")
+            regions = fog_preset.get("regions")
+            if (
+                isinstance(revision, bool)
+                or not isinstance(revision, int)
+                or revision < 1
+                or not isinstance(regions, list)
+                or not 1 <= len(regions) <= 128
+            ):
+                raise ManifestError(f"fogPreset invalido em {scene_id}")
+            region_ids: set[str] = set()
+            for region in regions:
+                normalized = _normalized_fog_presets(
+                    {scene_key: {"revision": revision, "regions": [region]}}
+                )
+                region_id = region.get("regionId") if isinstance(region, dict) else None
+                if normalized is None or region_id in region_ids:
+                    raise ManifestError(f"regiao de fogPreset invalida em {scene_id}")
+                region_ids.add(region_id)
         for collection_name in ("playerMaps", "gmGuideMaps", "overlays"):
             variants = scene[collection_name]
             for variant in variants:

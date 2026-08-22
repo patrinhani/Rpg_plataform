@@ -459,6 +459,70 @@ def _parse_scene_layers(
     return sorted(layers, key=lambda item: item["key"])
 
 
+def _sanitize_fog_preset(value: Any, context: str) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    raw = _expect_object(value, context)
+    if set(raw) != {"revision", "regions"}:
+        raise PackManifestError(f"{context} possui campos invalidos")
+    revision = _expect_nonnegative_int(raw.get("revision"), f"{context}.revision")
+    if revision < 1:
+        raise PackManifestError(f"{context}.revision deve ser positiva")
+    regions: list[dict[str, Any]] = []
+    region_ids: set[str] = set()
+    for index, raw_value in enumerate(_expect_list(raw.get("regions"), f"{context}.regions")):
+        region_context = f"{context}.regions[{index}]"
+        region = _expect_object(raw_value, region_context)
+        if set(region) != {"regionId", "label", "points"}:
+            raise PackManifestError(f"{region_context} possui campos invalidos")
+        region_id = _expect_string(region.get("regionId"), f"{region_context}.regionId")
+        label = _expect_string(region.get("label"), f"{region_context}.label")
+        if (
+            len(region_id) > 64
+            or not region_id[0].isalnum()
+            or any(not (character.isalnum() or character in "._:-") for character in region_id)
+            or region_id in region_ids
+            or len(label) > 80
+            or any(ord(character) < 32 for character in label)
+        ):
+            raise PackManifestError(f"{region_context} invalida")
+        points: list[dict[str, float]] = []
+        for point_index, raw_point in enumerate(
+            _expect_list(region.get("points"), f"{region_context}.points")
+        ):
+            point = _expect_object(raw_point, f"{region_context}.points[{point_index}]")
+            if set(point) != {"x", "y"}:
+                raise PackManifestError(f"{region_context}.points possui campos invalidos")
+            x = point.get("x")
+            y = point.get("y")
+            if (
+                isinstance(x, bool)
+                or not isinstance(x, (int, float))
+                or isinstance(y, bool)
+                or not isinstance(y, (int, float))
+                or not 0 <= float(x) <= 1
+                or not 0 <= float(y) <= 1
+            ):
+                raise PackManifestError(f"{region_context}.points fora do mapa")
+            points.append({"x": float(x), "y": float(y)})
+        area = sum(
+            (point["x"] * points[(point_index + 1) % len(points)]["y"])
+            - (points[(point_index + 1) % len(points)]["x"] * point["y"])
+            for point_index, point in enumerate(points)
+        )
+        if (
+            not 3 <= len(points) <= 64
+            or len({(p["x"], p["y"]) for p in points}) < 3
+            or abs(area) < 0.000002
+        ):
+            raise PackManifestError(f"{region_context}.points invalido")
+        region_ids.add(region_id)
+        regions.append({"regionId": region_id, "label": label, "points": points})
+    if not 1 <= len(regions) <= 128:
+        raise PackManifestError(f"{context}.regions invalido")
+    return {"revision": revision, "regions": regions}
+
+
 def _parse_scenes(
     collections: Mapping[str, Any], records: Mapping[str, AssetRecord]
 ) -> tuple[list[dict[str, Any]], set[str], set[str]]:
@@ -548,6 +612,7 @@ def _parse_scenes(
             "layers": layers,
             "activePlayerMap": active_player,
             "activeGmGuideMap": active_gm,
+            "fogPreset": _sanitize_fog_preset(raw.get("fogPreset"), f"{context}.fogPreset"),
             "gridHint": _sanitize_grid_hint(raw.get("gridHint"), f"{context}.gridHint"),
         }
         scenes.append(scene)

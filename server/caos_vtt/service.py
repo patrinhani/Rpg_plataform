@@ -26,6 +26,8 @@ from .campaign import (
     SceneView,
 )
 from .models import (
+    FogPresetApplyCommand,
+    FogPresetsApplyAllCommand,
     FogResetCommand,
     FogRegionCreateCommand,
     FogRegionRemoveCommand,
@@ -87,6 +89,8 @@ CatalogCommand = (
     | FogRegionSetRevealedCommand
     | FogRegionRemoveCommand
     | FogSetEnabledCommand
+    | FogPresetApplyCommand
+    | FogPresetsApplyAllCommand
     | FogResetCommand
     | FogRevealAllCommand
     | HandoutDeliverCommand
@@ -429,11 +433,32 @@ class VTTService:
                 layer.layer_id: layer.default_state for layer in scene.layers
             }
             room.scene_layer_placements[scene.scene_id] = {}
-            room.scene_fog[scene.scene_id] = FogState(
-                map_asset_id=scene.active_player_map,
-                map_fingerprint=self._map_fingerprint(scene.active_player_map),
-            )
+            room.scene_fog[scene.scene_id] = self._fog_state_from_scene(scene)
         room.active_scene_id = scenes[0].scene_id if scenes else None
+
+    def _fog_state_from_scene(
+        self,
+        scene: SceneView,
+        *,
+        revision: int = 0,
+        enabled: bool = True,
+    ) -> FogState:
+        regions = {
+            region.region_id: FogRegion(
+                region.region_id,
+                region.label,
+                region.points,
+                False,
+            )
+            for region in (scene.fog_preset.regions if scene.fog_preset is not None else ())
+        }
+        return FogState(
+            enabled=enabled,
+            revision=revision,
+            map_asset_id=scene.active_player_map,
+            map_fingerprint=self._map_fingerprint(scene.active_player_map),
+            regions=regions,
+        )
 
     def _map_fingerprint(self, asset_id: str | None) -> str | None:
         if asset_id is None:
@@ -969,6 +994,50 @@ class VTTService:
                 )
             else:
                 room.delivered_handouts.pop(command.payload.assetId, None)
+            return None
+
+        if isinstance(command, FogPresetsApplyAllCommand):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre altera a nevoa")
+            applied = 0
+            for scene in self._master_scenes():
+                if scene.fog_preset is None:
+                    continue
+                current = room.scene_fog.get(scene.scene_id)
+                room.scene_fog[scene.scene_id] = self._fog_state_from_scene(
+                    scene,
+                    revision=(current.revision + 1 if current is not None else 1),
+                    enabled=(current.enabled if current is not None else True),
+                )
+                applied += 1
+            if applied == 0:
+                return CatalogCommandFailure(
+                    "fog_preset_not_found",
+                    "A campanha nao possui setores oficiais de nevoa",
+                )
+            return None
+
+        if isinstance(command, FogPresetApplyCommand):
+            if role != "master":
+                return CatalogCommandFailure("forbidden", "Somente o mestre altera a nevoa")
+            scene_id = room.active_scene_id or ""
+            scene = next(
+                (item for item in self._master_scenes() if item.scene_id == scene_id),
+                None,
+            )
+            if scene is None:
+                return CatalogCommandFailure("no_active_scene", "Nao ha cena ativa")
+            if scene.fog_preset is None:
+                return CatalogCommandFailure(
+                    "fog_preset_not_found",
+                    "A cena nao possui setores oficiais de nevoa",
+                )
+            current = room.scene_fog.get(scene_id)
+            room.scene_fog[scene_id] = self._fog_state_from_scene(
+                scene,
+                revision=(current.revision + 1 if current is not None else 1),
+                enabled=(current.enabled if current is not None else True),
+            )
             return None
 
         if isinstance(
@@ -1737,6 +1806,7 @@ class VTTService:
                 room.scene_fog[scene_id] = self._deserialize_fog(
                     raw_fog,
                     *(scene_maps.get(scene_id) or (None, None)),
+                    scene_by_id[scene_id],
                 )
 
         active_scene_id = payload.get("activeSceneId")
@@ -1953,11 +2023,12 @@ class VTTService:
             locked=locked,
         )
 
-    @staticmethod
     def _deserialize_fog(
+        self,
         payload: Any,
         expected_map_asset_id: str | None,
         expected_map_fingerprint: str | None,
+        scene: SceneView,
     ) -> FogState:
         if not isinstance(payload, dict):
             raise ValueError("fog persistido invalido")
@@ -1976,10 +2047,14 @@ class VTTService:
                 RuntimeWarning,
                 stacklevel=2,
             )
-            return FogState(
-                map_asset_id=expected_map_asset_id,
-                map_fingerprint=expected_map_fingerprint,
+            replacement = self._fog_state_from_scene(
+                scene,
+                revision=0,
+                enabled=enabled,
             )
+            replacement.map_asset_id = expected_map_asset_id
+            replacement.map_fingerprint = expected_map_fingerprint
+            return replacement
         raw_regions = payload.get("regions")
         if raw_regions is None:
             if "maskBase64" in payload:
@@ -2490,6 +2565,11 @@ class VTTService:
                 else None
             ),
         }
+        if role == "master" and scene.fog_preset is not None:
+            payload["fogPreset"] = {
+                "revision": scene.fog_preset.revision,
+                "regionCount": len(scene.fog_preset.regions),
+            }
         if scene.layers:
             payload["layers"] = layers_payload
         if role == "master":
