@@ -781,10 +781,6 @@ export default function VttBoard({
   }, [selectedToken, selectedTokenId]);
 
   useEffect(() => {
-    if (selectedTokenId) openDirectorSection('tokens');
-  }, [openDirectorSection, selectedTokenId]);
-
-  useEffect(() => {
     if (selectedPropId) openDirectorSection('props');
   }, [openDirectorSection, selectedPropId]);
 
