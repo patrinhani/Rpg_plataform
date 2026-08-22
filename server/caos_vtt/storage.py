@@ -5,6 +5,7 @@ import sqlite3
 import threading
 import warnings
 import zlib
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
@@ -61,7 +62,7 @@ class RoomStateStore:
             raise
 
     def _ensure_schema(self) -> None:
-        with self._schema_lock, self._connect() as connection:
+        with self._schema_lock, closing(self._connect()) as connection, connection:
             version = int(connection.execute("PRAGMA user_version").fetchone()[0])
             if version > DATABASE_SCHEMA_VERSION:
                 raise RuntimeError(
@@ -93,7 +94,7 @@ class RoomStateStore:
 
     def load_all(self) -> tuple[tuple[str, dict[str, Any]], ...]:
         try:
-            with self._connect() as connection:
+            with closing(self._connect()) as connection:
                 rows = connection.execute(
                     "SELECT room_id, payload_json FROM room_state ORDER BY updated_at, room_id"
                 ).fetchall()
@@ -138,7 +139,7 @@ class RoomStateStore:
             separators=(",", ":"),
         )
         updated_at = datetime.now(UTC).isoformat()
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute(
                 """
                 INSERT INTO room_state(room_id, external_mesa_id, payload_json, updated_at)
@@ -158,7 +159,7 @@ class RoomStateStore:
             else json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         )
         timestamp = datetime.now(UTC).isoformat()
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute(
                 """
                 INSERT INTO invalid_room_state(

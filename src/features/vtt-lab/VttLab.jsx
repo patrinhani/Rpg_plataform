@@ -14,7 +14,11 @@ const LOCAL_DEVELOPMENT_SERVER_URL = 'http://127.0.0.1:8765';
 const DEMO_TOKEN_ID = 'demo-token';
 const LOG_LIMIT = 80;
 const SOCKET_CONNECTION_TIMEOUT_MS = 12_000;
-const REST_REQUEST_TIMEOUT_MS = 12_000;
+// O plano gratuito do Render pode precisar acordar o processo antes do
+// primeiro acesso da sessão. A conexão WebSocket continua com limite curto
+// depois que o backend já respondeu, mas o handshake REST precisa tolerar o
+// cold start sem criar um grant órfão no Firestore.
+const REST_REQUEST_TIMEOUT_MS = 60_000;
 const MISSING_INTEGRATED_SERVER_ORIGIN_ERROR = 'O mestre ainda precisa configurar o servidor VTT desta Mesa.';
 const BOARD_COMMAND_TYPES = new Set([
   'scene.select',
@@ -129,7 +133,7 @@ async function fetchWithTimeout(url, options, controller) {
     return await fetch(url, options);
   } catch (error) {
     if (timedOut) {
-      throw new Error('O servidor não respondeu em 12 segundos.');
+      throw new Error('O servidor não respondeu em 60 segundos. Tente novamente se o Render ainda estiver iniciando.');
     }
     throw error;
   } finally {
@@ -899,7 +903,7 @@ export default function VttLab({
     } catch (error) {
       if ((error.name === 'AbortError' && !requestTimedOut) || !mountedRef.current) return;
       const errorMessage = requestTimedOut
-        ? 'O servidor não respondeu em 12 segundos.'
+        ? 'O servidor não respondeu em 60 segundos. Tente novamente se o Render ainda estiver iniciando.'
         : (error instanceof Error
           ? error.message
           : 'Não foi possível validar o acesso desta Mesa.');

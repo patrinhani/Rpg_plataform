@@ -9,7 +9,8 @@ import { VTT_INTEGRATED_SESSION_REFRESH_MS } from '../../lib/vtt-session.js';
 import { requestMesaVttAccess } from '../../lib/vtt-mesa-access.js';
 import { projectMesaHandoutSnapshot } from './mesa-handouts.js';
 
-const REQUEST_TIMEOUT_MS = 12_000;
+// A primeira chamada pode acordar uma instância gratuita do Render.
+const REQUEST_TIMEOUT_MS = 60_000;
 const SOCKET_TIMEOUT_MS = 12_000;
 const VALID_ROLES = new Set(['master', 'player']);
 
@@ -258,7 +259,7 @@ export function useMesaHandouts({
         || (caughtError?.name === 'AbortError' && !requestTimedOut)
       ) return false;
       const message = requestTimedOut
-        ? 'O servidor não respondeu em 12 segundos.'
+        ? 'O servidor não respondeu em 60 segundos. Tente novamente se o Render ainda estiver iniciando.'
         : (caughtError instanceof Error
           ? caughtError.message
           : 'Não foi possível acessar os documentos desta Mesa.');

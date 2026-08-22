@@ -85,11 +85,16 @@ test('gera identificador imprevisível usando Web Crypto', () => {
   assert.equal(id, 'criatura_12345678-1234-4234-8234-123456789abc');
 });
 
-test('mantém as fichas da Mnemosyne fora do catálogo global e balanceadas para quatro agentes NEX 25', async () => {
+test('mantém as fichas da Mnemosyne fora do catálogo global e sincronizadas para três agentes NEX 25', async () => {
   const nomes = criaturasMnemosyne.map(criatura => criatura.nome);
-  assert.deepEqual(nomes, ['Repetente Palíndromo', 'Dr. Otávio Leme', 'Eco Indexador']);
+  assert.deepEqual(nomes, ['Repetente Palíndromo', 'Otávio Leme', 'Eco Indexador']);
   assert.deepEqual(criaturasMnemosyne.map(criatura => criatura.vd), [20, 40, 80]);
-  assert.ok(criaturasMnemosyne.every(criatura => criatura.habilidades[0].includes('NEX 25')));
+  assert.ok(criaturasMnemosyne.every(criatura => criatura.habilidades[0].includes('NEX 25 / PRESTÍGIO 20')));
+  assert.deepEqual(criaturasMnemosyne.map(criatura => criatura.pv_max), [28, 55, 135]);
+  assert.deepEqual(criaturasMnemosyne.map(criatura => criatura.defesa), [17, 18, 21]);
+  assert.equal(criaturasMnemosyne[0].habilidades[0].includes('três Repetentes para três agentes'), true);
+  assert.equal(criaturasMnemosyne[2].habilidades[1].includes('Defesa 21'), true);
+  assert.equal(criaturasMnemosyne[2].habilidades[1].includes('Defesa para 19'), true);
 
   const { bestiario } = await import('../src/lib/bestiario.js');
   assert.ok(nomes.every(nome => !bestiario.some(criatura => criatura.nome === nome)));
