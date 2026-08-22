@@ -410,6 +410,23 @@
     },
     {
       "audience": "gm",
+      "bytes": 2236563,
+      "controlledBy": "gm",
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png",
+      "image": {
+        "format": "png",
+        "hasAlpha": false,
+        "height": 941,
+        "pngColorType": 2,
+        "width": 1672
+      },
+      "kind": "handout",
+      "mediaType": "image/png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png",
+      "sha256": "ed172df8ea950af9e9dc15a424f860d97d22acf41e3c75215da83ac108e10f44"
+    },
+    {
+      "audience": "gm",
       "bytes": 268974,
       "controlledBy": "gm",
       "id": "asset:assets/mapas/helix-9/guia-mestre/helix-9-nivel-0-ala-administrativa-guia-mestre-v1.webp",
@@ -1287,7 +1304,8 @@
       "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
-      "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png"
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png"
     ],
     "masterReferenceAssetIds": [
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png"
@@ -4140,13 +4158,13 @@
   },
   "schemaVersion": 2,
   "summary": {
-    "assetCount": 75,
+    "assetCount": 76,
     "documentCount": 0,
     "sceneCount": 14,
     "sceneLayerCount": 8,
-    "sourceFingerprint": "8971928c23cfa10bb073fe6478f7d4999e69726e6233698dd3c13b7a54fbc0d8",
+    "sourceFingerprint": "ad6c6696ee0c811e0154dd1d5c36bf24a690fd9eafbe12629f43981450d220ac",
     "stateGroupCount": 1,
-    "totalAssetBytes": 141486786,
+    "totalAssetBytes": 143723349,
     "warningCount": 13
   },
   "warnings": [

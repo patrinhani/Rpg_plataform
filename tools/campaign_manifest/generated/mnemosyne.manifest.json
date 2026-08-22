@@ -16,14 +16,14 @@
     "fingerprint": "sha256:80cf23395fe32926f03d1a596989c13f1b7cce836cddd9afbfb2f17aff45c32f"
   },
   "summary": {
-    "assetCount": 126,
+    "assetCount": 127,
     "documentCount": 22,
     "sceneCount": 14,
     "sceneLayerCount": 8,
     "stateGroupCount": 1,
-    "totalAssetBytes": 239235798,
+    "totalAssetBytes": 241472361,
     "warningCount": 13,
-    "sourceFingerprint": "c5f8f3f54880a428904c30b0100e98e06ebd2544eea419f60e4f5add305a8048"
+    "sourceFingerprint": "ec8bc3dbafba0f8d8943d842f564448cfde98e88e757cfc0dbd18134694f7e6e"
   },
   "assets": [
     {
@@ -670,6 +670,23 @@
         "height": 1400,
         "hasAlpha": true,
         "pngColorType": 6
+      }
+    },
+    {
+      "id": "asset:assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png",
+      "relativePath": "assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png",
+      "kind": "handout",
+      "audience": "gm",
+      "controlledBy": "gm",
+      "bytes": 2236563,
+      "sha256": "ed172df8ea950af9e9dc15a424f860d97d22acf41e3c75215da83ac108e10f44",
+      "mediaType": "image/png",
+      "image": {
+        "format": "png",
+        "width": 1672,
+        "height": 941,
+        "hasAlpha": false,
+        "pngColorType": 2
       }
     },
     {
@@ -2292,8 +2309,8 @@
       "relativePath": "docs/one-shot-01-pistas-e-handouts.md",
       "title": "One-shot 01: pistas e handouts",
       "audienceHint": "gm",
-      "bytes": 26450,
-      "sha256": "98b9e4ce8b68a6b583dadccec3e20b7df497a8a1977796f2f7982be671deb6b1",
+      "bytes": 26920,
+      "sha256": "71985f67ffb22fa93fce802ad9cfc19e65c4cfeddedbade7599f8eb8d3938e82",
       "encoding": "utf-8"
     },
     {
@@ -5289,7 +5306,8 @@
       "asset:assets/handouts/one-shot-01-memoria-corrompida/12b-prescricao-sujeitos-palindromo-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13a-desenho-cidade-2073-handout-v1.png",
       "asset:assets/handouts/one-shot-01-memoria-corrompida/13b-bilhete-livia-salles-handout-v1.png",
-      "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png"
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/14-simulacao-lugar-ausente-handout-v1.png",
+      "asset:assets/handouts/one-shot-01-memoria-corrompida/15-cidade-2073-revelacao-final-handout-v1.png"
     ],
     "masterReferenceAssetIds": [
       "asset:assets/handouts/one-shot-01-memoria-corrompida/10d-circuitos-sobrepostos-referencia-mestre-v1.png"
