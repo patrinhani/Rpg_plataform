@@ -27,6 +27,8 @@ GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-service-account.json
 
 Adicione no Render um Secret File chamado `firebase-service-account.json` com o JSON de uma conta de serviço do projeto Firebase. Nunca versione esse arquivo. O Render fornece `RENDER=true` e `PORT`; o processo usa automaticamente `0.0.0.0:$PORT`. A coleção administrativa `vttRoomStates` permanece inacessível aos clientes pelas regras do Firestore e guarda snapshots comprimidos das salas.
 
+No plano gratuito, o primeiro acesso depois de um período ocioso pode levar até 60 segundos enquanto o serviço acorda. O frontend mantém o handshake aberto durante esse intervalo e oferece nova tentativa se o limite for atingido.
+
 O arquivo `render.yaml` na raiz registra os mesmos valores sem incluir segredos. Um pacote de campanha continua opcional por meio do par `CAOS_VTT_CAMPAIGN_MANIFEST` e `CAOS_VTT_CAMPAIGN_ROOT`. No Render, quando essas variáveis não são definidas e existe exatamente um pacote sob `server/campaigns`, ele é descoberto automaticamente. O conteúdo desse pacote só é exposto a salas cujo `campaignId` corresponda ao manifesto; mesas `caos-empty` continuam no workspace genérico e não conseguem abrir seus assets.
 
 ## Desenvolvimento
